@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  // Simulation du nombre d'articles (à lier avec ton futur CartContext)
+  const cartCount = 3;
 
   return (
     <nav className="fixed top-0 w-full z-[100] bg-white/90 backdrop-blur-md border-b border-pc-gold/30">
@@ -28,7 +30,7 @@ const Navbar = () => {
         </Link>
         
         {/* DESKTOP NAVIGATION */}
-        <div className="hidden lg:flex items-center space-x-10 text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">
+        <div className="hidden lg:flex items-center space-x-8 text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">
           <Link to="/real-estate" className="hover:text-pc-gold transition-colors relative group">
             Real Estate
             <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-pc-gold transition-all group-hover:w-full"></span>
@@ -39,42 +41,71 @@ const Navbar = () => {
             <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-pc-green transition-all group-hover:w-full"></span>
           </Link>
 
-          {/* EXPERTISE LINK UPDATED */}
+          <Link to="/agriculture/marketplace" className="hover:text-slate-900 transition-colors relative group flex items-center gap-1.5">
+            <span className="w-1 h-1 bg-pc-gold rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
+            Shop
+            <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-slate-900 transition-all group-hover:w-full"></span>
+          </Link>
+
           <Link to="/agriculture/expertise" className="hover:text-pc-gold transition-colors relative group">
             Expertise
             <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-pc-gold transition-all group-hover:w-full"></span>
           </Link>
           
           <div className="h-4 w-[1px] bg-slate-200 mx-2"></div>
-          
-          <a href="#" className="hover:text-pc-green transition-colors flex items-center gap-2">
+
+          {/* NEW: CART ICON WITH BADGE */}
+          <Link to="/cart" className="relative p-2 group transition-all duration-300">
+            <div className="relative">
+              <svg className="w-5 h-5 text-slate-900 group-hover:text-pc-gold transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 w-4 h-4 bg-pc-green text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-white shadow-sm animate-in fade-in zoom-in duration-300">
+                  {cartCount}
+                </span>
+              )}
+            </div>
+          </Link>
+
+          <Link to="/dashboard" className="hover:text-pc-green transition-colors flex items-center gap-2">
             <span className="w-1.5 h-1.5 bg-pc-green rounded-full animate-pulse"></span>
             Dashboard
-          </a>
+          </Link>
           
           <button className="bg-slate-900 text-white px-8 py-3 rounded-sm hover:bg-pc-gold transition-all duration-500 shadow-sm uppercase text-[9px] tracking-widest">
             Contact Us
           </button>
         </div>
 
-        {/* MOBILE BURGER BUTTON */}
-        {!isOpen && (
-          <button 
-            onClick={() => setIsOpen(true)}
-            className="lg:hidden flex flex-col justify-center items-center w-10 h-10 space-y-1.5"
-            aria-label="Open Menu"
-          >
-            <span className="block w-6 h-0.5 bg-slate-900"></span>
-            <span className="block w-6 h-0.5 bg-pc-gold"></span>
-            <span className="block w-6 h-0.5 bg-pc-green"></span>
-          </button>
-        )}
+        {/* MOBILE CONTROLS */}
+        <div className="flex lg:hidden items-center gap-4">
+          {/* MOBILE CART */}
+          <Link to="/cart" className="relative p-2">
+            <svg className="w-6 h-6 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            <span className="absolute top-1 right-1 w-4 h-4 bg-pc-green text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-white">
+              {cartCount}
+            </span>
+          </Link>
+
+          {!isOpen && (
+            <button 
+              onClick={() => setIsOpen(true)}
+              className="flex flex-col justify-center items-center w-10 h-10 space-y-1.5"
+              aria-label="Open Menu"
+            >
+              <span className="block w-6 h-0.5 bg-slate-900"></span>
+              <span className="block w-6 h-0.5 bg-pc-gold"></span>
+              <span className="block w-6 h-0.5 bg-pc-green"></span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* FULL SCREEN MOBILE OVERLAY */}
       <div className={`lg:hidden fixed top-0 left-0 w-full h-screen bg-white z-[105] transition-transform duration-500 ease-in-out transform ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-        
-        {/* CLOSE BUTTON */}
         <button 
           onClick={() => setIsOpen(false)}
           className="absolute top-6 right-6 w-12 h-12 flex items-center justify-center z-[110]"
@@ -85,7 +116,7 @@ const Navbar = () => {
           </div>
         </button>
 
-        <div className="flex flex-col items-center justify-center h-full w-full space-y-10 px-8">
+        <div className="flex flex-col items-center justify-center h-full w-full space-y-8 px-8">
           <div className="flex flex-col items-center gap-4">
             <img src="/images/logo.png" alt="Logo" className="w-16 h-16 object-contain" />
             <div className="text-xl font-black tracking-tighter text-slate-900">
@@ -93,20 +124,18 @@ const Navbar = () => {
             </div>
           </div>
 
-          <div className="flex flex-col items-center space-y-8 w-full text-center">
-            <Link to="/real-estate" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-slate-900 hover:text-pc-gold">Real Estate</Link>
+          <div className="flex flex-col items-center space-y-6 w-full text-center">
+            <Link to="/real-estate" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-slate-900">Real Estate</Link>
+            <Link to="/agriculture" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-slate-900">Agriculture</Link>
+            <Link to="/agriculture/marketplace" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-pc-gold underline decoration-pc-gold/30 underline-offset-8">Marketplace</Link>
+            <Link to="/agriculture/expertise" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-slate-900">Expertise</Link>
             
-            <Link to="/agriculture" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-slate-900 hover:text-pc-green">Agriculture</Link>
-            
-            {/* EXPERTISE MOBILE LINK UPDATED */}
-            <Link to="/agriculture/expertise" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-slate-900 hover:text-pc-gold">Expertise</Link>
-            
-            <div className="w-12 h-[1px] bg-slate-100"></div>
+            <div className="w-12 h-[1px] bg-slate-100 my-2"></div>
 
-            <a href="#" onClick={() => setIsOpen(false)} className="text-pc-green text-sm uppercase tracking-[0.3em] font-bold flex items-center gap-3">
-                <span className="w-2 h-2 bg-pc-green rounded-full animate-pulse"></span> 
-                Dashboard
-            </a>
+            <Link to="/dashboard" onClick={() => setIsOpen(false)} className="text-pc-green text-sm uppercase tracking-[0.3em] font-bold flex items-center gap-3">
+              <span className="w-2 h-2 bg-pc-green rounded-full animate-pulse"></span> 
+              Dashboard
+            </Link>
             
             <button className="w-full max-w-xs bg-slate-900 text-white py-5 rounded-sm shadow-2xl text-[10px] uppercase tracking-[0.2em] font-bold">
               Get in Touch

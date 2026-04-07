@@ -3,29 +3,33 @@ import Home from './pages/Home';
 import RealEstatePage from './pages/RealEstate';
 import AgriculturePage from './pages/AgriculturePage'; 
 import ExpertisePage from './pages/Expertise'; 
-import InstitutionalPage from './pages/InstitutionalPage'; // Import de la page CAPEF
+import InstitutionalPage from './pages/InstitutionalPage'; 
+import MarketplacePage from './pages/MarketplacePage'; // Nouvel import
 
 function App() {
   return (
     <Router>
       <div className="App">
         <Routes>
-          {/* Page d'accueil */}
+          {/* Accueil */}
           <Route path="/" element={<Home />} />
           
-          {/* Page de l'immobilier classique */}
+          {/* Immobilier */}
           <Route path="/real-estate" element={<RealEstatePage />} />
           
-          {/* Page de l'agriculture (Vue d'ensemble) */}
+          {/* Agriculture - Écosystème complet */}
           <Route path="/agriculture" element={<AgriculturePage />} />
           
-          {/* Page de l'expertise technique (Audit & Simulateur) */}
+          {/* Vente de produits (Le "Shop") */}
+          <Route path="/agriculture/marketplace" element={<MarketplacePage />} />
+          
+          {/* Expertise technique */}
           <Route path="/agriculture/expertise" element={<ExpertisePage />} />
 
-          {/* Page du cadre Institutionnel (CAPEF & Lois) */}
+          {/* Cadre Institutionnel */}
           <Route path="/agriculture/institutional-framework" element={<InstitutionalPage />} />
           
-          {/* Dashboard et autres routes à venir */}
+          {/* Dashboard (à décommenter quand tu seras prêt) */}
           {/* <Route path="/dashboard" element={<Dashboard />} /> */}
         </Routes>
       </div>
