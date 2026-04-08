@@ -23,17 +23,17 @@ const MOCK_PRODUCTS = [
     unit: "Pièce",
     origin: "Mbam",
     stock: 150,
-    image: "https://images.unsplash.com/photo-1550258114-b09a81c82e3c?auto=format&fit=crop&q=80&w=800"
+    image: "/images/propertyananas.jfif"
   },
   {
     id: "PROD-003",
-    name: "Cacao Grade A1 (Fermenté)",
+    name: "Cacao Grade A (Fèves)",
     category: "Transformation",
     price: "2,800",
     unit: "Kg",
     origin: "Lekié",
     stock: 1000,
-    image: "https://images.unsplash.com/photo-1548339818-886d95d4160a?auto=format&fit=crop&q=80&w=800"
+    image: "/images/propertycacao.jfif" // Mis à jour
   },
   {
     id: "PROD-004",
@@ -53,17 +53,17 @@ const MOCK_PRODUCTS = [
     unit: "Filet",
     origin: "Basse-Sanaga",
     stock: 120,
-    image: "https://images.unsplash.com/photo-1593105544280-ed5d0a8903a2?auto=format&fit=crop&q=80&w=800"
+    image: "/images/propertymaniocs.jfif"
   },
   {
     id: "PROD-006",
-    name: "Maïs Jaune Séché",
+    name: "Maïs Jaune Séché (Premium)",
     category: "Maraîcher",
     price: "22,000",
     unit: "Sac (100kg)",
     origin: "Nord",
     stock: 200,
-    image: "https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&q=80&w=800"
+    image: "/images/propertymais.jfif" // Mis à jour
   },
   {
     id: "PROD-007",
@@ -77,33 +77,33 @@ const MOCK_PRODUCTS = [
   },
   {
     id: "PROD-008",
-    name: "Okok Frais (Découpé)",
+    name: "Banane Douce (Régime Brut)",
     category: "Maraîcher",
-    price: "1,500",
-    unit: "Sachet",
-    origin: "Centre",
-    stock: 50,
-    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=800"
+    price: "4,500",
+    unit: "Régime",
+    origin: "Sud-Ouest",
+    stock: 85,
+    image: "/images/propertybananes.jfif" // Mis à jour
   },
   {
     id: "PROD-009",
-    name: "Noix de Palme (Sélection)",
+    name: "Oignons Rouges (Sélection)",
     category: "Maraîcher",
-    price: "12,000",
-    unit: "Sac",
-    origin: "Littoral",
-    stock: 80,
-    image: "https://images.unsplash.com/photo-1590779033100-9f60705a2f3b?auto=format&fit=crop&q=80&w=800"
+    price: "12,500",
+    unit: "Sac (50kg)",
+    origin: "Extrême-Nord",
+    stock: 110,
+    image: "/images/propertyoignons.jfif" // Mis à jour
   },
   {
     id: "PROD-010",
-    name: "Arachides de Garoua",
+    name: "Arachides Égrainées",
     category: "Maraîcher",
-    price: "1,800",
-    unit: "Litre",
+    price: "18,500",
+    unit: "Sac (50kg)",
     origin: "Nord",
     stock: 400,
-    image: "https://images.unsplash.com/photo-1509912747193-4709127db00d?auto=format&fit=crop&q=80&w=800"
+    image: "/images/propertyarrachides.jfif" // Mis à jour
   },
   {
     id: "PROD-011",
@@ -113,7 +113,7 @@ const MOCK_PRODUCTS = [
     unit: "Seau",
     origin: "Ouest",
     stock: 95,
-    image: "https://images.unsplash.com/photo-1585914924626-45adbc9307f2?auto=format&fit=crop&q=80&w=800"
+    image: "/images/propertyharicots.jfif"
   },
   {
     id: "PROD-012",
@@ -123,26 +123,24 @@ const MOCK_PRODUCTS = [
     unit: "Litre",
     origin: "Sud-Ouest",
     stock: 500,
-    image: "https://images.unsplash.com/photo-1474979266404-7eaacabc88c5?auto=format&fit=crop&q=80&w=800"
+    image: "/images/propertyhuile.jfif"
   }
 ];
 
 const MarketplacePage = () => {
   const [filter, setFilter] = useState('All');
 
-  // LOGIQUE DE FILTRAGE
   const filteredProducts = filter === 'All' 
     ? MOCK_PRODUCTS 
     : MOCK_PRODUCTS.filter(product => product.category === filter);
 
   return (
-    <div className="bg-white min-h-screen selection:bg-pc-green selection:text-white">
+    <div className="bg-white min-h-screen selection:bg-pc-green selection:text-white font-sans">
       <Navbar />
       
       <MarketplaceHero />
 
       <section className="max-w-7xl mx-auto px-8 py-20">
-        {/* Navigation des Filtres */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-16 border-b border-slate-100 pb-8">
           <div className="flex flex-wrap gap-x-8 gap-y-4 text-[10px] uppercase tracking-[0.2em] font-black text-slate-400">
             {['All', 'Maraîcher', 'Élevage', 'Épices', 'Transformation'].map(cat => (
@@ -165,7 +163,6 @@ const MarketplacePage = () => {
           </div>
         </div>
 
-        {/* Grille de Produits */}
         {filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
             {filteredProducts.map(product => (
