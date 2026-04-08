@@ -41,15 +41,22 @@ const Navbar = () => {
             <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-pc-green transition-all group-hover:w-full"></span>
           </Link>
 
+          {/* AJOUT SOURCING (Synchronisé avec App.js) */}
+          <Link to="/global-sourcing" className="hover:text-pc-gold transition-colors relative group">
+            Sourcing
+            <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-pc-gold transition-all group-hover:w-full"></span>
+          </Link>
+
           <Link to="/agriculture/marketplace" className="hover:text-slate-900 transition-colors relative group flex items-center gap-1.5">
             <span className="w-1 h-1 bg-pc-gold rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
             Shop
             <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-slate-900 transition-all group-hover:w-full"></span>
           </Link>
 
-          <Link to="/agriculture/expertise" className="hover:text-pc-gold transition-colors relative group">
-            Expertise
-            <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-pc-gold transition-all group-hover:w-full"></span>
+          {/* CORRECTION DU LIEN INSTITUTIONNEL (Synchronisé avec App.js) */}
+          <Link to="/agriculture/institutional-framework" className="hover:text-pc-green transition-colors relative group">
+            Compliance
+            <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-pc-green transition-all group-hover:w-full"></span>
           </Link>
           
           <div className="h-4 w-[1px] bg-slate-200 mx-2"></div>
@@ -78,9 +85,8 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* MOBILE CONTROLS (Updated with clear spacing) */}
+        {/* MOBILE CONTROLS */}
         <div className="flex lg:hidden items-center gap-6">
-          {/* MOBILE CART */}
           <Link to="/cart" className="relative p-2 group">
             <svg className="w-6 h-6 text-slate-900 group-hover:text-pc-gold transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -92,7 +98,6 @@ const Navbar = () => {
             )}
           </Link>
 
-          {/* HAMBURGER BUTTON */}
           <button 
             onClick={() => setIsOpen(true)}
             className="flex flex-col justify-center items-end w-8 h-8 space-y-1.5 group"
@@ -107,7 +112,6 @@ const Navbar = () => {
 
       {/* FULL SCREEN MOBILE OVERLAY */}
       <div className={`lg:hidden fixed top-0 left-0 w-full h-screen bg-white z-[105] transition-transform duration-500 ease-in-out transform ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-        {/* Close Button Inside Overlay */}
         <button 
           onClick={() => setIsOpen(false)}
           className="absolute top-6 right-6 w-12 h-12 flex items-center justify-center z-[110]"
@@ -129,7 +133,12 @@ const Navbar = () => {
           <div className="flex flex-col items-center space-y-6 w-full text-center">
             <Link to="/real-estate" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-slate-900">Real Estate</Link>
             <Link to="/agriculture" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-slate-900">Agriculture</Link>
+            <Link to="/global-sourcing" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-slate-900">Sourcing</Link>
             <Link to="/agriculture/marketplace" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-pc-gold underline decoration-pc-gold/30 underline-offset-8">Marketplace</Link>
+            
+            {/* CORRECTION DU LIEN INSTITUTIONNEL MOBILE */}
+            <Link to="/agriculture/institutional-framework" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-pc-green">Institutional Compliance</Link>
+            
             <Link to="/agriculture/expertise" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-slate-900">Expertise</Link>
             
             <div className="w-12 h-[1px] bg-slate-100 my-2"></div>
