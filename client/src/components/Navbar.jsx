@@ -12,7 +12,7 @@ const Navbar = () => {
         
         {/* LOGO SECTION */}
         <Link to="/" className="flex items-center gap-4 group cursor-pointer">
-          <div className="relative w-30 h-30 md:w-34 md:h-34 flex items-center justify-center transition-all duration-500 group-hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.3)]">
+          <div className="relative w-12 h-12 md:w-14 md:h-14 flex items-center justify-center transition-all duration-500 group-hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.3)]">
             <img 
               src="/images/logo.png" 
               alt="Property Cameroon Logo" 
@@ -54,7 +54,7 @@ const Navbar = () => {
           
           <div className="h-4 w-[1px] bg-slate-200 mx-2"></div>
 
-          {/* NEW: CART ICON WITH BADGE */}
+          {/* DESKTOP CART */}
           <Link to="/cart" className="relative p-2 group transition-all duration-300">
             <div className="relative">
               <svg className="w-5 h-5 text-slate-900 group-hover:text-pc-gold transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -78,34 +78,36 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* MOBILE CONTROLS */}
-        <div className="flex lg:hidden items-center gap-4">
+        {/* MOBILE CONTROLS (Updated with clear spacing) */}
+        <div className="flex lg:hidden items-center gap-6">
           {/* MOBILE CART */}
-          <Link to="/cart" className="relative p-2">
-            <svg className="w-6 h-6 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <Link to="/cart" className="relative p-2 group">
+            <svg className="w-6 h-6 text-slate-900 group-hover:text-pc-gold transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
-            <span className="absolute top-1 right-1 w-4 h-4 bg-pc-green text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-white">
-              {cartCount}
-            </span>
+            {cartCount > 0 && (
+              <span className="absolute top-1 right-0 w-4 h-4 bg-pc-green text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-white shadow-sm">
+                {cartCount}
+              </span>
+            )}
           </Link>
 
-          {!isOpen && (
-            <button 
-              onClick={() => setIsOpen(true)}
-              className="flex flex-col justify-center items-center w-10 h-10 space-y-1.5"
-              aria-label="Open Menu"
-            >
-              <span className="block w-6 h-0.5 bg-slate-900"></span>
-              <span className="block w-6 h-0.5 bg-pc-gold"></span>
-              <span className="block w-6 h-0.5 bg-pc-green"></span>
-            </button>
-          )}
+          {/* HAMBURGER BUTTON */}
+          <button 
+            onClick={() => setIsOpen(true)}
+            className="flex flex-col justify-center items-end w-8 h-8 space-y-1.5 group"
+            aria-label="Open Menu"
+          >
+            <span className="block w-8 h-0.5 bg-slate-900 group-hover:bg-pc-gold transition-all"></span>
+            <span className="block w-6 h-0.5 bg-pc-gold"></span>
+            <span className="block w-8 h-0.5 bg-pc-green"></span>
+          </button>
         </div>
       </div>
 
       {/* FULL SCREEN MOBILE OVERLAY */}
       <div className={`lg:hidden fixed top-0 left-0 w-full h-screen bg-white z-[105] transition-transform duration-500 ease-in-out transform ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        {/* Close Button Inside Overlay */}
         <button 
           onClick={() => setIsOpen(false)}
           className="absolute top-6 right-6 w-12 h-12 flex items-center justify-center z-[110]"
@@ -119,8 +121,8 @@ const Navbar = () => {
         <div className="flex flex-col items-center justify-center h-full w-full space-y-8 px-8">
           <div className="flex flex-col items-center gap-4">
             <img src="/images/logo.png" alt="Logo" className="w-16 h-16 object-contain" />
-            <div className="text-xl font-black tracking-tighter text-slate-900">
-              PROPERTY<span className="text-pc-gold italic font-serif font-light">Cameroon</span>
+            <div className="text-xl font-black tracking-tighter text-slate-900 uppercase">
+              PROPERTY<span className="text-pc-gold italic font-serif font-light ml-1">Cameroon</span>
             </div>
           </div>
 
@@ -137,17 +139,18 @@ const Navbar = () => {
               Dashboard
             </Link>
             
-            <button className="w-full max-w-xs bg-slate-900 text-white py-5 rounded-sm shadow-2xl text-[10px] uppercase tracking-[0.2em] font-bold">
+            <button className="w-full max-w-xs bg-slate-900 text-white py-5 rounded-sm shadow-2xl text-[10px] uppercase tracking-[0.2em] font-bold mt-4">
               Get in Touch
             </button>
           </div>
 
-          <div className="absolute bottom-10 text-[10px] text-slate-400 uppercase tracking-widest opacity-50 text-center">
+          <div className="absolute bottom-10 text-[10px] text-slate-400 uppercase tracking-widest opacity-50 text-center px-4">
             Institutional Seriousness — 2026
           </div>
         </div>
       </div>
       
+      {/* Decorative Bottom Line */}
       <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-pc-gold/50 to-transparent opacity-50"></div>
     </nav>
   );

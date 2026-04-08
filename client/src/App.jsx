@@ -4,7 +4,9 @@ import RealEstatePage from './pages/RealEstate';
 import AgriculturePage from './pages/AgriculturePage'; 
 import ExpertisePage from './pages/Expertise'; 
 import InstitutionalPage from './pages/InstitutionalPage'; 
-import MarketplacePage from './pages/MarketplacePage'; // Nouvel import
+import MarketplacePage from './pages/MarketplacePage';
+import AppointmentPage from './pages/Appointment';
+import SourcingPage from './pages/Sourcing'; // Nouvel import stratégique
 
 function App() {
   return (
@@ -28,6 +30,12 @@ function App() {
 
           {/* Cadre Institutionnel */}
           <Route path="/agriculture/institutional-framework" element={<InstitutionalPage />} />
+          
+          {/* Sourcing Global (Chine - Cameroun) */}
+          <Route path="/global-sourcing" element={<SourcingPage />} />
+          
+          {/* Prise de Rendez-vous / Consultation Privée */}
+          <Route path="/book-appointment" element={<AppointmentPage />} />
           
           {/* Dashboard (à décommenter quand tu seras prêt) */}
           {/* <Route path="/dashboard" element={<Dashboard />} /> */}

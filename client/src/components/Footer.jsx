@@ -1,3 +1,6 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+
 const Footer = () => {
   return (
     <footer className="bg-pc-green text-white pt-24 pb-12 border-t-2 border-pc-gold/30">
@@ -8,9 +11,18 @@ const Footer = () => {
           
           {/* COLUMN 1: BRAND & VISION */}
           <div className="col-span-1 md:col-span-1">
-            <div className="text-xl font-black tracking-tighter mb-8 flex items-center">
-              PROPERTY<span className="text-pc-gold ml-1 italic font-serif font-light lowercase">Cameroon</span>
-            </div>
+            <Link to="/" className="flex flex-col gap-6 mb-8 group cursor-pointer">
+              <img 
+                src="/images/logo.png" 
+                alt="Property Cameroon" 
+                className="w-30 h-30 object-contain grayscale brightness-200 group-hover:grayscale-0 transition-all duration-700" 
+              />
+              <div className="text-2xl font-black tracking-tighter uppercase leading-none">
+                PROPERTY<br />
+                <span className="text-pc-gold italic font-serif font-light lowercase text-lg">Cameroon</span>
+              </div>
+            </Link>
+            
             <p className="text-slate-400 text-sm leading-relaxed font-light italic">
               "Building a legacy, cultivating a heritage." <br />
               Land excellence at the service of the diaspora and local investors.
@@ -23,8 +35,8 @@ const Footer = () => {
               Real Estate Division
             </h4>
             <ul className="space-y-4 text-sm text-slate-300 font-light">
-              <li><a href="#" className="hover:text-pc-gold transition-colors italic">Luxury Residences</a></li>
-              <li><a href="#" className="hover:text-pc-gold transition-colors italic">Land Title Verification</a></li>
+              <li><Link to="/real-estate" className="hover:text-pc-gold transition-colors italic">Luxury Residences</Link></li>
+              <li><Link to="/agriculture/expertise" className="hover:text-pc-gold transition-colors italic">Land Title Verification</Link></li>
               <li><a href="#" className="hover:text-pc-gold transition-colors italic">Site Management</a></li>
             </ul>
           </div>
@@ -35,9 +47,9 @@ const Footer = () => {
               Agricultural Division
             </h4>
             <ul className="space-y-4 text-sm text-slate-300 font-light">
-              <li><a href="#" className="hover:text-white transition-colors italic">CAPEF Operations</a></li>
-              <li><a href="#" className="hover:text-white transition-colors italic">Agro-Mechanization</a></li>
-              <li><a href="#" className="hover:text-white transition-colors italic">Export & Logistics</a></li>
+              <li><Link to="/agriculture" className="hover:text-white transition-colors italic">Investment Projects</Link></li>
+              <li><Link to="/agriculture/expertise" className="hover:text-white transition-colors italic">Agro-Mechanization</Link></li>
+              <li><Link to="/agriculture/marketplace" className="hover:text-white transition-colors italic">Export & Logistics</Link></li>
             </ul>
           </div>
 
@@ -50,19 +62,35 @@ const Footer = () => {
               <p>📍 <span className="text-white font-medium">Cameroon:</span> Bastos, Yaoundé</p>
               <p>📍 <span className="text-white font-medium">France:</span> Melun, Paris Region</p>
               <div className="pt-4">
-                <button className="border border-white/20 px-6 py-2 rounded-sm text-[10px] uppercase tracking-widest hover:bg-white hover:text-pc-green transition-all">
-                  Book an Appointment
-                </button>
+                {/* Bouton maintenant fonctionnel */}
+                <Link to="/book-appointment">
+                  <button className="border border-white/20 px-6 py-2 rounded-sm text-[10px] uppercase tracking-widest hover:bg-white hover:text-pc-green transition-all">
+                    Book an Appointment
+                  </button>
+                </Link>
               </div>
             </address>
           </div>
         </div>
 
-        {/* BOTTOM LINE (COPYRIGHT) */}
-        <div className="pt-12 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-[9px] uppercase tracking-[0.4em] text-slate-500 font-medium text-center md:text-left">
-            © 2026 PropertyCameroon — Institutional Seriousness
-          </p>
+        {/* BOTTOM LINE (COPYRIGHT & PARTNERS) */}
+        <div className="pt-12 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-8">
+          
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <p className="text-[9px] uppercase tracking-[0.4em] text-slate-500 font-medium">
+              © 2026 PropertyCameroon — Institutional Seriousness
+            </p>
+            
+            {/* Logo CAPEF */}
+            <div className="flex items-center gap-4 border-l border-white/10 pl-8 opacity-60 hover:opacity-100 transition-opacity">
+              <span className="text-[8px] uppercase tracking-widest text-slate-500">Certified by</span>
+              <img 
+                src="/images/capeflogo.jfif" 
+                alt="CAPEF Certification" 
+                className="h-20 w-auto object-contain filter grayscale invert" 
+              />
+            </div>
+          </div>
           
           <div className="flex flex-wrap justify-center space-x-8 text-[9px] uppercase tracking-[0.2em] text-slate-500">
             <a href="#" className="hover:text-white transition-colors">Legal Mentions</a>
