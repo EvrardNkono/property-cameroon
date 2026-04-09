@@ -51,7 +51,7 @@ function App() {
             <Route path="admin" element={<AdminOverview />} />
             <Route path="admin/users" element={<UserManagement />} />
             <Route path="admin/inventory" element={<GlobalInventory />} />
-            <Route path="admin/finance" element={<FinancialControl />} />
+            <Route path="admin/finances" element={<FinancialControl />} />
 
             {/* 3. SECTION UTILISATEUR STANDARD */}
             {/* Profil & Paramètres */}

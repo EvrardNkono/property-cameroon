@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
 import { 
   TrendingUp, 
-  Truck, 
   Wallet, 
   ArrowUpRight, 
   ArrowDownLeft, 
   Container, 
   Anchor, 
-  CheckCircle,
   Clock,
   Filter,
   Download
 } from 'lucide-react';
 
 const FinancialControl = () => {
-  const [activeSection, setActiveSection] = useState('SOURCING'); // SOURCING ou INVEST
+  const [activeSection, setActiveSection] = useState('SOURCING'); // SOURCING or INVEST
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -22,8 +20,8 @@ const FinancialControl = () => {
       {/* HEADER SECTION */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-serif text-[#0a2619] italic">Contrôle Financier</h1>
-          <p className="text-slate-500 text-sm mt-1">Flux de trésorerie, dividendes CAPEF et logistique import.</p>
+          <h1 className="text-3xl font-serif text-[#0a2619] italic">Financial Control</h1>
+          <p className="text-slate-500 text-sm mt-1">Cash flow, CAPEF dividends, and import logistics.</p>
         </div>
         <div className="flex gap-2">
             <button className="p-3 bg-white border border-slate-200 text-slate-400 rounded-2xl hover:text-[#0a2619] transition-all shadow-sm">
@@ -40,7 +38,7 @@ const FinancialControl = () => {
                   onClick={() => setActiveSection('INVEST')}
                   className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${activeSection === 'INVEST' ? 'bg-[#0a2619] text-[#c5a059]' : 'text-slate-400'}`}
                 >
-                  Investissements
+                  Investments
                 </button>
             </div>
         </div>
@@ -49,48 +47,48 @@ const FinancialControl = () => {
       {/* DYNAMIC METRICS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Liquidités Totales</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Liquidity</p>
             <h3 className="text-2xl font-black text-[#0a2619] mt-2">128.5M <span className="text-xs font-normal">FCFA</span></h3>
             <div className="flex items-center gap-1 text-green-600 text-[10px] font-bold mt-2">
                 <ArrowUpRight size={12} /> +15.4%
             </div>
         </div>
         <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">En cours d'importation</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">In-Transit Imports</p>
             <h3 className="text-2xl font-black text-[#0a2619] mt-2">45.2M <span className="text-xs font-normal">FCFA</span></h3>
             <div className="flex items-center gap-1 text-orange-500 text-[10px] font-bold mt-2">
-                <Clock size={12} /> 03 Conteneurs
+                <Clock size={12} /> 03 Containers
             </div>
         </div>
         <div className="bg-[#c5a059] p-6 rounded-[2rem] shadow-xl shadow-[#c5a059]/10">
-            <p className="text-[10px] font-black text-[#0a2619] uppercase tracking-widest">Dividendes à Verser</p>
+            <p className="text-[10px] font-black text-[#0a2619] uppercase tracking-widest">Dividends to Pay</p>
             <h3 className="text-2xl font-black text-[#0a2619] mt-2">12.8M <span className="text-xs font-black opacity-60">FCFA</span></h3>
-            <button className="mt-3 text-[9px] font-black bg-[#0a2619] text-white px-3 py-1.5 rounded-lg uppercase">Lancer le Paiement</button>
+            <button className="mt-3 text-[9px] font-black bg-[#0a2619] text-white px-3 py-1.5 rounded-lg uppercase">Release Payment</button>
         </div>
       </div>
 
       {activeSection === 'SOURCING' ? (
-        /* SECTION SOURCING CHINE */
+        /* CHINA SOURCING SECTION */
         <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
             <div className="p-8 border-b border-slate-50 flex justify-between items-center">
-                <h3 className="font-bold text-[#0a2619] flex items-center gap-2 italic"><Container size={20} className="text-[#c5a059]" /> Suivi des Commandes Groupées</h3>
+                <h3 className="font-bold text-[#0a2619] flex items-center gap-2 italic"><Container size={20} className="text-[#c5a059]" /> Bulk Order Tracking</h3>
                 <Filter size={18} className="text-slate-300" />
             </div>
             <div className="overflow-x-auto">
                 <table className="w-full text-left">
                     <thead className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         <tr>
-                            <th className="px-8 py-4">Référence Cale</th>
-                            <th className="px-8 py-4">Client Principal</th>
-                            <th className="px-8 py-4">Valeur Fret</th>
-                            <th className="px-8 py-4">Étape Logistique</th>
+                            <th className="px-8 py-4">Freight Ref</th>
+                            <th className="px-8 py-4">Primary Client</th>
+                            <th className="px-8 py-4">Cargo Value</th>
+                            <th className="px-8 py-4">Logistics Stage</th>
                             <th className="px-8 py-4 text-right">Action</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                         {[
-                            { ref: "CN-DLA-445", client: "Boutique Prestige", val: "4,500,000", status: "En Mer", icon: <Anchor size={14}/> },
-                            { ref: "CN-YDE-102", client: "Evrard (Perso)", val: "1,200,000", status: "Dépot Guangzhou", icon: <Clock size={14}/> }
+                            { ref: "CN-DLA-445", client: "Prestige Boutique", val: "4,500,000", status: "At Sea", icon: <Anchor size={14}/> },
+                            { ref: "CN-YDE-102", client: "Evrard (Personal)", val: "1,200,000", status: "Guangzhou Warehouse", icon: <Clock size={14}/> }
                         ].map((row, i) => (
                             <tr key={i} className="text-sm hover:bg-slate-50/80 transition-all">
                                 <td className="px-8 py-5 font-bold text-[#0a2619]">{row.ref}</td>
@@ -102,7 +100,7 @@ const FinancialControl = () => {
                                     </span>
                                 </td>
                                 <td className="px-8 py-5 text-right">
-                                    <button className="text-[10px] font-black text-[#c5a059] uppercase hover:underline">Mettre à jour</button>
+                                    <button className="text-[10px] font-black text-[#c5a059] uppercase hover:underline">Update Status</button>
                                 </td>
                             </tr>
                         ))}
@@ -111,14 +109,14 @@ const FinancialControl = () => {
             </div>
         </div>
       ) : (
-        /* SECTION CAPEF INVEST */
+        /* CAPEF INVEST SECTION */
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="bg-[#0a2619] p-8 rounded-[2.5rem] text-white">
                 <h3 className="font-bold text-[#c5a059] mb-6 flex items-center gap-2 italic uppercase tracking-widest text-sm">
-                    <TrendingUp size={20} /> Performances Portefeuilles
+                    <TrendingUp size={20} /> Portfolio Performance
                 </h3>
                 <div className="space-y-6">
-                    {["Immobilier Kribi", "Sourcing Textiles", "Agro-Business"].map((proj, i) => (
+                    {["Kribi Real Estate", "Textile Sourcing", "Agro-Business"].map((proj, i) => (
                         <div key={i} className="bg-white/5 p-4 rounded-2xl border border-white/5">
                             <div className="flex justify-between items-center mb-2">
                                 <span className="font-bold text-sm">{proj}</span>
@@ -134,12 +132,12 @@ const FinancialControl = () => {
 
             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
                 <h3 className="font-bold text-[#0a2619] mb-6 flex items-center gap-2 italic">
-                    <Wallet size={20} className="text-[#c5a059]" /> Flux de Trésorerie
+                    <Wallet size={20} className="text-[#c5a059]" /> Cash Flow
                 </h3>
                 <div className="space-y-4">
                     {[
-                        { label: "Encaissement Terrain #45", amount: "+4,000,000", type: "IN" },
-                        { label: "Paiement Dividendes T1", amount: "-2,500,000", type: "OUT" }
+                        { label: "Land Sale #45 Payment", amount: "+4,000,000", type: "IN" },
+                        { label: "Q1 Dividend Payout", amount: "-2,500,000", type: "OUT" }
                     ].map((tx, i) => (
                         <div key={i} className="flex justify-between items-center p-3 hover:bg-slate-50 rounded-xl transition-all">
                             <div className="flex items-center gap-3">
