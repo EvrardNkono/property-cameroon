@@ -20,70 +20,76 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
-  // État des rôles (Simulateur)
+  // Role State (Simulator)
   const [activeRoles, setActiveRoles] = useState(['BUYER']); 
 
   const isAdminMode = activeRoles.includes('ADMIN');
 
-  // CONFIGURATION DU MENU
+  // --- LOGIQUE: LOGOUT & REDIRECT ---
+  const handleLogout = () => {
+    // Nettoyage éventuel (localStorage.clear(), etc.)
+    navigate('/');
+  };
+
+  // MENU CONFIGURATION
   const menuConfig = [
     { 
-      label: 'Vue Générale', 
+      label: 'Overview', 
       path: '/dashboard', 
       icon: <LayoutDashboard size={20} />, 
       roles: ['BUYER', 'OWNER', 'INVESTOR', 'ADMIN'],
       alwaysShow: true 
     },
-    // --- SECTION ADMIN ---
+    // --- ADMIN SECTION ---
     { 
-      label: 'Gestion Utilisateurs', 
+      label: 'User Management', 
       path: '/dashboard/admin/users', 
       icon: <Users size={20} />, 
       roles: ['ADMIN'] 
     },
     { 
-      label: 'Inventaire Global', 
+      label: 'Global Inventory', 
       path: '/dashboard/admin/inventory', 
       icon: <Database size={20} />, 
       roles: ['ADMIN'] 
     },
     { 
-      label: 'Contrôle Financier', 
+      label: 'Financial Control', 
       path: '/dashboard/admin/finances', 
       icon: <BarChart3 size={20} />, 
       roles: ['ADMIN'] 
     },
-    // --- SECTION UTILISATEUR ---
+    // --- USER SECTION ---
     { 
-      label: 'Mes Biens', 
+      label: 'My Properties', 
       path: '/dashboard/properties', 
       icon: <Home size={20} />, 
       roles: ['OWNER'],
       isPersonal: true 
     },
     { 
-      label: 'Titres Fonciers', 
+      label: 'Land Titles', 
       path: '/dashboard/titles', 
       icon: <FileCheck size={20} />, 
       roles: ['OWNER'],
       isPersonal: true 
     },
     { 
-      label: 'Investissements', 
+      label: 'Investments', 
       path: '/dashboard/invest', 
       icon: <TrendingUp size={20} />, 
       roles: ['INVESTOR'],
       isPersonal: true 
     },
     { 
-      label: 'Sourcing Chine', 
+      label: 'China Sourcing', 
       path: '/dashboard/sourcing', 
       icon: <Truck size={20} />, 
       roles: ['BUYER'],
       isPersonal: true 
     },
     { 
-      label: 'Mon Profil', 
+      label: 'My Profile', 
       path: '/dashboard/profile', 
       icon: <UserCircle size={20} />, 
       roles: ['BUYER', 'OWNER', 'INVESTOR', 'ADMIN'],
@@ -91,7 +97,7 @@ const DashboardLayout = () => {
     },
   ];
 
-  // FILTRAGE DU MENU
+  // MENU FILTERING LOGIC
   const filteredMenu = menuConfig.filter(item => {
     if (isAdminMode) {
       if (item.isPersonal) return false;
@@ -102,40 +108,42 @@ const DashboardLayout = () => {
     return item.roles.some(role => activeRoles.includes(role));
   });
 
-  // GESTION DES RÔLES AVEC REFRESH DE PAGE LOGIQUE
+  // ROLE TOGGLE
   const toggleRole = (role) => {
     setActiveRoles(prev => {
       const newRoles = prev.includes(role) 
         ? prev.filter(r => r !== role) 
         : [...prev, role];
-      
-      // On redirige vers la racine du dashboard pour forcer le rechargement des données
       navigate('/dashboard'); 
       return newRoles;
     });
   };
 
   return (
-    <div className="flex min-h-screen bg-[#f8fafc] font-sans text-slate-900">
+    <div className="flex h-screen bg-[#f8fafc] font-sans text-slate-900 overflow-hidden">
       
+      {/* Overlay Mobile */}
       {isSidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setIsSidebarOpen(false)} />
       )}
 
       {/* SIDEBAR */}
-      <aside className={`fixed lg:static inset-y-0 left-0 w-72 bg-[#0a2619] text-white flex flex-col z-50 transition-all duration-500 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${isAdminMode ? 'border-r-4 border-red-600/20' : ''}`}>
-        <div className="p-8">
+      <aside className={`fixed lg:static inset-y-0 left-0 w-72 bg-[#0a2619] text-white flex flex-col z-50 transition-all duration-500 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${isAdminMode ? 'border-r-4 border-red-600/20' : ''} h-full`}>
+        
+        {/* LOGO (Fixe) */}
+        <div className="p-8 flex-shrink-0">
           <h1 className="text-xl font-bold tracking-tighter italic uppercase">
             Property <span className="text-[#c5a059]">Cameroon</span>
           </h1>
           {isAdminMode && (
             <div className="mt-2 inline-block px-2 py-0.5 bg-red-600 text-[8px] font-black uppercase tracking-[0.2em] rounded animate-pulse">
-              Mode Administration
+              Administration Mode
             </div>
           )}
         </div>
 
-        <nav className="flex-1 px-4 space-y-1">
+        {/* NAVIGATION (Scrollable) */}
+        <nav className="flex-1 px-4 space-y-1 overflow-y-auto scrollbar-hide hover:scrollbar-default">
           {filteredMenu.map((item, index) => (
             <Link
               key={index}
@@ -153,33 +161,38 @@ const DashboardLayout = () => {
           ))}
         </nav>
 
-        <div className="p-6 border-t border-white/5">
-          <button className="flex items-center gap-3 text-white/30 hover:text-red-400 text-xs uppercase font-black tracking-widest transition-colors w-full">
-            <LogOut size={16} /> Déconnexion
+        {/* LOGOUT BUTTON (Toujours visible en bas) */}
+        <div className="p-6 border-t border-white/5 flex-shrink-0 bg-[#0a2619]">
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-3 text-white/30 hover:text-red-400 text-xs uppercase font-black tracking-widest transition-colors w-full group"
+          >
+            <LogOut size={16} className="group-hover:translate-x-1 transition-transform" /> Logout
           </button>
         </div>
       </aside>
 
       {/* CONTENT AREA */}
-      <main className="flex-1 flex flex-col min-w-0">
+      <main className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         
-        <header className="h-auto md:h-24 bg-white border-b border-slate-200 flex flex-col md:flex-row items-center justify-between px-4 md:px-10 sticky top-0 z-30 py-4 md:py-0 gap-4">
+        {/* HEADER */}
+        <header className="h-auto md:h-24 bg-white border-b border-slate-200 flex flex-col md:flex-row items-center justify-between px-4 md:px-10 shrink-0 py-4 md:py-0 gap-4">
           
           <div className="flex items-center gap-4">
             <button className="lg:hidden p-2 text-slate-600" onClick={() => setIsSidebarOpen(true)}><Menu /></button>
             <h2 className="font-serif text-[#0a2619] text-lg italic transition-all">
-              {isAdminMode ? "Console Maître" : "Espace Membre"}
+              {isAdminMode ? "Master Console" : "Member Area"}
             </h2>
           </div>
 
-          {/* SIMULATEUR DE RÔLES */}
+          {/* ROLE SIMULATOR */}
           <div className="flex items-center bg-slate-50 p-1 rounded-2xl border border-slate-200 shadow-inner">
             <div className="flex gap-1">
               {[
                 { id: 'ADMIN', label: 'ADMIN', color: 'bg-red-600' },
-                { id: 'OWNER', label: 'Proprio', color: 'bg-orange-500' },
-                { id: 'INVESTOR', label: 'Invest', color: 'bg-[#0a2619]' },
-                { id: 'BUYER', label: 'Acheteur', color: 'bg-blue-600' }
+                { id: 'OWNER', label: 'Owner', color: 'bg-orange-500' },
+                { id: 'INVESTOR', label: 'Investor', color: 'bg-[#0a2619]' },
+                { id: 'BUYER', label: 'Buyer', color: 'bg-blue-600' }
               ].map((role) => (
                 <button
                   key={role.id}
@@ -201,7 +214,7 @@ const DashboardLayout = () => {
             <div className="text-right hidden sm:block">
               <p className="text-xs font-black text-[#0a2619] uppercase">Evrard</p>
               <p className={`text-[8px] font-bold uppercase tracking-[0.1em] ${isAdminMode ? 'text-red-600' : 'text-[#c5a059]'}`}>
-                 {isAdminMode ? 'Super Admin' : 'Membre Premium'}
+                 {isAdminMode ? 'Super Admin' : 'Premium Member'}
               </p>
             </div>
             <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold transition-all duration-500 ${
@@ -212,9 +225,9 @@ const DashboardLayout = () => {
           </div>
         </header>
 
-        <section className="flex-1 p-4 md:p-10 overflow-y-auto">
+        {/* ZONE DE CONTENU SCROLLABLE */}
+        <section className="flex-1 p-4 md:p-10 overflow-y-auto bg-[#f8fafc]">
           <div className="max-w-6xl mx-auto">
-            {/* La key basée sur les rôles force l'Outlet à se rafraîchir complètement */}
             <Outlet key={activeRoles.join(',')} context={{ activeRoles, setActiveRoles }} />
           </div>
         </section>
