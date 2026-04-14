@@ -21,7 +21,6 @@ const Navbar = () => {
       if (!startTime) startTime = currentTime;
       const progress = currentTime - startTime;
       
-      // Easing function: easeInOutQuad (accélération et décélération douces)
       const easeInOutQuad = (t, b, c, d) => {
         t /= d / 2;
         if (t < 1) return (c / 2) * t * t + b;
@@ -45,19 +44,13 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Animation de "découverte" (Peek Scroll)
   useEffect(() => {
     if (isOpen && scrollContainerRef.current) {
-      // 1. On attend que la sidebar finisse de glisser (700ms)
       const timer = setTimeout(() => {
-        // Descente très profonde (450px) et très lente (1.5s)
         smoothScrollTo(450, 1500);
-
-        // 2. Remontée après une pause de lecture (1s)
         setTimeout(() => {
-          // Remontée un peu plus rapide pour rendre la main à l'utilisateur (1s)
           smoothScrollTo(0, 1000);
-        }, 2200); // 1500ms (scroll) + 700ms (pause)
+        }, 2200);
       }, 800); 
 
       return () => clearTimeout(timer);
@@ -86,14 +79,38 @@ const Navbar = () => {
         {/* DESKTOP NAV */}
         <div className="hidden lg:flex items-center space-x-10 text-[10px] uppercase tracking-[0.25em] font-bold text-slate-400">
           <Link to="/real-estate" className="hover:text-pc-gold transition-colors">Real Estate</Link>
-          <div className="relative group cursor-pointer py-2">
-            <span className="hover:text-pc-green flex items-center gap-1">Agriculture <ChevronDown size={10} /></span>
+          
+          {/* DROPDOWN AGRICULTURE */}
+          <div className="relative group py-2">
+            <button className="hover:text-pc-green flex items-center gap-1 uppercase tracking-[0.25em] font-bold outline-none transition-colors">
+              Agriculture <ChevronDown size={10} className="group-hover:rotate-180 transition-transform duration-300" />
+            </button>
+            
+            {/* MENU DÉROULANT DESKTOP */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 w-56 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+              <div className="bg-white border border-slate-100 shadow-2xl rounded-2xl p-5 flex flex-col space-y-4">
+                <Link to="/agriculture" className="text-slate-500 hover:text-pc-green transition-colors py-1 flex justify-between items-center group/item">
+                  Vue d'ensemble <ArrowRight size={10} className="opacity-0 group-hover/item:opacity-100 -translate-x-2 group-hover/item:translate-x-0 transition-all" />
+                </Link>
+                <Link to="/agriculture/livestock" className="text-slate-500 hover:text-pc-green transition-colors py-1 flex justify-between items-center group/item">
+                  Livestock <ArrowRight size={10} className="opacity-0 group-hover/item:opacity-100 -translate-x-2 group-hover/item:translate-x-0 transition-all" />
+                </Link>
+                <Link to="/agriculture/marketplace" className="text-slate-500 hover:text-pc-green transition-colors py-1 flex justify-between items-center group/item">
+                  Marketplace <ArrowRight size={10} className="opacity-0 group-hover/item:opacity-100 -translate-x-2 group-hover/item:translate-x-0 transition-all" />
+                </Link>
+              </div>
+            </div>
           </div>
-          <Link to="/global-sourcing" className="hover:text-pc-gold">Sourcing</Link>
-          <Link to="/agriculture/marketplace" className="hover:text-slate-900">Shop</Link>
+
+          <Link to="/global-sourcing" className="hover:text-pc-gold transition-colors">Sourcing</Link>
+          <Link to="/agriculture/marketplace" className="hover:text-slate-900 transition-colors">Shop</Link>
           <Link to="/blog" className="text-pc-gold">Journal</Link>
-          <div className="flex items-center gap-6 pl-4">
-             <ShoppingBag className="w-5 h-5 text-slate-900" strokeWidth={1.5} />
+          
+          <div className="flex items-center gap-6 pl-4 border-l border-slate-100">
+             <div className="relative cursor-pointer group">
+                <ShoppingBag className="w-5 h-5 text-slate-900 group-hover:text-pc-gold transition-colors" strokeWidth={1.5} />
+                <span className="absolute -top-2 -right-2 bg-pc-gold text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{cartCount}</span>
+             </div>
           </div>
         </div>
 
@@ -118,7 +135,7 @@ const Navbar = () => {
             </button>
           </div>
           
-          {/* ZONE SCROLLABLE - On enlève scroll-smooth pour gérer l'animation en JS */}
+          {/* ZONE SCROLLABLE */}
           <div 
             ref={scrollContainerRef}
             className="flex-1 overflow-y-auto px-10 py-12"
@@ -169,8 +186,8 @@ const Navbar = () => {
               <div className="border-t border-slate-100 pt-10">
                  <p className="text-[10px] text-slate-400 font-bold tracking-[0.4em] uppercase mb-6">Expertise</p>
                  <div className="grid grid-cols-2 gap-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                    <div className="p-5 bg-slate-50 rounded-2xl">INVESTMENT</div>
-                    <div className="p-5 bg-slate-50 rounded-2xl">STRATEGY</div>
+                    <div className="p-5 bg-slate-50 rounded-2xl text-center">INVESTMENT</div>
+                    <div className="p-5 bg-slate-50 rounded-2xl text-center">STRATEGY</div>
                  </div>
               </div>
 
