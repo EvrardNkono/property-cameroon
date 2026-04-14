@@ -7,39 +7,39 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import PopularLivestock from '../components/PopularLivestock'; // Ton nouveau composant
+import PopularLivestock from '../components/PopularLivestock';
 
 const LivestockIntroduction = () => {
   const categories = [
     {
       title: "Aquaculture",
-      subtitle: "L'Or Bleu",
+      subtitle: "The Blue Gold",
       icon: <Fish size={40} />,
-      desc: "Élevage intensif de Tilapia et Clarias en bacs hors-sol. Un cycle court de 6 mois pour une rentabilité rapide.",
+      desc: "Intensive Tilapia and Clarias farming in above-ground tanks. A short 6-month cycle for rapid profitability.",
       image: "https://images.unsplash.com/photo-1524704654690-b56c05c78a00?q=80&w=1000",
       color: "from-emerald-900/80"
     },
     {
-      title: "Aviculture",
-      subtitle: "Production Continue",
+      title: "Poultry Farming",
+      subtitle: "Continuous Production",
       icon: <Bird size={40} />,
-      desc: "Poulets de chair et pondeuses. Gestion automatisée des cycles pour un approvisionnement constant du marché local.",
+      desc: "Broilers and layers. Automated cycle management for a constant supply to the local market.",
       image: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000",
       color: "from-green-900/80"
     },
     {
-      title: "Élevage Bovin",
-      subtitle: "Le Patrimoine",
+      title: "Cattle Ranching",
+      subtitle: "The Heritage",
       icon: <Database size={40} />, 
-      desc: "Investissement dans le cheptel bovin (viande et lait). Valorisation à long terme sur les marchés sous-régionaux.",
+      desc: "Investment in bovine livestock (meat and dairy). Long-term value creation across sub-regional markets.",
       image: "https://images.unsplash.com/photo-1545468843-059960205249?q=80&w=1000",
       color: "from-emerald-800/80"
     },
     {
-      title: "Porciculture",
-      subtitle: "Filière Dynamique",
+      title: "Pig Farming",
+      subtitle: "Dynamic Sector",
       icon: <Leaf size={40} />,
-      desc: "Élevage de porcins avec un suivi vétérinaire rigoureux. Une demande nationale en constante progression.",
+      desc: "Swine production with rigorous veterinary monitoring. National demand is in constant progression.",
       image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?q=80&w=1000",
       color: "from-green-800/80"
     }
@@ -55,7 +55,7 @@ const LivestockIntroduction = () => {
            <img 
              src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2000" 
              className="w-full h-full object-cover grayscale-[0.5]" 
-             alt="Champs Verts"
+             alt="Green Fields"
            />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/80 via-transparent to-emerald-950" />
@@ -66,7 +66,7 @@ const LivestockIntroduction = () => {
             animate={{ opacity: 1, y: 0 }}
             className="inline-block px-4 py-1 border border-amber-500/40 rounded-full text-amber-500 text-[10px] font-black uppercase tracking-[0.4em] mb-6 bg-amber-500/5 backdrop-blur-md"
           >
-            Souveraineté Alimentaire • Cameroun
+            Food Sovereignty • Cameroon
           </motion.span>
           <motion.h1 
             initial={{ opacity: 0, y: 30 }}
@@ -75,16 +75,16 @@ const LivestockIntroduction = () => {
             className="text-6xl md:text-[100px] font-serif text-amber-500 leading-tight mb-6"
           >
             Livestock <br /> 
-            <span className="text-white italic font-light">L'Économie Vivante.</span>
+            <span className="text-white italic font-light">The Living Economy.</span>
           </motion.h1>
           <p className="text-emerald-100/70 max-w-2xl mx-auto text-lg font-light italic">
-            Transformez vos hectares en unités de production certifiées par la CAPEF. 
-            Investissez dans le cycle de la vie, nourrissez l'émergence.
+            Transform your land into CAPEF-certified production units. 
+            Invest in the cycle of life, fuel the emergence.
           </p>
         </div>
       </section>
 
-      {/* --- LES PILIERS DU LIVESTOCK (SECTION CLIQUABLE) --- */}
+      {/* --- LIVESTOCK PILLARS --- */}
       <section className="py-32 px-6 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {categories.map((cat, i) => (
@@ -106,7 +106,7 @@ const LivestockIntroduction = () => {
                   {cat.desc}
                 </p>
                 <button className="flex items-center gap-3 text-white text-[10px] font-black uppercase tracking-widest group-hover:gap-5 transition-all">
-                  Découvrir les actifs <ArrowRight size={16} className="text-amber-500" />
+                  Discover Assets <ArrowRight size={16} className="text-amber-500" />
                 </button>
               </div>
             </motion.div>
@@ -114,29 +114,29 @@ const LivestockIntroduction = () => {
         </div>
       </section>
 
-      {/* --- PROJETS LIVESTOCK POPULAIRES (SLIDER) --- */}
+      {/* --- POPULAR PROJECTS --- */}
       <div className="pb-32">
         <PopularLivestock />
       </div>
 
-      {/* --- SECTION POURQUOI LE LIVESTOCK ? (L'ARGUMENT CHOC) --- */}
+      {/* --- VALUE PROPOSITION --- */}
       <section className="bg-emerald-950 py-32 rounded-[5rem] mx-4 mb-32 border-b-4 border-amber-600 shadow-inner">
         <div className="max-w-7xl mx-auto px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
             <div className="lg:col-span-1">
-              <h2 className="text-amber-500 text-[10px] font-black uppercase tracking-[0.5em] mb-6 text-left">Chaîne de Valeur</h2>
-              <h3 className="text-5xl font-serif text-white leading-[1.1]">Pourquoi produire <span className="italic text-amber-500">Local ?</span></h3>
+              <h2 className="text-amber-500 text-[10px] font-black uppercase tracking-[0.5em] mb-6 text-left">Value Chain</h2>
+              <h3 className="text-5xl font-serif text-white leading-[1.1]">Why produce <span className="italic text-amber-500">Locally?</span></h3>
               <p className="text-emerald-100/50 mt-8 font-light">
-                Chaque bête élevée sur nos sites répond à une commande nationale. Nous ne produisons pas au hasard, nous comblons un déficit de production identifié.
+                Every animal raised on our sites meets specific national demand. We don't produce by chance; we fill identified production deficits.
               </p>
             </div>
             
             <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-8">
               {[
-                { icon: <TrendingUp className="text-amber-500" />, title: "Cash-flow Récurrent", desc: "Contrairement au foncier passif, le livestock génère des revenus cycliques (oeufs, lait, viande)." },
-                { icon: <ShieldCheck className="text-amber-500" />, title: "Sécurité CAPEF", desc: "Suivi sanitaire rigoureux et encadrement par les techniciens de la Chambre d'Agriculture." },
-                { icon: <Warehouse className="text-amber-500" />, title: "Transformation Locale", desc: "Accès direct aux abattoirs et usines de conservation pour minimiser les pertes." },
-                { icon: <Globe className="text-amber-500" />, title: "Marché Garanti", desc: "Mise en relation directe avec les interprofessions et la grande distribution." }
+                { icon: <TrendingUp className="text-amber-500" />, title: "Recurring Cash-flow", desc: "Unlike passive real estate, livestock generates cyclical income (eggs, milk, meat)." },
+                { icon: <ShieldCheck className="text-amber-500" />, title: "CAPEF Security", desc: "Rigorous sanitary monitoring and coaching by technicians from the Chamber of Agriculture." },
+                { icon: <Warehouse className="text-amber-500" />, title: "Local Processing", desc: "Direct access to slaughterhouses and preservation facilities to minimize losses." },
+                { icon: <Globe className="text-amber-500" />, title: "Guaranteed Market", desc: "Direct connection with inter-professional bodies and major retailers." }
               ].map((item, idx) => (
                 <div key={idx} className="bg-white/5 p-8 rounded-[2rem] border border-white/5 hover:border-amber-500/30 transition-all">
                   <div className="mb-6">{item.icon}</div>
@@ -153,17 +153,17 @@ const LivestockIntroduction = () => {
       <section className="py-40 text-center max-w-4xl mx-auto px-6">
         <BadgeCheck className="mx-auto text-amber-500 w-20 h-20 mb-10" />
         <h2 className="text-5xl md:text-7xl font-serif text-emerald-950 mb-8 leading-[0.9]">
-          Passez de la Terre <br />à la <span className="italic text-amber-600 underline decoration-emerald-800/20 underline-offset-8">Richesse.</span>
+          Turn Soil <br />into <span className="italic text-amber-600 underline decoration-emerald-800/20 underline-offset-8">Wealth.</span>
         </h2>
         <p className="text-emerald-900/60 text-lg font-light mb-12">
-          Choisissez une filière ci-dessus pour explorer les unités de production disponibles et commencer votre exploitation certifiée.
+          Select a sector above to explore available production units and start your certified operation.
         </p>
         <div className="flex flex-col sm:flex-row gap-6 justify-center">
           <button className="bg-emerald-900 text-amber-200 px-12 py-6 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-emerald-800 transition-all shadow-xl">
-            Lancer un projet d'élevage
+            Launch a Livestock Project
           </button>
           <button className="border-2 border-emerald-900/20 text-emerald-950 px-12 py-6 rounded-full text-[10px] font-black uppercase tracking-widest hover:border-amber-600 transition-all">
-            Consulter les guides techniques
+            Consult Technical Guides
           </button>
         </div>
       </section>
