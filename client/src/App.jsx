@@ -8,6 +8,9 @@ import MarketplacePage from './pages/MarketplacePage';
 import AppointmentPage from './pages/Appointment';
 import SourcingPage from './pages/Sourcing'; 
 
+// --- NOUVEL IMPORT LIVESTOCK ---
+import LivestockPage from './pages/LivestockIntroduction'; // La page Vert & Or qu'on a fait
+
 // --- IMPORTS DASHBOARD (UTILISATEURS) ---
 import DashboardLayout from './pages/dashboard/DashboardLayout';
 import Overview from './pages/dashboard/Overview';
@@ -34,6 +37,12 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/real-estate" element={<RealEstatePage />} />
           <Route path="/agriculture" element={<AgriculturePage />} />
+          
+          {/* NOUVELLES ROUTES LIVESTOCK */}
+          <Route path="/agriculture/livestock" element={<LivestockPage />} />
+          {/* On prépare déjà la route pour les poissons/aquaculture */}
+          <Route path="/agriculture/livestock/aquaculture" element={<div>Page Aquaculture en cours...</div>} />
+
           <Route path="/agriculture/marketplace" element={<MarketplacePage />} />
           <Route path="/agriculture/expertise" element={<ExpertisePage />} />
           <Route path="/agriculture/institutional-framework" element={<InstitutionalPage />} />
@@ -42,33 +51,20 @@ function App() {
 
           {/* --- ROUTES DASHBOARD (PRIVÉES/ADAPTATIVES) --- */}
           <Route path="/dashboard" element={<DashboardLayout />}>
-            
-            {/* 1. Page d'accueil du Dashboard (Adaptative) */}
             <Route index element={<Overview />} />
             
-            {/* 2. SECTION ADMIN (Centralisation & Piliers) */}
-            {/* Cette route 'admin' affiche le Hub AdminOverview */}
             <Route path="admin" element={<AdminOverview />} />
             <Route path="admin/users" element={<UserManagement />} />
             <Route path="admin/inventory" element={<GlobalInventory />} />
             <Route path="admin/finances" element={<FinancialControl />} />
 
-            {/* 3. SECTION UTILISATEUR STANDARD */}
-            {/* Profil & Paramètres */}
             <Route path="profile" element={<UserProfile />} />
-
-            {/* Zone Propriétaire */}
             <Route path="properties" element={<MyLands />} />
             <Route path="titles" element={<TitleDocuments />} />
-
-            {/* Zone Investisseur */}
             <Route path="invest" element={<Portfolio />} />
             <Route path="yields" element={<YieldReports />} />
-
-            {/* Zone Acheteur */}
             <Route path="purchases" element={<MyPurchases />} />
             <Route path="sourcing" element={<SourcingTracker />} />
-            
           </Route>
         </Routes>
       </div>

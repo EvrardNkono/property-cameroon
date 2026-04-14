@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  // Simulation du nombre d'articles (à lier avec ton futur CartContext)
+  // Simulation du nombre d'articles
   const cartCount = 3;
 
   return (
@@ -41,19 +41,23 @@ const Navbar = () => {
             <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-pc-green transition-all group-hover:w-full"></span>
           </Link>
 
-          {/* AJOUT SOURCING (Synchronisé avec App.js) */}
+          {/* AJOUT LIVESTOCK - LA FORCE VIVANTE */}
+          <Link to="/agriculture/livestock" className="hover:text-pc-green transition-colors relative group flex items-center gap-1">
+            <span className="w-1 h-1 bg-pc-green rounded-full"></span>
+            Livestock
+            <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-pc-green transition-all group-hover:w-full"></span>
+          </Link>
+
           <Link to="/global-sourcing" className="hover:text-pc-gold transition-colors relative group">
             Sourcing
             <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-pc-gold transition-all group-hover:w-full"></span>
           </Link>
 
           <Link to="/agriculture/marketplace" className="hover:text-slate-900 transition-colors relative group flex items-center gap-1.5">
-            <span className="w-1 h-1 bg-pc-gold rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
             Shop
             <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-slate-900 transition-all group-hover:w-full"></span>
           </Link>
 
-          {/* CORRECTION DU LIEN INSTITUTIONNEL (Synchronisé avec App.js) */}
           <Link to="/agriculture/institutional-framework" className="hover:text-pc-green transition-colors relative group">
             Compliance
             <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-pc-green transition-all group-hover:w-full"></span>
@@ -122,7 +126,7 @@ const Navbar = () => {
           </div>
         </button>
 
-        <div className="flex flex-col items-center justify-center h-full w-full space-y-8 px-8">
+        <div className="flex flex-col items-center justify-center h-full w-full space-y-8 px-8 overflow-y-auto py-20">
           <div className="flex flex-col items-center gap-4">
             <img src="/images/logo.png" alt="Logo" className="w-16 h-16 object-contain" />
             <div className="text-xl font-black tracking-tighter text-slate-900 uppercase">
@@ -133,13 +137,13 @@ const Navbar = () => {
           <div className="flex flex-col items-center space-y-6 w-full text-center">
             <Link to="/real-estate" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-slate-900">Real Estate</Link>
             <Link to="/agriculture" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-slate-900">Agriculture</Link>
+            
+            {/* MOBILE LIVESTOCK */}
+            <Link to="/agriculture/livestock" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-pc-green italic underline decoration-pc-green/20 underline-offset-4">Livestock</Link>
+            
             <Link to="/global-sourcing" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-slate-900">Sourcing</Link>
             <Link to="/agriculture/marketplace" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-pc-gold underline decoration-pc-gold/30 underline-offset-8">Marketplace</Link>
-            
-            {/* CORRECTION DU LIEN INSTITUTIONNEL MOBILE */}
             <Link to="/agriculture/institutional-framework" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-pc-green">Institutional Compliance</Link>
-            
-            <Link to="/agriculture/expertise" onClick={() => setIsOpen(false)} className="text-sm uppercase tracking-[0.3em] font-bold text-slate-900">Expertise</Link>
             
             <div className="w-12 h-[1px] bg-slate-100 my-2"></div>
 
@@ -152,15 +156,8 @@ const Navbar = () => {
               Get in Touch
             </button>
           </div>
-
-          <div className="absolute bottom-10 text-[10px] text-slate-400 uppercase tracking-widest opacity-50 text-center px-4">
-            Institutional Seriousness — 2026
-          </div>
         </div>
       </div>
-      
-      {/* Decorative Bottom Line */}
-      <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-pc-gold/50 to-transparent opacity-50"></div>
     </nav>
   );
 };
