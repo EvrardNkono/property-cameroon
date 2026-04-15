@@ -434,11 +434,18 @@ const InstitutionalProfil = () => {
       <div className="flex flex-col lg:flex-row items-start lg:items-center gap-10">
         
         {/* Logos */}
-        <div className="flex items-center gap-6 shrink-0">
-         
-          <div className="text-slate-300 font-black text-2xl">×</div>
-          <div className="w-16 h-16 rounded-xl flex items-center justify-center font-black text-sm text-white" style={{ background: G }}>PC</div>
-        </div>
+        <div className="flex items-center gap-4 md:gap-6 shrink-0">
+  {/* Le symbole multiplicateur */}
+  <div className="text-slate-300 font-light text-3xl">×</div>
+  
+  {/* Le badge Pioneer Choice (Largeur auto pour tenir sur une ligne) */}
+  <div 
+    className="px-6 py-3 rounded-xl flex items-center justify-center font-black text-xs md:text-sm text-white uppercase tracking-widest whitespace-nowrap shadow-lg" 
+    style={{ background: G }}
+  >
+    Pioneer Choice
+  </div>
+</div>
 
         {/* Main Content - Focus on Youth Benefits */}
         <div className="flex-1">
