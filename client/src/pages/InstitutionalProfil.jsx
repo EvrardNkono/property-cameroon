@@ -7,10 +7,12 @@ import {
   ShieldCheck, Globe, CheckCircle,
   ArrowRight, Landmark,
   Warehouse, Scale, Handshake,
-  TrendingUp, Coins, Gavel,
+  TrendingUp, TrendingDown, // Ajoute TrendingDown ici
+  Coins, Gavel,
   X, UserPlus, FileText, Phone, Mail, MapPin,
-  Leaf, Fish, Beef, Trees
-} from 'lucide-react';
+  Leaf, Fish, Beef, Trees,
+  Award, Briefcase, GraduationCap, Mic2 // Ajoute ceux-là pour le nouveau design
+} from 'lucide-react'
 
 const G  = '#1a4731';
 const GL = '#2d6e4e';
@@ -26,6 +28,25 @@ const IMGS = {
   forest:  "https://images.unsplash.com/photo-1448375240586-882707db888b?w=900&q=80",
   meeting: "https://images.unsplash.com/photo-1529688530647-93a6e1916f5f?w=900&q=80",
 };
+
+const CAPEF_SECTIONS = [
+  {
+    title: "Agriculture",
+    content: "Encadrement des filières cacao, café, coton, et cultures vivrières pour garantir la sécurité alimentaire."
+  },
+  {
+    title: "Pêches & Aquaculture",
+    content: "Modernisation des pirogues, gestion des zones de pêche et promotion de la pisciculture intensive."
+  },
+  {
+    title: "Élevage",
+    content: "Amélioration des races bovines, aviculture moderne et contrôle sanitaire des produits animaux."
+  },
+  {
+    title: "Forêts",
+    content: "Gestion durable des ressources ligneuses et promotion de la transformation locale du bois."
+  }
+];
 
 const InstitutionalProfil = () => {
   const [modal, setModal] = useState(false);
@@ -195,37 +216,7 @@ const InstitutionalProfil = () => {
         </div>
       </section>
 
-      {/* ══ 4 SERVICE PILLARS ══ */}
-      <section className="py-28 px-8" style={{ background:GB }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <span className="text-[10px] uppercase tracking-[0.4em] font-black block mb-4" style={{ color:GO, fontFamily:'sans-serif' }}>Consular Services</span>
-            <h2 className="text-4xl md:text-6xl italic" style={{ color:G }}>The power of a State network.</h2>
-            <p className="text-slate-400 text-sm mt-4 max-w-xl mx-auto" style={{ fontFamily:'sans-serif' }}>
-              By joining CAPEF through Palm Connect, you gain access to all of these institutional services.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { icon:<ShieldCheck size={28}/>, title:"Legal Assistance",     desc:"Securing rural leases and managing land disputes. Defense of your interests before institutional bodies." },
-              { icon:<Warehouse size={28}/>, title:"Logistics Support",      desc:"Access to CAPEF-certified storage platforms and processing infrastructure." },
-              { icon:<Globe size={28}/>,     title:"Export Certificates",    desc:"Issuance and support for EU/US certifications (EPA, AGOA). Opening international markets." },
-              { icon:<Coins size={28}/>,     title:"Credit Facilitation",    desc:"Assistance preparing grant applications with partner banks and agricultural development funds." },
-            ].map((p, i) => (
-              <div key={i} className="bg-white p-10 border border-slate-100 hover:border-green-300 hover:shadow-xl transition-all group cursor-default">
-                <div className="w-14 h-14 flex items-center justify-center mb-8 rounded-xl" style={{ background:GB, color:G }}>{p.icon}</div>
-                <h4 className="font-bold text-lg mb-4 italic" style={{ color:G }}>{p.title}</h4>
-                <p className="text-slate-400 text-xs leading-relaxed mb-6" style={{ fontFamily:'sans-serif' }}>{p.desc}</p>
-                <button onClick={() => setModal(true)}
-                  className="text-[10px] uppercase tracking-widest font-black border-b-2 pb-1 transition-all hover:pb-2"
-                  style={{ color:G, borderColor:GO, fontFamily:'sans-serif' }}>
-                  Access this service →
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      
 
       {/* ══ QUOTE BANNER ══ */}
       <section className="relative overflow-hidden" style={{ minHeight:400 }}>
@@ -257,88 +248,254 @@ const InstitutionalProfil = () => {
         </div>
       </section>
 
-      {/* ══ MEMBERSHIP BENEFITS ══ */}
-      <section className="py-28 px-8 bg-white">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-          <div>
-            <span className="text-[10px] uppercase tracking-[0.4em] font-black block mb-4" style={{ color:GO, fontFamily:'sans-serif' }}>Why Join?</span>
-            <h2 className="text-4xl md:text-5xl italic mb-8 leading-tight" style={{ color:G }}>
-              What CAPEF membership<br />concretely changes for you.
-            </h2>
-            <div className="space-y-4">
-              {[
-                "Official recognition as a player in Cameroon's agricultural sector",
-                "Priority access to public markets and agricultural tenders",
-                "Free legal assistance in case of land or contractual disputes",
-                "National network of 10 regions: partners, buyers, suppliers",
-                "Export support and international certifications",
-                "Easier access to agricultural credit and development funds",
-                "Institutional representation in national negotiations",
-                "Ongoing training and agricultural technology transfer",
-              ].map((a, i) => (
-                <div key={i} className="flex items-start gap-4 p-4 border border-slate-50 hover:border-green-200 hover:bg-green-50/50 transition-all rounded-lg">
-                  <CheckCircle size={18} className="mt-0.5 shrink-0" style={{ color:G }} />
-                  <span className="text-slate-600 text-sm" style={{ fontFamily:'sans-serif' }}>{a}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="space-y-6">
-            <div className="overflow-hidden rounded-2xl h-72">
-              <img src={IMGS.agri2} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
-            </div>
-            <div className="p-10 rounded-2xl text-white" style={{ background:G }}>
-              <TrendingUp size={40} className="mb-6" style={{ color:GO }} />
-              <h4 className="text-2xl italic mb-4">Cameroon Vision 2035</h4>
-              <p className="text-white/60 text-sm leading-relaxed mb-6" style={{ fontFamily:'sans-serif' }}>
-                Supporting the transformation from subsistence farming to a competitive,
-                export-oriented agro-industry. CAPEF is the institutional engine of this ambition.
-              </p>
-              <button onClick={() => setModal(true)}
-                className="text-[10px] uppercase tracking-widest font-black border-b-2 pb-1 transition-all hover:pb-2"
-                style={{ color:GO, borderColor:GO, fontFamily:'sans-serif' }}>
-                Join this movement →
-              </button>
-            </div>
-          </div>
+      {/* ══ SECTION: YOUTH EXCELLENCE PROGRAM (BENTO GRID) ══ */}
+<section className="py-24 px-8" style={{ background: '#FDFCFB' }}>
+  <div className="max-w-7xl mx-auto">
+    
+    {/* Sophisticated Header */}
+    <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+      <div className="max-w-2xl">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="h-[1px] w-12 bg-slate-200"></span>
+          <span className="text-[10px] uppercase tracking-[0.4em] font-black" style={{ color: GO }}>Exclusive Program</span>
         </div>
-      </section>
+        <h2 className="text-5xl md:text-6xl italic leading-[1.1] tracking-tight" style={{ color: G }}>
+          The Advantage for <span style={{ color: GO }}>YOUNG</span> <br /> 
+          <span className="text-slate-800">Pioneers.</span>
+        </h2>
+      </div>
+      <p className="text-slate-400 text-sm max-w-xs leading-relaxed italic border-l pl-6" style={{ borderColor: GO }}>
+        Driving the transition toward a competitive and export-ready agro-industry.
+      </p>
+    </div>
 
-      {/* ══ PALM CONNECT × CAPEF ══ */}
-      <section className="py-24 px-8" style={{ background:GB }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="border-l-4 p-10 md:p-14 bg-white shadow-sm" style={{ borderColor:GO }}>
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-10">
-              <div className="flex items-center gap-6 shrink-0">
-                <img src="/images/capeflogo.jfif" alt="CAPEF" className="w-16 h-16 rounded-xl object-contain bg-white border border-slate-100 p-1" />
-                <div className="text-slate-300 font-black text-2xl">×</div>
-                <div className="w-16 h-16 rounded-xl flex items-center justify-center font-black text-sm" style={{ background:G, color:'white' }}>PC</div>
-              </div>
-              <div className="flex-1">
-                <div className="font-black text-xl mb-2 italic" style={{ color:G }}>Palm Connect is an official CAPEF partner.</div>
-                <p className="text-slate-400 text-sm leading-relaxed" style={{ fontFamily:'sans-serif' }}>
-                  By joining CAPEF through Palm Connect, you benefit from personalized guidance,
-                  a dedicated file manager, and simultaneous access to our China sourcing services
-                  alongside your institutional integration.
-                </p>
-              </div>
-              <div className="shrink-0 flex flex-col gap-3">
-                <button onClick={() => setModal(true)}
-                  className="px-10 py-4 font-black uppercase text-[11px] tracking-widest text-white transition-all hover:opacity-90 whitespace-nowrap"
-                  style={{ background:G, fontFamily:'sans-serif' }}>
-                  Join via Palm Connect
-                </button>
-                <Link to="/book-appointment">
-                  <button className="w-full px-10 py-4 font-black uppercase text-[11px] tracking-widest border transition-all hover:bg-slate-50 whitespace-nowrap text-center"
-                    style={{ borderColor:G, color:G, fontFamily:'sans-serif' }}>
-                    Ask a Question
-                  </button>
-                </Link>
-              </div>
+    {/* Bento Grid Layout - Balanced and Airy */}
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+      
+      {/* 1. Vision & Reductions (Large Card) */}
+      <div className="md:col-span-8 bg-white p-10 md:p-14 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-700 relative overflow-hidden group">
+        <div className="relative z-10">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-8" style={{ background: `${G}10`, color: G }}>
+            <Award size={24} />
+          </div>
+          <h3 className="text-3xl font-bold mb-6 italic" style={{ color: G }}>A Performance Catalyst</h3>
+          <p className="text-lg text-slate-600 leading-relaxed mb-8" style={{ fontFamily: 'sans-serif' }}>
+            The CAPEF provides privileged access to <span className="font-bold" style={{ color: GO }}>YOUNG</span> agri-preneurs through an ecosystem designed to remove structural barriers. 
+            By joining, <span className="font-bold" style={{ color: GO }}>YOUNG</span> leaders benefit from a <span className="underline decoration-2 underline-offset-4" style={{ decorationColor: GO }}>50% reduction in membership and certification fees</span>, 
+            along with a total waiver of processing fees for investment files.
+          </p>
+        </div>
+        <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover:rotate-12 transition-transform duration-700">
+          <Landmark size={200} />
+        </div>
+      </div>
+
+      {/* 2. Key Figure (Square Card) */}
+      <div className="md:col-span-4 bg-[#1A1A1A] p-10 rounded-[3rem] flex flex-col justify-between items-start group hover:bg-black transition-all">
+        <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6" style={{ background: `${GO}20`, color: GO }}>
+          <TrendingDown size={28} />
+        </div>
+        <div>
+          <div className="text-6xl font-black text-white mb-2 italic">-50%</div>
+          <p className="text-white/40 text-[11px] uppercase tracking-widest font-bold">
+            Registration Fees for <span style={{ color: GO }}>YOUNG</span> Founders
+          </p>
+        </div>
+      </div>
+
+      {/* 3. Land & Projects (Medium Card) */}
+      <div className="md:col-span-6 bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all">
+        <div className="flex gap-4 mb-6">
+          <div className="p-3 rounded-xl" style={{ background: GB, color: G }}><MapPin size={20}/></div>
+          <h4 className="text-xl font-bold italic" style={{ color: G }}>Land & Projects</h4>
+        </div>
+        <p className="text-slate-500 text-sm leading-relaxed" style={{ fontFamily: 'sans-serif' }}>
+          We assist <span className="font-bold" style={{ color: GO }}>YOUNG</span> producers in maturing their projects and facilitate priority access to acquiring secured agricultural land.
+        </p>
+      </div>
+
+      {/* 4. Financing & Credit (Medium Card) */}
+      <div className="md:col-span-6 bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all">
+        <div className="flex gap-4 mb-6">
+          <div className="p-3 rounded-xl" style={{ background: GB, color: G }}><Coins size={20}/></div>
+          <h4 className="text-xl font-bold italic" style={{ color: G }}>Institutional Guarantee</h4>
+        </div>
+        <p className="text-slate-500 text-sm leading-relaxed" style={{ fontFamily: 'sans-serif' }}>
+          CAPEF acts as a guarantor for banks and international funds to help <span className="font-bold" style={{ color: GO }}>YOUNG</span> entrepreneurs secure the capital needed for expansion.
+        </p>
+      </div>
+
+      {/* 5. Expertise & Advocacy (Large Horizontal Card) */}
+      <div className="md:col-span-12 lg:col-span-8 bg-white p-10 rounded-[3rem] border border-slate-100 flex flex-col md:flex-row gap-8 items-center hover:shadow-md transition-all">
+        <div className="flex-1">
+          <h4 className="text-2xl font-bold mb-4 italic" style={{ color: G }}>Skills & Influence</h4>
+          <p className="text-slate-500 text-sm leading-relaxed" style={{ fontFamily: 'sans-serif' }}>
+            We provide specialized training in technical and marketing management for <span className="font-bold" style={{ color: GO }}>YOUNG</span> agri-preneurs, combined with direct advocacy to the government and international NGOs to defend your interests.
+          </p>
+        </div>
+        <div className="shrink-0 flex -space-x-3">
+           {[1,2,3].map(i => (
+             <div key={i} className="w-12 h-12 rounded-full border-4 border-white bg-slate-200 overflow-hidden shadow-sm">
+               <img src={`https://i.pravatar.cc/150?u=${i+30}`} alt="member" />
+             </div>
+           ))}
+           <div className="w-12 h-12 rounded-full border-4 border-white bg-slate-800 flex items-center justify-center text-[10px] text-white font-bold">
+             +500
+           </div>
+        </div>
+      </div>
+
+      {/* 6. Call to Action Card */}
+      <div className="md:col-span-12 lg:col-span-4 p-2 rounded-[3.2rem]" style={{ background: `linear-gradient(135deg, ${G}, ${GL})` }}>
+        <div className="h-full w-full p-8 flex flex-col justify-center items-center text-center">
+          <h4 className="text-xl font-bold mb-4 italic text-white text-center">Ready to transform the sector?</h4>
+          <button 
+            onClick={() => setModal(true)}
+            className="w-full py-5 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-xl hover:scale-[1.02] active:scale-95 bg-white"
+            style={{ color: G }}
+          >
+            Activate My <span style={{ color: GO }}>YOUNG</span> License
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+      <section className="py-20 bg-white">
+  <div className="max-w-4xl mx-auto px-8">
+    <h2 className="text-3xl font-bold mb-12 italic tracking-tight" style={{ color: G }}>
+      CAPEF × Frequently Asked Questions
+    </h2>
+    <div className="space-y-6">
+      
+      {/* Question 1: Mandatory for Exporters */}
+      <details className="group border-b pb-6">
+        <summary className="font-bold text-lg cursor-pointer list-none flex justify-between items-center text-slate-800">
+          Why is CAPEF membership essential for exporters?
+          <ArrowRight size={18} className="group-open:rotate-90 transition-transform" style={{ color: GO }} />
+        </summary>
+        <p className="mt-4 text-slate-500 text-sm leading-relaxed">
+          As a state institution, the Chamber certifies the professional origin and quality of your products. Without their endorsement, it is extremely difficult to meet the strict certification standards required for international markets like the European Union.
+        </p>
+      </details>
+
+      {/* Question 2: Investment & Land (From Audio) */}
+      <details className="group border-b pb-6">
+        <summary className="font-bold text-lg cursor-pointer list-none flex justify-between items-center text-slate-800">
+          How does CAPEF concretely help young people looking to invest?
+          <ArrowRight size={18} className="group-open:rotate-90 transition-transform" style={{ color: GO }} />
+        </summary>
+        <p className="mt-4 text-slate-500 text-sm leading-relaxed">
+          The Chamber assists you in <strong>maturing your investment projects</strong>. If you are looking for agricultural space, they facilitate the process of <strong>acquiring land</strong> and help you build solid files to secure the necessary funding for your venture.
+        </p>
+      </details>
+
+      {/* Question 3: Modernization & Skills (From Audio) */}
+      <details className="group border-b pb-6">
+        <summary className="font-bold text-lg cursor-pointer list-none flex justify-between items-center text-slate-800">
+          What specific skills can I acquire through the Chamber?
+          <ArrowRight size={18} className="group-open:rotate-90 transition-transform" style={{ color: GO }} />
+        </summary>
+        <p className="mt-4 text-slate-500 text-sm leading-relaxed">
+          To modernize Cameroon's agricultural sector, CAPEF provides professional training focused on three pillars: <strong>technical skills</strong> for production, <strong>managerial expertise</strong> for farm management, and <strong>marketing strategies</strong> to better position your products.
+        </p>
+      </details>
+
+      {/* Question 4: Institutional Voice (From Audio) */}
+      <details className="group border-b pb-6">
+        <summary className="font-bold text-lg cursor-pointer list-none flex justify-between items-center text-slate-800">
+          What is the Chamber's role as a "Consultative Body"?
+          <ArrowRight size={18} className="group-open:rotate-90 transition-transform" style={{ color: GO }} />
+        </summary>
+        <p className="mt-4 text-slate-500 text-sm leading-relaxed">
+          CAPEF acts as a bridge between producers and decision-makers. It collects real-world challenges from members in the agriculture, livestock, fisheries, and forestry sectors and submits them directly to the <strong>government, international organizations, and NGOs</strong>.
+        </p>
+      </details>
+
+      {/* Question 5: Economic Promotion (From Audio) */}
+      <details className="group border-b pb-6">
+        <summary className="font-bold text-lg cursor-pointer list-none flex justify-between items-center text-slate-800">
+          Can CAPEF help me find new markets or customers?
+          <ArrowRight size={18} className="group-open:rotate-90 transition-transform" style={{ color: GO }} />
+        </summary>
+        <p className="mt-4 text-slate-500 text-sm leading-relaxed">
+          Yes, one of its core missions is <strong>economic promotion</strong>. The Chamber helps producers improve their output and promotes their products both within Cameroon and on the international stage to increase visibility and sales.
+        </p>
+      </details>
+
+    </div>
+  </div>
+</section>
+
+     {/* ══ PALM CONNECT × CAPEF ══ */}
+<section className="py-24 px-8" style={{ background: GB }}>
+  <div className="max-w-7xl mx-auto">
+    <div className="border-l-4 p-10 md:p-14 bg-white shadow-sm" style={{ borderColor: GO }}>
+      <div className="flex flex-col lg:flex-row items-start lg:items-center gap-10">
+        
+        {/* Logos */}
+        <div className="flex items-center gap-6 shrink-0">
+          <img src="/images/capeflogo.jfif" alt="CAPEF" className="w-16 h-16 rounded-xl object-contain bg-white border border-slate-100 p-1" />
+          <div className="text-slate-300 font-black text-2xl">×</div>
+          <div className="w-16 h-16 rounded-xl flex items-center justify-center font-black text-sm text-white" style={{ background: G }}>PC</div>
+        </div>
+
+        {/* Main Content - Focus on Youth Benefits */}
+        <div className="flex-1">
+          <div className="font-black text-xl mb-3 italic uppercase tracking-tight" style={{ color: G }}>
+            A Strategic Gateway for Young Agri-Entrepreneurs
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+            <p className="text-slate-500 text-[13px] leading-relaxed">
+              The CAPEF is a state institution designed to <strong>defend your interests</strong>. It serves as a vital bridge, taking the challenges faced by young producers and submitting them directly to the <strong>government, international organizations, and NGOs</strong>. Joining means your voice is heard at the highest levels.
+            </p>
+            <p className="text-slate-500 text-[13px] leading-relaxed">
+              Accelerate your growth through professional <strong>technical, managerial, and marketing training</strong> aimed at modernizing the industry. Benefit from specialized support to <strong>secure land</strong>, mature investment projects, and access the funding necessary to scale your production.
+            </p>
+          </div>
+          
+          <div className="mt-4 flex flex-wrap items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-[1px] bg-slate-200"></span>
+              Agriculture
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-[1px] bg-slate-200"></span>
+              Livestock
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-[1px] bg-slate-200"></span>
+              Fisheries
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-[1px] bg-slate-200"></span>
+              Forestry
             </div>
           </div>
         </div>
-      </section>
+
+        {/* Actions */}
+        <div className="shrink-0 flex flex-col gap-3 w-full lg:w-auto">
+          <button onClick={() => setModal(true)}
+            className="px-10 py-4 font-black uppercase text-[11px] tracking-widest text-white transition-all hover:opacity-90 whitespace-nowrap"
+            style={{ background: G, fontFamily: 'sans-serif' }}>
+            Register with CAPEF
+          </button>
+          <Link to="/book-appointment">
+            <button className="w-full px-10 py-4 font-black uppercase text-[11px] tracking-widest border transition-all hover:bg-slate-50 whitespace-nowrap text-center"
+              style={{ borderColor: G, color: G, fontFamily: 'sans-serif' }}>
+              Consult an Expert
+            </button>
+          </Link>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
 
       {/* ══ FINAL CTA ══ */}
       <section className="py-32 text-center relative overflow-hidden" style={{ background:G }}>

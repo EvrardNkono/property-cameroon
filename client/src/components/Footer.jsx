@@ -83,7 +83,7 @@ const Footer = () => {
             
             {/* Logo CAPEF */}
             <div className="flex items-center gap-4 border-l border-white/10 pl-8 opacity-60 hover:opacity-100 transition-opacity">
-              <span className="text-[8px] uppercase tracking-widest text-slate-500">Certified by</span>
+              
               <img 
                 src="/images/capeflogo.jfif" 
                 alt="CAPEF Certification" 
