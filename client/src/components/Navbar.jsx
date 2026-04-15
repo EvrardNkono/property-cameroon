@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Landmark, ChevronDown, X, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Shield, ChevronDown, X, ShoppingBag, ArrowRight } from 'lucide-react';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -8,7 +8,6 @@ const Navbar = () => {
   const scrollContainerRef = useRef(null);
   const cartCount = 3;
 
-  // Optimisation du scroll : On utilise requestAnimationFrame pour ne pas bloquer le thread UI
   const smoothScrollTo = (target, duration) => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -36,36 +35,27 @@ const Navbar = () => {
         requestAnimationFrame(animateScroll);
       }
     };
-
     requestAnimationFrame(animateScroll);
   };
 
-  // Gestion du scroll de la page principale
   useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Déclenchement du scroll automatique à l'ouverture
   useEffect(() => {
     let timer1, timer2;
     if (isOpen) {
-      // Bloquer le scroll du body pour éviter le double scroll instable
       document.body.style.overflow = 'hidden';
       
+      // TIMINGS ACCÉLÉRÉS : 300ms pour démarrer, 800ms pour descendre, 1200ms pour remonter
       timer1 = setTimeout(() => {
-        smoothScrollTo(400, 1200);
+        smoothScrollTo(350, 800); 
         timer2 = setTimeout(() => {
-          smoothScrollTo(0, 800);
-        }, 2000);
-      }, 600);
+          smoothScrollTo(0, 600);
+        }, 1200); 
+      }, 400);
     } else {
       document.body.style.overflow = '';
     }
@@ -80,14 +70,14 @@ const Navbar = () => {
   const closeMenu = () => setIsOpen(false);
 
   return (
-    <nav className={`fixed top-0 w-full z-[100] transition-all duration-500 ease-in-out ${
+    <nav className={`fixed top-0 w-full z-[100] transition-all duration-500 ${
       isScrolled ? 'bg-white/95 backdrop-blur-md py-2 shadow-sm' : 'bg-white py-4'
     } border-b border-slate-100`}>
       
       <div className="max-w-[1440px] mx-auto px-6 md:px-12 flex justify-between items-center">
         {/* LOGO */}
         <Link to="/" className="flex items-center gap-4 group shrink-0">
-          <div className="relative w-9 h-9 md:w-11 md:h-11 transition-transform group-hover:scale-105">
+          <div className="relative w-9 h-9 md:w-11 md:h-11">
             <img src="/images/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <div className="flex flex-col tracking-[0.2em]">
@@ -96,59 +86,42 @@ const Navbar = () => {
           </div>
         </Link>
         
-        {/* DESKTOP NAV */}
+        {/* DESKTOP NAV (Cachée sur mobile) */}
         <div className="hidden lg:flex items-center space-x-10 text-[10px] uppercase tracking-[0.25em] font-bold text-slate-400">
           <Link to="/real-estate" className="hover:text-slate-900 transition-colors">Real Estate</Link>
-          
-          <div className="relative group py-2">
-            <button className="hover:text-slate-900 flex items-center gap-1 uppercase tracking-[0.25em] font-bold outline-none transition-colors">
-              Agriculture <ChevronDown size={10} className="group-hover:rotate-180 transition-transform duration-300" />
-            </button>
-            <div className="absolute top-full left-1/2 -translate-x-1/2 w-56 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-              <div className="bg-white border border-slate-100 shadow-2xl rounded-2xl p-5 flex flex-col space-y-4">
-                <Link to="/agriculture" className="text-slate-500 hover:text-slate-900 transition-colors py-1 flex justify-between items-center group/item">
-                  Vue d'ensemble <ArrowRight size={10} className="opacity-0 group-hover/item:opacity-100 -translate-x-2 group-hover/item:translate-x-0 transition-all" />
-                </Link>
-                <Link to="/agriculture/livestock" className="text-slate-500 hover:text-slate-900 transition-colors py-1 flex justify-between items-center group/item">
-                  Livestock <ArrowRight size={10} className="opacity-0 group-hover/item:opacity-100 -translate-x-2 group-hover/item:translate-x-0 transition-all" />
-                </Link>
-              </div>
-            </div>
-          </div>
-
           <Link to="/global-sourcing" className="hover:text-slate-900 transition-colors">Sourcing</Link>
           <Link to="/blog" className="text-[#C5A059]">Journal</Link>
-          
-          <div className="flex items-center gap-6 pl-4 border-l border-slate-100">
-             <div className="relative cursor-pointer group">
-                <ShoppingBag className="w-5 h-5 text-slate-900 group-hover:text-[#C5A059] transition-colors" strokeWidth={1.5} />
-                <span className="absolute -top-2 -right-2 bg-[#C5A059] text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold tracking-none">{cartCount}</span>
-             </div>
+          <div className="relative cursor-pointer group pl-4 border-l border-slate-100">
+             <ShoppingBag className="w-5 h-5 text-slate-900" strokeWidth={1.5} />
+             <span className="absolute -top-2 -right-2 bg-[#C5A059] text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{cartCount}</span>
           </div>
         </div>
 
-        {/* MOBILE TRIGGER */}
-        <button onClick={() => setIsOpen(true)} className="lg:hidden flex flex-col gap-1.5 p-2 items-end group z-[120]">
-          <span className="w-8 h-[1px] bg-slate-900 transition-all group-hover:w-6"></span>
+        {/* MOBILE TRIGGER : On le cache quand le menu est ouvert */}
+        <button 
+          onClick={() => setIsOpen(true)} 
+          className={`lg:hidden flex flex-col gap-1.5 p-2 items-end group transition-all duration-300 ${
+            isOpen ? 'opacity-0 pointer-events-none translate-x-4' : 'opacity-100'
+          }`}
+        >
+          <span className="w-8 h-[1px] bg-slate-900"></span>
           <span className="w-5 h-[1px] bg-[#C5A059]"></span>
         </button>
       </div>
 
-      {/* MOBILE SIDEBAR - Utilisation de d製作h pour la stabilité */}
+      {/* MOBILE SIDEBAR */}
       <div className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] transition-opacity duration-500 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`} onClick={closeMenu}>
         <div 
-          className={`absolute right-0 top-0 w-full md:max-w-md h-[100dvh] bg-white transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col shadow-2xl ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+          className={`absolute right-0 top-0 w-full md:max-w-md h-[100dvh] bg-white transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
           onClick={e => e.stopPropagation()}
         >
-          {/* Sidebar Header */}
           <div className="shrink-0 p-8 flex justify-between items-center border-b border-slate-50">
             <span className="text-[10px] font-black text-slate-900 tracking-[0.3em]">EXPLORE</span>
-            <button onClick={closeMenu} className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-900 active:scale-90 transition-transform">
+            <button onClick={closeMenu} className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-900">
                 <X size={20} strokeWidth={1.5} />
             </button>
           </div>
           
-          {/* Scrollable Area */}
           <div 
             ref={scrollContainerRef}
             className="flex-1 overflow-y-auto px-10 py-12"
@@ -168,10 +141,10 @@ const Navbar = () => {
                 <p className="text-[9px] text-[#2D4A3E] font-bold tracking-[0.4em] uppercase">Ecosystem</p>
                 <div className="flex flex-col space-y-6">
                   <Link to="/agriculture/livestock" onClick={closeMenu} className="text-slate-600 font-bold text-[11px] uppercase tracking-[0.2em] flex items-center justify-between group">
-                    Livestock <ArrowRight size={12} className="text-slate-300 group-hover:text-[#C5A059] transition-colors" />
+                    Livestock <ArrowRight size={12} className="text-slate-300" />
                   </Link>
                   <Link to="/agriculture/marketplace" onClick={closeMenu} className="text-slate-600 font-bold text-[11px] uppercase tracking-[0.2em] flex items-center justify-between group">
-                    Marketplace <ArrowRight size={12} className="text-slate-300 group-hover:text-[#C5A059] transition-colors" />
+                    Marketplace <ArrowRight size={12} className="text-slate-300" />
                   </Link>
                   <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5">
                     <div className="w-12 h-12 rounded-xl bg-[#C5A059]/10 flex items-center justify-center text-[#C5A059]">
@@ -187,9 +160,8 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Fixed Footer Action */}
           <div className="shrink-0 p-8 bg-white border-t border-slate-50 shadow-[0_-10px_40px_rgba(0,0,0,0.02)]">
-            <button className="w-full bg-slate-900 text-white py-5 rounded-2xl text-[10px] uppercase tracking-[0.4em] font-black hover:bg-slate-800 active:scale-[0.98] transition-all">
+            <button className="w-full bg-slate-900 text-white py-5 rounded-2xl text-[10px] uppercase tracking-[0.4em] font-black">
               Contact an Expert
             </button>
           </div>
