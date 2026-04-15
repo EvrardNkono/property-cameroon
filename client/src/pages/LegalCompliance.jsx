@@ -65,7 +65,7 @@ const LegalCompliancePage = () => {
              <div className="absolute -top-10 -left-10 w-32 h-32 bg-pc-gold/10 rounded-full blur-3xl"></div>
              <div className="relative z-10">
                 <div className="flex items-center gap-8 mb-12">
-                   <img src="/images/capeflogo.jfif" alt="CAPEF Logo" className="w-32 h-32 object-contain drop-shadow-2xl" />
+                   
                    <div className="h-20 w-[1px] bg-slate-200"></div>
                    <h2 className="text-4xl font-serif uppercase tracking-tighter leading-none">Prime <br/><span className="text-pc-gold">Partner</span></h2>
                 </div>

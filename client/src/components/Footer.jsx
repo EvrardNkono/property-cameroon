@@ -81,15 +81,7 @@ const Footer = () => {
               © 2026 PropertyCameroon — Institutional Seriousness
             </p>
             
-            {/* Logo CAPEF */}
-            <div className="flex items-center gap-4 border-l border-white/10 pl-8 opacity-60 hover:opacity-100 transition-opacity">
-              
-              <img 
-                src="/images/capeflogo.jfif" 
-                alt="CAPEF Certification" 
-                className="h-20 w-auto object-contain filter grayscale invert" 
-              />
-            </div>
+           
           </div>
           
           <div className="flex flex-wrap justify-center space-x-8 text-[9px] uppercase tracking-[0.2em] text-slate-500">

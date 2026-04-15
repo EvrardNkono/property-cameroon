@@ -76,9 +76,7 @@ const InstitutionalProfil = () => {
         <div className="relative z-10 text-center px-8 max-w-6xl mx-auto pt-32 pb-20">
           <motion.div initial={{ opacity:0, y:40 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.9 }}>
             <div className="flex justify-center mb-8">
-              <div className="bg-white rounded-2xl p-3 shadow-2xl w-20 h-20 flex items-center justify-center">
-                <img src="/images/capeflogo.jfif" alt="CAPEF" className="w-full h-full object-contain" />
-              </div>
+              
             </div>
             <span className="inline-block px-6 py-2 border text-[10px] font-black uppercase tracking-[0.5em] mb-6" style={{ borderColor:`${GO}66`, color:GO, fontFamily:'sans-serif' }}>
               Professional Public Establishment • Founded in 1921
@@ -225,7 +223,7 @@ const InstitutionalProfil = () => {
           <div className="absolute inset-0" style={{ background:`${G}e0` }} />
         </div>
         <div className="relative z-10 max-w-4xl mx-auto px-8 py-24 text-center">
-          <img src="/images/capeflogo.jfif" alt="CAPEF" className="w-16 h-16 object-contain mx-auto mb-8 rounded-xl bg-white p-2" />
+         
           <blockquote className="text-2xl md:text-4xl text-white italic leading-relaxed mb-8">
             "Structuring, protecting, and developing Cameroon's rural world — since 1921."
           </blockquote>
@@ -437,7 +435,7 @@ const InstitutionalProfil = () => {
         
         {/* Logos */}
         <div className="flex items-center gap-6 shrink-0">
-          <img src="/images/capeflogo.jfif" alt="CAPEF" className="w-16 h-16 rounded-xl object-contain bg-white border border-slate-100 p-1" />
+         
           <div className="text-slate-300 font-black text-2xl">×</div>
           <div className="w-16 h-16 rounded-xl flex items-center justify-center font-black text-sm text-white" style={{ background: G }}>PC</div>
         </div>
@@ -502,7 +500,7 @@ const InstitutionalProfil = () => {
         <div className="absolute inset-0" style={{ backgroundImage:`url(${IMGS.agri3})`, backgroundSize:'cover', backgroundPosition:'center', opacity:0.12 }} />
         <div className="absolute inset-0" style={{ background:`linear-gradient(to bottom, ${G}, transparent, ${G})` }} />
         <div className="max-w-4xl mx-auto px-8 relative z-10">
-          <img src="/images/capeflogo.jfif" alt="CAPEF" className="w-20 h-20 mx-auto mb-8 rounded-2xl bg-white p-2 shadow-xl" />
+         
           <span className="text-[10px] uppercase tracking-[0.5em] font-black block mb-6" style={{ color:GO, fontFamily:'sans-serif' }}>Join Cameroon's agricultural elite</span>
           <h2 className="text-4xl md:text-7xl text-white leading-tight mb-8 italic">
             Become a Certified<br />
@@ -544,7 +542,7 @@ const InstitutionalProfil = () => {
               </button>
               <div className="p-10 md:p-12">
                 <div className="flex items-center gap-4 mb-8">
-                  <img src="/images/capeflogo.jfif" alt="CAPEF" className="w-12 h-12 rounded-lg object-contain border border-slate-100 p-1" />
+                 
                   <div>
                     <span className="text-[10px] font-black uppercase tracking-widest block mb-1" style={{ color:GO, fontFamily:'sans-serif' }}>Official Membership</span>
                     <h3 className="text-2xl italic" style={{ color:G }}>Become a CAPEF Member</h3>
