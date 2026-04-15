@@ -1,73 +1,125 @@
 import React from 'react';
-import { Link } from 'react-router-dom'; // Import important
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { ArrowUpRight, ShieldCheck } from 'lucide-react';
 
-const Hero = () => (
-  <section className="relative pt-24 md:pt-32 pb-16 px-6 lg:px-24 flex flex-col lg:flex-row items-center gap-12 lg:gap-16 overflow-hidden bg-slate-50/30">
-    
-    {/* Connection Gradient */}
-    <div className="absolute top-0 left-0 w-full h-32 md:h-40 bg-gradient-to-b from-white to-transparent -z-10"></div>
+const Hero = () => {
+  // Couleurs basées sur tes variables
+  const gold = '#c8a84b';
+  const green = '#1a4731';
+  const terracotta = '#E2725B';
 
-    <div className="flex-1 z-10 text-center lg:text-left">
-      <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif text-slate-900 leading-tight mb-6 md:mb-8">
-        Land as a <br className="hidden md:block" /> 
-        <span className="text-pc-gold italic">legacy</span> & <span className="text-pc-green italic font-light">heritage.</span>
-      </h1>
+  return (
+    <section className="relative pt-24 md:pt-40 pb-20 px-6 lg:px-24 flex flex-col lg:flex-row items-center gap-12 lg:gap-20 overflow-hidden bg-[#fcfdfc]">
       
-      <p className="text-lg md:text-xl text-slate-600 mb-8 md:mb-10 max-w-lg mx-auto lg:mx-0 font-light leading-relaxed">
-        Real Estate Excellence <span className="text-pc-gold">●</span> Agricultural Future <span className="text-pc-green">●</span> Land Security.
-      </p>
+      {/* Background Decor */}
+      <div className="absolute top-0 right-0 w-1/3 h-full bg-slate-50/50 -z-10 skew-x-12 transform translate-x-20" />
 
-      {/* Responsive Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-        <Link to="/real-estate" className="w-full sm:w-auto bg-pc-gold text-white px-8 py-4 rounded-sm font-bold uppercase text-[10px] tracking-widest hover:bg-slate-900 transition shadow-lg shadow-pc-gold/20 text-center">
-          Explore Real Estate
-        </Link>
-        <Link to="/agriculture" className="w-full sm:w-auto bg-pc-green text-white px-8 py-4 rounded-sm font-bold uppercase text-[10px] tracking-widest hover:bg-slate-900 transition shadow-lg shadow-pc-green/20 text-center">
-          Discover Agriculture
-        </Link>
-      </div>
-    </div>
+      {/* --- TEXT CONTENT --- */}
+      <div className="flex-1 z-10 text-center lg:text-left">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 mb-8"
+        >
+          <span className="w-2 h-2 rounded-full bg-green-600 animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Expertise Multisectorielle</span>
+        </motion.div>
 
-    {/* Visual Grid */}
-    <div className="flex-1 relative w-full z-10 max-w-2xl mx-auto lg:max-w-none">
-      <div className="rounded-2xl overflow-hidden border border-slate-100 shadow-2xl bg-white">
+        <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif text-slate-900 leading-[0.9] mb-8 italic">
+          Land, Wealth <br /> 
+          <span style={{ color: gold }}>& Legacy.</span>
+        </h1>
         
-        {/* REAL ESTATE BLOCK */}
-        <div className="h-56 md:h-72 bg-slate-200 relative group overflow-hidden">
-           <img 
-             src="/images/heroimo.png" 
-             alt="Cameroon Real Estate" 
-             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-           />
-           <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1.5 rounded-sm border-l-4 border-pc-gold">
-              <p className="text-[8px] md:text-[9px] font-bold uppercase text-pc-gold tracking-widest">Real Estate Division</p>
-           </div>
-        </div>
+        <p className="text-lg md:text-xl text-slate-600 mb-10 max-w-xl mx-auto lg:mx-0 font-light leading-relaxed">
+          De la pierre à la terre, nous sécurisons vos investissements au Cameroun : 
+          <span className="font-bold text-slate-800"> Immobilier</span>, 
+          <span className="font-bold text-slate-800"> Agriculture </span> 
+          et <span className="font-bold text-slate-800"> Livestock</span>.
+        </p>
 
-        {/* AGRICULTURE BLOCK */}
-        <div className="h-56 md:h-72 bg-pc-green/10 relative group overflow-hidden border-t-4 border-white">
-           <img 
-             src="/images/heroagri.png" 
-             alt="Cameroon Agriculture" 
-             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-           />
-           <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1.5 rounded-sm border-l-4 border-pc-green">
-              <p className="text-[8px] md:text-[9px] font-bold uppercase text-pc-green tracking-widest">Agricultural Division</p>
-           </div>
-           
-           {/* CAPEF Badge - TRANSFORMÉ EN LIEN */}
-           <Link 
-             to="/agriculture/institutional-framework" 
-             className="absolute bottom-4 right-4 bg-pc-green text-white p-4 rounded-full shadow-2xl flex flex-col items-center justify-center w-16 h-16 md:w-20 md:h-20 border-2 border-pc-gold transform hover:rotate-12 hover:scale-110 transition-all cursor-pointer z-20 group/badge"
-           >
-              <span className="text-[7px] md:text-[8px] font-black uppercase group-hover/badge:text-pc-gold transition-colors">CAPEF</span>
-              <div className="h-[1px] w-6 bg-pc-gold my-1"></div>
-              <span className="text-[7px] md:text-[8px] font-light italic">Certified</span>
-           </Link>
+        {/* Action Buttons Triptyque */}
+        <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+          <Link to="/real-estate" className="group flex items-center gap-3 bg-slate-900 text-white px-8 py-5 rounded-none font-bold uppercase text-[10px] tracking-widest hover:bg-[#E2725B] transition-all">
+            Real Estate <ArrowUpRight size={14} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"/>
+          </Link>
+          <Link to="/agriculture" className="group flex items-center gap-3 bg-white border border-slate-200 text-slate-900 px-8 py-5 rounded-none font-bold uppercase text-[10px] tracking-widest hover:border-green-800 transition-all">
+            Agri & Livestock
+          </Link>
         </div>
       </div>
-    </div>
-  </section>
-);
+
+      {/* --- VISUAL GRID (THE TRIPTYCH) --- */}
+      <div className="flex-1 relative w-full z-10 max-w-2xl mx-auto lg:max-w-none">
+        <div className="grid grid-cols-12 grid-rows-2 gap-4 h-[500px] md:h-[650px]">
+          
+          {/* 1. IMMOBILIER (Large Top) */}
+          <div className="col-span-12 row-span-1 relative group overflow-hidden rounded-3xl shadow-xl">
+            <img 
+              src="/images/heroimo.png" 
+              alt="Real Estate" 
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute bottom-6 left-6">
+              <p className="text-white font-serif italic text-2xl">Real Estate</p>
+              <div className="h-1 w-12 bg-[#c8a84b] mt-2" />
+            </div>
+          </div>
+
+          {/* 2. AGRICULTURE (Small Bottom Left) */}
+          <div className="col-span-6 row-span-1 relative group overflow-hidden rounded-3xl shadow-xl">
+            <img 
+              src="/images/heroagri.png" 
+              alt="Agriculture" 
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-green-900/60 to-transparent" />
+            <div className="absolute bottom-6 left-6 text-white">
+              <p className="font-serif italic text-xl">Agriculture</p>
+            </div>
+          </div>
+
+          {/* 3. LIVESTOCK (Small Bottom Right) */}
+          <div className="col-span-6 row-span-1 relative group overflow-hidden rounded-3xl shadow-xl">
+            <img 
+              src="/images/lifstock.jfif" 
+              alt="Livestock" 
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-orange-900/40 to-transparent" />
+            <div className="absolute bottom-6 left-6 text-white">
+              <p className="font-serif italic text-xl">Livestock</p>
+            </div>
+          </div>
+
+          {/* --- INFO CAPEF FLOATING BUTTON --- */}
+          <Link 
+            to="/agriculture/institutional-framework"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30"
+          >
+            <motion.div 
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              className="bg-white p-2 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-100"
+            >
+              <div 
+                className="flex flex-col items-center justify-center w-24 h-24 md:w-32 md:h-32 rounded-full border-2 border-dashed border-[#c8a84b]"
+                style={{ background: green }}
+              >
+                <ShieldCheck size={20} className="text-[#c8a84b] mb-1" />
+                <span className="text-[10px] md:text-[11px] font-black uppercase text-white tracking-widest">Info</span>
+                <span className="text-[12px] md:text-[14px] font-serif italic text-[#c8a84b]">Capef</span>
+                <div className="mt-1 px-2 py-0.5 bg-white/10 rounded-full">
+                  <span className="text-[6px] text-white/70 uppercase">Certifié État</span>
+                </div>
+              </div>
+            </motion.div>
+          </Link>
+
+        </div>
+      </div>
+    </section>
+  );
+};
 
 export default Hero;
