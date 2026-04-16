@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // --- IMPORTS DES PAGES PUBLIQUES ---
 import Home from './pages/Home';
 import RealEstatePage from './pages/RealEstate';
+import PropertyDetailsPage from './pages/PropertyDetailsPage'; // AJOUTÉ ICI
 import AgriculturePage from './pages/AgriculturePage'; 
 import ExpertisePage from './pages/Expertise'; 
 import MarketplacePage from './pages/MarketplacePage';
@@ -26,6 +27,7 @@ const BlogPostDetail = () => (
 
 // --- IMPORT LIVESTOCK ---
 import LivestockPage from './pages/LivestockIntroduction'; 
+import LivestockCategoryPage from './pages/LivestockCategoryPage'; // NOUVEL IMPORT AJOUTÉ
 
 // --- IMPORTS DASHBOARD (STRUCTURE & UTILISATEURS) ---
 import DashboardLayout from './pages/dashboard/DashboardLayout';
@@ -52,6 +54,10 @@ function App() {
           {/* --- ROUTES PUBLIQUES PRINCIPALES --- */}
           <Route path="/" element={<Home />} />
           <Route path="/real-estate" element={<RealEstatePage />} />
+          
+          {/* ROUTE DÉTAILS AJOUTÉE ICI */}
+          <Route path="/real-estate/:id" element={<PropertyDetailsPage />} />
+          
           <Route path="/global-sourcing" element={<SourcingPage />} />
           <Route path="/book-appointment" element={<AppointmentPage />} />
 
@@ -60,6 +66,11 @@ function App() {
           <Route path="/agriculture/marketplace" element={<MarketplacePage />} />
           <Route path="/agriculture/expertise" element={<ExpertisePage />} />
           <Route path="/agriculture/livestock" element={<LivestockPage />} />
+          
+          {/* NOUVELLE ROUTE DYNAMIQUE POUR LES CATÉGORIES */}
+          <Route path="/agriculture/livestock/:category" element={<LivestockCategoryPage />} />
+          
+          {/* ROUTES EXISTANTES CONSERVÉES */}
           <Route path="/agriculture/livestock/aquaculture" element={<div>Page Aquaculture en cours...</div>} />
 
           {/* SEPARATION DES DEUX PAGES INSTITUTIONNELLES */}

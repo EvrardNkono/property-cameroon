@@ -26,14 +26,30 @@ const FilterBar = ({ onSearch }) => {
         </select>
       </div>
 
-      {/* Location Selector */}
+      {/* Location Selector - Updated with 10 Regions */}
       <div className="flex flex-col p-2 border-l border-slate-50">
         <label className="text-[9px] uppercase tracking-widest text-slate-400 mb-1 ml-2 font-bold">Location</label>
         <select className="bg-transparent text-slate-900 text-xs font-bold p-2 outline-none cursor-pointer appearance-none">
           <option value="">All Regions</option>
-          <option value="yaounde">Yaoundé (Bastos, Golf...)</option>
-          <option value="douala">Douala (Bonapriso, Akwa...)</option>
-          <option value="kribi">Kribi (Coastal)</option>
+          
+          <optgroup label="Major Hubs">
+            <option value="centre-yde">Centre (Yaoundé)</option>
+            <option value="littoral-dla">Littoral (Douala)</option>
+            <option value="ocean-kribi">South (Kribi)</option>
+          </optgroup>
+
+          <optgroup label="All Regions">
+            <option value="adamawa">Adamawa</option>
+            <option value="centre">Centre</option>
+            <option value="east">East</option>
+            <option value="far-north">Far North</option>
+            <option value="littoral">Littoral</option>
+            <option value="north">North</option>
+            <option value="north-west">North West</option>
+            <option value="west">West</option>
+            <option value="south">South</option>
+            <option value="south-west">South West</option>
+          </optgroup>
         </select>
       </div>
 

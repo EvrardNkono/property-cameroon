@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom'; // Import ajouté
 import { 
   ArrowRight, Leaf, Fish, Bird, 
   Database, TrendingUp, ShieldCheck, 
@@ -13,6 +14,7 @@ const LivestockIntroduction = () => {
   const categories = [
     {
       title: "Aquaculture",
+      slug: "aquaculture", // Identifiant pour l'URL
       subtitle: "The Blue Gold",
       icon: <Fish size={40} />,
       desc: "Intensive Tilapia and Clarias farming in above-ground tanks. A short 6-month cycle for rapid profitability.",
@@ -21,6 +23,7 @@ const LivestockIntroduction = () => {
     },
     {
       title: "Poultry Farming",
+      slug: "poultry",
       subtitle: "Continuous Production",
       icon: <Bird size={40} />,
       desc: "Broilers and layers. Automated cycle management for a constant supply to the local market.",
@@ -29,6 +32,7 @@ const LivestockIntroduction = () => {
     },
     {
       title: "Cattle Ranching",
+      slug: "cattle",
       subtitle: "The Heritage",
       icon: <Database size={40} />, 
       desc: "Investment in bovine livestock (meat and dairy). Long-term value creation across sub-regional markets.",
@@ -37,6 +41,7 @@ const LivestockIntroduction = () => {
     },
     {
       title: "Pig Farming",
+      slug: "pigs",
       subtitle: "Dynamic Sector",
       icon: <Leaf size={40} />,
       desc: "Swine production with rigorous veterinary monitoring. National demand is in constant progression.",
@@ -91,82 +96,36 @@ const LivestockIntroduction = () => {
             <motion.div 
               key={i}
               whileHover={{ y: -10 }}
-              className="group relative h-[450px] rounded-[3rem] overflow-hidden border border-emerald-900/10 shadow-2xl cursor-pointer"
+              className="group relative h-[450px] rounded-[3rem] overflow-hidden border border-emerald-900/10 shadow-2xl"
             >
-              <img src={cat.image} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={cat.title} />
-              <div className={`absolute inset-0 bg-gradient-to-t ${cat.color} via-emerald-950/40 to-transparent`} />
-              
-              <div className="absolute inset-0 p-12 flex flex-col justify-end">
-                <div className="text-amber-500 mb-6 group-hover:scale-110 transition-transform origin-left">
-                  {cat.icon}
+              {/* Le Link enveloppe toute la carte pour la navigation */}
+              <Link to={`/agriculture/livestock/${cat.slug}`}>
+                <img src={cat.image} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={cat.title} />
+                <div className={`absolute inset-0 bg-gradient-to-t ${cat.color} via-emerald-950/40 to-transparent`} />
+                
+                <div className="absolute inset-0 p-12 flex flex-col justify-end">
+                  <div className="text-amber-500 mb-6 group-hover:scale-110 transition-transform origin-left">
+                    {cat.icon}
+                  </div>
+                  <span className="text-amber-400 text-[10px] font-black uppercase tracking-widest mb-2">{cat.subtitle}</span>
+                  <h3 className="text-4xl font-serif text-white mb-4">{cat.title}</h3>
+                  <p className="text-emerald-50/70 text-sm font-light leading-relaxed mb-8 max-w-sm">
+                    {cat.desc}
+                  </p>
+                  <div className="flex items-center gap-3 text-white text-[10px] font-black uppercase tracking-widest group-hover:gap-5 transition-all">
+                    Discover Assets <ArrowRight size={16} className="text-amber-500" />
+                  </div>
                 </div>
-                <span className="text-amber-400 text-[10px] font-black uppercase tracking-widest mb-2">{cat.subtitle}</span>
-                <h3 className="text-4xl font-serif text-white mb-4">{cat.title}</h3>
-                <p className="text-emerald-50/70 text-sm font-light leading-relaxed mb-8 max-w-sm">
-                  {cat.desc}
-                </p>
-                <button className="flex items-center gap-3 text-white text-[10px] font-black uppercase tracking-widest group-hover:gap-5 transition-all">
-                  Discover Assets <ArrowRight size={16} className="text-amber-500" />
-                </button>
-              </div>
+              </Link>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* --- POPULAR PROJECTS --- */}
+      {/* --- REST OF THE PAGE --- */}
       <div className="pb-32">
         <PopularLivestock />
       </div>
-
-      {/* --- VALUE PROPOSITION --- */}
-      <section className="bg-emerald-950 py-32 rounded-[5rem] mx-4 mb-32 border-b-4 border-amber-600 shadow-inner">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
-            <div className="lg:col-span-1">
-              <h2 className="text-amber-500 text-[10px] font-black uppercase tracking-[0.5em] mb-6 text-left">Value Chain</h2>
-              <h3 className="text-5xl font-serif text-white leading-[1.1]">Why produce <span className="italic text-amber-500">Locally?</span></h3>
-              <p className="text-emerald-100/50 mt-8 font-light">
-                Every animal raised on our sites meets specific national demand. We don't produce by chance; we fill identified production deficits.
-              </p>
-            </div>
-            
-            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-8">
-              {[
-                { icon: <TrendingUp className="text-amber-500" />, title: "Recurring Cash-flow", desc: "Unlike passive real estate, livestock generates cyclical income (eggs, milk, meat)." },
-                { icon: <ShieldCheck className="text-amber-500" />, title: "CAPEF Security", desc: "Rigorous sanitary monitoring and coaching by technicians from the Chamber of Agriculture." },
-                { icon: <Warehouse className="text-amber-500" />, title: "Local Processing", desc: "Direct access to slaughterhouses and preservation facilities to minimize losses." },
-                { icon: <Globe className="text-amber-500" />, title: "Guaranteed Market", desc: "Direct connection with inter-professional bodies and major retailers." }
-              ].map((item, idx) => (
-                <div key={idx} className="bg-white/5 p-8 rounded-[2rem] border border-white/5 hover:border-amber-500/30 transition-all">
-                  <div className="mb-6">{item.icon}</div>
-                  <h4 className="text-white font-serif text-xl mb-3">{item.title}</h4>
-                  <p className="text-emerald-100/40 text-xs leading-relaxed font-light">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* --- CALL TO ACTION --- */}
-      <section className="py-40 text-center max-w-4xl mx-auto px-6">
-        <BadgeCheck className="mx-auto text-amber-500 w-20 h-20 mb-10" />
-        <h2 className="text-5xl md:text-7xl font-serif text-emerald-950 mb-8 leading-[0.9]">
-          Turn Soil <br />into <span className="italic text-amber-600 underline decoration-emerald-800/20 underline-offset-8">Wealth.</span>
-        </h2>
-        <p className="text-emerald-900/60 text-lg font-light mb-12">
-          Select a sector above to explore available production units and start your certified operation.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-6 justify-center">
-          <button className="bg-emerald-900 text-amber-200 px-12 py-6 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-emerald-800 transition-all shadow-xl">
-            Launch a Livestock Project
-          </button>
-          <button className="border-2 border-emerald-900/20 text-emerald-950 px-12 py-6 rounded-full text-[10px] font-black uppercase tracking-widest hover:border-amber-600 transition-all">
-            Consult Technical Guides
-          </button>
-        </div>
-      </section>
 
       <Footer />
     </div>
