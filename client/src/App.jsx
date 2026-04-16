@@ -29,6 +29,9 @@ const BlogPostDetail = () => (
 import LivestockPage from './pages/LivestockIntroduction'; 
 import LivestockCategoryPage from './pages/LivestockCategoryPage'; // NOUVEL IMPORT AJOUTÉ
 
+// --- IMPORT CHATBOT ---
+import ChatAssistant from './components/ChatAssistant'; // AJOUTÉ ICI
+
 // --- IMPORTS DASHBOARD (STRUCTURE & UTILISATEURS) ---
 import DashboardLayout from './pages/dashboard/DashboardLayout';
 import Overview from './pages/dashboard/Overview';
@@ -104,6 +107,9 @@ function App() {
             <Route path="sourcing" element={<SourcingTracker />} />
           </Route>
         </Routes>
+        
+        {/* LE CHATBOT GLOBAL */}
+        <ChatAssistant />
       </div>
     </Router>
   );
