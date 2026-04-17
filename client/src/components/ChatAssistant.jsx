@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, Send, Sparkles, ChevronRight, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
 
 const ChatAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -37,17 +39,42 @@ const ChatAssistant = () => {
       if (match.index > lastIndex) {
         parts.push(text.substring(lastIndex, match.index));
       }
-      parts.push(
-        <a 
-          key={match.index} 
-          href={match[2]} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-amber-500 underline font-black hover:text-amber-600 transition-colors mx-1"
-        >
-          {match[1]}
-        </a>
-      );
+
+      const linkText = match[1];
+      const linkUrl = match[2];
+
+      // Vérifier si c'est un lien interne ou externe
+      const isInternal = linkUrl.startsWith('/') || linkUrl.includes(window.location.hostname);
+
+      if (isInternal) {
+        // Nettoyer l'URL pour ne garder que le chemin (ex: /real-estate)
+        const path = linkUrl.includes('://') 
+          ? new URL(linkUrl).pathname 
+          : linkUrl;
+
+        parts.push(
+          <Link 
+            key={match.index} 
+            to={path} 
+            className="text-amber-500 underline font-black hover:text-amber-600 transition-colors mx-1"
+          >
+            {linkText}
+          </Link>
+        );
+      } else {
+        // Garder target="_blank" seulement pour les sites externes (ex: WhatsApp, Google)
+        parts.push(
+          <a 
+            key={match.index} 
+            href={linkUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-amber-500 underline font-black hover:text-amber-600 transition-colors mx-1"
+          >
+            {linkText}
+          </a>
+        );
+      }
       lastIndex = linkRegex.lastIndex;
     }
 
