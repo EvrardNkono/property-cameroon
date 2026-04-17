@@ -56,7 +56,7 @@ const Hero = () => {
           {/* 1. IMMOBILIER (Large Top) */}
           <div className="col-span-12 row-span-1 relative group overflow-hidden rounded-3xl shadow-xl">
             <img 
-              src="/images/heroimo.png" 
+              src="/images/heroimo.jfif" 
               alt="Real Estate" 
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
             />
@@ -70,7 +70,7 @@ const Hero = () => {
           {/* 2. AGRICULTURE (Small Bottom Left) */}
           <div className="col-span-6 row-span-1 relative group overflow-hidden rounded-3xl shadow-xl">
             <img 
-              src="/images/heroagri.png" 
+              src="/images/heroagri.jfif" 
               alt="Agriculture" 
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
             />
