@@ -20,82 +20,82 @@ const IMG = {
 
 /* ─────────────── DATA ─────────────── */
 const PRODUCTS = [
-  { title: "Kit d'irrigation solaire", price: "À partir de 249 000 FCFA", img: IMG.irrigation, tag: "BEST SELLER",
-    desc: "Système autonome pour 1 hectare. Zéro carburant. Inclut panneau 300W, pompe immergée, tuyaux PE et programmateur. Installation en 4h." },
-  { title: "Presse à huile compacte", price: "À partir de 450 000 FCFA", img: IMG.press, tag: "TOP QUALITÉ",
-    desc: "Rendement 85–92%. Traite palme, arachide, sésame. Capacité 50–80 kg/h. Moteur 2.2 kW monophasé. Acier inox alimentaire." },
-  { title: "Séchoir professionnel", price: "À partir de 185 000 FCFA", img: IMG.dryer, tag: "POST-RÉCOLTE",
-    desc: "Pour cacao, café, maïs, manioc. Température réglable 40–80°C. Capacité 200 kg/cycle. Économie de 70% vs séchage solaire classique." },
+  { title: "Solar Irrigation Kit", price: "From 249,000 FCFA", img: IMG.irrigation, tag: "BEST SELLER",
+    desc: "Autonomous system for 1 hectare. Zero fuel. Includes 300W panel, submersible pump, PE pipes and timer. Installed in 4 hours." },
+  { title: "Compact Oil Press", price: "From 450,000 FCFA", img: IMG.press, tag: "TOP QUALITY",
+    desc: "85–92% yield. Processes palm, peanut, sesame. Capacity 50–80 kg/h. 2.2 kW single-phase motor. Food-grade stainless steel." },
+  { title: "Professional Dryer", price: "From 185,000 FCFA", img: IMG.dryer, tag: "POST-HARVEST",
+    desc: "For cocoa, coffee, maize, cassava. Adjustable temperature 40–80°C. Capacity 200 kg/cycle. 70% energy saving vs traditional solar drying." },
 ];
 
 const STEPS = [
-  { num:"01", icon:"📋", title:"Consultation & Cahier des charges",
-    short:"Vous transmettez vos besoins, nous analysons.",
-    full:"Vous nous transmettez vos besoins précis : type de matériel, budget, quantités, contraintes techniques (voltage, normes, dimensions). Nous produisons un cahier des charges détaillé et identifions les fabricants les mieux adaptés à votre exploitation.", img: IMG.farmer },
-  { num:"02", icon:"🔎", title:"Sourcing & Vérification fournisseur",
-    short:"Audit physique des usines à Guangzhou.",
-    full:"Notre réseau à Guangzhou contacte les usines directement. Nous vérifions licences commerciales, certifications ISO/CE, capacité de production et réputation. Aucun fournisseur non audité n'entre dans notre chaîne.", img: IMG.canton1 },
-  { num:"03", icon:"🤝", title:"Négociation & Échantillonnage",
-    short:"Des échantillons testés avant toute commande.",
-    full:"Nous négocions les prix en votre nom — sans conflit d'intérêt. Des échantillons sont commandés, testés et photographiés. Vous validez avant tout paiement de production. Vous ne payez que ce que vous avez approuvé.", img: IMG.canton3 },
-  { num:"04", icon:"📄", title:"Contractualisation & Paiement sécurisé",
-    short:"Contrat bilingue FR/CN, paiement encadré.",
-    full:"Contrat rédigé en français ET mandarin avec clauses de protection acheteur, garanties de conformité, pénalités de retard. Paiement via LC (lettre de crédit), escrow ou virement encadré à jalons de production.", img: IMG.contract },
-  { num:"05", icon:"🔍", title:"Contrôle qualité avant embarquement",
-    short:"Inspecteurs tiers certifiés sur site en Chine.",
-    full:"Nous mandatons des inspecteurs tiers certifiés (SGS, Bureau Veritas ou équivalents) pour valider chaque lot avant qu'il quitte la Chine. Rapport d'inspection avec photos remis. Zéro surprise à Douala.", img: IMG.canton2 },
-  { num:"06", icon:"🚢", title:"Expédition & Dédouanement Cameroun",
-    short:"Fret maritime, suivi en temps réel, livraison.",
-    full:"Coordination logistique complète : fret maritime LCL/FCL, documents douaniers (BL, certificat d'origine), suivi tracking en temps réel. Dédouanement à Douala et transport jusqu'à Yaoundé ou votre site.", img: IMG.shipping },
+  { num:"01", icon:"📋", title:"Consultation & Requirements Specification",
+    short:"You share your needs, we analyze them.",
+    full:"You provide us with your precise requirements: type of equipment, budget, quantities, technical constraints (voltage, standards, dimensions). We produce a detailed specification sheet and identify the manufacturers best suited to your operation.", img: IMG.farmer },
+  { num:"02", icon:"🔎", title:"Sourcing & Supplier Verification",
+    short:"Physical audit of factories in Guangzhou.",
+    full:"Our network in Guangzhou contacts factories directly. We verify business licenses, ISO/CE certifications, production capacity and reputation. No unaudited supplier enters our supply chain.", img: IMG.canton1 },
+  { num:"03", icon:"🤝", title:"Negotiation & Sampling",
+    short:"Samples tested before any order is placed.",
+    full:"We negotiate prices on your behalf — with no conflict of interest. Samples are ordered, tested and photographed. You approve before any production payment is made. You only pay for what you have approved.", img: IMG.canton3 },
+  { num:"04", icon:"📄", title:"Contracting & Secure Payment",
+    short:"Bilingual EN/CN contract, structured payment.",
+    full:"Contract drafted in both English AND Mandarin with buyer protection clauses, compliance guarantees and late delivery penalties. Payment via LC (letter of credit), escrow or milestone-based wire transfer.", img: IMG.contract },
+  { num:"05", icon:"🔍", title:"Pre-Shipment Quality Control",
+    short:"Certified third-party inspectors on-site in China.",
+    full:"We commission certified third-party inspectors (SGS, Bureau Veritas or equivalent) to validate every batch before it leaves China. Inspection report with photos provided. Zero surprises upon arrival in Douala.", img: IMG.canton2 },
+  { num:"06", icon:"🚢", title:"Shipping & Cameroon Customs Clearance",
+    short:"Sea freight, real-time tracking, delivery.",
+    full:"Full logistics coordination: LCL/FCL sea freight, customs documents (BL, certificate of origin), real-time tracking. Customs clearance in Douala and transport to Yaoundé or your site.", img: IMG.shipping },
 ];
 
 const FAIRS = [
-  { badge:"PRINTEMPS", color:"#c8a84b", name:"Canton Fair – Session Printemps",
-    dates:"15 avril – 5 mai 2026", location:"Guangzhou, Guangdong",
-    focus:"Matériel agricole, machinerie, équipements industriels",
-    detail:"La plus grande foire commerciale au monde. +25 000 exposants. Section agricole massive avec démonstrations en direct. Palm Connect y est présent — nous pouvons vous représenter ou vous accompagner sur place.", img: IMG.canton1 },
-  { badge:"AUTOMNE", color:"#e07b3a", name:"Canton Fair – Session Automne",
-    dates:"15 oct – 4 nov 2026", location:"Guangzhou, Guangdong",
-    focus:"Outillage, agrochimie, technologies post-récolte",
-    detail:"Session idéale pour négocier les prix de l'année suivante. Les fabricants font des efforts commerciaux significatifs en fin d'exercice fiscal. Parfait pour la campagne cacao de la saison suivante.", img: IMG.canton2 },
-  { badge:"MACHINERIE", color:"#4a9f6a", name:"CIAME — China Agri Machinery Exhibition",
-    dates:"Fin octobre / début novembre", location:"Wuhan, Hubei",
-    focus:"Machines agricoles spécialisées, irrigation, semences",
-    detail:"Le salon le plus technique pour l'équipement agricole spécialisé. Tracteurs, moissonneuses, systèmes d'irrigation sur mesure. Idéal pour des commandes complexes ou personnalisées.", img: IMG.canton3 },
+  { badge:"SPRING", color:"#c8a84b", name:"Canton Fair – Spring Session",
+    dates:"April 15 – May 5, 2026", location:"Guangzhou, Guangdong",
+    focus:"Agricultural equipment, machinery, industrial tools",
+    detail:"The largest trade fair in the world. 25,000+ exhibitors. Massive agricultural section with live demonstrations. Palm Connect is present — we can represent you or accompany you on-site.", img: IMG.canton1 },
+  { badge:"AUTUMN", color:"#e07b3a", name:"Canton Fair – Autumn Session",
+    dates:"Oct 15 – Nov 4, 2026", location:"Guangzhou, Guangdong",
+    focus:"Tooling, agrochemicals, post-harvest technologies",
+    detail:"Ideal session for negotiating next year's prices. Manufacturers make significant commercial efforts at the end of their fiscal year. Perfect for planning ahead for the following cocoa season.", img: IMG.canton2 },
+  { badge:"MACHINERY", color:"#4a9f6a", name:"CIAME — China Agri Machinery Exhibition",
+    dates:"Late October / Early November", location:"Wuhan, Hubei",
+    focus:"Specialized agricultural machinery, irrigation, seeds",
+    detail:"The most technical trade show for specialized agricultural equipment. Tractors, harvesters, custom irrigation systems. Ideal for complex or customized orders.", img: IMG.canton3 },
   { badge:"B2B", color:"#3a6ea8", name:"China International Import Expo (CIIE)",
-    dates:"5–10 novembre 2026", location:"Shanghai",
-    focus:"Importations, partenariats B2B internationaux",
-    detail:"Événement stratégique pour établir des partenariats durables. Plus orienté business development qu'achat direct. Recommandé pour les entreprises cherchant des partenaires de long terme.", img: IMG.china },
+    dates:"November 5–10, 2026", location:"Shanghai",
+    focus:"Imports, international B2B partnerships",
+    detail:"A strategic event for establishing long-term partnerships. More focused on business development than direct purchasing. Recommended for companies seeking long-term partners.", img: IMG.china },
   { badge:"WHOLESALE", color:"#8a4faf", name:"Yiwu International Trade Fair",
-    dates:"21–25 octobre 2026", location:"Yiwu, Zhejiang",
-    focus:"Petits équipements, consommables, fournitures en gros",
-    detail:"La mecque du petit équipement et des fournitures en gros. Idéal pour les revendeurs ou pour compléter une commande principale avec des accessoires à prix imbattables.", img: IMG.canton1 },
+    dates:"October 21–25, 2026", location:"Yiwu, Zhejiang",
+    focus:"Small equipment, consumables, wholesale supplies",
+    detail:"The mecca of small equipment and wholesale supplies. Ideal for resellers or to complement a main order with accessories at unbeatable prices.", img: IMG.canton1 },
 ];
 
 const TRAPS = [
-  { icon:"👻", title:"Les fournisseurs fantômes",
-    full:"Des milliers de sites chinois (Alibaba, DHgate, Made-in-China) présentent des produits sans usine réelle. Sans vérification physique, vous risquez de perdre 30 à 50 % du montant total. Nous auditons chaque fournisseur avant tout engagement." },
-  { icon:"💸", title:"L'acompte sans contrat opposable",
-    full:"Un virement sans contrat bilingue vous prive de tout recours légal. En Chine, seuls les contrats en mandarin simplifié ont force exécutoire. Nos contrats sont rédigés par des juristes spécialisés sino-africains." },
-  { icon:"📦", title:"Qualité 'export grade' vs réelle",
-    full:"Nombreux fournisseurs expédient des produits inférieurs aux échantillons validés, une fois la commande payée. Notre inspection pré-embarquement (norme AQL) bloque ce risque à la source." },
-  { icon:"🧾", title:"Les frais cachés à l'importation",
-    full:"TVA, droits de douane CEMAC, frais de transit, surestaries au port — ces coûts peuvent atteindre 25 à 45 % du prix d'achat. Nous établissons un devis tout compris avant validation : zéro surprise." },
-  { icon:"🔌", title:"La barrière technique et linguistique",
-    full:"Voltage 220V vs 380V, mono vs triphasé, norme CE vs GB/T, filetage métrique vs UNC — une mauvaise spec peut rendre un équipement inutilisable à l'arrivée. Nos équipes rédigent les specs en mandarin technique." },
-  { icon:"⏳", title:"Les délais non contractualisés",
-    full:"Sans pénalités de retard dans le contrat, 4 semaines annoncées peuvent devenir 16 semaines — immobilisant votre capital. Nous incluons systématiquement un planning de production opposable avec pénalités." },
+  { icon:"👻", title:"Ghost Suppliers",
+    full:"Thousands of Chinese websites (Alibaba, DHgate, Made-in-China) list products without a real factory behind them. Without physical verification, you risk losing 30 to 50% of the total amount. We audit every supplier before any commitment." },
+  { icon:"💸", title:"Deposit Without Enforceable Contract",
+    full:"A wire transfer without a bilingual contract leaves you with no legal recourse. In China, only contracts written in Simplified Mandarin are enforceable. Our contracts are drafted by lawyers specializing in Sino-African trade." },
+  { icon:"📦", title:"'Export Grade' Quality vs. Reality",
+    full:"Many suppliers ship products inferior to the validated samples once production is paid for. Our pre-shipment inspection (AQL standard) stops this risk at the source." },
+  { icon:"🧾", title:"Hidden Import Costs",
+    full:"VAT, CEMAC customs duties, transit fees, port demurrage — these costs can reach 25 to 45% of the purchase price. We provide an all-inclusive quote before validation: zero surprises." },
+  { icon:"🔌", title:"Technical and Language Barriers",
+    full:"220V vs 380V, single-phase vs three-phase, CE vs GB/T standard, metric vs UNC threading — one wrong spec can make equipment unusable upon arrival. Our teams write specifications in technical Mandarin." },
+  { icon:"⏳", title:"Non-Contractualized Delays",
+    full:"Without late penalties in the contract, 4 announced weeks can become 16 weeks — tying up your capital. We systematically include an enforceable production schedule with penalties." },
 ];
 
 const PERIODS = [
-  { season:"Janv – Mars", label:"Pré-saison des pluies", stars:5, color:"#4a9f6a",
-    tip:"Idéal pour commander du matériel d'irrigation et des semoirs avant les semailles d'avril. Les délais de fabrication (4–8 semaines) s'alignent parfaitement avec les premières pluies camerounaises." },
-  { season:"Avr – Juin", label:"Post-Canton Printemps", stars:4, color:"#c8a84b",
-    tip:"Juste après la Foire de Canton, les usines sont en plein régime. Bon moment pour négocier les stocks d'exposition souvent vendus à prix réduit." },
-  { season:"Juil – Sept", label:"Pré-saison sèche", stars:3, color:"#e07b3a",
-    tip:"Commander du matériel de séchage et de pressage pour la campagne cacao. Attention aux fermetures d'usines en août. Délais plus longs." },
-  { season:"Oct – Déc", label:"Post-Canton Automne", stars:5, color:"#3a6ea8",
-    tip:"Meilleure période de l'année. Négociation des prix pour N+1. Les fabricants font des efforts commerciaux majeurs en fin d'exercice fiscal chinois." },
+  { season:"Jan – Mar", label:"Pre-rainy season", stars:5, color:"#4a9f6a",
+    tip:"Ideal for ordering irrigation equipment and seeders before April planting. Manufacturing lead times (4–8 weeks) align perfectly with the first Cameroonian rains." },
+  { season:"Apr – Jun", label:"Post-Spring Canton", stars:4, color:"#c8a84b",
+    tip:"Right after the Canton Fair, factories are at full capacity. A good time to negotiate exhibition stock often sold at reduced prices." },
+  { season:"Jul – Sep", label:"Pre-dry season", stars:3, color:"#e07b3a",
+    tip:"Order drying and pressing equipment for the cocoa campaign. Watch out for factory closures in August. Longer lead times." },
+  { season:"Oct – Dec", label:"Post-Autumn Canton", stars:5, color:"#3a6ea8",
+    tip:"Best time of the year. Negotiate prices for the following year. Manufacturers make major commercial efforts at the end of the Chinese fiscal year." },
 ];
 
 /* ─────────────── HELPERS ─────────────── */
@@ -164,23 +164,23 @@ const Sourcing = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
               <span className="text-pc-gold text-[10px] uppercase tracking-[0.6em] font-bold mb-6 block" style={{ fontFamily:'sans-serif' }}>
-                Sourcing Agricole — Guide Complet
+                Agricultural Sourcing — Complete Guide
               </span>
               <h1 className="text-5xl md:text-7xl leading-[1.05] mb-8 italic">
-                Acheter en<br /><span className="text-pc-gold">Chine</span>,<br />sans risque.
+                Buy from<br /><span className="text-pc-gold">China</span>,<br />risk-free.
               </h1>
               <p className="text-white/70 text-base max-w-lg leading-relaxed mb-10" style={{ fontFamily:'sans-serif', fontStyle:'normal' }}>
-                Guide complet par nos experts à Yaoundé et Canton. Processus sécurisé en 6 étapes, foires 2026, pièges à éviter, équipements au prix usine.
+                Complete guide by our experts in Yaoundé and Canton. Secure 6-step process, 2026 trade fairs, pitfalls to avoid, equipment at factory prices.
               </p>
               <div className="flex gap-4 flex-wrap">
                 <Link to="/book-appointment">
                   <button className="bg-pc-gold text-pc-green px-10 py-4 uppercase text-[11px] font-black tracking-widest hover:bg-white transition-all shadow-2xl" style={{ fontFamily:'sans-serif' }}>
-                    Démarrer gratuitement
+                    Get Started for Free
                   </button>
                 </Link>
-                <a href="#produits">
+                <a href="#products">
                   <button className="border border-white/30 text-white px-10 py-4 uppercase text-[11px] font-black tracking-widest hover:border-pc-gold hover:text-pc-gold transition-all" style={{ fontFamily:'sans-serif' }}>
-                    Voir les équipements ↓
+                    View Equipment ↓
                   </button>
                 </a>
               </div>
@@ -188,10 +188,10 @@ const Sourcing = () => {
 
             <div className="grid grid-cols-2 gap-4">
               {[
-                { target:60, suffix:"%", label:"Économie vs Europe", sub:"sur l'équipement agricole" },
-                { target:500, suffix:"+", label:"Fabricants audités", sub:"réseau Guangdong" },
-                { target:8, suffix:" sem.", label:"Délai moyen", sub:"fabrication sur mesure" },
-                { target:100, suffix:"%", label:"Traçabilité", sub:"avec notre accompagnement" },
+                { target:60, suffix:"%", label:"Savings vs Europe", sub:"on agricultural equipment" },
+                { target:500, suffix:"+", label:"Audited Manufacturers", sub:"Guangdong network" },
+                { target:8, suffix:" wks", label:"Average Lead Time", sub:"custom manufacturing" },
+                { target:100, suffix:"%", label:"Full Traceability", sub:"with our support" },
               ].map((s, i) => (
                 <div key={i} className="bg-white/5 border border-white/10 p-8 hover:bg-white/10 hover:border-pc-gold transition-all">
                   <div className="text-4xl font-black text-pc-gold mb-2"><CountUp target={s.target} suffix={s.suffix} /></div>
@@ -205,15 +205,15 @@ const Sourcing = () => {
         <div className="absolute bottom-0 left-0 right-0 h-16 z-10" style={{ background:'linear-gradient(to bottom,transparent,#f8fafc)' }} />
       </section>
 
-      {/* ══ PRODUITS EN HAUT ══ */}
-      <section id="produits" className="py-24 px-8 bg-slate-50">
+      {/* ══ PRODUCTS ══ */}
+      <section id="products" className="py-24 px-8 bg-slate-50">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
             <div>
-              <span className="text-pc-gold text-[10px] uppercase tracking-[0.4em] font-black block mb-3" style={{ fontFamily:'sans-serif' }}>Prix Usine Directe</span>
-              <h2 className="text-4xl md:text-5xl text-pc-green leading-tight italic">Équipements phares</h2>
+              <span className="text-pc-gold text-[10px] uppercase tracking-[0.4em] font-black block mb-3" style={{ fontFamily:'sans-serif' }}>Direct Factory Prices</span>
+              <h2 className="text-4xl md:text-5xl text-pc-green leading-tight italic">Featured Equipment</h2>
             </div>
-            <p className="text-slate-400 text-sm max-w-xs md:text-right" style={{ fontFamily:'sans-serif' }}>Tarifs indicatifs départ usine Chine.<br />Devis personnalisé sur demande.</p>
+            <p className="text-slate-400 text-sm max-w-xs md:text-right" style={{ fontFamily:'sans-serif' }}>Indicative ex-factory prices from China.<br />Custom quote available on request.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -237,14 +237,14 @@ const Sourcing = () => {
                       <p className="text-slate-500 text-sm leading-relaxed mb-4" style={{ fontFamily:'sans-serif' }}>{p.desc}</p>
                       <Link to="/book-appointment">
                         <button className="w-full bg-pc-green text-white py-3 text-[10px] uppercase tracking-widest font-black hover:bg-pc-gold hover:text-pc-green transition-all" style={{ fontFamily:'sans-serif' }}>
-                          Demander un devis →
+                          Request a Quote →
                         </button>
                       </Link>
                     </div>
                   </div>
                 </div>
                 <div className="px-6 py-4 flex justify-between items-center border-t border-slate-50">
-                  <span className="text-[10px] uppercase tracking-widest text-slate-300" style={{ fontFamily:'sans-serif' }}>Cliquer pour les détails</span>
+                  <span className="text-[10px] uppercase tracking-widest text-slate-300" style={{ fontFamily:'sans-serif' }}>Click for details</span>
                   <span className={`text-pc-gold font-black text-xl transition-transform duration-300 ${openProduct === i ? 'rotate-45' : ''}`}>+</span>
                 </div>
               </div>
@@ -254,39 +254,39 @@ const Sourcing = () => {
           <div className="mt-10 text-center">
             <Link to="/book-appointment">
               <button className="border-2 border-pc-green text-pc-green px-14 py-5 uppercase text-[11px] font-black tracking-widest hover:bg-pc-green hover:text-white transition-all" style={{ fontFamily:'sans-serif' }}>
-                Tous nos équipements disponibles →
+                All Available Equipment →
               </button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ══ POURQUOI LA CHINE ══ */}
+      {/* ══ WHY CHINA ══ */}
       <section className="py-24 px-8 bg-white">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div className="grid grid-cols-2 gap-3 h-[480px]">
             <div className="row-span-2 overflow-hidden">
-              <img src={IMG.canton1} alt="Foire de Canton" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+              <img src={IMG.canton1} alt="Canton Fair" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
             </div>
             <div className="overflow-hidden">
               <img src={IMG.china} alt="Guangzhou" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
             </div>
             <div className="overflow-hidden">
-              <img src={IMG.canton3} alt="Machines" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+              <img src={IMG.canton3} alt="Machinery" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
             </div>
           </div>
           <div>
-            <span className="text-pc-gold text-[10px] uppercase tracking-[0.4em] font-black block mb-4" style={{ fontFamily:'sans-serif' }}>Pourquoi la Chine ?</span>
-            <h2 className="text-4xl md:text-5xl text-pc-green mb-6 leading-tight italic">La source la plus compétitive au monde</h2>
+            <span className="text-pc-gold text-[10px] uppercase tracking-[0.4em] font-black block mb-4" style={{ fontFamily:'sans-serif' }}>Why China?</span>
+            <h2 className="text-4xl md:text-5xl text-pc-green mb-6 leading-tight italic">The most competitive source in the world</h2>
             <p className="text-slate-500 text-sm mb-10 leading-relaxed" style={{ fontFamily:'sans-serif' }}>
-              La Chine produit 70 % des équipements agricoles mondiaux. Pour un exploitant africain, accéder directement aux usines de Guangdong est une opportunité historique.
+              China produces 70% of the world's agricultural equipment. For African farmers, accessing Guangdong factories directly is a historic opportunity.
             </p>
             <div className="space-y-5">
               {[
-                { stat:"—60%", label:"Économie vs équipements européens ou japonais" },
-                { stat:"500+", label:"Fabricants spécialisés en région de Guangdong seule" },
-                { stat:"4–8 sem.", label:"Délai de fabrication sur mesure (5 unités et +)" },
-                { stat:"100%", label:"Traçabilité garantie avec notre accompagnement" },
+                { stat:"—60%", label:"Savings vs European or Japanese equipment" },
+                { stat:"500+", label:"Specialized manufacturers in Guangdong alone" },
+                { stat:"4–8 wks", label:"Custom manufacturing lead time (5 units and above)" },
+                { stat:"100%", label:"Guaranteed traceability with our support" },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-6 border-b border-slate-100 pb-5 hover:border-pc-gold transition-all">
                   <div className="text-3xl font-black text-pc-gold min-w-[90px]">{item.stat}</div>
@@ -296,21 +296,21 @@ const Sourcing = () => {
             </div>
             <div className="mt-8 bg-slate-50 border-l-4 border-pc-gold p-8">
               <p className="text-slate-500 text-sm italic leading-relaxed mb-2">
-                "La Chine est la seule économie capable de produire sur mesure, en petites séries, avec un délai raisonnable. Pour un exploitant camerounais, c'est une fenêtre historique."
+                "China is the only economy capable of producing custom, small-batch orders within a reasonable timeframe. For a Cameroonian farmer, this is a historic window of opportunity."
               </p>
-              <span className="text-[10px] uppercase tracking-widest font-bold text-pc-green" style={{ fontFamily:'sans-serif' }}>— Équipe PALM CONNECT, Yaoundé</span>
+              <span className="text-[10px] uppercase tracking-widest font-bold text-pc-green" style={{ fontFamily:'sans-serif' }}>— PALM CONNECT Team, Yaoundé</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ══ PROCESSUS — ACCORDÉON ══ */}
-      <section id="processus" className="py-24 px-8 bg-[#0a192f] text-white">
+      {/* ══ PROCESS — ACCORDION ══ */}
+      <section id="process" className="py-24 px-8 bg-[#0a192f] text-white">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
-            <span className="text-pc-gold text-[10px] uppercase tracking-[0.4em] font-black block mb-4" style={{ fontFamily:'sans-serif' }}>Notre Méthode</span>
+            <span className="text-pc-gold text-[10px] uppercase tracking-[0.4em] font-black block mb-4" style={{ fontFamily:'sans-serif' }}>Our Method</span>
             <h2 className="text-4xl md:text-5xl leading-tight italic">
-              6 étapes pour acheter<br /><span className="text-pc-gold">en toute sécurité</span>
+              6 steps to buy<br /><span className="text-pc-gold">with complete confidence</span>
             </h2>
           </div>
           <div className="space-y-2">
@@ -335,7 +335,7 @@ const Sourcing = () => {
                         <p className="text-white/70 text-sm leading-relaxed" style={{ fontFamily:'sans-serif' }}>{step.full}</p>
                         <Link to="/book-appointment">
                           <button className="mt-6 text-[10px] uppercase tracking-widest font-black text-pc-gold border border-pc-gold/40 px-6 py-3 hover:bg-pc-gold hover:text-pc-green transition-all" style={{ fontFamily:'sans-serif' }}>
-                            En savoir plus →
+                            Learn More →
                           </button>
                         </Link>
                       </div>
@@ -351,22 +351,22 @@ const Sourcing = () => {
           <div className="mt-12 text-center">
             <Link to="/book-appointment">
               <button className="bg-pc-gold text-pc-green px-14 py-5 uppercase text-[11px] font-black tracking-widest hover:bg-white transition-all" style={{ fontFamily:'sans-serif' }}>
-                Démarrer mon projet d'import
+                Start My Import Project
               </button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ══ FOIRES — ACCORDÉON ══ */}
+      {/* ══ TRADE FAIRS — ACCORDION ══ */}
       <section className="py-24 px-8 bg-slate-50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
-            <span className="text-pc-gold text-[10px] uppercase tracking-[0.4em] font-black block mb-4" style={{ fontFamily:'sans-serif' }}>Agenda 2026</span>
+            <span className="text-pc-gold text-[10px] uppercase tracking-[0.4em] font-black block mb-4" style={{ fontFamily:'sans-serif' }}>2026 Agenda</span>
             <h2 className="text-4xl md:text-5xl text-pc-green leading-tight italic">
-              Les foires incontournables<br />en Chine pour les agriculteurs
+              The must-attend trade fairs<br />in China for farmers
             </h2>
-            <p className="text-slate-400 text-sm mt-4" style={{ fontFamily:'sans-serif' }}>Cliquez sur une foire pour en savoir plus. Palm Connect peut vous y représenter.</p>
+            <p className="text-slate-400 text-sm mt-4" style={{ fontFamily:'sans-serif' }}>Click on a fair to learn more. Palm Connect can represent you there.</p>
           </div>
           <div className="space-y-3">
             {FAIRS.map((fair, i) => (
@@ -394,7 +394,7 @@ const Sourcing = () => {
                         <p className="text-slate-600 text-sm leading-relaxed mb-6" style={{ fontFamily:'sans-serif' }}>{fair.detail}</p>
                         <Link to="/book-appointment">
                           <button className="text-[10px] uppercase tracking-widest font-black px-8 py-3 text-white hover:opacity-80 transition-all" style={{ background:fair.color, fontFamily:'sans-serif' }}>
-                            Être accompagné à cette foire →
+                            Get Accompanied to This Fair →
                           </button>
                         </Link>
                       </div>
@@ -409,20 +409,20 @@ const Sourcing = () => {
           </div>
           <div className="mt-8 bg-pc-gold/10 border border-pc-gold/30 p-6 text-center">
             <p className="text-sm text-slate-700" style={{ fontFamily:'sans-serif' }}>
-              <strong>Palm Connect</strong> participe à la Foire de Canton (Printemps &amp; Automne 2026).{' '}
-              <Link to="/book-appointment" className="font-bold text-pc-green underline hover:text-pc-gold">Nous contacter pour être représenté →</Link>
+              <strong>Palm Connect</strong> attends the Canton Fair (Spring &amp; Autumn 2026).{' '}
+              <Link to="/book-appointment" className="font-bold text-pc-green underline hover:text-pc-gold">Contact us to be represented →</Link>
             </p>
           </div>
         </div>
       </section>
 
-      {/* ══ PÉRIODES — SÉLECTEUR ══ */}
+      {/* ══ PERIODS — SELECTOR ══ */}
       <section className="py-24 px-8 bg-white">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
-            <span className="text-pc-gold text-[10px] uppercase tracking-[0.4em] font-black block mb-4" style={{ fontFamily:'sans-serif' }}>Timing Stratégique</span>
-            <h2 className="text-4xl md:text-5xl text-pc-green leading-tight italic">Quand commander en Chine ?</h2>
-            <p className="text-slate-400 text-sm mt-4" style={{ fontFamily:'sans-serif' }}>Sélectionnez une période pour voir nos recommandations.</p>
+            <span className="text-pc-gold text-[10px] uppercase tracking-[0.4em] font-black block mb-4" style={{ fontFamily:'sans-serif' }}>Strategic Timing</span>
+            <h2 className="text-4xl md:text-5xl text-pc-green leading-tight italic">When should you order from China?</h2>
+            <p className="text-slate-400 text-sm mt-4" style={{ fontFamily:'sans-serif' }}>Select a period to see our recommendations.</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-0">
             {PERIODS.map((p, i) => (
@@ -446,7 +446,7 @@ const Sourcing = () => {
               <div className="shrink-0">
                 <Link to="/book-appointment">
                   <button className="px-10 py-4 text-white text-[10px] uppercase tracking-widest font-black hover:opacity-80 transition-all" style={{ background:PERIODS[period].color, fontFamily:'sans-serif' }}>
-                    Planifier pour cette période →
+                    Plan for This Period →
                   </button>
                 </Link>
               </div>
@@ -455,16 +455,16 @@ const Sourcing = () => {
         </div>
       </section>
 
-      {/* ══ PIÈGES — ACCORDÉON ══ */}
+      {/* ══ PITFALLS — ACCORDION ══ */}
       <section className="py-24 px-8 bg-[#0a192f] text-white">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
-            <span className="text-[#e07b3a] text-[10px] uppercase tracking-[0.4em] font-black block mb-4" style={{ fontFamily:'sans-serif' }}>Risques & Vigilance</span>
+            <span className="text-[#e07b3a] text-[10px] uppercase tracking-[0.4em] font-black block mb-4" style={{ fontFamily:'sans-serif' }}>Risks & Vigilance</span>
             <h2 className="text-4xl md:text-5xl leading-tight italic">
-              Les 6 pièges classiques<br /><span className="text-[#e07b3a]">à connaître absolument</span>
+              The 6 classic pitfalls<br /><span className="text-[#e07b3a]">you absolutely must know</span>
             </h2>
             <p className="text-white/40 text-sm mt-4 max-w-lg mx-auto" style={{ fontFamily:'sans-serif' }}>
-              Ces erreurs coûtent des millions de FCFA à des acheteurs africains chaque année. Cliquez pour lire.
+              These mistakes cost African buyers millions of FCFA every year. Click to read.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -490,35 +490,35 @@ const Sourcing = () => {
           </div>
           <div className="mt-12 border border-pc-gold/30 bg-white/5 p-10 flex flex-col md:flex-row items-center gap-8">
             <div className="flex-1">
-              <div className="text-pc-gold font-black text-lg mb-3">Palm Connect = votre garde-fou.</div>
+              <div className="text-pc-gold font-black text-lg mb-3">Palm Connect = your safeguard.</div>
               <p className="text-white/60 text-sm leading-relaxed" style={{ fontFamily:'sans-serif' }}>
-                Présents physiquement en Chine. Contrats bilingues opposables. Inspection qualité avant embarquement. Dédouanement au Cameroun. Nous ne lâchons pas le dossier.
+                Physically present in China. Bilingual enforceable contracts. Quality inspection before shipment. Customs clearance in Cameroon. We see every project through to the end.
               </p>
             </div>
             <Link to="/book-appointment">
               <button className="shrink-0 bg-pc-gold text-pc-green px-12 py-5 uppercase text-[11px] font-black tracking-widest hover:bg-white transition-all" style={{ fontFamily:'sans-serif' }}>
-                Bénéficier de notre protection
+                Benefit from Our Protection
               </button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ══ FIABILITÉ — CARTES IMAGE ══ */}
+      {/* ══ RELIABILITY — IMAGE CARDS ══ */}
       <section className="py-24 px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <span className="text-pc-gold text-[10px] uppercase tracking-[0.4em] font-black block mb-4" style={{ fontFamily:'sans-serif' }}>Notre Fiabilité</span>
-            <h2 className="text-4xl md:text-5xl text-pc-green leading-tight italic">Pourquoi faire confiance<br />à Palm Connect ?</h2>
+            <span className="text-pc-gold text-[10px] uppercase tracking-[0.4em] font-black block mb-4" style={{ fontFamily:'sans-serif' }}>Our Reliability</span>
+            <h2 className="text-4xl md:text-5xl text-pc-green leading-tight italic">Why trust<br />Palm Connect?</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon:"🏛", img:IMG.canton2, title:"Présence institutionnelle", desc:"Membre actif de la Foire de Canton. Équipes présentes physiquement lors des foires et visites d'usines. Vous n'achetez pas à l'aveugle." },
-              { icon:"📄", img:IMG.contract, title:"Contrats bilingues FR/CN", desc:"Chaque transaction encadrée par un contrat en français ET mandarin, avec clauses de protection acheteur et pénalités de retard." },
-              { icon:"🔍", img:IMG.shipping, title:"Contrôle qualité avant embarquement", desc:"Inspecteurs tiers certifiés (SGS, Bureau Veritas) valident chaque lot avant qu'il quitte la Chine. Zéro surprise à Douala." },
-              { icon:"🌍", img:IMG.farmer, title:"Ancrage local au Cameroun", desc:"Basés à Yaoundé, nous assurons suivi post-livraison, dédouanement et mise en service sur votre exploitation." },
-              { icon:"🤝", img:IMG.canton1, title:"Réseau de fournisseurs audités", desc:"Chaque fournisseur visité, audité et testé. Certifications ISO, CE vérifiées. Aucun intermédiaire inconnu." },
-              { icon:"💬", img:IMG.china, title:"Accompagnement bout en bout", desc:"De la foire de Canton à votre exploitation. Pas de frais cachés. Communication transparente à chaque étape." },
+              { icon:"🏛", img:IMG.canton2, title:"Institutional Presence", desc:"Active member of the Canton Fair. Teams physically present at trade fairs and factory visits. You don't buy blind." },
+              { icon:"📄", img:IMG.contract, title:"Bilingual EN/CN Contracts", desc:"Every transaction governed by a contract in both English AND Mandarin, with buyer protection clauses and late delivery penalties." },
+              { icon:"🔍", img:IMG.shipping, title:"Pre-Shipment Quality Control", desc:"Certified third-party inspectors (SGS, Bureau Veritas) validate every batch before it leaves China. Zero surprises in Douala." },
+              { icon:"🌍", img:IMG.farmer, title:"Local Presence in Cameroon", desc:"Based in Yaoundé, we handle post-delivery follow-up, customs clearance and commissioning at your farm." },
+              { icon:"🤝", img:IMG.canton1, title:"Network of Audited Suppliers", desc:"Every supplier visited, audited and tested. ISO, CE certifications verified. No unknown intermediaries." },
+              { icon:"💬", img:IMG.china, title:"End-to-End Support", desc:"From the Canton Fair to your farm. No hidden fees. Transparent communication at every step." },
             ].map((item, i) => (
               <div key={i} className="border border-slate-100 overflow-hidden group hover:shadow-xl hover:border-pc-gold transition-all duration-500">
                 <div className="h-40 overflow-hidden relative">
@@ -536,27 +536,27 @@ const Sourcing = () => {
         </div>
       </section>
 
-      {/* ══ CTA FINAL ══ */}
+      {/* ══ FINAL CTA ══ */}
       <section className="py-32 bg-[#0a192f] text-white text-center relative overflow-hidden">
         <div className="absolute inset-0" style={{ backgroundImage:`url(${IMG.canton2})`, backgroundSize:'cover', backgroundPosition:'center', opacity:0.12 }} />
         <div className="absolute inset-0 bg-gradient-to-b from-[#0a192f] via-transparent to-[#0a192f]" />
         <div className="max-w-3xl mx-auto px-8 relative z-10">
-          <span className="text-pc-gold text-[10px] uppercase tracking-[0.5em] font-black block mb-8" style={{ fontFamily:'sans-serif' }}>Prêt à passer à l'action ?</span>
+          <span className="text-pc-gold text-[10px] uppercase tracking-[0.5em] font-black block mb-8" style={{ fontFamily:'sans-serif' }}>Ready to take action?</span>
           <h2 className="text-4xl md:text-6xl leading-tight mb-8 italic">
-            "L'avenir appartient<br />à ceux qui s'équipent<br /><span className="text-pc-gold">avant les autres."</span>
+            "The future belongs<br />to those who equip themselves<br /><span className="text-pc-gold">before the rest."</span>
           </h2>
           <p className="text-white/50 text-sm mb-14 leading-relaxed" style={{ fontFamily:'sans-serif' }}>
-            Premier entretien gratuit et sans engagement. Nos experts vous répondent sous 24h.
+            Free first consultation, no commitment required. Our experts respond within 24 hours.
           </p>
           <div className="flex flex-col md:flex-row gap-6 justify-center">
             <Link to="/book-appointment">
               <button className="bg-pc-gold text-pc-green px-14 py-5 uppercase text-[11px] font-black tracking-widest hover:bg-white transition-all shadow-2xl" style={{ fontFamily:'sans-serif' }}>
-                Prendre rendez-vous — Gratuit
+                Book an Appointment — Free
               </button>
             </Link>
             <Link to="/book-appointment">
               <button className="border border-white/30 text-white px-14 py-5 uppercase text-[11px] font-black tracking-widest hover:border-pc-gold hover:text-pc-gold transition-all" style={{ fontFamily:'sans-serif' }}>
-                Poser une question →
+                Ask a Question →
               </button>
             </Link>
           </div>
