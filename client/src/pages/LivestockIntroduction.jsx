@@ -14,13 +14,13 @@ const LivestockIntroduction = () => {
   const categories = [
     {
       title: "Aquaculture",
-      slug: "aquaculture", // Identifiant pour l'URL
+      slug: "aquaculture",
       subtitle: "The Blue Gold",
       icon: <Fish size={40} />,
       desc: "Intensive Tilapia and Clarias farming in above-ground tanks. A short 6-month cycle for rapid profitability.",
-      image: "https://images.unsplash.com/photo-1524704654690-b56c05c78a00?q=80&w=1000",
+      image: "/images/aqua.jpg", 
       color: "from-emerald-900/80"
-    },
+    }, // Suppression du ]; qui était ici
     {
       title: "Poultry Farming",
       slug: "poultry",
@@ -36,7 +36,7 @@ const LivestockIntroduction = () => {
       subtitle: "The Heritage",
       icon: <Database size={40} />, 
       desc: "Investment in bovine livestock (meat and dairy). Long-term value creation across sub-regional markets.",
-      image: "https://images.unsplash.com/photo-1545468843-059960205249?q=80&w=1000",
+       image: "/images/bovin.jpg", 
       color: "from-emerald-800/80"
     },
     {
@@ -45,10 +45,12 @@ const LivestockIntroduction = () => {
       subtitle: "Dynamic Sector",
       icon: <Leaf size={40} />,
       desc: "Swine production with rigorous veterinary monitoring. National demand is in constant progression.",
-      image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?q=80&w=1000",
+        image: "/images/pig.jpg", 
       color: "from-green-800/80"
     }
-  ];
+  ]; // Le tableau se ferme bien ici désormais
+
+  // ... reste du code (return, etc.)
 
   return (
     <div className="min-h-screen bg-[#fdfcf0] selection:bg-emerald-800 selection:text-amber-200">

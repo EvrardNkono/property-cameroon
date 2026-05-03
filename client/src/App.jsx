@@ -4,17 +4,15 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // --- IMPORTS DES PAGES PUBLIQUES ---
 import Home from './pages/Home';
 import RealEstatePage from './pages/RealEstate';
-import PropertyDetailsPage from './pages/PropertyDetailsPage'; // AJOUTÉ ICI
+import PropertyDetailsPage from './pages/PropertyDetailsPage';
 import AgriculturePage from './pages/AgriculturePage'; 
 import ExpertisePage from './pages/Expertise'; 
 import MarketplacePage from './pages/MarketplacePage';
 import AppointmentPage from './pages/Appointment';
 import SourcingPage from './pages/Sourcing'; 
 
-// --- PAGES INSTITUTIONNELLES (DISTINCTES) ---
-// 1. L'ancienne page centrée sur le profil de la CAPEF
+// --- PAGES INSTITUTIONNELLES ---
 import InstitutionalPage from './pages/InstitutionalProfil'; 
-// 2. La nouvelle page "Massive" sur les garanties et la légalité
 import LegalCompliancePage from './pages/LegalCompliance'; 
 
 // --- IMPORTS BLOG ---
@@ -27,10 +25,11 @@ const BlogPostDetail = () => (
 
 // --- IMPORT LIVESTOCK ---
 import LivestockPage from './pages/LivestockIntroduction'; 
-import LivestockCategoryPage from './pages/LivestockCategoryPage'; // NOUVEL IMPORT AJOUTÉ
+import LivestockCategoryPage from './pages/LivestockCategoryPage';
+import ProjectDetailsPage from './pages/ProjectDetailsPage'; // Import de la nouvelle page de détails
 
 // --- IMPORT CHATBOT ---
-import ChatAssistant from './components/ChatAssistant'; // AJOUTÉ ICI
+import ChatAssistant from './components/ChatAssistant';
 
 // --- IMPORTS DASHBOARD (STRUCTURE & UTILISATEURS) ---
 import DashboardLayout from './pages/dashboard/DashboardLayout';
@@ -57,8 +56,6 @@ function App() {
           {/* --- ROUTES PUBLIQUES PRINCIPALES --- */}
           <Route path="/" element={<Home />} />
           <Route path="/real-estate" element={<RealEstatePage />} />
-          
-          {/* ROUTE DÉTAILS AJOUTÉE ICI */}
           <Route path="/real-estate/:id" element={<PropertyDetailsPage />} />
           
           <Route path="/global-sourcing" element={<SourcingPage />} />
@@ -68,36 +65,39 @@ function App() {
           <Route path="/agriculture" element={<AgriculturePage />} />
           <Route path="/agriculture/marketplace" element={<MarketplacePage />} />
           <Route path="/agriculture/expertise" element={<ExpertisePage />} />
+          
+          {/* Section Livestock */}
           <Route path="/agriculture/livestock" element={<LivestockPage />} />
           
-          {/* NOUVELLE ROUTE DYNAMIQUE POUR LES CATÉGORIES */}
+          {/* 
+              ROUTE DYNAMIQUE PAR CATÉGORIE : Gère aquaculture, poultry, cattle, pigs.
+          */}
           <Route path="/agriculture/livestock/:category" element={<LivestockCategoryPage />} />
-          
-          {/* ROUTES EXISTANTES CONSERVÉES */}
-          <Route path="/agriculture/livestock/aquaculture" element={<div>Page Aquaculture en cours...</div>} />
 
-          {/* SEPARATION DES DEUX PAGES INSTITUTIONNELLES */}
-          {/* A. Le profil officiel CAPEF */}
+          {/* 
+              NOUVELLE ROUTE DÉTAILS PROJET : Accès direct à une unité de production spécifique
+          */}
+          <Route path="/agriculture/livestock/:category/:id" element={<ProjectDetailsPage />} />
+
+          {/* --- CADRE LÉGAL & INSTITUTIONNEL --- */}
           <Route path="/agriculture/institutional-framework" element={<InstitutionalPage />} />
-          
-          {/* B. La nouvelle page sur la sécurité juridique et conformité */}
           <Route path="/agriculture/legal-safety" element={<LegalCompliancePage />} />
 
           {/* --- BLOG --- */}
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/blog/:id" element={<BlogPostDetail />} />
 
-          {/* --- ROUTES DASHBOARD (PRIVÉES / NESTED) --- */}
+          {/* --- ROUTES DASHBOARD --- */}
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Overview />} />
             
-            {/* Sous-section Admin */}
+            {/* Admin */}
             <Route path="admin" element={<AdminOverview />} />
             <Route path="admin/users" element={<UserManagement />} />
             <Route path="admin/inventory" element={<GlobalInventory />} />
             <Route path="admin/finances" element={<FinancialControl />} />
 
-            {/* Sous-section Utilisateur */}
+            {/* User */}
             <Route path="profile" element={<UserProfile />} />
             <Route path="properties" element={<MyLands />} />
             <Route path="titles" element={<TitleDocuments />} />
@@ -108,7 +108,6 @@ function App() {
           </Route>
         </Routes>
         
-        {/* LE CHATBOT GLOBAL */}
         <ChatAssistant />
       </div>
     </Router>
