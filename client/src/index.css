@@ -1,0 +1,13 @@
+
+@import "tailwindcss";
+
+@theme {
+  /* Tes couleurs Prestige */
+  --color-pc-gold: #D4AF37;
+  --color-pc-green: #1B4332;
+  --color-pc-brown: #3E2723;
+  
+  /* Tes Polices */
+  --font-serif: "Playfair Display", serif;
+  --font-sans: "Inter", sans-serif;
+}
