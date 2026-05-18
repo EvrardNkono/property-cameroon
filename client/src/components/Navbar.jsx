@@ -323,7 +323,7 @@ const Navbar = () => {
 
               <div className="pt-4 border-t border-slate-100">
                 <Link 
-                  to="/contact" 
+                  to="/experts" 
                   onClick={() => setIsOpen(false)}
                   className="block w-full text-center py-3 bg-slate-950 text-white rounded-full text-[10px] font-black uppercase tracking-widest"
                 >
