@@ -1,138 +1,109 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ProductCard from '../components/agriculture/ProductCard';
 import MarketplaceHero from '../components/agriculture/MarketplaceHero';
-
-const MOCK_PRODUCTS = [
-  {
-    id: "PROD-001",
-    name: "Poivre de Penja Blanc (AOP)",
-    category: "Épices",
-    price: "18,500",
-    unit: "Kg",
-    origin: "Moungo",
-    stock: 25,
-    image: "https://images.unsplash.com/photo-1532336414038-cf19250c5757?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: "PROD-002",
-    name: "Ananas Pain de Sucre",
-    category: "Maraîcher",
-    price: "1,500",
-    unit: "Pièce",
-    origin: "Mbam",
-    stock: 150,
-    image: "/images/propertyananas.jfif"
-  },
-  {
-    id: "PROD-003",
-    name: "Cacao Grade A (Fèves)",
-    category: "Transformation",
-    price: "2,800",
-    unit: "Kg",
-    origin: "Lekié",
-    stock: 1000,
-    image: "/images/propertycacao.jfif" // Mis à jour
-  },
-  {
-    id: "PROD-004",
-    name: "Café Arabica Blue Mountain",
-    category: "Transformation",
-    price: "7,500",
-    unit: "500g",
-    origin: "Ouest",
-    stock: 45,
-    image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: "PROD-005",
-    name: "Manioc Blanc (Tubercules)",
-    category: "Maraîcher",
-    price: "8,500",
-    unit: "Filet",
-    origin: "Basse-Sanaga",
-    stock: 120,
-    image: "/images/propertymaniocs.jfif"
-  },
-  {
-    id: "PROD-006",
-    name: "Maïs Jaune Séché (Premium)",
-    category: "Maraîcher",
-    price: "22,000",
-    unit: "Sac (100kg)",
-    origin: "Nord",
-    stock: 200,
-    image: "/images/propertymais.jfif" // Mis à jour
-  },
-  {
-    id: "PROD-007",
-    name: "Ail Violet de l'Ouest",
-    category: "Épices",
-    price: "2,500",
-    unit: "Seau",
-    origin: "Ouest",
-    stock: 60,
-    image: "https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: "PROD-008",
-    name: "Banane Douce (Régime Brut)",
-    category: "Maraîcher",
-    price: "4,500",
-    unit: "Régime",
-    origin: "Sud-Ouest",
-    stock: 85,
-    image: "/images/propertybananes.jfif" // Mis à jour
-  },
-  {
-    id: "PROD-009",
-    name: "Oignons Rouges (Sélection)",
-    category: "Maraîcher",
-    price: "12,500",
-    unit: "Sac (50kg)",
-    origin: "Extrême-Nord",
-    stock: 110,
-    image: "/images/propertyoignons.jfif" // Mis à jour
-  },
-  {
-    id: "PROD-010",
-    name: "Arachides Égrainées",
-    category: "Maraîcher",
-    price: "18,500",
-    unit: "Sac (50kg)",
-    origin: "Nord",
-    stock: 400,
-    image: "/images/propertyarrachides.jfif" // Mis à jour
-  },
-  {
-    id: "PROD-011",
-    name: "Haricots Rouges (Gros Grains)",
-    category: "Maraîcher",
-    price: "15,000",
-    unit: "Seau",
-    origin: "Ouest",
-    stock: 95,
-    image: "/images/propertyharicots.jfif"
-  },
-  {
-    id: "PROD-012",
-    name: "Huile de Palme Rouge (Brute)",
-    category: "Transformation",
-    price: "1,000",
-    unit: "Litre",
-    origin: "Sud-Ouest",
-    stock: 500,
-    image: "/images/propertyhuile.jfif"
-  }
-];
+import { Loader2 } from 'lucide-react';
+import api from '../services/api';
 
 const MarketplacePage = () => {
   const [filter, setFilter] = useState('All');
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Categories for filter (from backend or static)
+  const categories = ['All', 'Maraîcher', 'Livestock', 'Spices', 'Transformation'];
+
+  // Fetch agricultural products from backend
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // You need to create this endpoint in your backend
+      // For now, we'll use the agricultural lands endpoint or create a new one
+      const response = await api.getAgriculturalProducts?.() || await api.getAgriculturalLands();
+      
+      // Transform agricultural lands into products if no dedicated endpoint
+      let productsData = [];
+      if (response.lands || response.products) {
+        const items = response.lands || response.products || [];
+        productsData = items.map(item => ({
+          id: item._id,
+          name: item.title,
+          category: item.category || 'Maraîcher',
+          price: item.price?.amount?.toLocaleString() || '0',
+          unit: item.unit || 'Kg',
+          origin: item.location?.region || 'Cameroon',
+          stock: item.stock || Math.floor(Math.random() * 200) + 10,
+          image: item.images?.[0] || 'https://images.unsplash.com/photo-1532336414038-cf19250c5757?auto=format&fit=crop&q=80&w=800',
+          description: item.description
+        }));
+      }
+      
+      setProducts(productsData);
+    } catch (err) {
+      console.error('Error fetching products:', err);
+      setError(err.message || 'Error loading products');
+      
+      // Fallback data
+      setProducts([
+        {
+          id: "PROD-001",
+          name: "Penja White Pepper (AOP)",
+          category: "Spices",
+          price: "18,500",
+          unit: "Kg",
+          origin: "Moungo",
+          stock: 25,
+          image: "https://images.unsplash.com/photo-1532336414038-cf19250c5757?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: "PROD-002",
+          name: "Sugar Pineapple",
+          category: "Maraîcher",
+          price: "1,500",
+          unit: "Piece",
+          origin: "Mbam",
+          stock: 150,
+          image: "/images/propertyananas.jfif"
+        },
+        {
+          id: "PROD-003",
+          name: "Cocoa Grade A (Beans)",
+          category: "Transformation",
+          price: "2,800",
+          unit: "Kg",
+          origin: "Lekié",
+          stock: 1000,
+          image: "/images/propertycacao.jfif"
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const filteredProducts = filter === 'All' 
-    ? MOCK_PRODUCTS 
-    : MOCK_PRODUCTS.filter(product => product.category === filter);
+    ? products 
+    : products.filter(product => product.category === filter);
+
+  if (loading) {
+    return (
+      <div className="bg-white min-h-screen">
+        <Navbar />
+        <div className="flex justify-center items-center h-96">
+          <Loader2 size={48} className="text-pc-green animate-spin" />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white min-h-screen selection:bg-pc-green selection:text-white font-sans">
@@ -143,7 +114,7 @@ const MarketplacePage = () => {
       <section className="max-w-7xl mx-auto px-8 py-20">
         <div className="flex flex-col md:flex-row justify-between items-center mb-16 border-b border-slate-100 pb-8">
           <div className="flex flex-wrap gap-x-8 gap-y-4 text-[10px] uppercase tracking-[0.2em] font-black text-slate-400">
-            {['All', 'Maraîcher', 'Élevage', 'Épices', 'Transformation'].map(cat => (
+            {categories.map(cat => (
               <button 
                 key={cat}
                 onClick={() => setFilter(cat)}
@@ -163,6 +134,18 @@ const MarketplacePage = () => {
           </div>
         </div>
 
+        {error && (
+          <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-center mb-8">
+            <p>{error}</p>
+            <button 
+              onClick={fetchProducts}
+              className="mt-2 px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
         {filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
             {filteredProducts.map(product => (
@@ -171,7 +154,7 @@ const MarketplacePage = () => {
           </div>
         ) : (
           <div className="py-20 text-center border border-dashed border-slate-200">
-            <p className="text-slate-400 font-serif italic">Aucun produit disponible dans cette catégorie pour le moment.</p>
+            <p className="text-slate-400 font-serif italic">No products available in this category at the moment.</p>
           </div>
         )}
       </section>

@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, ChevronDown, X, ShoppingBag, ArrowRight, Menu } from 'lucide-react';
+import { Shield, ChevronDown, X, ArrowRight, Menu, User, LogIn, LogOut, UserCircle } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { user, logout, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  
   const gold = '#c8a84b';
-  const cartCount = 3;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -15,28 +19,63 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleLogout = async () => {
+    await logout();
+    setIsProfileOpen(false);
+    navigate('/');
+  };
+
+  const handleLogin = () => {
+    navigate('/login');
+    setIsProfileOpen(false);
+  };
+
+  const handleRegister = () => {
+    navigate('/register');
+    setIsProfileOpen(false);
+  };
+
+  const handleDashboard = () => {
+    navigate('/dashboard');
+    setIsProfileOpen(false);
+  };
+
   const navLinks = [
     { name: 'Real Estate', path: '/real-estate' },
+    
     { name: 'Sourcing', path: '/global-sourcing' },
+    { name: 'Journal', path: '/blog' },
   ];
 
   const agriLinks = [
-    { name: 'Overview', path: '/agriculture/overview' },
+    { name: 'Overview', path: '/agriculture' },
     { name: 'Livestock', path: '/agriculture/livestock' },
     { name: 'Marketplace', path: '/agriculture/marketplace' },
   ];
+
+  const getUserInitials = () => {
+    if (!user?.name) return 'U';
+    return user.name.charAt(0).toUpperCase();
+  };
+
+  const getDisplayName = () => {
+    if (!user?.name) return 'Account';
+    if (user.name.length > 15) return user.name.substring(0, 15) + '...';
+    return user.name;
+  };
 
   return (
     <header className={`fixed top-0 w-full z-[100] transition-all duration-700 ${
       isScrolled ? 'py-4' : 'py-8'
     }`}>
-      <div className={`mx-auto transition-all duration-700 px-6 ${
-        isScrolled ? 'max-w-[90%] lg:max-w-[1100px]' : 'max-w-[1440px]'
+      <div className={`mx-auto transition-all duration-700 px-4 md:px-6 ${
+        isScrolled ? 'max-w-[95%] lg:max-w-[1100px]' : 'max-w-[1440px]'
       }`}>
-        <div className={`relative flex justify-between items-center transition-all duration-700 px-8 ${
+        {/* La bulle est TOUJOURS présente */}
+        <div className={`relative flex justify-between items-center transition-all duration-700 px-4 md:px-8 ${
           isScrolled 
             ? 'bg-white/70 backdrop-blur-2xl py-3 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-[#c8a84b]/20' 
-            : 'bg-transparent py-0'
+            : 'bg-[#c8a84b]/10 backdrop-blur-md py-3 rounded-full border border-[#c8a84b]/15 shadow-md'
         }`}>
           
           {isScrolled && (
@@ -44,14 +83,14 @@ const Navbar = () => {
                  style={{ background: `linear-gradient(90deg, transparent, ${gold}, transparent)` }} />
           )}
           
-          {/* LOGO */}
-          <Link to="/" className="relative z-10 flex items-center gap-3 group">
-            <div className="relative w-10 h-10 overflow-hidden rounded-xl bg-slate-900 flex items-center justify-center transition-transform group-hover:rotate-6">
-               <img src="/images/logo.png" alt="Logo" className="w-7 h-7 object-contain" />
+          {/* LOGO - Version mobile plus compacte */}
+          <Link to="/" className="relative z-10 flex items-center gap-2 md:gap-3 group">
+            <div className="relative w-8 h-8 md:w-10 md:h-10 overflow-hidden rounded-xl bg-slate-900 flex items-center justify-center transition-transform group-hover:rotate-6">
+               <img src="/images/logo.png" alt="Logo" className="w-5 h-5 md:w-7 md:h-7 object-contain" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-black tracking-[0.2em] text-slate-950 uppercase leading-none">Property</span>
-              <span className="text-[10px] font-serif italic" style={{ color: gold }}>Cameroon</span>
+              <span className="text-[10px] md:text-sm font-black tracking-[0.2em] text-slate-950 uppercase leading-none">Property</span>
+              <span className="text-[8px] md:text-[10px] font-serif italic" style={{ color: gold }}>Cameroon</span>
             </div>
           </Link>
           
@@ -68,7 +107,7 @@ const Navbar = () => {
               </Link>
             ))}
 
-            {/* DROPDOWN AGRICULTURE (DESKTOP) */}
+            {/* DROPDOWN AGRICULTURE */}
             <div className="relative group">
               <button className="text-[10px] uppercase tracking-[0.3em] font-bold text-slate-500 flex items-center gap-1 group-hover:text-slate-950 transition-colors">
                 Agriculture <ChevronDown size={10} className="group-hover:rotate-180 transition-transform duration-500" />
@@ -91,68 +130,213 @@ const Navbar = () => {
             </div>
           </nav>
 
-          {/* RIGHT ACTIONS */}
-          <div className="relative z-10 flex items-center gap-6">
-            <div className="relative cursor-pointer group p-2">
-              <ShoppingBag className="w-5 h-5 text-slate-950 transition-transform group-hover:-rotate-12" strokeWidth={1.5} />
-              <span className="absolute top-0 right-0 bg-slate-950 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-                {cartCount}
-              </span>
+          {/* RIGHT ACTIONS - Desktop */}
+          <div className="hidden lg:flex relative z-10 items-center gap-4">
+            {/* ACCOUNT BUTTON (Desktop uniquement) */}
+            <div className="relative">
+              <button 
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-all group"
+              >
+                {isAuthenticated ? (
+                  <>
+                    <div className="w-7 h-7 rounded-full bg-emerald-700 flex items-center justify-center text-white text-xs font-bold">
+                      {getUserInitials()}
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-700 hidden md:block">
+                      {getDisplayName()}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <UserCircle size={20} className="text-slate-600" />
+                    <span className="text-[10px] font-bold text-slate-700 hidden md:block">Account</span>
+                  </>
+                )}
+                <ChevronDown size={12} className={`text-slate-500 transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Dropdown Menu */}
+              <AnimatePresence>
+                {isProfileOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-50"
+                  >
+                    {isAuthenticated ? (
+                      <>
+                        <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
+                          <p className="text-xs font-bold text-slate-900">{user?.name}</p>
+                          <p className="text-[9px] text-slate-500 truncate">{user?.email}</p>
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {user?.roles?.map(role => (
+                              <span key={role} className="text-[7px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 uppercase">
+                                {role}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <button
+                          onClick={handleDashboard}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                        >
+                          <User size={14} />
+                          Dashboard
+                        </button>
+                        
+                        <div className="h-px bg-slate-100" />
+                        
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-xs font-bold text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <LogOut size={14} />
+                          Sign Out
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={handleLogin}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                        >
+                          <LogIn size={14} />
+                          Sign In
+                        </button>
+                        
+                        <button
+                          onClick={handleRegister}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left text-xs font-bold text-emerald-700 hover:bg-emerald-50 transition-colors"
+                        >
+                          <User size={14} />
+                          Create Account
+                        </button>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            <button onClick={() => setIsOpen(true)} className="lg:hidden p-2 text-slate-950">
-              <Menu size={24} strokeWidth={1.5} />
-            </button>
-
-            <Link to="/contact" className="hidden lg:block px-6 py-3 bg-slate-950 text-white rounded-full text-[9px] font-black uppercase tracking-[0.2em] hover:bg-slate-800 transition-all shadow-lg shadow-slate-950/20">
+            {/* Contact Expert Button */}
+            <Link to="/experts" className="px-6 py-3 bg-slate-950 text-white rounded-full text-[9px] font-black uppercase tracking-[0.2em] hover:bg-slate-800 transition-all shadow-lg shadow-slate-950/20">
               Contact Expert
             </Link>
+          </div>
+
+          {/* RIGHT ACTIONS - Mobile (SEULEMENT LE MENU HAMBURGER) */}
+          <div className="flex lg:hidden items-center gap-2">
+            {/* Mobile Menu Button - bien visible */}
+            <button onClick={() => setIsOpen(true)} className="p-2 text-slate-950 hover:bg-slate-100 rounded-full transition-colors">
+              <Menu size={28} strokeWidth={1.5} />
+            </button>
           </div>
         </div>
       </div>
 
-      {/* MOBILE MENU */}
+      {/* MOBILE MENU - Avec l'icône compte à l'intérieur */}
       <AnimatePresence>
         {isOpen && (
           <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-white/98 backdrop-blur-2xl z-[200] flex flex-col p-8 overflow-y-auto"
+            initial={{ opacity: 0, x: '100%' }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: '100%' }}
+            transition={{ type: 'spring', damping: 25 }}
+            className="fixed inset-0 bg-white z-[200] flex flex-col p-6 overflow-y-auto shadow-2xl"
           >
-            <div className="flex justify-between items-center mb-12">
-              <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Menu</span>
-              <button onClick={() => setIsOpen(false)} className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
-                <X size={24} />
+            <div className="flex justify-between items-center mb-8">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center">
+                  <img src="/images/logo.png" alt="Logo" className="w-5 h-5 object-contain" />
+                </div>
+                <span className="text-[10px] font-black text-slate-950 uppercase">Property Cameroon</span>
+              </div>
+              <button onClick={() => setIsOpen(false)} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors">
+                <X size={22} />
               </button>
             </div>
+
+            {/* SECTION COMPTE DANS LE MENU MOBILE */}
+            <div className="mb-6 p-4 bg-gradient-to-r from-slate-50 to-white rounded-2xl border border-slate-100">
+              {isAuthenticated ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-emerald-700 flex items-center justify-center text-white font-bold">
+                      {getUserInitials()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-900">{user?.name}</p>
+                      <p className="text-[9px] text-slate-500">{user?.email}</p>
+                    </div>
+                  </div>
+                  <button onClick={handleLogout} className="text-red-600 text-[10px] font-bold">
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-3">
+                  <Link 
+                    to="/login" 
+                    onClick={() => setIsOpen(false)}
+                    className="flex-1 text-center py-2.5 bg-slate-900 text-white rounded-xl text-[11px] font-bold"
+                  >
+                    Sign In
+                  </Link>
+                  <Link 
+                    to="/register" 
+                    onClick={() => setIsOpen(false)}
+                    className="flex-1 text-center py-2.5 border border-emerald-600 text-emerald-700 rounded-xl text-[11px] font-bold"
+                  >
+                    Create Account
+                  </Link>
+                </div>
+              )}
+            </div>
             
-            <nav className="flex flex-col gap-10">
-              {/* Liens Directs */}
-              {['Real Estate', 'Sourcing', 'Journal'].map((name) => (
-                <Link key={name} to={`/${name.toLowerCase().replace(' ', '-')}`} onClick={() => setIsOpen(false)}
-                      className="text-4xl font-serif italic text-slate-900">
-                  {name}
+            <nav className="flex flex-col gap-6">
+              {/* UTILISATION DE NAVLINKS POUR CONFIGURER ÉGALEMENT LE MOBILE AVEC L'ONGLET EXPERTS */}
+              {navLinks.map((link) => (
+                <Link 
+                  key={link.name} 
+                  to={link.path} 
+                  onClick={() => setIsOpen(false)}
+                  className="text-2xl font-serif italic text-slate-800 hover:text-slate-950 transition-colors"
+                >
+                  {link.name}
                 </Link>
               ))}
 
-              {/* Section Agriculture (Mobile) */}
-              <div className="flex flex-col gap-4">
-                <span className="text-[10px] font-black tracking-widest text-pc-gold uppercase" style={{ color: gold }}>Agriculture</span>
-                <div className="flex flex-col gap-4 pl-4 border-l border-slate-100">
+              <div className="flex flex-col gap-3 pt-2">
+                <span className="text-[10px] font-black tracking-widest uppercase" style={{ color: gold }}>Agriculture</span>
+                <div className="flex flex-col gap-3 pl-4 border-l-2 border-slate-100">
                   {agriLinks.map((sub) => (
                     <Link key={sub.name} to={sub.path} onClick={() => setIsOpen(false)}
-                          className="text-2xl font-serif text-slate-600 italic hover:text-slate-950">
+                          className="text-lg font-serif text-slate-500 hover:text-slate-800 transition-colors">
                       {sub.name}
                     </Link>
                   ))}
                 </div>
               </div>
+
+              <div className="pt-4 border-t border-slate-100">
+                <Link 
+                  to="/contact" 
+                  onClick={() => setIsOpen(false)}
+                  className="block w-full text-center py-3 bg-slate-950 text-white rounded-full text-[10px] font-black uppercase tracking-widest"
+                >
+                  Contact Expert
+                </Link>
+              </div>
             </nav>
 
-            <div className="mt-12 pt-10 border-t border-slate-100">
-               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-4">Official Partner</p>
-               <div className="flex items-center gap-4 text-slate-900 font-serif italic text-xl">
-                  <Shield style={{ color: gold }} /> CAPEF Certified
-               </div>
+            <div className="mt-auto pt-8 border-t border-slate-100">
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-3">Official Partner</p>
+              <div className="flex items-center gap-2 text-slate-900 font-serif italic">
+                <Shield style={{ color: gold }} size={16} /> CAPEF Certified
+              </div>
             </div>
           </motion.div>
         )}

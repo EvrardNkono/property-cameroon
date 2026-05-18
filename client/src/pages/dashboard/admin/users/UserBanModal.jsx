@@ -9,14 +9,16 @@ const UserBanModal = ({ isOpen, onClose, user, onConfirm }) => {
   if (!isOpen || !user) return null;
 
   const handleAction = async () => {
-    setIsProcessing(true);
-    // Simulation API
-    setTimeout(() => {
-      onConfirm(user.id, { reason: banReason, duration });
-      setIsProcessing(false);
-      onClose();
-    }, 1200);
-  };
+  setIsProcessing(true);
+  try {
+    await onConfirm(user.id, { reason: banReason, duration });
+    onClose();
+  } catch (error) {
+    console.error('Error banning user:', error);
+  } finally {
+    setIsProcessing(false);
+  }
+};
 
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">

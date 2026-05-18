@@ -1,74 +1,102 @@
-import React, { useState } from 'react';
+// frontend/src/pages/RealEstate.jsx
+import React, { useState, useEffect } from 'react';
+import PropertyCard from '../components/real-estate/PropertyCard';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import FilterBar from '../components/real-estate/FilterBar';
-import PropertyCard from '../components/real-estate/PropertyCard';
-import { MOCK_PROPERTIES } from '../data/properties'; // IMPORTATION DU FICHIER DATA
+import api from '../services/api';
 
-const RealEstatePage = () => {
-  const [activeMode, setActiveMode] = useState('all'); 
+const RealEstate = () => {
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filteredProperties = MOCK_PROPERTIES.filter(property => {
-    if (activeMode === 'all') return true;
-    return property.status === activeMode;
-  });
+  useEffect(() => {
+    fetchProperties();
+  }, []);
 
-  const handleFilter = (filters) => {
-    console.log("Deep filtering triggered:", filters);
-    // Logique de filtrage par prix/type à ajouter ici
+  const fetchProperties = async () => {
+    try {
+      setLoading(true);
+      const response = await api.getProperties({ status: 'PUBLISHED' });
+      setProperties(response.properties || []);
+    } catch (err) {
+      console.error('Error fetching properties:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <div className="flex justify-center items-center h-96">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pc-gold"></div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <div className="text-center py-32">
+          <p className="text-red-600">Error: {error}</p>
+          <button onClick={fetchProperties} className="mt-4 px-4 py-2 bg-pc-gold text-white rounded">
+            Retry
+          </button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-
-      {/* HERO SECTION */}
-      <section className="pt-32 pb-24 bg-slate-900 relative">
-        <div className="max-w-7xl mx-auto px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-serif text-white mb-6 uppercase tracking-tighter">
-            Our <span className="text-pc-gold italic font-light">Elite</span> Portfolio
-          </h1>
-          <div className="flex justify-center mb-4">
-            <div className="bg-white/5 p-1 rounded-sm border border-white/10">
-              {['all', 'sale', 'lease'].map((mode) => (
-                <button
-                  key={mode}
-                  onClick={() => setActiveMode(mode)}
-                  className={`px-8 py-2 rounded-sm text-[10px] uppercase tracking-[0.2em] font-bold transition-all ${
-                    activeMode === mode ? 'bg-pc-gold text-white' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  {mode === 'all' ? 'All Assets' : `For ${mode}`}
-                </button>
-              ))}
-            </div>
-          </div>
+      
+      {/* Hero Section */}
+      <section className="pt-40 pb-20 px-6 bg-slate-50">
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="text-4xl md:text-6xl font-serif text-slate-900 mb-4">Real Estate Portfolio</h1>
+          <p className="text-slate-600 max-w-2xl mx-auto">
+            Discover our exclusive collection of certified properties across Cameroon's prime locations.
+          </p>
         </div>
       </section>
 
-      <div className="px-8">
-        <FilterBar onSearch={handleFilter} />
-      </div>
-
-      <main className="max-w-7xl mx-auto px-8 py-24">
-        <div className="flex justify-between items-end mb-12 border-b border-slate-100 pb-8">
-          <h2 className="text-2xl font-serif text-slate-900 uppercase">Featured Opportunities</h2>
-          <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">
-            {filteredProperties.length} Results Found
+      {/* Properties Grid */}
+      <section className="py-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {properties.map((property) => (
+              <PropertyCard 
+                key={property._id}
+                property={{
+                  id: property._id,
+                  title: property.title,
+                  image: property.images?.[0] || 'https://via.placeholder.com/400x300',
+                  status: property.status === 'PUBLISHED' ? 'sale' : 'lease',
+                  category: property.category,
+                  price: `${property.price?.amount?.toLocaleString() || 0}`,
+                  location: `${property.location?.city || ''}, ${property.location?.region || ''}`,
+                  type: property.category?.toLowerCase() === 'land' ? 'land' : 'building',
+                  size: property.surface?.value || 0,
+                  beds: property.features?.bedrooms || 3,
+                  baths: property.features?.bathrooms || 2
+                }}
+              />
+            ))}
           </div>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {filteredProperties.map((property) => (
-            /* PropertyCard reçoit les données simplifiées mais possède le bouton vers le détail */
-            <PropertyCard key={property.id} property={property} />
-          ))}
-        </div>
-      </main>
+      </section>
 
       <Footer />
     </div>
   );
 };
 
-export default RealEstatePage;
+export default RealEstate;

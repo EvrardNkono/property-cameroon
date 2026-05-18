@@ -1,5 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import Login from './pages/Login';
+import Register from './pages/Register';  // 👈 AJOUTER CET IMPORT
 
 // --- IMPORTS DES PAGES PUBLIQUES ---
 import Home from './pages/Home';
@@ -7,6 +10,7 @@ import RealEstatePage from './pages/RealEstate';
 import PropertyDetailsPage from './pages/PropertyDetailsPage';
 import AgriculturePage from './pages/AgriculturePage'; 
 import ExpertisePage from './pages/Expertise'; 
+import ExpertHubPage from './pages/ExpertHubPage'; // 👈 AJOUT DE LA PAGE HUB EXPERTS
 import MarketplacePage from './pages/MarketplacePage';
 import AppointmentPage from './pages/Appointment';
 import SourcingPage from './pages/Sourcing'; 
@@ -26,7 +30,7 @@ const BlogPostDetail = () => (
 // --- IMPORT LIVESTOCK ---
 import LivestockPage from './pages/LivestockIntroduction'; 
 import LivestockCategoryPage from './pages/LivestockCategoryPage';
-import ProjectDetailsPage from './pages/ProjectDetailsPage'; // Import de la nouvelle page de détails
+import ProjectDetailsPage from './pages/ProjectDetailsPage';
 
 // --- IMPORT CHATBOT ---
 import ChatAssistant from './components/ChatAssistant';
@@ -47,69 +51,80 @@ import AdminOverview from './pages/dashboard/admin/AdminOverview';
 import UserManagement from './pages/dashboard/admin/UserManagement';
 import GlobalInventory from './pages/dashboard/admin/GlobalInventory';
 import FinancialControl from './pages/dashboard/admin/FinancialControl';
+import AgriculturalInventory from './pages/dashboard/admin/AgriculturalInventory';
+import LivestockCategoriesManager from './pages/dashboard/admin/LivestockCategoriesManager';
+import LivestockAssetsManager from './pages/dashboard/admin/LivestockAssetsManager';
 
 function App() {
   return (
     <Router>
-      <div className="App">
-        <Routes>
-          {/* --- ROUTES PUBLIQUES PRINCIPALES --- */}
-          <Route path="/" element={<Home />} />
-          <Route path="/real-estate" element={<RealEstatePage />} />
-          <Route path="/real-estate/:id" element={<PropertyDetailsPage />} />
-          
-          <Route path="/global-sourcing" element={<SourcingPage />} />
-          <Route path="/book-appointment" element={<AppointmentPage />} />
-
-          {/* --- ÉCOSYSTÈME AGRICULTURE --- */}
-          <Route path="/agriculture" element={<AgriculturePage />} />
-          <Route path="/agriculture/marketplace" element={<MarketplacePage />} />
-          <Route path="/agriculture/expertise" element={<ExpertisePage />} />
-          
-          {/* Section Livestock */}
-          <Route path="/agriculture/livestock" element={<LivestockPage />} />
-          
-          {/* 
-              ROUTE DYNAMIQUE PAR CATÉGORIE : Gère aquaculture, poultry, cattle, pigs.
-          */}
-          <Route path="/agriculture/livestock/:category" element={<LivestockCategoryPage />} />
-
-          {/* 
-              NOUVELLE ROUTE DÉTAILS PROJET : Accès direct à une unité de production spécifique
-          */}
-          <Route path="/agriculture/livestock/:category/:id" element={<ProjectDetailsPage />} />
-
-          {/* --- CADRE LÉGAL & INSTITUTIONNEL --- */}
-          <Route path="/agriculture/institutional-framework" element={<InstitutionalPage />} />
-          <Route path="/agriculture/legal-safety" element={<LegalCompliancePage />} />
-
-          {/* --- BLOG --- */}
-          <Route path="/blog" element={<BlogPage />} />
-          <Route path="/blog/:id" element={<BlogPostDetail />} />
-
-          {/* --- ROUTES DASHBOARD --- */}
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<Overview />} />
+      <AuthProvider>
+        <div className="App">
+          <Routes>
+            {/* --- ROUTES PUBLIQUES PRINCIPALES --- */}
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />  {/* 👈 AJOUTER CETTE LIGNE */}
+            <Route path="/real-estate" element={<RealEstatePage />} />
+            <Route path="/real-estate/:id" element={<PropertyDetailsPage />} />
             
-            {/* Admin */}
-            <Route path="admin" element={<AdminOverview />} />
-            <Route path="admin/users" element={<UserManagement />} />
-            <Route path="admin/inventory" element={<GlobalInventory />} />
-            <Route path="admin/finances" element={<FinancialControl />} />
+            <Route path="/experts" element={<ExpertHubPage />} /> {/* 👈 NOUVELLE ROUTE DU HUB EXPERTS */}
+            <Route path="/global-sourcing" element={<SourcingPage />} />
+            <Route path="/book-appointment" element={<AppointmentPage />} />
 
-            {/* User */}
-            <Route path="profile" element={<UserProfile />} />
-            <Route path="properties" element={<MyLands />} />
-            <Route path="titles" element={<TitleDocuments />} />
-            <Route path="invest" element={<Portfolio />} />
-            <Route path="yields" element={<YieldReports />} />
-            <Route path="purchases" element={<MyPurchases />} />
-            <Route path="sourcing" element={<SourcingTracker />} />
-          </Route>
-        </Routes>
-        
-        <ChatAssistant />
-      </div>
+            {/* --- ÉCOSYSTÈME AGRICULTURE --- */}
+            <Route path="/agriculture" element={<AgriculturePage />} />
+            <Route path="/agriculture/marketplace" element={<MarketplacePage />} />
+            <Route path="/agriculture/expertise" element={<ExpertisePage />} />
+            
+            {/* Section Livestock */}
+            <Route path="/agriculture/livestock" element={<LivestockPage />} />
+            <Route path="/agriculture/livestock/:category" element={<LivestockCategoryPage />} />
+            <Route path="/agriculture/livestock/:category/:id" element={<ProjectDetailsPage />} />
+
+            {/* --- CADRE LÉGAL & INSTITUTIONNEL --- */}
+            <Route path="/agriculture/institutional-framework" element={<InstitutionalPage />} />
+            <Route path="/agriculture/legal-safety" element={<LegalCompliancePage />} />
+
+            {/* --- BLOG --- */}
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/blog/:id" element={<BlogPostDetail />} />
+
+            {/* --- ROUTES DASHBOARD --- */}
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<Overview />} />
+              
+              {/* Admin - Gestion principale */}
+              <Route path="admin" element={<AdminOverview />} />
+              <Route path="admin/users" element={<UserManagement />} />
+              <Route path="admin/inventory" element={<GlobalInventory />} />
+              <Route path="admin/finances" element={<FinancialControl />} />
+              
+              {/* Admin - Agriculture */}
+              <Route path="admin/agriculture" element={<AgriculturalInventory />} />
+              
+              {/* Admin - Livestock */}
+              <Route path="admin/livestock-categories" element={<LivestockCategoriesManager />} />
+              <Route path="admin/livestock" element={<LivestockAssetsManager />} />
+
+              {/* User - Section propriétaire */}
+              <Route path="profile" element={<UserProfile />} />
+              <Route path="properties" element={<MyLands />} />
+              <Route path="titles" element={<TitleDocuments />} />
+              
+              {/* User - Section investisseur */}
+              <Route path="invest" element={<Portfolio />} />
+              <Route path="yields" element={<YieldReports />} />
+              
+              {/* User - Section acheteur */}
+              <Route path="purchases" element={<MyPurchases />} />
+              <Route path="sourcing" element={<SourcingTracker />} />
+            </Route>
+          </Routes>
+          
+          <ChatAssistant />
+        </div>
+      </AuthProvider>
     </Router>
   );
 }

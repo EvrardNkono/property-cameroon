@@ -23,15 +23,18 @@ const UserAccessModal = ({ isOpen, onClose, user, onUpdate }) => {
     );
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    // Simulation d'appel API
-    setTimeout(() => {
-      onUpdate(user.id, selectedRoles);
-      setIsSaving(false);
-      onClose();
-    }, 1000);
-  };
+  // Remplacer le setTimeout par :
+const handleSave = async () => {
+  setIsSaving(true);
+  try {
+    await onUpdate(user.id, selectedRoles);
+    onClose();
+  } catch (error) {
+    console.error('Error updating roles:', error);
+  } finally {
+    setIsSaving(false);
+  }
+};
 
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">

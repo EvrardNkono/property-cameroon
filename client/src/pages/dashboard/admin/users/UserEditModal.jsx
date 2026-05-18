@@ -17,16 +17,19 @@ const UserEditModal = ({ isOpen, onClose, user, onSave }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    // Simulation API
-    setTimeout(() => {
-      onSave(user.id, formData);
-      setIsSubmitting(false);
-      onClose();
-    }, 1000);
-  };
+  // Remplacer le setTimeout par :
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  try {
+    await onSave(user.id, formData);
+    onClose();
+  } catch (error) {
+    console.error('Error updating user:', error);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">

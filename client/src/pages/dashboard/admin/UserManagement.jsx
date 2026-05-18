@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   Search, UserPlus, MoreVertical, Trash2, Edit3, 
-  Mail, Eye, TrendingUp, Home, FileText, User, ShieldCheck
+  Mail, Eye, TrendingUp, Home, FileText, User, ShieldCheck,
+  Loader2
 } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
+import api from '../../../services/api';
 
-// Importation de tes nouveaux modals
+// Importation des modals
 import UserDetailModal from './users/UserDetailModal';
 import UserAccessModal from './users/UserAccessModal';
 import UserBanModal from './users/UserBanModal';
@@ -64,12 +66,12 @@ const UserActionMenu = ({ user, onAction }) => {
   const getSmartActions = () => {
     const actions = [{ id: 'VIEW_PROFILE', label: 'View Profile', icon: <User size={14} />, color: 'text-slate-600', tab: 'profile' }];
     
-    if (user.roles.includes('OWNER')) {
+    if (user.roles && user.roles.includes('OWNER')) {
       actions.push({ id: 'VIEW_PROPERTIES', label: 'View Properties', icon: <Home size={14} />, color: 'text-blue-600', tab: 'properties' });
       actions.push({ id: 'VIEW_TITLES', label: 'Land Titles', icon: <FileText size={14} />, color: 'text-orange-600', tab: 'titles' });
     }
     
-    if (user.roles.includes('INVESTOR')) {
+    if (user.roles && user.roles.includes('INVESTOR')) {
       actions.push({ id: 'VIEW_INVEST', label: 'Investments', icon: <TrendingUp size={14} />, color: 'text-emerald-600', tab: 'investments' });
     }
     
@@ -139,19 +141,40 @@ const UserManagement = () => {
   const { activeRoles } = useOutletContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('ALL');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [users, setUsers] = useState([]);
 
   // ÉTATS DES MODALS
   const [selectedUser, setSelectedUser] = useState(null);
-  const [activeModal, setActiveModal] = useState(null); // 'VIEW', 'EDIT', 'ACCESS', 'BAN', 'VERIFY'
+  const [activeModal, setActiveModal] = useState(null);
   const [initialTab, setInitialTab] = useState('profile');
 
-  const users = [
-    { id: 1, name: "Evrard", email: "evrard@capef.cm", roles: ['ADMIN', 'OWNER'], status: 'Verified', joinDate: 'March 12, 2026' },
-    { id: 2, name: "Samuel Eto'o", email: "sam@legend.com", roles: ['INVESTOR', 'OWNER'], status: 'Verified', joinDate: 'February 01, 2026' },
-    { id: 3, name: "Jean Dupont", email: "j.dupont@orange.fr", roles: ['BUYER'], status: 'Pending', joinDate: 'April 05, 2026' },
-    { id: 4, name: "Marie Ngo", email: "marie.ngo@test.cm", roles: ['OWNER'], status: 'Verified', joinDate: 'January 20, 2026' },
-    { id: 5, name: "Basic Client", email: "test@user.com", roles: ['BUYER'], status: 'Pending', joinDate: 'April 09, 2026' },
-  ];
+  // Charger les utilisateurs depuis le backend
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const filters = {};
+      if (activeFilter !== 'ALL') filters.role = activeFilter;
+      if (searchTerm) filters.search = searchTerm;
+      
+      const response = await api.getUsers(filters);
+      setUsers(response.users || []);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      setError(err.message || 'Erreur lors du chargement des utilisateurs');
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Effet pour charger les users quand les filtres changent
+  useEffect(() => {
+    fetchUsers();
+  }, [activeFilter, searchTerm]);
 
   // Handler Centralisé pour les actions du menu
   const handleMenuAction = (user, actionType, tab = 'profile') => {
@@ -165,40 +188,136 @@ const UserManagement = () => {
     else if (actionType === 'VERIFY_KYC') setActiveModal('VERIFY');
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = activeFilter === 'ALL' || user.roles.includes(activeFilter);
-    return matchesSearch && matchesFilter;
-  });
+  // Handlers pour les actions backend
+  const handleUpdateRoles = async (userId, roles) => {
+    try {
+      await api.updateUserRoles(userId, roles);
+      await fetchUsers(); // Rafraîchir la liste
+      setActiveModal(null);
+    } catch (err) {
+      console.error('Error updating roles:', err);
+      alert('Erreur lors de la mise à jour des rôles');
+    }
+  };
+
+  const handleBanUser = async (userId, banReason) => {
+    try {
+      await api.banUser(userId, banReason);
+      await fetchUsers();
+      setActiveModal(null);
+    } catch (err) {
+      console.error('Error banning user:', err);
+      alert('Erreur lors du bannissement');
+    }
+  };
+
+  const handleVerifyKYC = async (userId, kycStatusValue) => {
+  console.log('📝 handleVerifyKYC received:', { userId, kycStatusValue });
+  
+  try {
+    await api.verifyKYC(userId, kycStatusValue);
+    await fetchUsers();
+    setActiveModal(null);
+  } catch (err) {
+    console.error('Error verifying KYC:', err);
+    alert('Erreur lors de la vérification KYC');
+  }
+};
+
+  const handleEditUser = async (userId, userData) => {
+    try {
+      await api.updateUser(userId, userData);
+      await fetchUsers();
+      setActiveModal(null);
+    } catch (err) {
+      console.error('Error updating user:', err);
+      alert('Erreur lors de la mise à jour');
+    }
+  };
+
+  const handleCreateUser = async () => {
+    // À implémenter - ouvrir un modal de création
+    console.log('Create user');
+  };
+
+  // Affichage du loader
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-96 space-y-4">
+        <Loader2 size={48} className="text-[#c5a059] animate-spin" />
+        <p className="text-slate-500 text-sm">Chargement des utilisateurs...</p>
+      </div>
+    );
+  }
+
+  // Affichage de l'erreur
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-96 space-y-4">
+        <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-center">
+          <p className="font-bold">Erreur</p>
+          <p className="text-sm">{error}</p>
+          <button 
+            onClick={fetchUsers}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold"
+          >
+            Réessayer
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
-      {/* HEADER & FILTERS (Inchangés) */}
+      {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h1 className="text-3xl font-serif text-[#0a2619] italic">Member Management</h1>
           <p className="text-slate-500 text-sm mt-1">Supervise access permissions and user assets.</p>
+          <p className="text-xs text-green-600 mt-1">
+            ✅ Connecté au backend - {users.length} utilisateur{users.length > 1 ? 's' : ''} chargé{users.length > 1 ? 's' : ''}
+          </p>
         </div>
-        <button className="flex items-center gap-2 bg-[#0a2619] text-[#c5a059] px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:scale-105 transition-all">
+        <button 
+          onClick={handleCreateUser}
+          className="flex items-center gap-2 bg-[#0a2619] text-[#c5a059] px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:scale-105 transition-all"
+        >
           <UserPlus size={16} /> Create New User
         </button>
       </div>
 
+      {/* FILTRES */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-center">
         <div className="lg:col-span-2 flex flex-wrap gap-2">
           {['ALL', 'OWNER', 'INVESTOR', 'BUYER', 'ADMIN'].map((filter) => (
-            <button key={filter} onClick={() => setActiveFilter(filter)} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeFilter === filter ? 'bg-[#c5a059] text-[#0a2619] shadow-md' : 'bg-white text-slate-400 border border-slate-100'}`}>{filter}</button>
+            <button 
+              key={filter} 
+              onClick={() => setActiveFilter(filter)} 
+              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                activeFilter === filter 
+                  ? 'bg-[#c5a059] text-[#0a2619] shadow-md' 
+                  : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'
+              }`}
+            >
+              {filter}
+            </button>
           ))}
         </div>
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input type="text" placeholder="Search members..." className="w-full pl-12 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-sm outline-none" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          <input 
+            type="text" 
+            placeholder="Search members..." 
+            className="w-full pl-12 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-[#c5a059]/20" 
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value)} 
+          />
         </div>
       </div>
 
-      {/* TABLE AVEC CONNEXION MENU */}
+      {/* TABLE */}
       <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-visible">
         <div className="overflow-x-auto overflow-visible">
           <table className="w-full text-left">
@@ -206,37 +325,56 @@ const UserManagement = () => {
               <tr>
                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">User</th>
                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Roles</th>
+                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-slate-50/80 transition-colors group">
+              {users.map((user) => (
+                <tr key={user._id || user.id} className="hover:bg-slate-50/80 transition-colors group">
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-[#0a2619] text-[#c5a059] rounded-xl flex items-center justify-center font-black text-xs">{user.name.charAt(0)}</div>
+                      <div className="w-10 h-10 bg-[#0a2619] text-[#c5a059] rounded-xl flex items-center justify-center font-black text-xs">
+                        {user.name?.charAt(0) || '?'}
+                      </div>
                       <div>
                         <p className="font-bold text-[#0a2619] text-sm">{user.name}</p>
-                        <p className="text-[10px] text-slate-400 flex items-center gap-1"><Mail size={10}/> {user.email}</p>
+                        <p className="text-[10px] text-slate-400 flex items-center gap-1">
+                          <Mail size={10}/> {user.email}
+                        </p>
                       </div>
                     </div>
                   </td>
                   <td className="px-8 py-5">
                     <div className="flex gap-1 flex-wrap">
-                      {user.roles.map(role => (
-                        <span key={role} className={`text-[8px] font-black px-2 py-0.5 rounded border uppercase ${role === 'ADMIN' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>{role}</span>
+                      {user.roles?.map(role => (
+                        <span key={role} className={`text-[8px] font-black px-2 py-0.5 rounded border uppercase ${
+                          role === 'ADMIN' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-slate-100 text-slate-500 border-slate-200'
+                        }`}>
+                          {role}
+                        </span>
                       ))}
                     </div>
+                  </td>
+                  <td className="px-8 py-5">
+                    <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${
+                      user.status === 'Verified' ? 'bg-green-100 text-green-600' :
+                      user.status === 'Banned' ? 'bg-red-100 text-red-600' : 
+                      user.status === 'Suspended' ? 'bg-orange-100 text-orange-600' :
+                      'bg-yellow-100 text-yellow-600'
+                    }`}>
+                      {user.status || 'Pending'}
+                    </span>
                   </td>
                   <td className="px-8 py-5 text-right overflow-visible">
                     <div className="flex justify-end items-center gap-2">
                       <button 
                         onClick={() => handleMenuAction(user, 'VIEW_PROFILE', 'profile')}
                         className="p-2 text-slate-300 hover:text-blue-500 transition-colors"
+                        title="Voir le profil"
                       >
                         <Eye size={16}/>
                       </button>
-                      {/* Injection du handler d'action */}
                       <UserActionMenu 
                         user={user} 
                         onAction={(type, tab) => handleMenuAction(user, type, tab)} 
@@ -247,15 +385,55 @@ const UserManagement = () => {
               ))}
             </tbody>
           </table>
+          {users.length === 0 && (
+            <div className="p-20 text-center text-slate-400 font-medium italic">
+              Aucun utilisateur trouvé
+            </div>
+          )}
         </div>
       </div>
 
-      {/* RENDU DES MODALS */}
-      {activeModal === 'VIEW' && <UserDetailModal isOpen={true} user={selectedUser} initialTab={initialTab} onClose={() => setActiveModal(null)} />}
-      {activeModal === 'EDIT' && <UserEditModal isOpen={true} user={selectedUser} onClose={() => setActiveModal(null)} onSave={(id, data) => console.log("Save", data)} />}
-      {activeModal === 'ACCESS' && <UserAccessModal isOpen={true} user={selectedUser} onClose={() => setActiveModal(null)} onUpdate={(id, roles) => console.log("Roles", roles)} />}
-      {activeModal === 'BAN' && <UserBanModal isOpen={true} user={selectedUser} onClose={() => setActiveModal(null)} onConfirm={(id, data) => console.log("Ban", data)} />}
-      {activeModal === 'VERIFY' && <UserVerificationModal isOpen={true} user={selectedUser} onClose={() => setActiveModal(null)} onVerify={(id, data) => console.log("Verify", data)} />}
+      {/* MODALS */}
+      {activeModal === 'VIEW' && selectedUser && (
+        <UserDetailModal 
+          isOpen={true} 
+          user={selectedUser} 
+          initialTab={initialTab} 
+          onClose={() => setActiveModal(null)} 
+        />
+      )}
+      {activeModal === 'EDIT' && selectedUser && (
+        <UserEditModal 
+          isOpen={true} 
+          user={selectedUser} 
+          onClose={() => setActiveModal(null)} 
+          onSave={handleEditUser} 
+        />
+      )}
+      {activeModal === 'ACCESS' && selectedUser && (
+        <UserAccessModal 
+          isOpen={true} 
+          user={selectedUser} 
+          onClose={() => setActiveModal(null)} 
+          onUpdate={handleUpdateRoles} 
+        />
+      )}
+      {activeModal === 'BAN' && selectedUser && (
+        <UserBanModal 
+          isOpen={true} 
+          user={selectedUser} 
+          onClose={() => setActiveModal(null)} 
+          onConfirm={handleBanUser} 
+        />
+      )}
+      {activeModal === 'VERIFY' && selectedUser && (
+        <UserVerificationModal 
+          isOpen={true} 
+          user={selectedUser} 
+          onClose={() => setActiveModal(null)} 
+          onVerify={handleVerifyKYC} 
+        />
+      )}
 
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -12,26 +12,63 @@ import {
   X, 
   Users,
   Database,
-  BarChart3
+  BarChart3,
+  Loader2,
+  Sprout,
+  Beef,
+  Leaf
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const DashboardLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout, loading: authLoading } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
-  // Role State (Simulator)
-  const [activeRoles, setActiveRoles] = useState(['BUYER']); 
+  const [activeRoles, setActiveRoles] = useState([]);
+  const [isUpdatingRoles, setIsUpdatingRoles] = useState(false);
+
+  // Initialiser les rôles actifs depuis l'utilisateur connecté
+  useEffect(() => {
+    if (user && user.roles) {
+      setActiveRoles(user.roles);
+    }
+  }, [user]);
 
   const isAdminMode = activeRoles.includes('ADMIN');
 
-  // --- LOGIQUE: LOGOUT & REDIRECT ---
-  const handleLogout = () => {
-    // Nettoyage éventuel (localStorage.clear(), etc.)
+  // Déconnexion
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
 
-  // MENU CONFIGURATION
+  // Changer les rôles actifs (mode simulation)
+  const toggleRole = async (role) => {
+    // Ne pas permettre de désactiver ADMIN si c'est le seul rôle ?
+    if (role === 'ADMIN' && activeRoles.length === 1 && activeRoles.includes('ADMIN')) {
+      return;
+    }
+    
+    setActiveRoles(prev => {
+      const newRoles = prev.includes(role) 
+        ? prev.filter(r => r !== role) 
+        : [...prev, role];
+      
+      // Si on active ADMIN, on navigue vers le dashboard admin
+      if (role === 'ADMIN' && !prev.includes(role)) {
+        navigate('/dashboard/admin/users');
+      }
+      // Si on désactive ADMIN, on navigue vers le dashboard utilisateur
+      if (role === 'ADMIN' && prev.includes(role) && newRoles.length === 0) {
+        navigate('/dashboard');
+      }
+      
+      return newRoles;
+    });
+  };
+
+  // Configuration du menu
   const menuConfig = [
     { 
       label: 'Overview', 
@@ -57,6 +94,24 @@ const DashboardLayout = () => {
       label: 'Financial Control', 
       path: '/dashboard/admin/finances', 
       icon: <BarChart3 size={20} />, 
+      roles: ['ADMIN'] 
+    },
+    { 
+      label: 'Agricultural Lands', 
+      path: '/dashboard/admin/agriculture', 
+      icon: <Sprout size={20} />, 
+      roles: ['ADMIN'] 
+    },
+    { 
+      label: 'Livestock Categories', 
+      path: '/dashboard/admin/livestock-categories', 
+      icon: <Beef size={20} />, 
+      roles: ['ADMIN'] 
+    },
+    { 
+      label: 'Livestock Assets', 
+      path: '/dashboard/admin/livestock', 
+      icon: <Leaf size={20} />, 
       roles: ['ADMIN'] 
     },
     // --- USER SECTION ---
@@ -97,27 +152,54 @@ const DashboardLayout = () => {
     },
   ];
 
-  // MENU FILTERING LOGIC
+  // Filtrage du menu selon les rôles actifs
   const filteredMenu = menuConfig.filter(item => {
     if (isAdminMode) {
+      // En mode admin, on cache les sections personnelles
       if (item.isPersonal) return false;
       return item.roles.includes('ADMIN');
     }
+    // En mode utilisateur, on cache les sections admin
     const isStrictAdmin = item.roles.includes('ADMIN') && item.roles.length === 1;
     if (isStrictAdmin) return false;
     return item.roles.some(role => activeRoles.includes(role));
   });
 
-  // ROLE TOGGLE
-  const toggleRole = (role) => {
-    setActiveRoles(prev => {
-      const newRoles = prev.includes(role) 
-        ? prev.filter(r => r !== role) 
-        : [...prev, role];
-      navigate('/dashboard'); 
-      return newRoles;
-    });
+  // Récupérer le nom d'utilisateur
+  const getUserName = () => {
+    if (!user) return 'Invité';
+    return user.name || user.email?.split('@')[0] || 'Utilisateur';
   };
+
+  // Récupérer la lettre pour l'avatar
+  const getUserInitial = () => {
+    const name = getUserName();
+    return name.charAt(0).toUpperCase();
+  };
+
+  // Récupérer le rôle principal pour l'affichage
+  const getPrimaryRoleLabel = () => {
+    if (isAdminMode) return 'Super Admin';
+    if (activeRoles.includes('OWNER')) return 'Propriétaire';
+    if (activeRoles.includes('INVESTOR')) return 'Investisseur';
+    if (activeRoles.includes('BUYER')) return 'Acheteur';
+    return 'Membre';
+  };
+
+  // Chargement
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[#f8fafc]">
+        <Loader2 size={48} className="text-[#c5a059] animate-spin" />
+      </div>
+    );
+  }
+
+  // Redirection si non connecté
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
 
   return (
     <div className="flex h-screen bg-[#f8fafc] font-sans text-slate-900 overflow-hidden">
@@ -130,7 +212,7 @@ const DashboardLayout = () => {
       {/* SIDEBAR */}
       <aside className={`fixed lg:static inset-y-0 left-0 w-72 bg-[#0a2619] text-white flex flex-col z-50 transition-all duration-500 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${isAdminMode ? 'border-r-4 border-red-600/20' : ''} h-full`}>
         
-        {/* LOGO (Fixe) */}
+        {/* LOGO */}
         <div className="p-8 flex-shrink-0">
           <h1 className="text-xl font-bold tracking-tighter italic uppercase">
             Property <span className="text-[#c5a059]">Cameroon</span>
@@ -142,7 +224,7 @@ const DashboardLayout = () => {
           )}
         </div>
 
-        {/* NAVIGATION (Scrollable) */}
+        {/* NAVIGATION */}
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto scrollbar-hide hover:scrollbar-default">
           {filteredMenu.map((item, index) => (
             <Link
@@ -161,7 +243,7 @@ const DashboardLayout = () => {
           ))}
         </nav>
 
-        {/* LOGOUT BUTTON (Toujours visible en bas) */}
+        {/* LOGOUT BUTTON */}
         <div className="p-6 border-t border-white/5 flex-shrink-0 bg-[#0a2619]">
           <button 
             onClick={handleLogout}
@@ -179,13 +261,15 @@ const DashboardLayout = () => {
         <header className="h-auto md:h-24 bg-white border-b border-slate-200 flex flex-col md:flex-row items-center justify-between px-4 md:px-10 shrink-0 py-4 md:py-0 gap-4">
           
           <div className="flex items-center gap-4">
-            <button className="lg:hidden p-2 text-slate-600" onClick={() => setIsSidebarOpen(true)}><Menu /></button>
+            <button className="lg:hidden p-2 text-slate-600" onClick={() => setIsSidebarOpen(true)}>
+              <Menu />
+            </button>
             <h2 className="font-serif text-[#0a2619] text-lg italic transition-all">
               {isAdminMode ? "Master Console" : "Member Area"}
             </h2>
           </div>
 
-          {/* ROLE SIMULATOR */}
+          {/* ROLE SELECTOR */}
           <div className="flex items-center bg-slate-50 p-1 rounded-2xl border border-slate-200 shadow-inner">
             <div className="flex gap-1">
               {[
@@ -193,39 +277,46 @@ const DashboardLayout = () => {
                 { id: 'OWNER', label: 'Owner', color: 'bg-orange-500' },
                 { id: 'INVESTOR', label: 'Investor', color: 'bg-[#0a2619]' },
                 { id: 'BUYER', label: 'Buyer', color: 'bg-blue-600' }
-              ].map((role) => (
-                <button
-                  key={role.id}
-                  onClick={() => toggleRole(role.id)}
-                  className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
-                    activeRoles.includes(role.id)
-                      ? `${role.color} text-white shadow-md scale-105`
-                      : 'bg-white text-slate-400 hover:bg-slate-50'
-                  }`}
-                >
-                  {role.label}
-                </button>
-              ))}
+              ].map((role) => {
+                // Vérifier si l'utilisateur a réellement ce rôle dans son compte
+                const hasRole = user?.roles?.includes(role.id);
+                if (!hasRole && role.id !== 'BUYER') return null;
+                
+                return (
+                  <button
+                    key={role.id}
+                    onClick={() => toggleRole(role.id)}
+                    disabled={!hasRole && role.id !== 'BUYER'}
+                    className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
+                      activeRoles.includes(role.id)
+                        ? `${role.color} text-white shadow-md scale-105`
+                        : 'bg-white text-slate-400 hover:bg-slate-50'
+                    } ${!hasRole && role.id !== 'BUYER' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {role.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* PROFILE INDICATOR */}
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
-              <p className="text-xs font-black text-[#0a2619] uppercase">Evrard</p>
+              <p className="text-xs font-black text-[#0a2619] uppercase">{getUserName()}</p>
               <p className={`text-[8px] font-bold uppercase tracking-[0.1em] ${isAdminMode ? 'text-red-600' : 'text-[#c5a059]'}`}>
-                 {isAdminMode ? 'Super Admin' : 'Premium Member'}
+                {getPrimaryRoleLabel()}
               </p>
             </div>
             <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold transition-all duration-500 ${
               isAdminMode ? 'bg-red-50 border-red-600 text-red-600 rotate-[360deg]' : 'bg-[#c5a059] border-[#0a2619]/10 text-[#0a2619]'
             }`}>
-              E
+              {getUserInitial()}
             </div>
           </div>
         </header>
 
-        {/* ZONE DE CONTENU SCROLLABLE */}
+        {/* CONTENT */}
         <section className="flex-1 p-4 md:p-10 overflow-y-auto bg-[#f8fafc]">
           <div className="max-w-6xl mx-auto">
             <Outlet key={activeRoles.join(',')} context={{ activeRoles, setActiveRoles }} />
