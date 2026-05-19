@@ -9,28 +9,14 @@ export const getAllCategories = async (req, res) => {
   try {
     const { isActive } = req.query;
     let filter = {};
+    
     if (isActive !== undefined) filter.isActive = isActive === 'true';
     
     const categories = await LivestockCategory.find(filter).sort('order');
     
-    // Mettre à jour les statistiques pour chaque catégorie
-    for (const category of categories) {
-      const livestock = await Livestock.find({ 
-        category: category.slug, 
-        status: 'AVAILABLE' 
-      });
-      
-      category.stats.totalAssets = livestock.length;
-      category.stats.totalValue = livestock.reduce((sum, l) => sum + (l.price?.amount || 0), 0);
-      category.stats.avgRoi = livestock.length > 0 
-        ? livestock.reduce((sum, l) => sum + (l.roi || 0), 0) / livestock.length 
-        : 0;
-      
-      await category.save();
-    }
-    
     res.json({ success: true, count: categories.length, categories });
   } catch (error) {
+    console.error('Error in getAllCategories:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -44,6 +30,7 @@ export const getCategoryBySlug = async (req, res) => {
     }
     res.json({ success: true, category });
   } catch (error) {
+    console.error('Error in getCategoryBySlug:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -57,6 +44,7 @@ export const getCategoryById = async (req, res) => {
     }
     res.json({ success: true, category });
   } catch (error) {
+    console.error('Error in getCategoryById:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -64,9 +52,39 @@ export const getCategoryById = async (req, res) => {
 // Créer une catégorie
 export const createCategory = async (req, res) => {
   try {
-    const categoryData = { ...req.body };
+    console.log('📝 Creating category...');
+    console.log('Body:', req.body);
+    console.log('File:', req.file);
     
-    // Gérer l'upload d'image si un fichier a été envoyé
+    // Extraire les données du formulaire
+    const { slug, title, subtitle, description, iconName, marketDemand, features, order, isActive, imageType, imageUrl } = req.body;
+    
+    // Parser features si c'est une string JSON
+    let parsedFeatures = features;
+    if (typeof features === 'string') {
+      try {
+        parsedFeatures = JSON.parse(features);
+      } catch (e) {
+        parsedFeatures = features.split(',').map(f => f.trim());
+      }
+    }
+    
+    const categoryData = {
+      slug,
+      title,
+      subtitle: subtitle || '',
+      description,
+      iconName: iconName || 'Leaf',
+      marketDemand: marketDemand || '+0% YoY',
+      features: Array.isArray(parsedFeatures) ? parsedFeatures : [],
+      order: parseInt(order) || 0,
+      isActive: isActive === 'true' || isActive === true,
+      imageType: imageType || 'url',
+      imageUrl: imageUrl || '',
+      imageUpload: ''
+    };
+    
+    // Gérer l'upload d'image
     if (req.file) {
       categoryData.imageType = 'upload';
       categoryData.imageUpload = `/uploads/categories/${req.file.filename}`;
@@ -74,8 +92,11 @@ export const createCategory = async (req, res) => {
     }
     
     const category = await LivestockCategory.create(categoryData);
+    console.log(`✅ Category created: ${category.title}`);
+    
     res.status(201).json({ success: true, category });
   } catch (error) {
+    console.error('Error in createCategory:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -88,11 +109,35 @@ export const updateCategory = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Category not found' });
     }
     
-    const updateData = { ...req.body };
+    const { slug, title, subtitle, description, iconName, marketDemand, features, order, isActive, imageType, imageUrl } = req.body;
+    
+    // Parser features
+    let parsedFeatures = features;
+    if (typeof features === 'string') {
+      try {
+        parsedFeatures = JSON.parse(features);
+      } catch (e) {
+        parsedFeatures = features.split(',').map(f => f.trim());
+      }
+    }
+    
+    const updateData = {
+      slug: slug || category.slug,
+      title: title || category.title,
+      subtitle: subtitle !== undefined ? subtitle : category.subtitle,
+      description: description || category.description,
+      iconName: iconName || category.iconName,
+      marketDemand: marketDemand || category.marketDemand,
+      features: Array.isArray(parsedFeatures) ? parsedFeatures : category.features,
+      order: order !== undefined ? parseInt(order) : category.order,
+      isActive: isActive !== undefined ? (isActive === 'true' || isActive === true) : category.isActive,
+      imageType: imageType || category.imageType,
+      imageUrl: imageUrl || category.imageUrl
+    };
     
     // Gérer l'upload d'image
     if (req.file) {
-      // Supprimer l'ancienne image uploadée si elle existe
+      // Supprimer l'ancienne image si elle existe
       if (category.imageUpload && category.imageType === 'upload') {
         const oldImagePath = path.join(process.cwd(), category.imageUpload);
         if (fs.existsSync(oldImagePath)) {
@@ -102,10 +147,6 @@ export const updateCategory = async (req, res) => {
       updateData.imageType = 'upload';
       updateData.imageUpload = `/uploads/categories/${req.file.filename}`;
       updateData.imageUrl = '';
-    } else if (req.body.imageType === 'url') {
-      updateData.imageType = 'url';
-      updateData.imageUrl = req.body.imageUrl;
-      updateData.imageUpload = '';
     }
     
     const updatedCategory = await LivestockCategory.findByIdAndUpdate(
@@ -114,8 +155,10 @@ export const updateCategory = async (req, res) => {
       { new: true, runValidators: true }
     );
     
+    console.log(`✅ Category updated: ${updatedCategory.title}`);
     res.json({ success: true, category: updatedCategory });
   } catch (error) {
+    console.error('Error in updateCategory:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -137,8 +180,39 @@ export const deleteCategory = async (req, res) => {
     }
     
     await category.deleteOne();
+    console.log(`✅ Category deleted: ${category.title}`);
     res.json({ success: true, message: 'Category deleted successfully' });
   } catch (error) {
+    console.error('Error in deleteCategory:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Mettre à jour les statistiques d'une catégorie (calculées automatiquement)
+export const updateCategoryStats = async (req, res) => {
+  try {
+    const categories = await LivestockCategory.find({});
+    
+    for (const category of categories) {
+      const livestock = await Livestock.find({ 
+        category: category.slug, 
+        status: 'AVAILABLE' 
+      });
+      
+      category.stats = {
+        totalAssets: livestock.length,
+        totalValue: livestock.reduce((sum, l) => sum + (l.price?.amount || 0), 0),
+        avgRoi: livestock.length > 0 
+          ? livestock.reduce((sum, l) => sum + (l.roi || 0), 0) / livestock.length 
+          : 0
+      };
+      
+      await category.save();
+    }
+    
+    res.json({ success: true, message: 'Stats updated' });
+  } catch (error) {
+    console.error('Error in updateCategoryStats:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

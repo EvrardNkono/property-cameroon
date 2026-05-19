@@ -22,28 +22,78 @@ export const getAllAmenities = async (req, res) => {
 };
 
 // Obtenir les amenities près d'une propriété
+// Obtenir les amenities près d'une propriété
 export const getAmenitiesNearProperty = async (req, res) => {
   try {
     const { propertyId } = req.params;
     const { radius = 5 } = req.query; // rayon en km par défaut
     
     const property = await Property.findById(propertyId);
-    if (!property || !property.location?.coordinates) {
-      return res.status(404).json({ success: false, message: 'Property or coordinates not found' });
+    
+    // ✅ Vérification plus stricte des coordonnées
+    if (!property) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Property not found',
+        amenities: {
+          schools: { count: 0, names: [] },
+          markets: { count: 0, names: [] },
+          stations: { count: 0, names: [] },
+          bakeries: { count: 0, names: [] }
+        }
+      });
     }
     
-    // Recherche par rayon (si vous avez des coordonnées)
-    const amenities = await Amenity.find({
-      'location.coordinates': {
-        $near: {
-          $geometry: {
-            type: 'Point',
-            coordinates: [property.location.coordinates.lng, property.location.coordinates.lat]
-          },
-          $maxDistance: radius * 1000 // conversion en mètres
+    // ✅ Vérifier si les coordonnées existent et sont valides
+    const hasValidCoordinates = property.location?.coordinates && 
+                                typeof property.location.coordinates.lat === 'number' &&
+                                typeof property.location.coordinates.lng === 'number' &&
+                                !isNaN(property.location.coordinates.lat) &&
+                                !isNaN(property.location.coordinates.lng);
+    
+    if (!hasValidCoordinates) {
+      // ✅ Retourner des données vides au lieu d'une erreur
+      console.log(`Property ${propertyId} has no valid coordinates, returning empty amenities`);
+      return res.json({ 
+        success: true, 
+        message: 'No coordinates available for this property',
+        amenities: {
+          schools: { count: 0, names: [] },
+          markets: { count: 0, names: [] },
+          stations: { count: 0, names: [] },
+          bakeries: { count: 0, names: [] }
         }
-      }
-    }).limit(20);
+      });
+    }
+    
+    // ✅ Recherche par rayon avec coordonnées valides
+    let amenities = [];
+    try {
+      amenities = await Amenity.find({
+        'location.coordinates': {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: [property.location.coordinates.lng, property.location.coordinates.lat]
+            },
+            $maxDistance: radius * 1000 // conversion en mètres
+          }
+        }
+      }).limit(20);
+    } catch (dbError) {
+      console.error('MongoDB geo query error:', dbError);
+      // Si la requête géo échoue, retourner des données vides
+      return res.json({ 
+        success: true, 
+        message: 'Geo query failed, no amenities found',
+        amenities: {
+          schools: { count: 0, names: [] },
+          markets: { count: 0, names: [] },
+          stations: { count: 0, names: [] },
+          bakeries: { count: 0, names: [] }
+        }
+      });
+    }
     
     // Grouper par type
     const grouped = {
@@ -57,18 +107,36 @@ export const getAmenitiesNearProperty = async (req, res) => {
       let key;
       switch (amenity.type) {
         case 'school': key = 'schools'; break;
+        case 'university': key = 'schools'; break;
         case 'market': key = 'markets'; break;
+        case 'supermarket': key = 'markets'; break;
         case 'station': key = 'stations'; break;
+        case 'gas_station': key = 'stations'; break;
         case 'bakery': key = 'bakeries'; break;
+        case 'restaurant': key = 'bakeries'; break;
         default: return;
       }
       grouped[key].count++;
-      grouped[key].names.push(amenity.name);
+      if (grouped[key].names.length < 10) { // Limiter à 10 noms
+        grouped[key].names.push(amenity.name);
+      }
     });
     
     res.json({ success: true, amenities: grouped });
+    
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Error in getAmenitiesNearProperty:', error);
+    // ✅ Toujours retourner un objet valide même en cas d'erreur
+    res.status(500).json({ 
+      success: false, 
+      message: error.message,
+      amenities: {
+        schools: { count: 0, names: [] },
+        markets: { count: 0, names: [] },
+        stations: { count: 0, names: [] },
+        bakeries: { count: 0, names: [] }
+      }
+    });
   }
 };
 

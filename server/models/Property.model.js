@@ -20,7 +20,28 @@ const propertySchema = new mongoose.Schema({
     hasElectricity: Boolean,
     hasWater: Boolean,
     hasRoad: Boolean,
-    isFenced: Boolean
+    isFenced: Boolean,
+    bedrooms: { type: Number, default: 0 },
+    bathrooms: { type: Number, default: 0 }
+  },
+  // ✅ Amenities renseignées par le propriétaire (optionnel)
+  amenities: {
+    schools: {
+      count: { type: Number, default: 0 },
+      names: [{ type: String }]
+    },
+    markets: {
+      count: { type: Number, default: 0 },
+      names: [{ type: String }]
+    },
+    stations: {
+      count: { type: Number, default: 0 },
+      names: [{ type: String }]
+    },
+    bakeries: {
+      count: { type: Number, default: 0 },
+      names: [{ type: String }]
+    }
   },
   views: { type: Number, default: 0 },
   soldAt: Date,

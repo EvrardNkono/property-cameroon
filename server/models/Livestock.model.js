@@ -3,10 +3,11 @@ import mongoose from 'mongoose';
 
 const livestockSchema = new mongoose.Schema({
   title: { type: String, required: true },
-  category: {
-    type: String,
-    enum: ['aquaculture', 'poultry', 'cattle', 'pigs'],
-    required: true
+  // ✅ Plus d'enum ! La catégorie peut être n'importe quelle string
+  category: { 
+    type: String, 
+    required: true,
+    index: true
   },
   location: {
     city: String,
@@ -17,12 +18,12 @@ const livestockSchema = new mongoose.Schema({
     amount: { type: Number, required: true },
     currency: { type: String, default: 'FCFA' }
   },
-  roi: { type: Number, default: 0 }, // Rendement en pourcentage
+  roi: { type: Number, default: 0 },
   capacity: {
     value: Number,
     unit: { type: String, default: 'heads' }
   },
-  cycleDuration: { type: String }, // ex: "6 months"
+  cycleDuration: { type: String },
   status: {
     type: String,
     enum: ['AVAILABLE', 'RESERVED', 'SOLD'],
@@ -36,9 +37,8 @@ const livestockSchema = new mongoose.Schema({
     hasVeterinaryAccess: Boolean,
     hasFeedStorage: Boolean
   },
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  certifications: [String],
-  createdAt: { type: Date, default: Date.now }
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  certifications: [String]
 }, { timestamps: true });
 
 export default mongoose.model('Livestock', livestockSchema);

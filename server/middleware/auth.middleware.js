@@ -1,4 +1,5 @@
-﻿import jwt from 'jsonwebtoken';
+﻿// backend/middleware/auth.middleware.js
+import jwt from 'jsonwebtoken';
 import User from '../models/User.model.js';
 
 export const protect = async (req, res, next) => {
@@ -17,18 +18,36 @@ export const protect = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'User not found' });
     }
 
-    next(); // ✅ Appelé une seule fois, à la fin
+    // ✅ Log pour debug (optionnel, à retirer en production)
+    console.log(`✅ User authenticated: ${req.user.email}, Roles: ${req.user.roles.join(', ')}`);
+    
+    next();
   } catch (error) {
+    console.error('Auth error:', error.message);
     return res.status(401).json({ success: false, message: 'Not authorized, token failed' });
   }
 };
 
+// ✅ Version unique et corrigée de authorize
 export const authorize = (...roles) => {
   return (req, res, next) => {
-    const hasRole = req.user.roles.some(role => roles.includes(role));
-    if (!hasRole) {
-      return res.status(403).json({ success: false, message: `Role ${req.user.roles} not authorized to access this route` });
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'User not authenticated' });
     }
+    
+    // ✅ Log pour debug
+    console.log(`🔒 Checking authorization: User roles: [${req.user.roles.join(', ')}], Required: [${roles.join(', ')}]`);
+    
+    // ✅ Vérification correcte
+    const hasRole = req.user.roles.some(role => roles.includes(role));
+    
+    if (!hasRole) {
+      return res.status(403).json({ 
+        success: false, 
+        message: `Access denied. Required roles: ${roles.join(', ')}. Your roles: ${req.user.roles.join(', ')}`
+      });
+    }
+    
     next();
   };
 };

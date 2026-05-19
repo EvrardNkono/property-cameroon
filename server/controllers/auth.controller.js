@@ -1,8 +1,18 @@
-﻿import User from '../models/User.model.js';
+﻿// backend/controllers/auth.controller.js
+import User from '../models/User.model.js';
 import jwt from 'jsonwebtoken';
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE || '7d' });
+// ✅ CORRECTION : Inclure les rôles dans le token
+const generateToken = (user) => {
+  return jwt.sign(
+    { 
+      id: user._id, 
+      email: user.email,
+      roles: user.roles  // ← Ajouter les rôles ici
+    }, 
+    process.env.JWT_SECRET, 
+    { expiresIn: process.env.JWT_EXPIRE || '7d' }
+  );
 };
 
 export const register = async (req, res) => {
@@ -23,19 +33,20 @@ export const register = async (req, res) => {
       password,
       phone,
       roles: parsedRoles,
-      status: 'Pending',
-      kycStatus: 'Not Submitted'
+      status: 'PENDING',  // ← Normaliser en majuscules
+      kycStatus: 'NOT_SUBMITTED'  // ← Normaliser en majuscules
     };
     
     // Gérer l'upload du document KYC si INVESTOR
     if (req.file) {
-  userData.kycDocuments = [{
-    type: 'ID_CARD',
-    url: `/uploads/kyc/${req.file.filename}`,
-    verifiedAt: null
-  }];
-  userData.kycStatus = 'Pending';
-}
+      userData.kycDocuments = [{
+        type: 'ID_CARD',
+        url: `/uploads/kyc/${req.file.filename}`,
+        uploadedAt: new Date(),
+        verifiedAt: null
+      }];
+      userData.kycStatus = 'PENDING';
+    }
     
     const user = await User.create(userData);
     
@@ -52,6 +63,7 @@ export const register = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -66,25 +78,27 @@ export const login = async (req, res) => {
     }
     
     // Vérifier si le compte est en attente de validation
-    if (user.status === 'Pending') {
+    if (user.status === 'PENDING') {
       return res.status(403).json({ 
         success: false, 
         message: 'Your account is pending admin approval. You will receive an email once approved.' 
       });
     }
     
-    if (user.status === 'Banned') {
+    if (user.status === 'BANNED') {
       return res.status(403).json({ success: false, message: 'Account is banned', banReason: user.banReason });
     }
     
-    if (user.status === 'Rejected') {
+    if (user.status === 'REJECTED') {
       return res.status(403).json({ success: false, message: 'Your registration was rejected. Please contact support.' });
     }
     
     user.lastLogin = new Date();
     await user.save();
     
-    const token = generateToken(user._id);
+    // ✅ Générer token avec l'utilisateur complet (inclut les rôles)
+    const token = generateToken(user);
+    
     res.json({
       success: true,
       token,
@@ -94,10 +108,12 @@ export const login = async (req, res) => {
         email: user.email, 
         roles: user.roles, 
         status: user.status, 
-        kycStatus: user.kycStatus 
+        kycStatus: user.kycStatus,
+        isActive: user.isActive
       }
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

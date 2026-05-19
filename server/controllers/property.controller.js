@@ -13,9 +13,37 @@ export const getAllProperties = async (req, res) => {
         { 'location.city': { $regex: search, $options: 'i' } }
       ];
     }
+    
     const properties = await Property.find(filter).populate('owner', 'name email').sort('-createdAt');
-    const totalValue = properties.reduce((sum, p) => sum + (p.price?.amount || 0), 0);
-    res.json({ success: true, count: properties.length, totalValue, properties });
+    
+    // Ensure each property has proper amenities structure
+    const formattedProperties = properties.map(property => {
+      const propertyObj = property.toObject();
+      
+      // Initialize amenities with defaults if missing
+      if (!propertyObj.amenities) {
+        propertyObj.amenities = {
+          schools: { count: 0, names: [] },
+          markets: { count: 0, names: [] },
+          stations: { count: 0, names: [] },
+          bakeries: { count: 0, names: [] }
+        };
+      } else {
+        // Ensure each amenity type has proper structure
+        ['schools', 'markets', 'stations', 'bakeries'].forEach(amenityType => {
+          if (!propertyObj.amenities[amenityType] || typeof propertyObj.amenities[amenityType] !== 'object') {
+            propertyObj.amenities[amenityType] = { count: 0, names: [] };
+          }
+          if (!propertyObj.amenities[amenityType].count) propertyObj.amenities[amenityType].count = 0;
+          if (!propertyObj.amenities[amenityType].names) propertyObj.amenities[amenityType].names = [];
+        });
+      }
+      
+      return propertyObj;
+    });
+    
+    const totalValue = formattedProperties.reduce((sum, p) => sum + (p.price?.amount || 0), 0);
+    res.json({ success: true, count: formattedProperties.length, totalValue, properties: formattedProperties });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
