@@ -27,6 +27,14 @@ const RealEstate = () => {
     }
   };
 
+  // ✅ Fonction pour obtenir l'URL complète de l'image
+  const getImageUrl = (image) => {
+    if (!image) return null;
+    if (image.startsWith('http')) return image;
+    if (image.startsWith('/uploads')) return `http://localhost:5000${image}`;
+    return `http://localhost:5000/uploads/properties/${image}`;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
@@ -72,24 +80,28 @@ const RealEstate = () => {
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {properties.map((property) => (
-              <PropertyCard 
-                key={property._id}
-                property={{
-                  id: property._id,
-                  title: property.title,
-                  image: property.images?.[0] || 'https://via.placeholder.com/400x300',
-                  status: property.status === 'PUBLISHED' ? 'sale' : 'lease',
-                  category: property.category,
-                  price: `${property.price?.amount?.toLocaleString() || 0}`,
-                  location: `${property.location?.city || ''}, ${property.location?.region || ''}`,
-                  type: property.category?.toLowerCase() === 'land' ? 'land' : 'building',
-                  size: property.surface?.value || 0,
-                  beds: property.features?.bedrooms || 3,
-                  baths: property.features?.bathrooms || 2
-                }}
-              />
-            ))}
+            {properties.map((property) => {
+              const imageUrl = getImageUrl(property.images?.[0]);
+              
+              return (
+                <PropertyCard 
+                  key={property._id}
+                  property={{
+                    id: property._id,
+                    title: property.title,
+                    image: imageUrl || 'https://via.placeholder.com/400x300',
+                    status: property.status === 'PUBLISHED' ? 'sale' : 'lease',
+                    category: property.category,
+                    price: `${property.price?.amount?.toLocaleString() || 0}`,
+                    location: `${property.location?.city || ''}, ${property.location?.region || ''}`,
+                    type: property.category?.toLowerCase() === 'land' ? 'land' : 'building',
+                    size: property.surface?.value || 0,
+                    beds: property.features?.bedrooms || 3,
+                    baths: property.features?.bathrooms || 2
+                  }}
+                />
+              );
+            })}
           </div>
         </div>
       </section>

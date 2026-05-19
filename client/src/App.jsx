@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Login from './pages/Login';
-import Register from './pages/Register';  // 👈 AJOUTER CET IMPORT
+import Register from './pages/Register';
 
 // --- IMPORTS DES PAGES PUBLIQUES ---
 import Home from './pages/Home';
@@ -10,7 +10,7 @@ import RealEstatePage from './pages/RealEstate';
 import PropertyDetailsPage from './pages/PropertyDetailsPage';
 import AgriculturePage from './pages/AgriculturePage'; 
 import ExpertisePage from './pages/Expertise'; 
-import ExpertHubPage from './pages/ExpertHubPage'; // 👈 AJOUT DE LA PAGE HUB EXPERTS
+import ExpertHubPage from './pages/ExpertHubPage';
 import MarketplacePage from './pages/MarketplacePage';
 import AppointmentPage from './pages/Appointment';
 import SourcingPage from './pages/Sourcing'; 
@@ -55,6 +55,12 @@ import AgriculturalInventory from './pages/dashboard/admin/AgriculturalInventory
 import LivestockCategoriesManager from './pages/dashboard/admin/LivestockCategoriesManager';
 import LivestockAssetsManager from './pages/dashboard/admin/LivestockAssetsManager';
 
+// --- IMPORTS PROPERTY FORM ---
+import PropertyForm from './pages/dashboard/properties/PropertyForm';
+
+// ✅ NOUVEAU: IMPORT LIVESTOCK MANAGEMENT (Dashboard Owner)
+import LivestockManagement from './pages/dashboard/livestock/LivestockManagement';
+
 function App() {
   return (
     <Router>
@@ -64,11 +70,11 @@ function App() {
             {/* --- ROUTES PUBLIQUES PRINCIPALES --- */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />  {/* 👈 AJOUTER CETTE LIGNE */}
+            <Route path="/register" element={<Register />} />
             <Route path="/real-estate" element={<RealEstatePage />} />
             <Route path="/real-estate/:id" element={<PropertyDetailsPage />} />
             
-            <Route path="/experts" element={<ExpertHubPage />} /> {/* 👈 NOUVELLE ROUTE DU HUB EXPERTS */}
+            <Route path="/experts" element={<ExpertHubPage />} />
             <Route path="/global-sourcing" element={<SourcingPage />} />
             <Route path="/book-appointment" element={<AppointmentPage />} />
 
@@ -107,10 +113,15 @@ function App() {
               <Route path="admin/livestock-categories" element={<LivestockCategoriesManager />} />
               <Route path="admin/livestock" element={<LivestockAssetsManager />} />
 
-              {/* User - Section propriétaire */}
+              {/* User - Section propriétaire (Real Estate) */}
               <Route path="profile" element={<UserProfile />} />
               <Route path="properties" element={<MyLands />} />
+              <Route path="properties/new" element={<PropertyForm />} />
+              <Route path="properties/edit/:id" element={<PropertyForm />} />
               <Route path="titles" element={<TitleDocuments />} />
+              
+              {/* ✅ NOUVEAU: User - Section Livestock Owner */}
+              <Route path="livestock" element={<LivestockManagement />} />
               
               {/* User - Section investisseur */}
               <Route path="invest" element={<Portfolio />} />

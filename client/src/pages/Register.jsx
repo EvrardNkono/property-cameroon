@@ -27,12 +27,13 @@ const Register = () => {
     roles: []
   });
 
+  // ✅ CORRECTION: IDs des rôles cohérents avec le backend
   const roleOptions = [
     { id: 'INVESTOR', label: 'Investor', icon: <TrendingUp size={18} />, description: 'Access financial portfolios, ROI tracking, and investment opportunities.' },
     { id: 'OWNER', label: 'Property Owner', icon: <Home size={18} />, description: 'List properties, manage land titles, and handle real estate assets.' },
     { id: 'BUYER', label: 'Buyer', icon: <Building2 size={18} />, description: 'Browse and purchase properties across Cameroon.' },
-    { id: 'AGRICULTURE', label: 'Agriculture Owner', icon: <Sprout size={18} />, description: 'Manage agricultural lands and farming operations.' },
-    { id: 'LIVESTOCK', label: 'Livestock Owner', icon: <Beef size={18} />, description: 'Manage livestock production units.' }
+    { id: 'AGRICULTURE_OWNER', label: 'Agriculture Owner', icon: <Sprout size={18} />, description: 'Manage agricultural lands and farming operations.' },
+    { id: 'LIVESTOCK_OWNER', label: 'Livestock Owner', icon: <Beef size={18} />, description: 'Manage livestock production units.' }
   ];
 
   const handleChange = (e) => {
@@ -51,6 +52,11 @@ const Register = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Vérifier la taille du fichier (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setError('File size must be less than 10MB');
+        return;
+      }
       setKycDocument(file);
       setKycPreview(URL.createObjectURL(file));
     }
@@ -58,7 +64,10 @@ const Register = () => {
 
   const removeFile = () => {
     setKycDocument(null);
-    setKycPreview(null);
+    if (kycPreview) {
+      URL.revokeObjectURL(kycPreview);
+      setKycPreview(null);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -101,6 +110,7 @@ const Register = () => {
       setSuccess(true);
       setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
+      console.error('Registration error:', err);
       setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
@@ -329,9 +339,8 @@ const Register = () => {
                     </>
                   )}
                 </button>
-              </form>{/* ✅ form se ferme ici, après le bouton submit */}
+              </form>
 
-              {/* ✅ Ce div est en dehors du form */}
               <div className="mt-6 pt-4 border-t border-emerald-100 text-center">
                 <p className="text-[10px] text-emerald-500">
                   Already have an account?{' '}
@@ -341,10 +350,10 @@ const Register = () => {
                 </p>
               </div>
 
-            </div>{/* fin p-8 */}
-          </div>{/* fin rounded-3xl */}
-        </div>{/* fin max-w-4xl */}
-      </div>{/* fin py-12 */}
+            </div>
+          </div>
+        </div>
+      </div>
 
       <Footer />
     </div>

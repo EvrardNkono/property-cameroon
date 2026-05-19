@@ -1,6 +1,6 @@
 // frontend/src/components/admin/LivestockCategoriesManager.jsx
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Image, Link as LinkIcon, Loader2, Fish, Bird, Database, Leaf } from 'lucide-react';
+import { Plus, Edit, Trash2, Image, Link as LinkIcon, Loader2, Fish, Bird, Database, Leaf, AlertCircle } from 'lucide-react';
 import api from '../../../services/api';
 
 const LivestockCategoriesManager = () => {
@@ -24,12 +24,11 @@ const LivestockCategoriesManager = () => {
   });
   const [previewUrl, setPreviewUrl] = useState('');
 
-  // Icônes disponibles
   const iconOptions = [
     { value: 'Fish', label: '🐟 Fish', icon: <Fish size={20} /> },
     { value: 'Bird', label: '🐔 Bird', icon: <Bird size={20} /> },
-    { value: 'Database', label: '🐄 Cattle', icon: <Database size={20} /> },
-    { value: 'Leaf', label: '🐖 Pig', icon: <Leaf size={20} /> }
+    { value: 'Database', label: '🐄 Database', icon: <Database size={20} /> },
+    { value: 'Leaf', label: '🌿 Leaf', icon: <Leaf size={20} /> }
   ];
 
   useEffect(() => {
@@ -68,8 +67,33 @@ const LivestockCategoriesManager = () => {
     setFormData({ ...formData, features });
   };
 
+  // Génère automatiquement le slug à partir du titre
+  const generateSlug = (title) => {
+    return title
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  };
+
+  const handleTitleChange = (e) => {
+    const title = e.target.value;
+    const slug = generateSlug(title);
+    setFormData({ ...formData, title, slug });
+  };
+
+  const handleSlugChange = (e) => {
+    const slug = e.target.value.toLowerCase().replace(/\s/g, '-');
+    setFormData({ ...formData, slug });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!formData.slug) {
+      alert('Please enter a slug');
+      return;
+    }
     
     const formDataToSend = new FormData();
     Object.keys(formData).forEach(key => {
@@ -93,7 +117,7 @@ const LivestockCategoriesManager = () => {
       resetForm();
     } catch (error) {
       console.error('Error saving category:', error);
-      alert('Erreur lors de la sauvegarde');
+      alert('Error saving category');
     }
   };
 
@@ -117,13 +141,13 @@ const LivestockCategoriesManager = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Supprimer cette catégorie ? Tous les assets associés seront également supprimés.')) {
+    if (window.confirm('Delete this category? Associated assets will remain but will not be displayed on the site.')) {
       try {
         await api.deleteLivestockCategory(id);
         await fetchCategories();
       } catch (error) {
         console.error('Error deleting category:', error);
-        alert('Erreur lors de la suppression');
+        alert('Error deleting category');
       }
     }
   };
@@ -225,7 +249,7 @@ const LivestockCategoriesManager = () => {
         </div>
       )}
 
-      {/* Modal Ajout/Modification */}
+      {/* Modal Add/Edit */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -238,24 +262,27 @@ const LivestockCategoriesManager = () => {
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-emerald-600 mb-1">Slug *</label>
-                  <input
-                    type="text"
-                    value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/\s/g, '-') })}
-                    className="w-full px-4 py-2 bg-emerald-50 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-                    required
-                  />
-                </div>
-                <div>
                   <label className="block text-[10px] font-bold uppercase text-emerald-600 mb-1">Title *</label>
                   <input
                     type="text"
                     value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    onChange={handleTitleChange}
+                    placeholder="e.g., Aquaculture, Bovins, Volaille"
                     className="w-full px-4 py-2 bg-emerald-50 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                     required
                   />
+                  <p className="text-[8px] text-emerald-500 mt-1">The slug will be generated automatically</p>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-emerald-600 mb-1">Slug (optional)</label>
+                  <input
+                    type="text"
+                    value={formData.slug}
+                    onChange={handleSlugChange}
+                    placeholder="auto-generated from title"
+                    className="w-full px-4 py-2 bg-emerald-50 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                  />
+                  <p className="text-[8px] text-emerald-500 mt-1">Leave empty to auto-generate</p>
                 </div>
               </div>
 
@@ -265,7 +292,7 @@ const LivestockCategoriesManager = () => {
                   type="text"
                   value={formData.subtitle}
                   onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                  placeholder="The Blue Gold"
+                  placeholder="e.g., The Blue Gold"
                   className="w-full px-4 py-2 bg-emerald-50 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                 />
               </div>
@@ -307,7 +334,7 @@ const LivestockCategoriesManager = () => {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase text-emerald-600 mb-1">Features (séparées par des virgules)</label>
+                <label className="block text-[10px] font-bold uppercase text-emerald-600 mb-1">Features (comma separated)</label>
                 <input
                   type="text"
                   value={formData.features.join(', ')}
@@ -319,11 +346,14 @@ const LivestockCategoriesManager = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-emerald-600 mb-1">Order</label>
+                  <label className="block text-[10px] font-bold uppercase text-emerald-600 mb-1">Display Order</label>
                   <input
                     type="number"
-                    value={formData.order}
-                    onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
+                    value={formData.order ?? 0}
+                    onChange={(e) => {
+                      const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                      setFormData({ ...formData, order: isNaN(value) ? 0 : value });
+                    }}
                     className="w-full px-4 py-2 bg-emerald-50 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                   />
                 </div>
@@ -375,8 +405,8 @@ const LivestockCategoriesManager = () => {
                       <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-2 hover:bg-emerald-200 transition-colors">
                         <Image size={24} className="text-emerald-600" />
                       </div>
-                      <p className="text-xs text-emerald-600">Click to upload image (JPG, PNG)</p>
-                      <p className="text-[9px] text-emerald-400 mt-1">Max size: 5MB</p>
+                      <p className="text-xs text-emerald-600">Click to upload image</p>
+                      <p className="text-[9px] text-emerald-400 mt-1">Max: 5MB (JPG, PNG)</p>
                     </label>
                   </div>
                 )}

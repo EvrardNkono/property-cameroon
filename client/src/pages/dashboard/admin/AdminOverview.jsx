@@ -20,7 +20,7 @@ const AdminOverview = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // États pour les données du dashboard
+  // States for dashboard data
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalInvested: 0,
@@ -32,49 +32,49 @@ const AdminOverview = () => {
   const [recentActivity, setRecentActivity] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Formater la date
+  // Format date
   const formatDate = (date) => {
-    return new Intl.DateTimeFormat('fr-FR', { 
+    return new Intl.DateTimeFormat('en-US', { 
       day: '2-digit', 
       month: 'long', 
       year: 'numeric' 
     }).format(date);
   };
 
-  // Charger toutes les données du dashboard
+  // Load all dashboard data
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Charger les utilisateurs
+      // Load users
       const usersRes = await api.getUsers();
       const users = usersRes.users || [];
       
-      // Charger les propriétés
+      // Load properties
       const propertiesRes = await api.getProperties();
       const properties = propertiesRes.properties || [];
       
-      // Charger les transactions
+      // Load transactions
       const transactionsRes = await api.getTransactions();
       const transactions = transactionsRes.items || transactionsRes.transactions || [];
       
-      // Charger les investissements
+      // Load investments
       const investmentsRes = await api.getInvestments();
       const investments = investmentsRes.items || investmentsRes.investments || [];
       
-      // Calculer les statistiques
+      // Calculate statistics
       const totalUsers = users.length;
       const totalProperties = properties.length;
       
-      // Calculer les fonds investis (somme des investissements)
+      // Calculate total invested funds (sum of investments)
       const totalInvested = investments.reduce((sum, inv) => sum + (inv.amount || 0), 0);
       
-      // Calculer le taux de conversion (ex: nombre de propriétés vendues / nombre total)
+      // Calculate conversion rate (number of sold properties / total number)
       const soldProperties = properties.filter(p => p.status === 'SOLD').length;
       const conversionRate = totalProperties > 0 ? ((soldProperties / totalProperties) * 100).toFixed(1) : 0;
       
-      // Propriétés en vente (PUBLISHED)
+      // Properties for sale (PUBLISHED)
       const publishedProperties = properties.filter(p => p.status === 'PUBLISHED').length;
       
       setStats({
@@ -84,15 +84,15 @@ const AdminOverview = () => {
         conversionRate: parseFloat(conversionRate)
       });
       
-      // Récupérer les validations en attente (documents à vérifier)
+      // Get pending validations (documents to verify)
       const pendingDocs = await fetchPendingDocuments();
       setPendingValidations(pendingDocs);
       
-      // Récupérer l'activité récente (dernières transactions)
+      // Get recent activity (latest transactions)
       const recentTransactions = transactions.slice(0, 5).map(t => ({
         id: t._id,
-        title: t.type === 'INVESTMENT' ? 'Investissement CAPEF' : 'Transaction foncière',
-        location: t.metadata?.location || 'Cameroun',
+        title: t.type === 'INVESTMENT' ? 'CAPEF Investment' : 'Land Transaction',
+        location: t.metadata?.location || 'Cameroon',
         amount: t.amount?.value || 0,
         date: t.createdAt
       }));
@@ -100,9 +100,9 @@ const AdminOverview = () => {
       
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
-      setError(err.message || 'Erreur lors du chargement des données');
+      setError(err.message || 'Error loading dashboard data');
       
-      // Données de fallback en cas d'erreur
+      // Fallback data in case of error
       setStats({
         totalUsers: 1284,
         totalInvested: 450000000,
@@ -110,17 +110,17 @@ const AdminOverview = () => {
         conversionRate: 14.2
       });
       setPendingValidations([
-        { id: 1, name: "Samuel Eto'o", type: "Nouveau Titre Foncier à valider" }
+        { id: 1, name: "Samuel Eto'o", type: "New Land Title to validate" }
       ]);
       setRecentActivity([
-        { id: 1, title: "Investissement CAPEF", location: "Yassa, Douala", amount: 15000000 }
+        { id: 1, title: "CAPEF Investment", location: "Yassa, Douala", amount: 15000000 }
       ]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Récupérer les documents en attente de validation
+  // Get pending documents for validation
   const fetchPendingDocuments = async () => {
     try {
       const docsRes = await api.getDocuments();
@@ -129,8 +129,8 @@ const AdminOverview = () => {
       
       return pendingDocs.map(doc => ({
         id: doc._id,
-        name: doc.uploadedBy?.name || 'Utilisateur',
-        type: doc.type === 'TITLE_DEED' ? 'Titre Foncier à valider' : 'Document à vérifier'
+        name: doc.uploadedBy?.name || 'User',
+        type: doc.type === 'TITLE_DEED' ? 'Land Title to validate' : 'Document to verify'
       }));
     } catch (err) {
       console.error('Error fetching pending documents:', err);
@@ -138,10 +138,10 @@ const AdminOverview = () => {
     }
   };
 
-  // Formater les montants
+  // Format amounts
   const formatAmount = (amount) => {
     if (amount >= 1000000000) {
-      return `${(amount / 1000000000).toFixed(1)}Mrd FCFA`;
+      return `${(amount / 1000000000).toFixed(1)}B FCFA`;
     }
     if (amount >= 1000000) {
       return `${(amount / 1000000).toFixed(0)}M FCFA`;
@@ -151,7 +151,7 @@ const AdminOverview = () => {
 
   useEffect(() => {
     fetchDashboardData();
-    // Mettre à jour la date toutes les minutes
+    // Update date every minute
     const interval = setInterval(() => setCurrentDate(new Date()), 60000);
     return () => clearInterval(interval);
   }, []);
@@ -160,7 +160,7 @@ const AdminOverview = () => {
     return (
       <div className="flex flex-col items-center justify-center h-96 space-y-4">
         <Loader2 size={48} className="text-[#c5a059] animate-spin" />
-        <p className="text-slate-500 text-sm">Chargement du tableau de bord...</p>
+        <p className="text-slate-500 text-sm">Loading dashboard...</p>
       </div>
     );
   }
@@ -168,13 +168,13 @@ const AdminOverview = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       
-      {/* HEADER AVEC TITRE ET ACTIONS RAPIDES */}
+      {/* HEADER WITH TITLE AND QUICK ACTIONS */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <span className="text-[10px] font-black text-[#c5a059] uppercase tracking-[0.3em]">Console Maître</span>
-          <h1 className="text-3xl md:text-4xl font-serif text-[#0a2619] mt-1 italic">État de la plateforme</h1>
+          <span className="text-[10px] font-black text-[#c5a059] uppercase tracking-[0.3em]">Master Console</span>
+          <h1 className="text-3xl md:text-4xl font-serif text-[#0a2619] mt-1 italic">Platform Status</h1>
           <p className="text-xs text-green-600 mt-2">
-            ✅ Connecté au backend - Données en temps réel
+            ✅ Connected to backend - Real-time data
           </p>
         </div>
         <div className="flex gap-2">
@@ -188,33 +188,33 @@ const AdminOverview = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <Link to="/dashboard/admin/users" className="hover:scale-[1.02] transition-transform">
           <AdminStatCard 
-            title="Membres Totaux" 
+            title="Total Members" 
             value={stats.totalUsers.toLocaleString()} 
-            subValue="Gérer les accès" 
+            subValue="Manage Access" 
             icon={Users} 
             color="bg-blue-50 text-blue-600"
           />
         </Link>
         <Link to="/dashboard/admin/finances" className="hover:scale-[1.02] transition-transform">
           <AdminStatCard 
-            title="Fonds Investis" 
+            title="Invested Funds" 
             value={formatAmount(stats.totalInvested)} 
-            subValue="Voir les flux" 
+            subValue="View Flows" 
             icon={Wallet} 
             color="bg-green-50 text-green-600"
           />
         </Link>
         <Link to="/dashboard/admin/inventory" className="hover:scale-[1.02] transition-transform">
           <AdminStatCard 
-            title="Terrains en Vente" 
+            title="Lands for Sale" 
             value={stats.totalProperties.toString()} 
-            subValue="Voir l'inventaire" 
+            subValue="View Inventory" 
             icon={Map} 
             color="bg-orange-50 text-orange-600"
           />
         </Link>
         <AdminStatCard 
-          title="Taux de Conversion" 
+          title="Conversion Rate" 
           value={`${stats.conversionRate}%`} 
           subValue="Performance" 
           icon={TrendingUp} 
@@ -222,43 +222,43 @@ const AdminOverview = () => {
         />
       </div>
 
-      {/* SECTION RACCOURCIS */}
+      {/* SHORTCUTS SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Accès direct UserManagement */}
+        {/* Direct Access UserManagement */}
         <Link to="/dashboard/admin/users" className="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:border-[#c5a059]/30 transition-all">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
               <Settings size={20} />
             </div>
             <div>
-              <h4 className="font-bold text-[#0a2619] text-sm">Gestion Utilisateurs</h4>
-              <p className="text-[10px] text-slate-400 uppercase font-black">Configuration & Rôles</p>
+              <h4 className="font-bold text-[#0a2619] text-sm">User Management</h4>
+              <p className="text-[10px] text-slate-400 uppercase font-black">Configuration & Roles</p>
             </div>
           </div>
         </Link>
 
-        {/* Accès direct GlobalInventory */}
+        {/* Direct Access GlobalInventory */}
         <Link to="/dashboard/admin/inventory" className="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:border-[#c5a059]/30 transition-all">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center group-hover:bg-orange-600 group-hover:text-white transition-colors">
               <PlusCircle size={20} />
             </div>
             <div>
-              <h4 className="font-bold text-[#0a2619] text-sm">Ajouter un Bien</h4>
-              <p className="text-[10px] text-slate-400 uppercase font-black">Inventaire Global</p>
+              <h4 className="font-bold text-[#0a2619] text-sm">Add Property</h4>
+              <p className="text-[10px] text-slate-400 uppercase font-black">Global Inventory</p>
             </div>
           </div>
         </Link>
 
-        {/* Accès direct FinancialControl */}
+        {/* Direct Access FinancialControl */}
         <Link to="/dashboard/admin/finances" className="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:border-[#c5a059]/30 transition-all">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors">
               <FileText size={20} />
             </div>
             <div>
-              <h4 className="font-bold text-[#0a2619] text-sm">Rapports Financiers</h4>
+              <h4 className="font-bold text-[#0a2619] text-sm">Financial Reports</h4>
               <p className="text-[10px] text-slate-400 uppercase font-black">Audit & Transactions</p>
             </div>
           </div>
@@ -266,14 +266,14 @@ const AdminOverview = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* VALIDATIONS EN ATTENTE */}
+        {/* PENDING VALIDATIONS */}
         <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
           <div className="flex justify-between items-center mb-6">
             <h3 className="font-bold text-[#0a2619] flex items-center gap-2">
-              <AlertTriangle size={18} className="text-orange-500" /> Validations Requises
+              <AlertTriangle size={18} className="text-orange-500" /> Pending Validations
             </h3>
             <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded">
-              {pendingValidations.length} {pendingValidations.length === 1 ? 'urgence' : 'urgences'}
+              {pendingValidations.length} {pendingValidations.length === 1 ? 'urgent' : 'urgent'}
             </span>
           </div>
           <div className="space-y-4">
@@ -297,20 +297,20 @@ const AdminOverview = () => {
             ))}
             {pendingValidations.length === 0 && (
               <div className="text-center py-8 text-slate-400">
-                <p>Aucune validation en attente</p>
+                <p>No pending validations</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* ACTIVITÉ RÉCENTE */}
+        {/* RECENT ACTIVITY */}
         <div className="bg-[#0a2619] p-8 rounded-[2.5rem] text-white shadow-xl">
           <div className="flex justify-between items-center mb-6">
             <h3 className="font-bold text-[#c5a059] flex items-center gap-2 uppercase tracking-widest text-sm">
-              <ShieldCheck size={18} /> Activité Récente
+              <ShieldCheck size={18} /> Recent Activity
             </h3>
             <Link to="/dashboard/admin/finances" className="text-[9px] font-bold text-white/40 hover:text-[#c5a059] transition-colors uppercase tracking-widest">
-              Voir Tout
+              View All
             </Link>
           </div>
           <div className="space-y-6">
@@ -327,7 +327,7 @@ const AdminOverview = () => {
             ))}
             {recentActivity.length === 0 && (
               <div className="text-center py-8 text-white/40">
-                <p>Aucune activité récente</p>
+                <p>No recent activity</p>
               </div>
             )}
           </div>

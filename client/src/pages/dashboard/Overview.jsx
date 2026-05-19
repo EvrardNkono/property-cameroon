@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowUpRight, ShieldCheck, TrendingUp, Map, Clock, Truck, Loader2 } from 'lucide-react';
+import { ArrowUpRight, ShieldCheck, TrendingUp, Map, Clock, Truck, Loader2, PawPrint, Sprout, DollarSign, Users } from 'lucide-react';
 import { useOutletContext, Link } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -14,6 +14,10 @@ const Overview = () => {
     investmentsCount: 0,
     investmentsROI: 0,
     purchasesCount: 0,
+    livestockCount: 0,
+    livestockValue: 0,
+    agricultureCount: 0,
+    agricultureValue: 0,
     lastUpdate: new Date()
   });
   const [pendingValidations, setPendingValidations] = useState([]);
@@ -28,6 +32,10 @@ const Overview = () => {
       let investmentsCount = 0;
       let investmentsROI = 0;
       let purchasesCount = 0;
+      let livestockCount = 0;
+      let livestockValue = 0;
+      let agricultureCount = 0;
+      let agricultureValue = 0;
       
       // Load properties (if OWNER)
       if (activeRoles.includes('OWNER') && user) {
@@ -36,6 +44,55 @@ const Overview = () => {
           propertiesCount = propertiesRes.properties?.length || 0;
         } catch (err) {
           console.error('Error fetching properties:', err);
+        }
+      }
+      
+      // Load livestock (if LIVESTOCK_OWNER)
+      if (activeRoles.includes('LIVESTOCK_OWNER') && user) {
+        try {
+          // Récupérer tous les animaux (le backend filtrera par owner via le token)
+          const livestockRes = await api.getAllLivestock();
+          let livestock = livestockRes.items || livestockRes.livestock || [];
+          
+          // Filtrer par propriétaire si nécessaire
+          if (user && user._id) {
+            livestock = livestock.filter(item => item.owner?._id === user._id || item.owner === user._id);
+          }
+          
+          livestockCount = livestock.length;
+          
+          // Calculer la valeur totale
+          livestockValue = livestock.reduce((sum, item) => {
+            const price = item.price?.amount || 0;
+            const quantity = item.capacity?.value || 1;
+            return sum + (price * quantity);
+          }, 0);
+        } catch (err) {
+          console.error('Error fetching livestock:', err);
+        }
+      }
+      
+      // Load agriculture products (if AGRICULTURE_OWNER)
+      if (activeRoles.includes('AGRICULTURE_OWNER') && user) {
+        try {
+          const agricultureRes = await api.getAgriculturalProducts();
+          let agriculture = agricultureRes.items || agricultureRes.products || [];
+          
+          // Filtrer par propriétaire si nécessaire
+          if (user && user._id) {
+            agriculture = agriculture.filter(item => item.owner?._id === user._id || item.owner === user._id);
+          }
+          
+          agricultureCount = agriculture.length;
+          
+          // Calculer la valeur totale (prix * stock)
+          agricultureValue = agriculture.reduce((sum, product) => {
+            const price = product.price?.amount || 0;
+            const stock = product.stock || product.quantity || 1;
+            return sum + (price * stock);
+          }, 0);
+        } catch (err) {
+          console.error('Error fetching agriculture products:', err);
         }
       }
       
@@ -95,6 +152,10 @@ const Overview = () => {
         investmentsCount,
         investmentsROI: investmentsROI.toFixed(1),
         purchasesCount,
+        livestockCount,
+        livestockValue,
+        agricultureCount,
+        agricultureValue,
         lastUpdate: new Date()
       });
       
@@ -104,10 +165,14 @@ const Overview = () => {
       
       // Fallback data
       setStats({
-        propertiesCount: 2,
-        investmentsCount: 2,
+        propertiesCount: activeRoles.includes('OWNER') ? 2 : 0,
+        investmentsCount: activeRoles.includes('INVESTOR') ? 2 : 0,
         investmentsROI: 12.4,
-        purchasesCount: 4,
+        purchasesCount: activeRoles.includes('BUYER') ? 4 : 0,
+        livestockCount: activeRoles.includes('LIVESTOCK_OWNER') ? 3 : 0,
+        livestockValue: 2500000,
+        agricultureCount: activeRoles.includes('AGRICULTURE_OWNER') ? 5 : 0,
+        agricultureValue: 1800000,
         lastUpdate: new Date()
       });
       setPendingValidations([
@@ -122,6 +187,17 @@ const Overview = () => {
   const formatLastUpdate = () => {
     const now = new Date();
     return `Today, ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+  };
+
+  // Format currency
+  const formatCurrency = (value) => {
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M FCFA`;
+    }
+    if (value >= 1000) {
+      return `${(value / 1000).toFixed(0)}K FCFA`;
+    }
+    return `${value.toLocaleString()} FCFA`;
   };
 
   // Get compliance status
@@ -160,7 +236,7 @@ const Overview = () => {
           <span className="text-[10px] font-black text-[#c5a059] uppercase tracking-[0.3em]">Dashboard</span>
           <h1 className="text-3xl md:text-4xl font-serif text-[#0a2619] mt-1 italic">Activity Summary</h1>
           <p className="text-xs text-green-600 mt-2">
-            ✅ Connected to backend
+            ✅ Connected to backend | Roles: {activeRoles.join(', ')}
           </p>
         </div>
         <div className="text-sm text-slate-400 flex items-center gap-2">
@@ -168,8 +244,10 @@ const Overview = () => {
         </div>
       </div>
 
-      {/* STATS GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* STATS GRID - 2 colonnes sur mobile, 3 sur tablette, 4 sur desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        
+        {/* OWNER - Property Assets */}
         {activeRoles.includes('OWNER') && (
           <div className="group bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 relative overflow-hidden">
             <div className="relative z-10">
@@ -188,6 +266,51 @@ const Overview = () => {
           </div>
         )}
 
+        {/* LIVESTOCK_OWNER - Livestock Management */}
+        {activeRoles.includes('LIVESTOCK_OWNER') && (
+          <div className="group bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 relative overflow-hidden">
+            <div className="relative z-10">
+                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <PawPrint size={24} />
+                </div>
+                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest">Livestock</h3>
+                <p className="text-3xl font-bold text-[#0a2619] mt-2">
+                  {stats.livestockCount} Animal{stats.livestockCount > 1 ? 's' : ''}
+                </p>
+                <p className="text-xs text-emerald-600 mt-1 font-medium">
+                  Value: {formatCurrency(stats.livestockValue)}
+                </p>
+                <Link to="/dashboard/livestock" className="mt-6 flex items-center gap-2 text-xs font-black text-[#c5a059] uppercase tracking-widest group-hover:gap-4 transition-all">
+                    Manage Livestock <ArrowUpRight size={14} />
+                </Link>
+            </div>
+            <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-emerald-50/50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          </div>
+        )}
+
+        {/* AGRICULTURE_OWNER - Agriculture Management */}
+        {activeRoles.includes('AGRICULTURE_OWNER') && (
+          <div className="group bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 relative overflow-hidden">
+            <div className="relative z-10">
+                <div className="w-12 h-12 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <Sprout size={24} />
+                </div>
+                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest">Agriculture</h3>
+                <p className="text-3xl font-bold text-[#0a2619] mt-2">
+                  {stats.agricultureCount} Product{stats.agricultureCount > 1 ? 's' : ''}
+                </p>
+                <p className="text-xs text-green-600 mt-1 font-medium">
+                  Value: {formatCurrency(stats.agricultureValue)}
+                </p>
+                <Link to="/dashboard/agriculture" className="mt-6 flex items-center gap-2 text-xs font-black text-[#c5a059] uppercase tracking-widest group-hover:gap-4 transition-all">
+                    Manage Products <ArrowUpRight size={14} />
+                </Link>
+              </div>
+            <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-green-50/50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          </div>
+        )}
+
+        {/* INVESTOR - Investments */}
         {activeRoles.includes('INVESTOR') && (
           <div className="group bg-[#0a2619] p-8 rounded-[2rem] text-white shadow-xl hover:shadow-[#0a2619]/20 transition-all duration-500 relative overflow-hidden">
              <div className="relative z-10">
@@ -207,6 +330,7 @@ const Overview = () => {
           </div>
         )}
 
+        {/* BUYER - Global Sourcing */}
         {activeRoles.includes('BUYER') && (
           <div className="group bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500">
              <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
@@ -222,6 +346,17 @@ const Overview = () => {
           </div>
         )}
       </div>
+
+      {/* Message si aucun rôle actif */}
+      {activeRoles.length === 0 && (
+        <div className="bg-yellow-50 rounded-3xl p-8 text-center border border-yellow-100">
+          <Users size={48} className="text-yellow-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-yellow-800 mb-2">No active roles</h3>
+          <p className="text-yellow-600 text-sm">
+            You don't have any active roles yet. Please contact support to assign roles to your account.
+          </p>
+        </div>
+      )}
 
       {/* RECENT ACTIVITY / COMPLIANCE BLOC */}
       <div className="bg-white rounded-[2.5rem] p-6 md:p-10 border border-slate-100 shadow-sm">

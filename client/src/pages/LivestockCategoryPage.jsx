@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Fish, Bird, Database, Leaf, MapPin, Gauge, ChevronRight,
   TrendingUp, Info, Loader2, Filter, Grid3x3, List, Heart, Share2,
-  DollarSign, ShieldCheck, Droplets, Sun
+  DollarSign, ShieldCheck, Droplets, Sun, AlertCircle
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -37,6 +37,14 @@ const LivestockCategoryPage = () => {
   const [sortBy, setSortBy] = useState('roi');
   const [filterRoi, setFilterRoi] = useState('all');
 
+  // Fonction pour obtenir l'URL complète de l'image
+  const getImageUrl = (image) => {
+    if (!image) return null;
+    if (image.startsWith('http')) return image;
+    if (image.startsWith('/uploads')) return `http://localhost:5000${image}`;
+    return `http://localhost:5000/uploads/livestock/${image}`;
+  };
+
   // Charger la catégorie et ses assets
   const fetchCategoryData = async () => {
     try {
@@ -49,6 +57,11 @@ const LivestockCategoryPage = () => {
       
       const colors = categoryColorMap[cat.slug] || categoryColorMap.poultry;
       
+      // Récupérer l'image de la catégorie
+      const categoryImage = cat.imageType === 'upload' 
+        ? (cat.imageUpload ? `http://localhost:5000${cat.imageUpload}` : null)
+        : cat.imageUrl;
+      
       setCategoryData({
         id: cat._id,
         slug: cat.slug,
@@ -60,16 +73,24 @@ const LivestockCategoryPage = () => {
         color: colors.color,
         borderColor: colors.border,
         buttonColor: colors.button,
-        marketDemand: cat.marketDemand,
+        marketDemand: cat.marketDemand || '+0% YoY',
         features: cat.features || [],
-        image: cat.imageType === 'upload' ? cat.imageUpload : cat.imageUrl
+        image: categoryImage || 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000'
       });
       
       // Récupérer les assets de cette catégorie
       const livestockRes = await api.getLivestockByCategory(cat.slug);
       const items = livestockRes.livestock || [];
       
-      setLivestock(items);
+      // Formater les assets avec les URLs d'images
+      const formattedItems = items.map(item => ({
+        ...item,
+        id: item._id,
+        image: item.images && item.images[0] ? getImageUrl(item.images[0]) : null,
+        location: item.location?.city || 'Cameroun'
+      }));
+      
+      setLivestock(formattedItems);
       
     } catch (err) {
       console.error('Error fetching category data:', err);
@@ -79,13 +100,14 @@ const LivestockCategoryPage = () => {
       setCategoryData({
         slug: category,
         title: category?.charAt(0).toUpperCase() + category?.slice(1) || "Livestock",
-        description: "Production units available for investment.",
+        description: "Unités de production disponibles pour l'investissement.",
         icon: <Leaf size={32} />,
         bg: "bg-gradient-to-br from-emerald-50 to-emerald-100",
         color: "text-emerald-700",
         buttonColor: "bg-emerald-600 hover:bg-emerald-700",
         marketDemand: "+0% YoY",
-        features: []
+        features: [],
+        image: 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000'
       });
     } finally {
       setLoading(false);
@@ -98,13 +120,13 @@ const LivestockCategoryPage = () => {
     
     if (filterRoi !== 'all') {
       const [min, max] = filterRoi.split('-').map(Number);
-      filtered = filtered.filter(item => item.roi >= min && (!max || item.roi <= max));
+      filtered = filtered.filter(item => (item.roi || 0) >= min && (!max || (item.roi || 0) <= max));
     }
     
     filtered.sort((a, b) => {
-      if (sortBy === 'roi') return b.roi - a.roi;
-      if (sortBy === 'price') return a.price.amount - b.price.amount;
-      if (sortBy === 'capacity') return b.capacity.value - a.capacity.value;
+      if (sortBy === 'roi') return (b.roi || 0) - (a.roi || 0);
+      if (sortBy === 'price') return (b.price?.amount || 0) - (a.price?.amount || 0);
+      if (sortBy === 'capacity') return (b.capacity?.value || 0) - (a.capacity?.value || 0);
       return 0;
     });
     
@@ -132,7 +154,7 @@ const LivestockCategoryPage = () => {
         <Navbar />
         <div className="flex flex-col items-center justify-center h-screen">
           <Loader2 size={48} className="text-emerald-600 animate-spin mb-4" />
-          <p className="text-emerald-600/60 text-sm">Loading...</p>
+          <p className="text-emerald-600/60 text-sm">Chargement...</p>
         </div>
         <Footer />
       </div>
@@ -143,11 +165,14 @@ const LivestockCategoryPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#fdfcf0] via-white to-[#f8f7ee]">
         <Navbar />
-        <div className="flex flex-col items-center justify-center h-screen">
+        <div className="flex flex-col items-center justify-center h-screen px-4">
           <div className="bg-red-50 text-red-600 p-6 rounded-2xl text-center max-w-md">
+            <AlertCircle size={40} className="mx-auto mb-3 text-red-500" />
             <p className="font-bold">Erreur de chargement</p>
             <p className="text-sm mt-1">{error || "Catégorie non trouvée"}</p>
-            <Link to="/agriculture/livestock" className="mt-4 inline-block text-emerald-600 underline text-sm">Retour aux secteurs</Link>
+            <Link to="/agriculture/livestock" className="mt-4 inline-block text-emerald-600 underline text-sm">
+              Retour aux secteurs
+            </Link>
           </div>
         </div>
         <Footer />
@@ -170,7 +195,7 @@ const LivestockCategoryPage = () => {
             <div className="p-2 rounded-full border border-emerald-900/10 group-hover:border-emerald-800 group-hover:-translate-x-1 transition-all">
               <ArrowLeft size={16} />
             </div>
-            Back to Sectors
+            Retour aux secteurs
           </Link>
         </nav>
 
@@ -183,7 +208,7 @@ const LivestockCategoryPage = () => {
               className={`inline-flex items-center gap-3 px-4 py-2 rounded-full ${categoryData.bg} ${categoryData.color} mb-8`}
             >
               {categoryData.icon}
-              <span className="text-xs font-black uppercase tracking-widest">Industry Overview</span>
+              <span className="text-xs font-black uppercase tracking-widest">Aperçu du secteur</span>
             </motion.div>
             
             <motion.h1 
@@ -214,20 +239,20 @@ const LivestockCategoryPage = () => {
                 <div className="p-2 bg-white/10 rounded-lg">
                   <TrendingUp size={20} className="text-amber-400" />
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">Market Status</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">Statut du marché</span>
               </div>
-              <p className="text-4xl font-serif mb-2">{categoryData.marketDemand || '+0% YoY'}</p>
-              <p className="text-xs text-white/40 uppercase tracking-tighter">Current Sector Performance Index</p>
+              <p className="text-4xl font-serif mb-2">{categoryData.marketDemand}</p>
+              <p className="text-xs text-white/40 uppercase tracking-tighter">Indice de performance actuel</p>
               <div className="mt-6 pt-6 border-t border-white/10 flex justify-between">
                 <div>
-                  <p className="text-[8px] uppercase text-white/40">Available Assets</p>
+                  <p className="text-[8px] uppercase text-white/40">Actifs disponibles</p>
                   <p className="text-2xl font-bold">{filteredAndSortedLivestock.length}</p>
                 </div>
                 <div>
-                  <p className="text-[8px] uppercase text-white/40">Avg. ROI</p>
+                  <p className="text-[8px] uppercase text-white/40">ROI moyen</p>
                   <p className="text-2xl font-bold text-amber-400">
                     {filteredAndSortedLivestock.length > 0 
-                      ? `+${(filteredAndSortedLivestock.reduce((sum, i) => sum + i.roi, 0) / filteredAndSortedLivestock.length).toFixed(1)}%`
+                      ? `+${(filteredAndSortedLivestock.reduce((sum, i) => sum + (i.roi || 0), 0) / filteredAndSortedLivestock.length).toFixed(1)}%`
                       : '0%'}
                   </p>
                 </div>
@@ -247,9 +272,9 @@ const LivestockCategoryPage = () => {
         >
           <div className="flex gap-2">
             {[
-              { id: 'roi', label: 'Highest ROI' },
-              { id: 'price', label: 'Price' },
-              { id: 'capacity', label: 'Capacity' }
+              { id: 'roi', label: 'ROI le plus élevé' },
+              { id: 'price', label: 'Prix' },
+              { id: 'capacity', label: 'Capacité' }
             ].map(opt => (
               <button 
                 key={opt.id}
@@ -275,7 +300,7 @@ const LivestockCategoryPage = () => {
               </button>
             </div>
             <select value={filterRoi} onChange={(e) => setFilterRoi(e.target.value)} className="px-4 py-2 bg-white border border-emerald-200 rounded-xl text-xs font-medium text-emerald-700">
-              <option value="all">All ROI</option>
+              <option value="all">Tous les ROI</option>
               <option value="0-15">0% - 15%</option>
               <option value="15-25">15% - 25%</option>
               <option value="25-100">25%+</option>
@@ -302,22 +327,31 @@ const LivestockCategoryPage = () => {
                 className={`group cursor-pointer bg-white border border-emerald-100 rounded-3xl overflow-hidden hover:shadow-2xl hover:shadow-emerald-900/10 transition-all duration-500 ${viewMode === 'list' ? 'flex' : ''}`}
               >
                 <div className={`relative overflow-hidden ${viewMode === 'list' ? 'w-72 h-48 flex-shrink-0' : 'h-64'}`}>
-                  <img src={asset.image || 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000'} alt={asset.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <img 
+                    src={asset.image || 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000'} 
+                    alt={asset.title} 
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    onError={(e) => {
+                      e.target.src = 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000';
+                    }}
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
                   
                   <div className="absolute top-4 left-4 flex gap-2">
                     <div className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-full">
-                      <span className="text-[9px] font-black text-emerald-900 uppercase">#{asset.id}</span>
+                      <span className="text-[9px] font-black text-emerald-900 uppercase">#{asset.id?.slice(-6)}</span>
                     </div>
                   </div>
                   
                   <div className="absolute top-4 right-4 bg-amber-500 text-emerald-950 px-3 py-1 rounded-full">
-                    <span className="text-[9px] font-black">+{asset.roi}% ROI</span>
+                    <span className="text-[9px] font-black">+{asset.roi || 0}% ROI</span>
                   </div>
 
                   <div className="absolute bottom-4 left-4 flex items-center gap-2 text-white">
                     <MapPin size={12} className="text-amber-400" />
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-white/90">{asset.location}</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-white/90">
+                      {asset.location?.city || asset.location || 'Cameroun'}
+                    </span>
                   </div>
                 </div>
 
@@ -326,34 +360,34 @@ const LivestockCategoryPage = () => {
                   
                   <div className="grid grid-cols-3 gap-4 mb-6 pt-4 border-t border-emerald-50">
                     <div>
-                      <p className="text-[8px] font-black uppercase text-emerald-400 tracking-wider">Unit Value</p>
+                      <p className="text-[8px] font-black uppercase text-emerald-400 tracking-wider">Valeur unitaire</p>
                       <p className="text-base font-bold text-emerald-900">
-                        {(asset.price.amount / 1000000).toFixed(1)}M <span className="text-[8px] text-emerald-400">FCFA</span>
+                        {(asset.price?.amount / 1000000).toFixed(1)}M <span className="text-[8px] text-emerald-400">FCFA</span>
                       </p>
                     </div>
                     <div>
-                      <p className="text-[8px] font-black uppercase text-emerald-400 tracking-wider">Capacity</p>
+                      <p className="text-[8px] font-black uppercase text-emerald-400 tracking-wider">Capacité</p>
                       <p className="text-base font-bold text-emerald-900">
-                        {asset.capacity.value} <span className="text-[8px] text-emerald-400">{asset.capacity.unit}</span>
+                        {asset.capacity?.value || 0} <span className="text-[8px] text-emerald-400">{asset.capacity?.unit || 'têtes'}</span>
                       </p>
                     </div>
                     <div>
                       <p className="text-[8px] font-black uppercase text-emerald-400 tracking-wider">Cycle</p>
-                      <p className="text-sm font-bold text-emerald-900">{asset.cycleDuration || '12 months'}</p>
+                      <p className="text-sm font-bold text-emerald-900">{asset.cycleDuration || '12 mois'}</p>
                     </div>
                   </div>
 
                   <div className="mt-auto flex items-center justify-between pt-4 border-t border-emerald-50">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-100 transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-100 transition-colors cursor-pointer">
                         <Heart size={14} />
                       </div>
-                      <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-100 transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-100 transition-colors cursor-pointer">
                         <Share2 size={14} />
                       </div>
                     </div>
                     <button className={`flex items-center gap-2 px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest text-white transition-all ${categoryData.buttonColor}`}>
-                      View Details <ChevronRight size={14} />
+                      Voir détails <ChevronRight size={14} />
                     </button>
                   </div>
                 </div>
@@ -368,8 +402,12 @@ const LivestockCategoryPage = () => {
             <div className="w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center mb-6">
               <Info className="text-emerald-400" size={40} />
             </div>
-            <p className="text-2xl font-serif text-emerald-800/40 italic mb-4">No production units currently available in this sector.</p>
-            <Link to="/agriculture/livestock" className="text-emerald-600 text-sm font-bold underline hover:text-emerald-800">Explore other sectors</Link>
+            <p className="text-2xl font-serif text-emerald-800/40 italic mb-4">
+              Aucune unité de production disponible dans ce secteur.
+            </p>
+            <Link to="/agriculture/livestock" className="text-emerald-600 text-sm font-bold underline hover:text-emerald-800">
+              Explorer d'autres secteurs
+            </Link>
           </motion.div>
         )}
       </main>

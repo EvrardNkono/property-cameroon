@@ -3,12 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
   ArrowRight, Fish, Bird, Database, Leaf, TrendingUp, ShieldCheck, 
-  Warehouse, Globe, BadgeCheck, Loader2, Users, DollarSign, Clock
+  Warehouse, Globe, BadgeCheck, Loader2, Users, DollarSign, Clock,
+  AlertCircle
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
-
 
 // Map des icônes par nom
 const iconMap = {
@@ -32,7 +32,6 @@ const LivestockIntroduction = () => {
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({
     totalAssets: 0,
-    totalInvestors: 0,
     avgROI: 0,
     totalValue: 0
   });
@@ -59,7 +58,6 @@ const LivestockIntroduction = () => {
       
       setStats({
         totalAssets: livestock.length,
-        totalInvestors: Math.floor(livestock.length * 2.5),
         avgROI: avgRoi,
         totalValue: totalValue
       });
@@ -94,8 +92,8 @@ const LivestockIntroduction = () => {
           borderColor: colors.border,
           count: categoryAssets.length,
           totalValue: categoryAssets.reduce((sum, item) => sum + (item.price?.amount || 0), 0),
-          image: imageUrl,
-          marketDemand: cat.marketDemand,
+          image: imageUrl || 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000',
+          marketDemand: cat.marketDemand || '+0% YoY',
           features: cat.features || []
         };
       });
@@ -104,7 +102,7 @@ const LivestockIntroduction = () => {
       
     } catch (err) {
       console.error('Error fetching categories:', err);
-      setError(err.message || 'Erreur de chargement');
+      setError(err.message || 'Erreur de chargement des catégories');
     } finally {
       setLoading(false);
     }
@@ -128,6 +126,29 @@ const LivestockIntroduction = () => {
     hidden: { scale: 0.9, opacity: 0 },
     visible: { scale: 1, opacity: 1, transition: { duration: 0.5, type: "spring", stiffness: 200 } }
   };
+
+  // Affichage si aucune catégorie
+  if (!loading && categories.length === 0 && !error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#fdfcf0] via-white to-[#f8f7ee]">
+        <Navbar />
+        <div className="flex flex-col items-center justify-center py-32 px-6">
+          <div className="w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center mb-6">
+            <Leaf size={48} className="text-emerald-400" />
+          </div>
+          <h2 className="text-2xl font-serif text-emerald-900 mb-3">Aucune catégorie disponible</h2>
+          <p className="text-emerald-600/70 text-center max-w-md mb-6">
+            Les catégories d'élevage seront bientôt disponibles. 
+            Veuillez revenir plus tard ou contacter l'administrateur.
+          </p>
+          <Link to="/" className="text-emerald-600 text-sm font-bold underline hover:text-emerald-800">
+            Retour à l'accueil
+          </Link>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fdfcf0] via-white to-[#f8f7ee] selection:bg-emerald-800 selection:text-amber-200">
@@ -194,7 +215,7 @@ const LivestockIntroduction = () => {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-8"
+            className="grid grid-cols-1 sm:grid-cols-3 gap-8"
           >
             <motion.div variants={statVariants} className="text-center">
               <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
@@ -202,14 +223,6 @@ const LivestockIntroduction = () => {
               </div>
               <p className="text-2xl md:text-3xl font-black text-emerald-900">{stats.totalAssets}</p>
               <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Active Assets</p>
-            </motion.div>
-            
-            <motion.div variants={statVariants} className="text-center">
-              <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <Users size={24} className="text-amber-700" />
-              </div>
-              <p className="text-2xl md:text-3xl font-black text-emerald-900">{stats.totalInvestors}+</p>
-              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Active Investors</p>
             </motion.div>
             
             <motion.div variants={statVariants} className="text-center">
@@ -225,7 +238,7 @@ const LivestockIntroduction = () => {
                 <DollarSign size={24} className="text-amber-700" />
               </div>
               <p className="text-2xl md:text-3xl font-black text-emerald-900">
-                {(stats.totalValue / 1000000).toFixed(0)}M
+                {(stats.totalValue / 1000000).toFixed(1)}M
               </p>
               <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Portfolio Value</p>
             </motion.div>
@@ -238,15 +251,16 @@ const LivestockIntroduction = () => {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-32">
             <Loader2 size={48} className="text-emerald-600 animate-spin mb-4" />
-            <p className="text-emerald-600/60 text-sm">Loading investment opportunities...</p>
+            <p className="text-emerald-600/60 text-sm">Chargement des opportunités...</p>
           </div>
         ) : error ? (
-          <div className="bg-red-50 text-red-600 p-6 rounded-2xl text-center">
+          <div className="bg-red-50 text-red-600 p-6 rounded-2xl text-center max-w-lg mx-auto">
+            <AlertCircle size={40} className="mx-auto mb-3 text-red-500" />
             <p className="font-bold">Erreur de chargement</p>
             <p className="text-sm mt-1">{error}</p>
             <button 
               onClick={fetchCategories}
-              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold hover:bg-red-700"
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold hover:bg-red-700 transition-colors"
             >
               Réessayer
             </button>
@@ -269,9 +283,12 @@ const LivestockIntroduction = () => {
                 <Link to={`/agriculture/livestock/${cat.slug}`} className="block h-full">
                   {/* Background Image */}
                   <img 
-                    src={cat.image || 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000'} 
+                    src={cat.image} 
                     alt={cat.title}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    onError={(e) => {
+                      e.target.src = 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000';
+                    }}
                   />
                   <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} to-emerald-950/95`} />
                   <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
@@ -296,11 +313,11 @@ const LivestockIntroduction = () => {
                       <div className="flex items-center justify-between mb-6">
                         <div className="flex gap-6">
                           <div>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-white/40">Assets</p>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-white/40">Actifs</p>
                             <p className="text-xl font-bold text-white">{cat.count}</p>
                           </div>
                           <div>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-white/40">Portfolio Value</p>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-white/40">Valeur du portefeuille</p>
                             <p className="text-xl font-bold text-amber-400">
                               {(cat.totalValue / 1000000).toFixed(1)}M <span className="text-xs text-white/40">FCFA</span>
                             </p>
@@ -309,7 +326,7 @@ const LivestockIntroduction = () => {
                       </div>
                       
                       <div className="flex items-center gap-3 text-white text-[10px] font-black uppercase tracking-widest group-hover:gap-5 transition-all">
-                        Discover Assets <ArrowRight size={16} className="text-amber-400" />
+                        Découvrir <ArrowRight size={16} className="text-amber-400" />
                       </div>
                     </div>
                   </div>
@@ -330,17 +347,17 @@ const LivestockIntroduction = () => {
             className="text-center mb-16"
           >
             <span className="text-amber-400 text-[10px] font-black uppercase tracking-[0.3em] mb-4 block">
-              Why CAPEF Livestock
+              Pourquoi investir
             </span>
-            <h2 className="text-4xl md:text-5xl font-serif italic mb-4">A Living, Breathing Economy</h2>
+            <h2 className="text-4xl md:text-5xl font-serif italic mb-4">Une économie vivante</h2>
             <div className="w-20 h-1 bg-amber-400 mx-auto" />
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {[
-              { icon: <ShieldCheck size={32} />, title: "Certified Assets", description: "All production units are veterinary-certified and legally secured." },
-              { icon: <Clock size={32} />, title: "Short Cycles", description: "From 6 months to 24 months, rapid ROI on your investment." },
-              { icon: <Globe size={32} />, title: "Export Ready", description: "Access to CEMAC and international markets through CAPEF network." }
+              { icon: <ShieldCheck size={32} />, title: "Actifs certifiés", description: "Toutes les unités de production sont certifiées vétérinaires et légalement sécurisées." },
+              { icon: <Clock size={32} />, title: "Cycles courts", description: "De 6 à 24 mois, retour sur investissement rapide." },
+              { icon: <Globe size={32} />, title: "Prêt pour l'export", description: "Accès aux marchés CEMAC et internationaux via le réseau CAPEF." }
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -371,10 +388,10 @@ const LivestockIntroduction = () => {
             className="bg-gradient-to-br from-emerald-50 to-amber-50 rounded-3xl p-12 shadow-xl"
           >
             <BadgeCheck size={48} className="text-emerald-600 mx-auto mb-6" />
-            <h3 className="text-3xl font-serif text-emerald-900 mb-4">Ready to Invest in Living Assets?</h3>
-            <p className="text-emerald-700/70 max-w-md mx-auto mb-8">Schedule a consultation with our livestock investment advisors.</p>
+            <h3 className="text-3xl font-serif text-emerald-900 mb-4">Prêt à investir dans des actifs vivants ?</h3>
+            <p className="text-emerald-700/70 max-w-md mx-auto mb-8">Programmez une consultation avec nos conseillers en investissement agricole.</p>
             <button className="px-8 py-4 bg-emerald-800 text-white rounded-full text-[10px] font-black uppercase tracking-[0.2em] hover:bg-emerald-900 transition-all inline-flex items-center gap-2 group">
-              Schedule a Call <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              Prendre rendez-vous <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </motion.div>
         </div>

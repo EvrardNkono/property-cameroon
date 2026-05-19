@@ -7,43 +7,27 @@ const Hero = () => {
   const gold = '#c8a84b';
   const green = '#1a4731';
 
-  // État pour l'image principale
-  const [mainImage, setMainImage] = useState({
-    src: '/images/heroimo.jfif',
-    label: 'Real Estate',
-    alt: 'Real Estate'
-  });
-
-  // Images disponibles
-  const images = [
-    { src: '/images/heroimo.jfif', label: 'Real Estate', alt: 'Real Estate' },
-    { src: '/images/heroagri.jfif', label: 'Agriculture', alt: 'Agriculture' },
-    { src: '/images/lifstock.jfif', label: 'Livestock', alt: 'Livestock' }
+  // Images disponibles initiales
+  const initialImages = [
+    { id: 'img0', src: '/images/heroimo.jfif', label: 'Real Estate', alt: 'Real Estate' },
+    { id: 'img1', src: '/images/heroagri.jfif', label: 'Agriculture', alt: 'Agriculture' },
+    { id: 'img2', src: '/images/lifstock.jfif', label: 'Livestock', alt: 'Livestock' }
   ];
 
-  // Fonction pour échanger l'image
-  const swapImage = (clickedImage) => {
-    if (clickedImage.src === mainImage.src) return;
-    
-    // Trouver l'image qui était en position principale
-    const oldMainImage = mainImage;
-    
-    // Mettre à jour l'image principale avec celle qui a été cliquée
-    setMainImage(clickedImage);
-    
-    // Mettre à jour l'image cliquée avec l'ancienne image principale
-    // On va retourner l'élément DOM correspondant
-    const imageElements = document.querySelectorAll('.swap-image');
-    imageElements.forEach((el) => {
-      if (el.getAttribute('data-src') === clickedImage.src) {
-        // Mettre à jour l'attribut src et le label de l'élément cliqué
-        el.setAttribute('data-src', oldMainImage.src);
-        el.querySelector('img').src = oldMainImage.src;
-        el.querySelector('img').alt = oldMainImage.alt;
-        const labelEl = el.querySelector('.image-label');
-        if (labelEl) labelEl.textContent = oldMainImage.label;
-      }
-    });
+  // Gestion propre des positions par état (Centre, Haut Droite, Bas Gauche)
+  const [displayImages, setDisplayImages] = useState(initialImages);
+
+  // Fonction de swap purement React : On passe l'image cliquée au premier index (index 0 = Centre)
+  const handleSwap = (clickedIndex) => {
+    if (clickedIndex === 0) return; // Déjà au centre
+
+    const updated = [...displayImages];
+    // Échange standard de tableau
+    const temp = updated[0];
+    updated[0] = updated[clickedIndex];
+    updated[clickedIndex] = temp;
+
+    setDisplayImages(updated);
   };
 
   return (
@@ -133,78 +117,70 @@ const Hero = () => {
         </motion.div>
       </div>
 
-      {/* --- RIGHT CONTENT WITH CLICKABLE IMAGES --- */}
+      {/* --- RIGHT CONTENT WITH IMAGES --- */}
       <div className="flex-1 relative w-full flex items-center justify-center lg:justify-end">
-        
-        <div className="relative w-full max-w-[450px] md:max-w-[550px]">
+        <div className="relative w-full max-w-[450px] md:max-w-[550px] aspect-[4/3]">
           
-          {/* --- MAIN IMAGE (Center) - Clickable to cycle through images --- */}
-          <motion.div 
-            key={mainImage.src}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="relative z-20 w-full rounded-2xl overflow-hidden shadow-2xl aspect-[4/3] cursor-pointer group"
-            onClick={() => {
-              // Trouver l'index de l'image actuelle et passer à la suivante
-              const currentIndex = images.findIndex(img => img.src === mainImage.src);
-              const nextIndex = (currentIndex + 1) % images.length;
-              setMainImage(images[nextIndex]);
-            }}
-          >
-            <img src={mainImage.src} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={mainImage.alt} />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-            <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg">
-              <p className="text-white text-[10px] font-bold uppercase tracking-wider">{mainImage.label}</p>
-            </div>
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-              <div className="bg-white/20 backdrop-blur-md rounded-full p-3">
-                <ArrowUpRight size={24} className="text-white" />
+          {/* AnimatePresence pour animer fluidement les transitions lors des changements de place */}
+          <AnimatePresence mode="popLayout">
+            
+            {/* --- 1. IMAGE PRINCIPALE (Centre) - z-10 (Dessous les autres) --- */}
+            <motion.div 
+              key={displayImages[0].id}
+              layoutId={displayImages[0].id}
+              className="absolute inset-0 z-10 rounded-2xl overflow-hidden shadow-2xl cursor-pointer group"
+              onClick={() => handleSwap(0)}
+            >
+              <img src={displayImages[0].src} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt={displayImages[0].alt} />
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+              
+              {/* REPOSITIONNÉ : Badge de l'image centrale parfaitement centré au milieu de sa carte */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="bg-black/75 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-white/10">
+                  <p className="text-white text-[11px] font-bold uppercase tracking-widest">{displayImages[0].label}</p>
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
 
-          {/* --- SECOND IMAGE (Top Right overlay) - Clickable to swap with main --- */}
-          <motion.div 
-            animate={{ y: [0, -15, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
-            className="absolute z-30 -top-6 -right-4 md:-top-10 md:-right-8 w-32 md:w-44 rounded-xl overflow-hidden shadow-xl aspect-square cursor-pointer group swap-image"
-            data-src={images[1].src}
-            onClick={() => swapImage(images[1])}
-          >
-            <img src={images[1].src} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt={images[1].alt} />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-            <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md">
-              <p className="text-white text-[7px] font-bold uppercase tracking-wider image-label">{images[1].label}</p>
-            </div>
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-              <ArrowUpRight size={16} className="text-white" />
-            </div>
-          </motion.div>
+            {/* --- 2. IMAGE SECONDAIRE (Haut Droite) - z-20 (Au-dessus) --- */}
+            <motion.div 
+              key={displayImages[1].id}
+              layoutId={displayImages[1].id}
+              animate={{ y: [0, -10, 0] }}
+              transition={{ y: { duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.3 } }}
+              className="absolute z-20 -top-6 -right-4 md:-top-10 md:-right-8 w-32 md:w-44 rounded-xl overflow-hidden shadow-xl aspect-square cursor-pointer group"
+              onClick={() => handleSwap(1)}
+            >
+              <img src={displayImages[1].src} className="w-full h-full object-cover" alt={displayImages[1].alt} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+              <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md">
+                <p className="text-white text-[8px] font-bold uppercase tracking-wider">{displayImages[1].label}</p>
+              </div>
+            </motion.div>
 
-          {/* --- THIRD IMAGE (Bottom Left overlay) - Clickable to swap with main --- */}
-          <motion.div 
-            animate={{ x: [0, 8, 0] }}
-            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
-            className="absolute z-10 -bottom-6 -left-4 md:-bottom-10 md:-left-8 w-28 md:w-36 rounded-xl overflow-hidden shadow-lg aspect-square cursor-pointer group swap-image"
-            data-src={images[2].src}
-            onClick={() => swapImage(images[2])}
-          >
-            <img src={images[2].src} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt={images[2].alt} />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-            <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md">
-              <p className="text-white text-[7px] font-bold uppercase tracking-wider image-label">{images[2].label}</p>
-            </div>
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-              <ArrowUpRight size={16} className="text-white" />
-            </div>
-          </motion.div>
+            {/* --- 3. IMAGE TERTIAIRE (Bas Gauche) - z-20 (Maintenant AU-DESSUS) --- */}
+            <motion.div 
+              key={displayImages[2].id}
+              layoutId={displayImages[2].id}
+              animate={{ x: [0, 6, 0] }}
+              transition={{ x: { duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.6 } }}
+              className="absolute z-20 -bottom-6 -left-4 md:-bottom-10 md:-left-8 w-28 md:w-36 rounded-xl overflow-hidden shadow-xl aspect-square cursor-pointer group"
+              onClick={() => handleSwap(2)}
+            >
+              <img src={displayImages[2].src} className="w-full h-full object-cover" alt={displayImages[2].alt} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+              <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md">
+                <p className="text-white text-[8px] font-bold uppercase tracking-wider">{displayImages[2].label}</p>
+              </div>
+            </motion.div>
+
+          </AnimatePresence>
 
           {/* --- CAPEF BADGE (Bottom Right) --- */}
           <motion.div
             animate={{ x: [0, 5, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -bottom-4 right-0 md:-bottom-6 md:right-0 z-40"
+            className="absolute -bottom-4 right-0 md:-bottom-6 md:right-0 z-30"
           >
             <Link 
               to="/agriculture/institutional-framework" 
@@ -229,6 +205,7 @@ const Hero = () => {
               </div>
             </Link>
           </motion.div>
+
         </div>
       </div>
     </section>

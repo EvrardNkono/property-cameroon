@@ -16,7 +16,9 @@ import {
   Loader2,
   Sprout,
   Beef,
-  Leaf
+  Leaf,
+  PawPrint,
+  Map
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -45,7 +47,6 @@ const DashboardLayout = () => {
 
   // Changer les rôles actifs (mode simulation)
   const toggleRole = async (role) => {
-    // Ne pas permettre de désactiver ADMIN si c'est le seul rôle ?
     if (role === 'ADMIN' && activeRoles.length === 1 && activeRoles.includes('ADMIN')) {
       return;
     }
@@ -55,11 +56,9 @@ const DashboardLayout = () => {
         ? prev.filter(r => r !== role) 
         : [...prev, role];
       
-      // Si on active ADMIN, on navigue vers le dashboard admin
       if (role === 'ADMIN' && !prev.includes(role)) {
         navigate('/dashboard/admin/users');
       }
-      // Si on désactive ADMIN, on navigue vers le dashboard utilisateur
       if (role === 'ADMIN' && prev.includes(role) && newRoles.length === 0) {
         navigate('/dashboard');
       }
@@ -68,13 +67,13 @@ const DashboardLayout = () => {
     });
   };
 
-  // Configuration du menu
+  // ✅ Configuration du menu avec tous les rôles
   const menuConfig = [
     { 
       label: 'Overview', 
       path: '/dashboard', 
       icon: <LayoutDashboard size={20} />, 
-      roles: ['BUYER', 'OWNER', 'INVESTOR', 'ADMIN'],
+      roles: ['BUYER', 'OWNER', 'INVESTOR', 'LIVESTOCK_OWNER', 'AGRICULTURE_OWNER', 'ADMIN'],
       alwaysShow: true 
     },
     // --- ADMIN SECTION ---
@@ -129,6 +128,22 @@ const DashboardLayout = () => {
       roles: ['OWNER'],
       isPersonal: true 
     },
+    // ✅ NOUVEAU: Livestock Owner
+    { 
+      label: 'My Livestock', 
+      path: '/dashboard/livestock', 
+      icon: <PawPrint size={20} />, 
+      roles: ['LIVESTOCK_OWNER'],
+      isPersonal: true 
+    },
+    // ✅ NOUVEAU: Agriculture Owner
+    { 
+      label: 'My Agriculture', 
+      path: '/dashboard/agriculture', 
+      icon: <Sprout size={20} />, 
+      roles: ['AGRICULTURE_OWNER'],
+      isPersonal: true 
+    },
     { 
       label: 'Investments', 
       path: '/dashboard/invest', 
@@ -147,7 +162,7 @@ const DashboardLayout = () => {
       label: 'My Profile', 
       path: '/dashboard/profile', 
       icon: <UserCircle size={20} />, 
-      roles: ['BUYER', 'OWNER', 'INVESTOR', 'ADMIN'],
+      roles: ['BUYER', 'OWNER', 'INVESTOR', 'LIVESTOCK_OWNER', 'AGRICULTURE_OWNER', 'ADMIN'],
       alwaysShow: true
     },
   ];
@@ -155,11 +170,9 @@ const DashboardLayout = () => {
   // Filtrage du menu selon les rôles actifs
   const filteredMenu = menuConfig.filter(item => {
     if (isAdminMode) {
-      // En mode admin, on cache les sections personnelles
       if (item.isPersonal) return false;
       return item.roles.includes('ADMIN');
     }
-    // En mode utilisateur, on cache les sections admin
     const isStrictAdmin = item.roles.includes('ADMIN') && item.roles.length === 1;
     if (isStrictAdmin) return false;
     return item.roles.some(role => activeRoles.includes(role));
@@ -177,13 +190,31 @@ const DashboardLayout = () => {
     return name.charAt(0).toUpperCase();
   };
 
-  // Récupérer le rôle principal pour l'affichage
+  // ✅ Récupérer le rôle principal pour l'affichage (mis à jour)
   const getPrimaryRoleLabel = () => {
     if (isAdminMode) return 'Super Admin';
     if (activeRoles.includes('OWNER')) return 'Propriétaire';
+    if (activeRoles.includes('LIVESTOCK_OWNER')) return 'Éleveur';
+    if (activeRoles.includes('AGRICULTURE_OWNER')) return 'Agriculteur';
     if (activeRoles.includes('INVESTOR')) return 'Investisseur';
     if (activeRoles.includes('BUYER')) return 'Acheteur';
     return 'Membre';
+  };
+
+  // ✅ Récupérer tous les rôles disponibles pour le sélecteur
+  const getAvailableRolesForSelector = () => {
+    const userRoles = user?.roles || [];
+    const allRoles = [
+      { id: 'ADMIN', label: 'ADMIN', color: 'bg-red-600' },
+      { id: 'OWNER', label: 'Owner', color: 'bg-orange-500' },
+      { id: 'LIVESTOCK_OWNER', label: 'Livestock', color: 'bg-emerald-600' },
+      { id: 'AGRICULTURE_OWNER', label: 'Agriculture', color: 'bg-green-600' },
+      { id: 'INVESTOR', label: 'Investor', color: 'bg-[#0a2619]' },
+      { id: 'BUYER', label: 'Buyer', color: 'bg-blue-600' }
+    ];
+    
+    // Retourner uniquement les rôles que l'utilisateur possède
+    return allRoles.filter(role => userRoles.includes(role.id));
   };
 
   // Chargement
@@ -200,6 +231,8 @@ const DashboardLayout = () => {
     navigate('/login');
     return null;
   }
+
+  const availableRoles = getAvailableRolesForSelector();
 
   return (
     <div className="flex h-screen bg-[#f8fafc] font-sans text-slate-900 overflow-hidden">
@@ -269,34 +302,22 @@ const DashboardLayout = () => {
             </h2>
           </div>
 
-          {/* ROLE SELECTOR */}
+          {/* ROLE SELECTOR - Version dynamique avec tous les rôles de l'utilisateur */}
           <div className="flex items-center bg-slate-50 p-1 rounded-2xl border border-slate-200 shadow-inner">
             <div className="flex gap-1">
-              {[
-                { id: 'ADMIN', label: 'ADMIN', color: 'bg-red-600' },
-                { id: 'OWNER', label: 'Owner', color: 'bg-orange-500' },
-                { id: 'INVESTOR', label: 'Investor', color: 'bg-[#0a2619]' },
-                { id: 'BUYER', label: 'Buyer', color: 'bg-blue-600' }
-              ].map((role) => {
-                // Vérifier si l'utilisateur a réellement ce rôle dans son compte
-                const hasRole = user?.roles?.includes(role.id);
-                if (!hasRole && role.id !== 'BUYER') return null;
-                
-                return (
-                  <button
-                    key={role.id}
-                    onClick={() => toggleRole(role.id)}
-                    disabled={!hasRole && role.id !== 'BUYER'}
-                    className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
-                      activeRoles.includes(role.id)
-                        ? `${role.color} text-white shadow-md scale-105`
-                        : 'bg-white text-slate-400 hover:bg-slate-50'
-                    } ${!hasRole && role.id !== 'BUYER' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {role.label}
-                  </button>
-                );
-              })}
+              {availableRoles.map((role) => (
+                <button
+                  key={role.id}
+                  onClick={() => toggleRole(role.id)}
+                  className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
+                    activeRoles.includes(role.id)
+                      ? `${role.color} text-white shadow-md scale-105`
+                      : 'bg-white text-slate-400 hover:bg-slate-50'
+                  }`}
+                >
+                  {role.label}
+                </button>
+              ))}
             </div>
           </div>
 

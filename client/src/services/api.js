@@ -341,6 +341,11 @@ class ApiService {
     return this.request(`/livestock/${id}`);
   }
 
+  // ✅ NOUVEAU: Récupérer les animaux d'un propriétaire
+  async getLivestockByOwner(ownerId) {
+    return this.request(`/livestock/owner/${ownerId}`);
+  }
+
   async createLivestock(data) {
     return this.request('/livestock', {
       method: 'POST',

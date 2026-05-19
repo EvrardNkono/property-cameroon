@@ -53,16 +53,18 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* COLUMN 4: CONTACT & HEADQUARTERS */}
+          {/* COLUMN 4: CONTACT & HEADQUARTERS (CORRIGÉ) */}
           <div>
             <h4 className="text-pc-gold text-[10px] uppercase tracking-[0.3em] font-bold mb-8 opacity-80">
-              Global Offices
+              Our Headquarters
             </h4>
             <address className="not-italic text-sm text-slate-300 space-y-4 font-light">
-              <p>📍 <span className="text-white font-medium">Cameroon:</span> Bastos, Yaoundé</p>
-              <p>📍 <span className="text-white font-medium">France:</span> Melun, Paris Region</p>
+              <p>
+                📍 <span className="text-white font-medium">Yaoundé, Cameroon</span> <br />
+                <span className="text-xs text-slate-400 block mt-1">Tongolo, en face du Centre Yannick Noah</span>
+              </p>
+              
               <div className="pt-4">
-                {/* Bouton maintenant fonctionnel */}
                 <Link to="/book-appointment">
                   <button className="border border-white/20 px-6 py-2 rounded-sm text-[10px] uppercase tracking-widest hover:bg-white hover:text-pc-green transition-all">
                     Book an Appointment
@@ -80,8 +82,6 @@ const Footer = () => {
             <p className="text-[9px] uppercase tracking-[0.4em] text-slate-500 font-medium">
               © 2026 PropertyCameroon — Institutional Seriousness
             </p>
-            
-           
           </div>
           
           <div className="flex flex-wrap justify-center space-x-8 text-[9px] uppercase tracking-[0.2em] text-slate-500">
