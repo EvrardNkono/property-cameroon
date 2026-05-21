@@ -1,6 +1,29 @@
 // backend/models/AgriculturalLand.model.js
 import mongoose from 'mongoose';
 
+// Liste complète des cultures (60+)
+const cropEnumValues = [
+  // Céréales
+  'maize', 'rice', 'wheat', 'sorghum', 'millet', 'barley', 'fonio',
+  // Cultures de rente
+  'cocoa', 'coffee', 'palm', 'rubber', 'cotton', 'cashew', 'shea', 'tea', 'tobacco', 'sugarcane',
+  // Tubercules
+  'cassava', 'yam', 'sweet potato', 'potato', 'taro', 'cocoyam', 'ginger', 'turmeric',
+  // Légumes
+  'tomato', 'onion', 'garlic', 'shallot', 'leek', 'chili', 'pepper', 'eggplant', 'cucumber',
+  'zucchini', 'pumpkin', 'squash', 'cabbage', 'cauliflower', 'broccoli', 'spinach', 'lettuce', 'carrot',
+  // Légumineuses
+  'beans', 'soybean', 'peanut', 'cowpea', 'lentil', 'chickpea', 'green bean', 'pea',
+  // Fruits
+  'banana', 'plantain', 'mango', 'pineapple', 'orange', 'lemon', 'grapefruit', 'papaya',
+  'avocado', 'guava', 'passion fruit', 'watermelon', 'coconut', 'date', 'fig', 'grape',
+  // Épices et aromates
+  'vanilla', 'cinnamon', 'pepper black', 'clove', 'nutmeg', 'cardamom', 'basil', 'thyme',
+  'rosemary', 'mint', 'parsley', 'coriander', 'ginger', 'turmeric',
+  // Autres
+  'sunflower', 'sesame', 'jatropha', 'bamboo', 'moringa', 'neem', 'eucalyptus'
+];
+
 const agriculturalLandSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -43,22 +66,33 @@ const agriculturalLandSchema = new mongoose.Schema({
       type: String,
       default: 'FCFA'
     },
-    perHectare: Number // Prix à l'hectare (calculé automatiquement)
+    perHectare: Number
   },
   
-  // 🌾 CARACTÉRISTIQUES AGRICOLES SPÉCIFIQUES
+  // 📈 METRICS D'INVESTISSEMENT
+  expectedRoi: {
+    type: Number,
+    default: 0
+  },
+  annualYield: {
+    type: Number,
+    default: 0
+  },
+  
+  // 🌾 CARACTÉRISTIQUES AGRICOLES
   agricultureDetails: {
     cropCompatibility: [{
       type: String,
-      enum: ['cocoa', 'coffee', 'palm', 'banana', 'rubber', 'maize', 'cassava', 'rice']
+      enum: cropEnumValues
     }],
     primaryCrop: {
       type: String,
-      enum: ['cocoa', 'coffee', 'palm', 'banana', 'rubber', 'maize', 'cassava', 'rice']
+      enum: [...cropEnumValues, '']  // Permettre valeur vide
     },
     soilType: {
       type: String,
-      enum: ['volcanic', 'laterite', 'sandy', 'clay', 'loam', 'ferrallitic']
+      enum: ['volcanic', 'laterite', 'sandy', 'clay', 'loam', 'ferrallitic', 'peat', 'silt', ''],
+      default: ''
     },
     soilQuality: {
       type: Number,
@@ -72,7 +106,8 @@ const agriculturalLandSchema = new mongoose.Schema({
     },
     waterSource: {
       type: String,
-      enum: ['river', 'well', 'borehole', 'lake', 'rainfed']
+      enum: ['river', 'well', 'borehole', 'lake', 'rainfed', 'spring', 'dam', ''],
+      default: ''
     },
     electricityAccess: {
       type: Boolean,
@@ -84,24 +119,24 @@ const agriculturalLandSchema = new mongoose.Schema({
       default: 'unpaved'
     },
     distanceToMarket: {
-      value: Number,
+      value: { type: Number, default: 0 },
       unit: { type: String, default: 'km' }
     },
     annualRainfall: {
-      value: Number,
+      value: { type: Number, default: 0 },
       unit: { type: String, default: 'mm' }
     },
     averageTemperature: {
-      value: Number,
+      value: { type: Number, default: 0 },
       unit: { type: String, default: '°C' }
     },
     altitude: {
-      value: Number,
+      value: { type: Number, default: 0 },
       unit: { type: String, default: 'm' }
     },
     slope: {
       type: String,
-      enum: ['flat', 'gentle', 'moderate', 'steep'],
+      enum: ['flat', 'gentle', 'moderate', 'steep', 'mountainous', ''],
       default: 'gentle'
     }
   },
@@ -134,7 +169,7 @@ const agriculturalLandSchema = new mongoose.Schema({
   },
   certifications: [{
     type: String,
-    enum: ['organic', 'fair-trade', 'rainforest', 'utZ']
+    enum: ['organic', 'fair-trade', 'rainforest', 'utZ', 'bio-certified', 'global-gap', '']
   }],
   isIrrigated: {
     type: Boolean,
@@ -144,12 +179,12 @@ const agriculturalLandSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Calculer le prix à l'hectare avant sauvegarde
-agriculturalLandSchema.pre('save', function(next) {
-  if (this.price.amount && this.surface.value) {
+// ✅ CORRECTION ICI - Version sans next (recommandée pour Mongoose 6+)
+agriculturalLandSchema.pre('save', function() {
+  if (this.price && this.price.amount && this.surface && this.surface.value) {
     this.price.perHectare = this.price.amount / this.surface.value;
   }
-  next();
+  // Ne pas appeler next() - Mongoose 6+ gère automatiquement
 });
 
 // Index pour les recherches

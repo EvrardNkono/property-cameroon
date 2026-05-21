@@ -55,14 +55,42 @@ export const getAgriculturalLandById = async (req, res) => {
 // Créer une nouvelle terre agricole
 export const createAgriculturalLand = async (req, res) => {
   try {
+    // ========== LOGS DE DIAGNOSTIC (à retirer en production) ==========
+    console.log('\n📥 ===== CREATE AGRICULTURAL LAND =====');
+    console.log('👤 User:', req.user ? `${req.user.email} (roles: ${req.user.roles?.join(', ')})` : '❌ AUCUN USER');
+    console.log('📦 Body reçu:', JSON.stringify(req.body, null, 2));
+    // ===================================================================
+
     const landData = {
       ...req.body,
       owner: req.user._id
     };
+
+    // ========== LOG AVANT CRÉATION ==========
+    console.log('💾 Données envoyées à Mongoose:', JSON.stringify(landData, null, 2));
+    // =========================================
     
     const land = await AgriculturalLand.create(landData);
+
+    console.log('✅ Terre créée avec succès, ID:', land._id);
+
     res.status(201).json({ success: true, land });
   } catch (error) {
+    // ========== LOG ERREUR COMPLET ==========
+    console.error('\n❌ ===== ERREUR createAgriculturalLand =====');
+    console.error('Type:', error.name);
+    console.error('Message:', error.message);
+    // Détail des erreurs de validation Mongoose
+    if (error.errors) {
+      console.error('Champs invalides:');
+      Object.entries(error.errors).forEach(([field, err]) => {
+        console.error(`  - ${field}: "${err.value}" → ${err.message}`);
+      });
+    }
+    console.error('Stack:', error.stack);
+    console.error('===========================================\n');
+    // =========================================
+
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -114,18 +142,14 @@ export const filterByCrop = async (req, res) => {
       ]
     }).populate('owner', 'name email');
     
-    // Calculer un score de match pour chaque terre
     const landsWithScore = lands.map(land => {
       let score = 70;
       
-      // Bonus selon le type de culture
       if (land.agricultureDetails.primaryCrop === crop) score += 15;
       if (land.agricultureDetails.soilQuality > 70) score += 10;
       if (land.agricultureDetails.waterAccess) score += 10;
       if (land.agricultureDetails.electricityAccess) score += 5;
       if (land.agricultureDetails.roadAccess === 'paved') score += 5;
-      
-      // Terrain plat = bonus
       if (land.agricultureDetails.slope === 'flat') score += 5;
       
       land.matchScore = Math.min(100, score);

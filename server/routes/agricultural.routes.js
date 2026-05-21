@@ -21,29 +21,29 @@ import { protect, authorize } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-// ========== LAND ROUTES ==========
-// Routes publiques
+// ========== LAND ROUTES (PUBLIC) ==========
 router.get('/', getAllAgriculturalLands);
-router.get('/:id', getAgriculturalLandById);
 router.get('/filter/crop/:crop', filterByCrop);
 router.get('/stats/regions', getRegionStats);
 
-// Routes protégées (admin et owner)
-router.use(protect);
-
-router.post('/', authorize('ADMIN', 'OWNER'), createAgriculturalLand);
-router.put('/:id', authorize('ADMIN', 'OWNER'), updateAgriculturalLand);
-router.delete('/:id', authorize('ADMIN'), deleteAgriculturalLand);
-
 // ========== PRODUCT ROUTES ==========
-// Routes publiques pour les produits
-router.get('/products', getAllProducts);
-router.get('/products/category/:category', getProductsByCategory);
-router.get('/products/:id', getProductById);
+// ✅ AJOUTER protect sur les routes GET pour avoir req.user
+router.get('/products', protect, getAllProducts);                    // ← Ajouter protect
+router.get('/products/category/:category', protect, getProductsByCategory);  // ← Ajouter protect
+router.get('/products/:id', protect, getProductById);                // ← Ajouter protect
 
 // Routes protégées pour les produits
-router.post('/products', authorize('ADMIN', 'OWNER'), createProduct);
-router.put('/products/:id', authorize('ADMIN', 'OWNER'), updateProduct);
-router.delete('/products/:id', authorize('ADMIN'), deleteProduct);
+router.post('/products', protect, authorize('ADMIN', 'OWNER', 'AGRICULTURE_OWNER'), createProduct);
+router.put('/products/:id', protect, authorize('ADMIN', 'OWNER', 'AGRICULTURE_OWNER'), updateProduct);
+router.delete('/products/:id', protect, authorize('ADMIN'), deleteProduct);
+
+// ========== LAND ROUTES (DYNAMIC) ==========
+router.get('/:id', getAgriculturalLandById);
+
+// Routes protégées pour les terres
+router.use(protect);
+router.post('/', authorize('ADMIN', 'OWNER', 'AGRICULTURE_OWNER'), createAgriculturalLand);
+router.put('/:id', authorize('ADMIN', 'OWNER', 'AGRICULTURE_OWNER'), updateAgriculturalLand);
+router.delete('/:id', authorize('ADMIN'), deleteAgriculturalLand);
 
 export default router;

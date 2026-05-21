@@ -9,7 +9,7 @@ import {
   deleteCategory
 } from '../controllers/livestockCategory.controller.js';
 import { protect, authorize } from '../middleware/auth.middleware.js';
-import upload from '../middleware/upload.middleware.js';
+import { uploadCategoryImage } from '../middleware/upload.middleware.js'; // ← SEUL CHANGEMENT ICI
 
 const router = express.Router();
 
@@ -22,8 +22,8 @@ router.get('/:id', getCategoryById);
 router.use(protect);
 router.use(authorize('ADMIN'));
 
-router.post('/', upload.single('image'), createCategory);
-router.put('/:id', upload.single('image'), updateCategory);
+router.post('/', uploadCategoryImage.single('image'), createCategory); // ← uploadCategoryImage au lieu de upload
+router.put('/:id', uploadCategoryImage.single('image'), updateCategory); // ← uploadCategoryImage au lieu de upload
 router.delete('/:id', deleteCategory);
 
 export default router;

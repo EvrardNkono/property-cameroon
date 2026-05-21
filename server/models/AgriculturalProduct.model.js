@@ -1,47 +1,40 @@
+// backend/models/AgriculturalProduct.model.js
 import mongoose from 'mongoose';
 
 const agriculturalProductSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Le nom du produit est requis'],
+    required: [true, 'Product name is required'],
     trim: true
   },
   category: {
     type: String,
-    required: true,
-    enum: ['crops', 'livestock', 'dairy', 'poultry', 'other']
+    enum: ['Maraîcher', 'Livestock', 'Spices', 'Transformation', 'Cereals', 'Fruits', 'Vegetables', 'Processed'],
+    required: true
   },
   price: {
     amount: {
       type: Number,
-      required: true,
-      min: 0
+      required: true
     },
     currency: {
       type: String,
       default: 'FCFA'
     }
   },
-  quantity: {
-    value: {
-      type: Number,
-      required: true,
-      min: 0
-    },
-    unit: {
-      type: String,
-      required: true,
-      enum: ['kg', 'litre', 'piece', 'dozen', 'ton', 'bunch']
-    }
+  unit: {
+    type: String,
+    default: 'Kg'
+  },
+  origin: {
+    type: String,
+    trim: true
+  },
+  stock: {
+    type: Number,
+    default: 0
   },
   description: String,
-  origin: {
-    region: {
-      type: String,
-      enum: ['Center', 'South', 'West', 'North-West', 'Littoral', 'Adamawa', 'North', 'Far-North', 'East']
-    },
-    city: String
-  },
   images: [String],
   seller: {
     type: mongoose.Schema.Types.ObjectId,
@@ -50,25 +43,26 @@ const agriculturalProductSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['PENDING', 'PUBLISHED', 'SOLD', 'RESERVED'],
+    enum: ['PENDING', 'PUBLISHED', 'SOLD_OUT', 'DISCONTINUED'],
     default: 'PENDING'
   },
   certifications: [{
     type: String,
-    enum: ['organic', 'fair-trade', 'rainforest']
+    enum: ['organic', 'fair-trade', 'rainforest', 'utZ']
   }],
-  isAvailable: {
-    type: Boolean,
-    default: true
-  },
   harvestDate: Date,
   expiryDate: Date
 }, {
   timestamps: true
 });
 
-// Index pour les recherches
-agriculturalProductSchema.index({ name: 'text', description: 'text' });
-agriculturalProductSchema.index({ category: 1, status: 1 });
+// ✅ Supprimer quantity si vous ne l'utilisez pas, ou le rendre optionnel
+// Si quantity existe dans votre base, ajoutez ceci :
+agriculturalProductSchema.add({
+  quantity: {
+    value: { type: Number, default: 0 },
+    unit: { type: String, default: 'Kg' }
+  }
+});
 
 export default mongoose.model('AgriculturalProduct', agriculturalProductSchema);
