@@ -18,7 +18,9 @@ import {
   Beef,
   Leaf,
   PawPrint,
-  Map
+  Map,
+  Globe,
+  Package  
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -102,6 +104,12 @@ const DashboardLayout = () => {
       roles: ['ADMIN'] 
     },
     { 
+      label: 'Agricultural Products', 
+      path: '/dashboard/admin/agricultural-products', 
+      icon: <Package size={20} />, 
+      roles: ['ADMIN'] 
+    },
+    { 
       label: 'Livestock Categories', 
       path: '/dashboard/admin/livestock-categories', 
       icon: <Beef size={20} />, 
@@ -128,7 +136,7 @@ const DashboardLayout = () => {
       roles: ['OWNER'],
       isPersonal: true 
     },
-    // ✅ NOUVEAU: Livestock Owner
+    // Livestock Owner
     { 
       label: 'My Livestock', 
       path: '/dashboard/livestock', 
@@ -136,14 +144,23 @@ const DashboardLayout = () => {
       roles: ['LIVESTOCK_OWNER'],
       isPersonal: true 
     },
-    // ✅ NOUVEAU: Agriculture Owner
+    // Agriculture Owner - PRODUITS
     { 
-      label: 'My Agriculture', 
+      label: 'My Agriculture Products', 
       path: '/dashboard/agriculture', 
       icon: <Sprout size={20} />, 
       roles: ['AGRICULTURE_OWNER'],
       isPersonal: true 
     },
+    // ✅ NOUVEAU: Agriculture Owner - TERRES
+    { 
+      label: 'My Agricultural Lands', 
+      path: '/dashboard/my-agricultural-lands', 
+      icon: <Map size={20} />, 
+      roles: ['AGRICULTURE_OWNER'],
+      isPersonal: true 
+    },
+    // Investor
     { 
       label: 'Investments', 
       path: '/dashboard/invest', 
@@ -151,6 +168,7 @@ const DashboardLayout = () => {
       roles: ['INVESTOR'],
       isPersonal: true 
     },
+    // Buyer
     { 
       label: 'China Sourcing', 
       path: '/dashboard/sourcing', 
@@ -158,6 +176,7 @@ const DashboardLayout = () => {
       roles: ['BUYER'],
       isPersonal: true 
     },
+    // Profile - visible pour tous
     { 
       label: 'My Profile', 
       path: '/dashboard/profile', 
@@ -180,8 +199,8 @@ const DashboardLayout = () => {
 
   // Récupérer le nom d'utilisateur
   const getUserName = () => {
-    if (!user) return 'Invité';
-    return user.name || user.email?.split('@')[0] || 'Utilisateur';
+    if (!user) return 'Guest';
+    return user.name || user.email?.split('@')[0] || 'User';
   };
 
   // Récupérer la lettre pour l'avatar
@@ -190,18 +209,18 @@ const DashboardLayout = () => {
     return name.charAt(0).toUpperCase();
   };
 
-  // ✅ Récupérer le rôle principal pour l'affichage (mis à jour)
+  // Récupérer le rôle principal pour l'affichage
   const getPrimaryRoleLabel = () => {
     if (isAdminMode) return 'Super Admin';
-    if (activeRoles.includes('OWNER')) return 'Propriétaire';
-    if (activeRoles.includes('LIVESTOCK_OWNER')) return 'Éleveur';
-    if (activeRoles.includes('AGRICULTURE_OWNER')) return 'Agriculteur';
-    if (activeRoles.includes('INVESTOR')) return 'Investisseur';
-    if (activeRoles.includes('BUYER')) return 'Acheteur';
-    return 'Membre';
+    if (activeRoles.includes('OWNER')) return 'Owner';
+    if (activeRoles.includes('LIVESTOCK_OWNER')) return 'Livestock Farmer';
+    if (activeRoles.includes('AGRICULTURE_OWNER')) return 'Agriculturist';
+    if (activeRoles.includes('INVESTOR')) return 'Investor';
+    if (activeRoles.includes('BUYER')) return 'Buyer';
+    return 'Member';
   };
 
-  // ✅ Récupérer tous les rôles disponibles pour le sélecteur
+  // Récupérer tous les rôles disponibles pour le sélecteur
   const getAvailableRolesForSelector = () => {
     const userRoles = user?.roles || [];
     const allRoles = [
@@ -213,7 +232,6 @@ const DashboardLayout = () => {
       { id: 'BUYER', label: 'Buyer', color: 'bg-blue-600' }
     ];
     
-    // Retourner uniquement les rôles que l'utilisateur possède
     return allRoles.filter(role => userRoles.includes(role.id));
   };
 
@@ -302,7 +320,7 @@ const DashboardLayout = () => {
             </h2>
           </div>
 
-          {/* ROLE SELECTOR - Version dynamique avec tous les rôles de l'utilisateur */}
+          {/* ROLE SELECTOR */}
           <div className="flex items-center bg-slate-50 p-1 rounded-2xl border border-slate-200 shadow-inner">
             <div className="flex gap-1">
               {availableRoles.map((role) => (

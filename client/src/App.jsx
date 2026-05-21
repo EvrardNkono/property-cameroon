@@ -58,8 +58,20 @@ import LivestockAssetsManager from './pages/dashboard/admin/LivestockAssetsManag
 // --- IMPORTS PROPERTY FORM ---
 import PropertyForm from './pages/dashboard/properties/PropertyForm';
 
-// ✅ NOUVEAU: IMPORT LIVESTOCK MANAGEMENT (Dashboard Owner)
+// ✅ IMPORT LIVESTOCK MANAGEMENT
 import LivestockManagement from './pages/dashboard/livestock/LivestockManagement';
+
+// ✅ IMPORT AGRICULTURAL MANAGEMENT (PRODUITS)
+import AgriculturalManagement from './pages/dashboard/agricultural/AgriculturalManagement';
+
+// ✅ IMPORT MY AGRICULTURAL LANDS (TERRES)
+import MyAgriculturalLands from './pages/dashboard/agricultural/MyAgriculturalLands';
+
+// ✅ IMPORT PAGE PUBLIQUE DES PRODUITS AGRICOLES
+import AgriculturalProducts from './pages/AgriculturalProducts';
+
+// ✅ IMPORT PAGE DETAIL DES TERRES AGRICOLES
+import LandDetailPage from './pages/LandDetailPage';
 
 function App() {
   return (
@@ -80,6 +92,8 @@ function App() {
 
             {/* --- ÉCOSYSTÈME AGRICULTURE --- */}
             <Route path="/agriculture" element={<AgriculturePage />} />
+            <Route path="/agriculture/products" element={<AgriculturalProducts />} />
+            <Route path="/agriculture/land/:id" element={<LandDetailPage />} />
             <Route path="/agriculture/marketplace" element={<MarketplacePage />} />
             <Route path="/agriculture/expertise" element={<ExpertisePage />} />
             
@@ -108,6 +122,7 @@ function App() {
               
               {/* Admin - Agriculture */}
               <Route path="admin/agriculture" element={<AgriculturalInventory />} />
+              <Route path="admin/agricultural-products" element={<AgriculturalManagement />} />
               
               {/* Admin - Livestock */}
               <Route path="admin/livestock-categories" element={<LivestockCategoriesManager />} />
@@ -120,8 +135,14 @@ function App() {
               <Route path="properties/edit/:id" element={<PropertyForm />} />
               <Route path="titles" element={<TitleDocuments />} />
               
-              {/* ✅ NOUVEAU: User - Section Livestock Owner */}
+              {/* User - Section Livestock Owner */}
               <Route path="livestock" element={<LivestockManagement />} />
+              
+              {/* User - Section Agriculture Owner - PRODUITS */}
+              <Route path="agriculture" element={<AgriculturalManagement />} />
+              
+              {/* ✅ NOUVEAU: User - Section Agriculture Owner - TERRES */}
+              <Route path="my-agricultural-lands" element={<MyAgriculturalLands />} />
               
               {/* User - Section investisseur */}
               <Route path="invest" element={<Portfolio />} />
