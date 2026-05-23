@@ -10,6 +10,17 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
 const ProjectDetailsPage = () => {
   const { category, id } = useParams();
   const navigate = useNavigate();
@@ -18,12 +29,12 @@ const ProjectDetailsPage = () => {
   const [error, setError] = useState(null);
   const [categoryData, setCategoryData] = useState(null);
 
-  // Get full image URL
+  // 🔥 Fonction getImageUrl mise à jour avec BACKEND_URL dynamique
   const getImageUrl = (image) => {
     if (!image) return null;
     if (image.startsWith('http')) return image;
-    if (image.startsWith('/uploads')) return `http://localhost:5000${image}`;
-    return `http://localhost:5000/uploads/livestock/${image}`;
+    if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
+    return `${BACKEND_URL}/uploads/livestock/${image}`;
   };
 
   useEffect(() => {
@@ -31,6 +42,10 @@ const ProjectDetailsPage = () => {
       try {
         setLoading(true);
         setError(null);
+        
+        // 🔥 Console.log pour debug (optionnel)
+        console.log(`🌍 ProjectDetailsPage - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+        console.log(`🔗 ProjectDetailsPage - Backend URL: ${BACKEND_URL}`);
         
         // Get livestock details
         const livestockRes = await api.getLivestockById(id);

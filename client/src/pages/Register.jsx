@@ -10,6 +10,17 @@ import api from '../services/api';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES - optionnel mais cohérent)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
 const Register = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -26,6 +37,12 @@ const Register = () => {
     phone: '',
     roles: []
   });
+
+  // 🔥 Console.log pour debug (optionnel)
+  if (typeof window !== 'undefined') {
+    console.log(`🌍 Register page - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+    console.log(`🔗 Register page - Backend URL: ${BACKEND_URL}`);
+  }
 
   // ✅ CORRECTION: IDs des rôles cohérents avec le backend
   const roleOptions = [

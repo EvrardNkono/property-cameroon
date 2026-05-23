@@ -10,6 +10,17 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
 // Map des icônes par nom
 const iconMap = {
   Fish: <Fish size={32} />,
@@ -28,10 +39,22 @@ const LivestockIntroduction = () => {
     totalValue: 0
   });
 
+  // 🔥 Fonction utilitaire pour obtenir l'URL complète d'une image
+  const getFullImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http')) return imagePath;
+    if (imagePath.startsWith('/uploads')) return `${BACKEND_URL}${imagePath}`;
+    return `${BACKEND_URL}/uploads/${imagePath}`;
+  };
+
   const fetchCategories = async () => {
     try {
       setLoading(true);
       setError(null);
+      
+      // 🔥 Console.log pour debug (optionnel)
+      console.log(`🌍 LivestockIntroduction - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+      console.log(`🔗 LivestockIntroduction - Backend URL: ${BACKEND_URL}`);
       
       const categoriesRes = await api.getAllLivestockCategories({ isActive: true });
       const dbCategories = categoriesRes.categories || [];
@@ -61,10 +84,10 @@ const LivestockIntroduction = () => {
       const formattedCategories = dbCategories.map(cat => {
         const categoryAssets = grouped[cat.slug] || [];
         
-        // Construction de l'URL de l'image
+        // 🔥 Construction de l'URL de l'image avec BACKEND_URL dynamique
         let imageUrl = '';
         if (cat.imageType === 'upload' && cat.imageUpload) {
-          imageUrl = `http://localhost:5000${cat.imageUpload}`;
+          imageUrl = getFullImageUrl(cat.imageUpload);
         } else if (cat.imageUrl) {
           imageUrl = cat.imageUrl;
         } else {

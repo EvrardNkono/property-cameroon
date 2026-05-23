@@ -10,6 +10,17 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
 // Icon mapping
 const iconMap = {
   Fish: <Fish size={32} />,
@@ -37,12 +48,12 @@ const LivestockCategoryPage = () => {
   const [sortBy, setSortBy] = useState('roi');
   const [filterRoi, setFilterRoi] = useState('all');
 
-  // Get full image URL
+  // 🔥 Fonction getImageUrl mise à jour avec BACKEND_URL dynamique
   const getImageUrl = (image) => {
     if (!image) return null;
     if (image.startsWith('http')) return image;
-    if (image.startsWith('/uploads')) return `http://localhost:5000${image}`;
-    return `http://localhost:5000/uploads/livestock/${image}`;
+    if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
+    return `${BACKEND_URL}/uploads/livestock/${image}`;
   };
 
   // Load category and its assets
@@ -51,15 +62,19 @@ const LivestockCategoryPage = () => {
       setLoading(true);
       setError(null);
       
+      // 🔥 Console.log pour debug (optionnel)
+      console.log(`🌍 LivestockCategoryPage - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+      console.log(`🔗 LivestockCategoryPage - Backend URL: ${BACKEND_URL}`);
+      
       // Get category info
       const catResponse = await api.getLivestockCategoryBySlug(category);
       const cat = catResponse.category;
       
       const colors = categoryColorMap[cat.slug] || categoryColorMap.poultry;
       
-      // Get category image
+      // Get category image - 🔥 MIS À JOUR avec BACKEND_URL
       const categoryImage = cat.imageType === 'upload' 
-        ? (cat.imageUpload ? `http://localhost:5000${cat.imageUpload}` : null)
+        ? (cat.imageUpload ? (cat.imageUpload.startsWith('http') ? cat.imageUpload : `${BACKEND_URL}${cat.imageUpload}`) : null)
         : cat.imageUrl;
       
       setCategoryData({

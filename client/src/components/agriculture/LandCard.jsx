@@ -3,13 +3,24 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, ShieldCheck, Droplets, Gauge, ArrowRight, Activity, TrendingUp, Sprout, Zap } from 'lucide-react';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
 const LandCard = ({ land }) => {
-  // Fonction pour obtenir l'URL complète de l'image
+  // 🔥 Fonction pour obtenir l'URL complète de l'image avec BACKEND_URL dynamique
   const getImageUrl = (image) => {
     if (!image) return "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1932&auto=format&fit=crop";
     if (image.startsWith('http')) return image;
-    if (image.startsWith('/uploads')) return `http://localhost:5000${image}`;
-    return `http://localhost:5000/uploads/properties/${image}`;
+    if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
+    return `${BACKEND_URL}/uploads/properties/${image}`;
   };
 
   // Score de compatibilité

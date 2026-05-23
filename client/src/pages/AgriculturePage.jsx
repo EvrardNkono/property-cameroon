@@ -8,6 +8,20 @@ import LandCard from '../components/agriculture/LandCard';
 import { Loader2 } from 'lucide-react';
 import api from '../services/api';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
+const API_URL = `${BACKEND_URL}/api`;
+
+// Le reste de ton code ne change PAS du tout
 const AgriculturePage = () => {
   const [activeCrop, setActiveCrop] = useState(null);
   const [filteredLands, setFilteredLands] = useState([]);
@@ -21,6 +35,10 @@ const AgriculturePage = () => {
     try {
       setLoading(true);
       setError(null);
+      
+      // ⚠️ Optionnel : Ajoute ce console.log pour debug (tu peux le retirer ensuite)
+      console.log(`🌍 AgriculturePage - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+      console.log(`🔗 AgriculturePage - Backend URL: ${BACKEND_URL}`);
       
       const response = await api.getAgriculturalLands({ status: 'PUBLISHED' });
       const lands = response.lands || [];

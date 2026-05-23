@@ -2,8 +2,38 @@
 import React from 'react';
 import { X, Maximize2, Map as MapIcon } from 'lucide-react';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
 const ZonePreviewModal = ({ zone, isOpen, onClose }) => {
+  // 🔥 Fonction pour obtenir l'URL de l'image (préparée pour l'avenir)
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http')) return imagePath;
+    if (imagePath.startsWith('/uploads')) return `${BACKEND_URL}${imagePath}`;
+    if (imagePath.startsWith('/images')) return imagePath; // Images locales
+    return `${BACKEND_URL}/uploads/zones/${imagePath}`;
+  };
+
+  // 🔥 Debug (optionnel)
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    console.log(`🌍 ZonePreviewModal - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+  }
+
   if (!isOpen || !zone) return null;
+
+  // 🔥 URL de l'image avec fallback
+  const imageUrl = zone.image 
+    ? getImageUrl(zone.image) 
+    : `/images/zones/${zone.id}-landscape.jpg`;
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-sm">
@@ -23,7 +53,7 @@ const ZonePreviewModal = ({ zone, isOpen, onClose }) => {
           <div className="lg:w-2/3 bg-slate-200 relative h-[400px] lg:h-[600px]">
             {/* Zone landscape preview with fallback */}
             <img 
-              src={`/images/zones/${zone.id}-landscape.jpg`} 
+              src={imageUrl}
               className="w-full h-full object-cover"
               alt={`${zone.name} landscape`}
               onError={(e) => {

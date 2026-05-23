@@ -2,6 +2,17 @@ import React, { useState } from 'react';
 import { CloudRain, Thermometer, Map as MapIcon, X, Eye, ChevronRight } from 'lucide-react';
 import ZoneMap from './ZoneMap';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
 const ZONES_DATA = [
   {
     id: 1,
@@ -82,6 +93,12 @@ const ZONES_DATA = [
 
 const ZoneRadar = ({ lands = [] }) => {
   const [activeZone, setActiveZone] = useState(null);
+
+  // 🔥 Debug (optionnel)
+  React.useEffect(() => {
+    console.log(`🌍 ZoneRadar - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+    console.log(`🔗 ZoneRadar - Backend URL: ${BACKEND_URL}`);
+  }, []);
 
   return (
     <section className="py-24 bg-white relative">

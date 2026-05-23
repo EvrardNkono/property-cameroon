@@ -9,6 +9,18 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
 
+// 🔥 Détection automatique de l'environnement
+const isDevelopment = window.location.hostname === 'localhost' || 
+                      window.location.hostname === '127.0.0.1' ||
+                      window.location.hostname === '';
+
+// URLs en dur selon l'environnement
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
+const API_URL = `${BACKEND_URL}/api`;
+
 const AgriculturalProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,16 +30,18 @@ const AgriculturalProducts = () => {
 
   const categories = ['All', 'Maraîcher', 'Livestock', 'Spices', 'Transformation', 'Cereals', 'Fruits'];
 
+  // 🔥 Fonction getImageUrl mise à jour
   const getImageUrl = (image) => {
     if (!image) return null;
     if (image.startsWith('http')) return image;
-    if (image.startsWith('/uploads')) return `http://localhost:5000${image}`;
-    return `http://localhost:5000/uploads/agriculture/${image}`;
+    if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
+    return `${BACKEND_URL}/uploads/agriculture/${image}`;
   };
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
+      // Utiliser l'API configurée dynamiquement
       const response = await api.get('/agriculture/products');
       setProducts(response.products || []);
     } catch (err) {
@@ -39,9 +53,12 @@ const AgriculturalProducts = () => {
   };
 
   useEffect(() => {
+    console.log(`🌍 Environnement: ${isDevelopment ? 'DÉVELOPPEMENT (local)' : 'PRODUCTION (Vercel)'}`);
+    console.log(`🔗 Backend URL: ${BACKEND_URL}`);
     fetchProducts();
   }, []);
 
+  // ... le reste de ton code reste identique ...
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (product.origin || '').toLowerCase().includes(searchTerm.toLowerCase());

@@ -3,6 +3,17 @@ import { MapContainer, TileLayer, Circle, GeoJSON, useMap, ZoomControl } from 'r
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
 // URL d'un GeoJSON précis et public pour le Cameroun (hébergé sur GitHub)
 // Ce fichier contient les tracés officiels et détaillés.
 const CAMEROON_GEOJSON_URL = "https://raw.githubusercontent.com/johan/world.geo.json/master/countries/CMR.geo.json";
@@ -19,6 +30,12 @@ const MapController = ({ center, zoom }) => {
 
 const ZoneMap = ({ activeZoneId, activeCenter, activeZoom = 6 }) => {
   const [geojsonData, setGeojsonData] = useState(null);
+
+  // 🔥 Debug (optionnel)
+  useEffect(() => {
+    console.log(`🌍 ZoneMap - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+    console.log(`🔗 ZoneMap - Backend URL: ${BACKEND_URL}`);
+  }, []);
 
   // Chargement du GeoJSON précis au montage du composant
   useEffect(() => {

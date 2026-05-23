@@ -1,6 +1,30 @@
 import React from 'react';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
 const MarketplaceHero = () => {
+  // 🔥 Fonction utilitaire pour les images (préparée pour l'avenir)
+  const getImageUrl = (image) => {
+    if (!image) return null;
+    if (image.startsWith('http')) return image;
+    if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
+    return `${BACKEND_URL}/uploads/agriculture/${image}`;
+  };
+
+  // 🔥 Debug (optionnel)
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    console.log(`🌍 MarketplaceHero - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+  }
+
   return (
     <section className="relative pt-32 pb-20 bg-slate-900 overflow-hidden">
       {/* Background Decor */}
@@ -45,6 +69,9 @@ const MarketplaceHero = () => {
                 src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1000" 
                 alt="Premium Harvest" 
                 className="w-full h-full object-cover grayscale-[20%] hover:grayscale-0 transition-all duration-1000"
+                onError={(e) => {
+                  e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1000';
+                }}
               />
               {/* Floating Badge */}
               <div className="absolute -bottom-6 -left-6 bg-white p-6 shadow-2xl border-t-4 border-pc-gold max-w-[200px]">

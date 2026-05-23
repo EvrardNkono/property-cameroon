@@ -10,6 +10,17 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
 const PropertyDetailsPage = () => {
   const { id } = useParams();
   const [property, setProperty] = useState(null);
@@ -30,6 +41,15 @@ const PropertyDetailsPage = () => {
     message: ''
   });
   const [formStatus, setFormStatus] = useState(null);
+
+  // 🔥 Fonction pour obtenir l'URL complète de l'image avec BACKEND_URL dynamique
+  const getImageUrl = (image) => {
+    if (!image) return null;
+    if (image.startsWith('http')) return image;
+    if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
+    if (image.startsWith('data:')) return image;
+    return `${BACKEND_URL}/uploads/properties/${image}`;
+  };
 
   // Fonction pour fusionner les amenities (propriétaire + auto)
   const mergeAmenities = (ownerAmenities, autoAmenitiesData) => {
@@ -54,20 +74,15 @@ const PropertyDetailsPage = () => {
     return merged;
   };
 
-  // ✅ Fonction pour obtenir l'URL complète de l'image
-  const getImageUrl = (image) => {
-    if (!image) return null;
-    if (image.startsWith('http')) return image;
-    if (image.startsWith('/uploads')) return `http://localhost:5000${image}`;
-    if (image.startsWith('data:')) return image;
-    return `http://localhost:5000/uploads/properties/${image}`;
-  };
-
   // Charger les détails de la propriété depuis le backend
   const fetchPropertyDetails = async () => {
     try {
       setLoading(true);
       setError(null);
+      
+      // 🔥 Console.log pour debug (optionnel)
+      console.log(`🌍 PropertyDetailsPage - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+      console.log(`🔗 PropertyDetailsPage - Backend URL: ${BACKEND_URL}`);
       
       const response = await api.getPropertyById(id);
       const prop = response.property;
@@ -89,7 +104,7 @@ const PropertyDetailsPage = () => {
         images: allImages.length > 0 ? allImages : ['https://images.unsplash.com/photo-1594759714300-8456f9f68800?q=80&w=2070&auto=format&fit=crop'],
         coordinates: prop.location?.coordinates,
         owner: prop.owner,
-        ownerAmenities: prop.amenities || null  // ✅ Récupérer les amenities du propriétaire
+        ownerAmenities: prop.amenities || null
       };
       
       setProperty(formattedProperty);
@@ -144,43 +159,43 @@ const PropertyDetailsPage = () => {
   };
 
   // Charger les amenities (fusionnées)
- const fetchAmenities = async (propertyId, ownerAmenities) => {
-  try {
-    setLoadingAmenities(true);
-    const response = await api.getAmenitiesNearProperty(propertyId, 3);
-    
-    // ✅ Normalisation de la réponse
-    let autoData;
-    if (response.amenities) {
-      autoData = response.amenities;
-    } else if (response.data) {
-      autoData = response.data;
-    } else {
-      autoData = response;
-    }
-    
-    // ✅ S'assurer que chaque catégorie a la bonne structure
-    const categories = ['schools', 'markets', 'stations', 'bakeries'];
-    const normalizedData = {};
-    categories.forEach(cat => {
-      if (!autoData[cat] || typeof autoData[cat] !== 'object') {
-        normalizedData[cat] = { count: 0, names: [] };
+  const fetchAmenities = async (propertyId, ownerAmenities) => {
+    try {
+      setLoadingAmenities(true);
+      const response = await api.getAmenitiesNearProperty(propertyId, 3);
+      
+      // ✅ Normalisation de la réponse
+      let autoData;
+      if (response.amenities) {
+        autoData = response.amenities;
+      } else if (response.data) {
+        autoData = response.data;
       } else {
-        normalizedData[cat] = {
-          count: autoData[cat].count || autoData[cat].names?.length || 0,
-          names: autoData[cat].names || []
-        };
+        autoData = response;
       }
-    });
-    
-    const mergedAmenities = mergeAmenities(ownerAmenities, normalizedData);
-    setAutoAmenities(mergedAmenities);
-    
-  } catch (err) {
-    console.error('Error fetching amenities:', err);
-    // Fallback...
-  }
-};
+      
+      // ✅ S'assurer que chaque catégorie a la bonne structure
+      const categories = ['schools', 'markets', 'stations', 'bakeries'];
+      const normalizedData = {};
+      categories.forEach(cat => {
+        if (!autoData[cat] || typeof autoData[cat] !== 'object') {
+          normalizedData[cat] = { count: 0, names: [] };
+        } else {
+          normalizedData[cat] = {
+            count: autoData[cat].count || autoData[cat].names?.length || 0,
+            names: autoData[cat].names || []
+          };
+        }
+      });
+      
+      const mergedAmenities = mergeAmenities(ownerAmenities, normalizedData);
+      setAutoAmenities(mergedAmenities);
+      
+    } catch (err) {
+      console.error('Error fetching amenities:', err);
+      // Fallback...
+    }
+  };
 
   const handleContactSubmit = async (e) => {
     e.preventDefault();

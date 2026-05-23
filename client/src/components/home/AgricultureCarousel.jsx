@@ -3,6 +3,26 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
+// 🔥 Fonction pour obtenir l'URL complète de l'image
+const getImageUrl = (image) => {
+  if (!image) return 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1000';
+  if (image.startsWith('http')) return image;
+  if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
+  if (image.startsWith('/images')) return image; // Images locales dans le dossier public
+  return `${BACKEND_URL}/uploads/agriculture/${image}`;
+};
+
 const PRODUCTS = [
   { id: 1, name: "Premium Cocoa Beans", price: "2,800", unit: "Kg", img: "/images/propertycacao.jfif" },
   { id: 2, name: "Sweet Cayenne Pineapple", price: "1,500", unit: "Unit", img: "/images/propertyananas.jfif" },
@@ -11,6 +31,12 @@ const PRODUCTS = [
 ];
 
 const AgricultureCarousel = () => {
+  // 🔥 Debug (optionnel)
+  React.useEffect(() => {
+    console.log(`🌍 AgricultureCarousel - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+    console.log(`🔗 AgricultureCarousel - Backend URL: ${BACKEND_URL}`);
+  }, []);
+
   return (
     <section className="py-24 bg-slate-50">
       <div className="max-w-[1600px] mx-auto px-8">
@@ -35,7 +61,14 @@ const AgricultureCarousel = () => {
             <SwiperSlide key={item.id}>
               <div className="bg-white p-4 shadow-sm hover:shadow-xl transition-shadow duration-300">
                 <div className="aspect-square overflow-hidden mb-6">
-                  <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
+                  <img 
+                    src={getImageUrl(item.img)} 
+                    alt={item.name} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1000';
+                    }}
+                  />
                 </div>
                 <h4 className="font-bold text-sm uppercase tracking-tight text-slate-800">{item.name}</h4>
                 <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-100">

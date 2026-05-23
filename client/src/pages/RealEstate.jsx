@@ -5,6 +5,17 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
 const RealEstate = () => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,6 +28,11 @@ const RealEstate = () => {
   const fetchProperties = async () => {
     try {
       setLoading(true);
+      
+      // 🔥 Console.log pour debug (optionnel)
+      console.log(`🌍 RealEstate - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+      console.log(`🔗 RealEstate - Backend URL: ${BACKEND_URL}`);
+      
       const response = await api.getProperties({ status: 'PUBLISHED' });
       setProperties(response.properties || []);
     } catch (err) {
@@ -27,12 +43,12 @@ const RealEstate = () => {
     }
   };
 
-  // ✅ Fonction pour obtenir l'URL complète de l'image
+  // 🔥 Fonction pour obtenir l'URL complète de l'image avec BACKEND_URL dynamique
   const getImageUrl = (image) => {
     if (!image) return null;
     if (image.startsWith('http')) return image;
-    if (image.startsWith('/uploads')) return `http://localhost:5000${image}`;
-    return `http://localhost:5000/uploads/properties/${image}`;
+    if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
+    return `${BACKEND_URL}/uploads/properties/${image}`;
   };
 
   if (loading) {

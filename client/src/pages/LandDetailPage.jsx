@@ -6,6 +6,17 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
 const LandDetailPage = () => {
   const { id } = useParams();
   const [land, setLand] = useState(null);
@@ -22,17 +33,22 @@ const LandDetailPage = () => {
     message: ''
   });
 
+  // 🔥 Fonction getImageUrl mise à jour avec BACKEND_URL dynamique
   const getImageUrl = (image) => {
     if (!image) return 'https://images.unsplash.com/photo-1594759714300-8456f9f68800?q=80&w=2070&auto=format&fit=crop';
     if (image.startsWith('http')) return image;
-    if (image.startsWith('/uploads')) return `http://localhost:5000${image}`;
-    return `http://localhost:5000/uploads/properties/${image}`;
+    if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
+    return `${BACKEND_URL}/uploads/properties/${image}`;
   };
 
   useEffect(() => {
     const fetchLand = async () => {
       try {
         setLoading(true);
+        // Ajoute ce console.log pour debug (optionnel)
+        console.log(`🌍 LandDetailPage - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+        console.log(`🔗 LandDetailPage - Backend URL: ${BACKEND_URL}`);
+        
         const response = await api.getAgriculturalLandById(id);
         setLand(response.land);
       } catch (err) {
@@ -242,7 +258,7 @@ const LandDetailPage = () => {
         </div>
       </main>
 
-      {/* Modal de contact - CORRIGÉ */}
+      {/* Modal de contact */}
       {showContactForm && (
         <div 
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4"

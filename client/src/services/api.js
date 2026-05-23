@@ -1,5 +1,24 @@
 // frontend/src/services/api.js
-const API_URL = 'http://localhost:5000/api';
+
+// 🔥 Détection automatique de l'environnement
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'                                    // URL locale
+  : 'https://property-cameroon-backend.vercel.app';            // URL de production
+
+const API_URL = `${BACKEND_URL}/api`;
+
+// Pour le debug (optionnel)
+if (typeof window !== 'undefined') {
+  console.log(`🌍 Environnement: ${isDevelopment ? 'DÉVELOPPEMENT (local)' : 'PRODUCTION (Vercel)'}`);
+  console.log(`🔗 Backend URL: ${BACKEND_URL}`);
+  console.log(`📡 API URL: ${API_URL}`);
+}
 
 class ApiService {
   constructor() {
@@ -341,7 +360,6 @@ class ApiService {
     return this.request(`/livestock/${id}`);
   }
 
-  // ✅ NOUVEAU: Récupérer les animaux d'un propriétaire
   async getLivestockByOwner(ownerId) {
     return this.request(`/livestock/owner/${ownerId}`);
   }

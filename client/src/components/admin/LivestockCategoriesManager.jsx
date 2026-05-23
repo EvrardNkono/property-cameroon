@@ -3,6 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Image, Link as LinkIcon, Loader2 } from 'lucide-react';
 import api from '../../services/api';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
 const LivestockCategoriesManager = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,8 +35,22 @@ const LivestockCategoriesManager = () => {
   });
   const [previewUrl, setPreviewUrl] = useState('');
 
+  // 🔥 Fonction pour obtenir l'URL complète de l'image
+  const getImageUrl = (image) => {
+    if (!image) return null;
+    if (image.startsWith('http')) return image;
+    if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
+    return `${BACKEND_URL}/uploads/${image}`;
+  };
+
   useEffect(() => {
     fetchCategories();
+  }, []);
+
+  // 🔥 Console.log pour debug (optionnel)
+  useEffect(() => {
+    console.log(`🌍 LivestockCategoriesManager - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+    console.log(`🔗 LivestockCategoriesManager - Backend URL: ${BACKEND_URL}`);
   }, []);
 
   const fetchCategories = async () => {
@@ -135,38 +160,53 @@ const LivestockCategoriesManager = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {categories.map((cat) => (
-          <div key={cat._id} className="bg-white rounded-2xl border border-emerald-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-            <div className="h-40 overflow-hidden">
-              <img 
-                src={cat.imageType === 'upload' ? cat.imageUpload : cat.imageUrl} 
-                alt={cat.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="p-5">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h3 className="font-bold text-emerald-900">{cat.title}</h3>
-                  <p className="text-[10px] text-emerald-500 uppercase">/{cat.slug}</p>
+        {categories.map((cat) => {
+          // 🔥 Obtenir l'URL correcte de l'image selon l'environnement
+          let imageUrl = '';
+          if (cat.imageType === 'upload' && cat.imageUpload) {
+            imageUrl = getImageUrl(cat.imageUpload);
+          } else if (cat.imageUrl) {
+            imageUrl = cat.imageUrl;
+          } else {
+            imageUrl = 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000';
+          }
+          
+          return (
+            <div key={cat._id} className="bg-white rounded-2xl border border-emerald-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div className="h-40 overflow-hidden">
+                <img 
+                  src={imageUrl} 
+                  alt={cat.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000';
+                  }}
+                />
+              </div>
+              <div className="p-5">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="font-bold text-emerald-900">{cat.title}</h3>
+                    <p className="text-[10px] text-emerald-500 uppercase">/{cat.slug}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => { setEditingCategory(cat); setFormData(cat); setShowModal(true); }} className="text-emerald-500 hover:text-emerald-700">
+                      <Edit size={16} />
+                    </button>
+                    <button onClick={() => handleDelete(cat._id)} className="text-red-400 hover:text-red-600">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => { setEditingCategory(cat); setFormData(cat); setShowModal(true); }} className="text-emerald-500 hover:text-emerald-700">
-                    <Edit size={16} />
-                  </button>
-                  <button onClick={() => handleDelete(cat._id)} className="text-red-400 hover:text-red-600">
-                    <Trash2 size={16} />
-                  </button>
+                <p className="text-xs text-emerald-600/70 line-clamp-2 mb-3">{cat.description}</p>
+                <div className="flex justify-between items-center text-[10px]">
+                  <span className="text-emerald-500">{cat.stats?.totalAssets || 0} assets</span>
+                  <span className="text-amber-600 font-bold">{cat.marketDemand}</span>
                 </div>
               </div>
-              <p className="text-xs text-emerald-600/70 line-clamp-2 mb-3">{cat.description}</p>
-              <div className="flex justify-between items-center text-[10px]">
-                <span className="text-emerald-500">{cat.stats?.totalAssets || 0} assets</span>
-                <span className="text-amber-600 font-bold">{cat.marketDemand}</span>
-              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Modal */}

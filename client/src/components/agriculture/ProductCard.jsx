@@ -1,9 +1,28 @@
 import React, { useState } from 'react';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
 const ProductCard = ({ product }) => {
   const [quantity, setQuantity] = useState(1);
   const [unitType, setUnitType] = useState(product.unit); // Par défaut l'unité du mock
   const [isAdded, setIsAdded] = useState(false);
+
+  // 🔥 Fonction pour obtenir l'URL complète de l'image
+  const getImageUrl = (image) => {
+    if (!image) return 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1000';
+    if (image.startsWith('http')) return image;
+    if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
+    return `${BACKEND_URL}/uploads/agriculture/${image}`;
+  };
 
   // Simulation du changement de prix selon l'unité (exemple simplifié)
   const displayPrice = unitType.includes('Sac') 
@@ -16,27 +35,36 @@ const ProductCard = ({ product }) => {
     console.log(`Ajouté: ${quantity} ${unitType} de ${product.name}`);
   };
 
+  // 🔥 Traitement de l'image du produit
+  const productWithImage = {
+    ...product,
+    image: getImageUrl(product.image)
+  };
+
   return (
     <div className="group bg-white border border-slate-100 p-4 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
       {/* Visual Section */}
       <div className="relative aspect-[4/5] overflow-hidden mb-6 bg-slate-50">
         <img 
-          src={product.image} 
-          alt={product.name}
+          src={productWithImage.image} 
+          alt={productWithImage.name}
           className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+          onError={(e) => {
+            e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1000';
+          }}
         />
         <div className="absolute top-4 left-4">
            <span className="bg-white/90 backdrop-blur-md text-slate-900 text-[8px] font-black px-3 py-1.5 uppercase tracking-widest border border-slate-100 shadow-sm">
-             {product.origin}
+             {productWithImage.origin}
            </span>
         </div>
       </div>
 
       {/* Content Section */}
       <div className="space-y-2 mb-6 text-center">
-        <p className="text-[9px] uppercase tracking-[0.2em] text-pc-gold font-bold">{product.category}</p>
+        <p className="text-[9px] uppercase tracking-[0.2em] text-pc-gold font-bold">{productWithImage.category}</p>
         <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight h-10 flex items-center justify-center">
-          {product.name}
+          {productWithImage.name}
         </h3>
         <div className="flex flex-col items-center">
           <span className="text-2xl font-serif text-slate-900">{displayPrice} <span className="text-[10px] font-sans align-middle ml-1">XAF</span></span>

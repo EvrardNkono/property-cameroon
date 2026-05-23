@@ -1,5 +1,19 @@
 import React from 'react';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
+// 🔥 Export de BACKEND_URL pour que d'autres composants puissent l'utiliser si nécessaire
+export { BACKEND_URL, isDevelopment };
+
 /**
  * 1. CARTE DE STATISTIQUE (AdminStatCard)
  * Utilisée dans AdminOverview et FinancialControl

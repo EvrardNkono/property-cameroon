@@ -6,6 +6,17 @@ import { Loader2, ArrowRight, Building2, ShieldCheck, Globe } from 'lucide-react
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
+// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'           // URL locale
+  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -13,6 +24,12 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // 🔥 Console.log pour debug (optionnel)
+  if (typeof window !== 'undefined') {
+    console.log(`🌍 Login page - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+    console.log(`🔗 Login page - Backend URL: ${BACKEND_URL}`);
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
