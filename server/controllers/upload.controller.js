@@ -2,69 +2,58 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { put } from '@vercel/blob';
 
-// Configuration multer pour les images de propriétés
-const propertyStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = 'uploads/properties/';
+// Détecter si on est sur Vercel
+const isVercel = process.env.VERCEL === '1';
+
+// Configuration mémoire pour multer (nécessaire pour Vercel)
+const memoryStorage = multer.memoryStorage();
+
+// Service de stockage unifié
+const saveFile = async (file, folder) => {
+  if (isVercel) {
+    // 🇻🇪 Sur Vercel : utilise Vercel Blob
+    const timestamp = Date.now();
+    const random = Math.round(Math.random() * 1E9);
+    const filename = `${folder}-${timestamp}-${random}${path.extname(file.originalname)}`;
+    
+    const blob = await put(`${folder}/${filename}`, file.buffer, {
+      access: 'public',
+      addRandomSuffix: true,
+    });
+    
+    return blob.url;
+  } else {
+    // 💻 En local : utilise le disque
+    const uploadDir = `uploads/${folder}/`;
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'property-' + uniqueSuffix + path.extname(file.originalname));
+    
+    const timestamp = Date.now();
+    const random = Math.round(Math.random() * 1E9);
+    const filename = `${folder}-${timestamp}-${random}${path.extname(file.originalname)}`;
+    const filepath = path.join(uploadDir, filename);
+    
+    fs.writeFileSync(filepath, file.buffer);
+    
+    return `/uploads/${folder}/${filename}`;
   }
-});
+};
 
-// Configuration multer pour les images de livestock
-const livestockStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = 'uploads/livestock/';
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'livestock-' + uniqueSuffix + path.extname(file.originalname));
+const saveMultipleFiles = async (files, folder) => {
+  const urls = [];
+  for (const file of files) {
+    const url = await saveFile(file, folder);
+    urls.push(url);
   }
-});
+  return urls;
+};
 
-// Configuration multer pour les images de produits agricoles
-const agricultureStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = 'uploads/agriculture/';
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'agriculture-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-// Configuration multer pour les catégories de livestock
-const categoryStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = 'uploads/categories/';
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'category-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-// Middleware multer avec limites
+// Multer configuré avec memoryStorage (fonctionne partout)
 const upload = multer({ 
+  storage: memoryStorage,
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
@@ -82,7 +71,7 @@ export const handlePropertyImages = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No files uploaded' });
     }
     
-    const imageUrls = files.map(file => `/uploads/properties/${file.filename}`);
+    const imageUrls = await saveMultipleFiles(files, 'properties');
     
     res.json({ success: true, images: imageUrls });
   } catch (error) {
@@ -98,7 +87,7 @@ export const handleLivestockImages = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No files uploaded' });
     }
     
-    const imageUrls = files.map(file => `/uploads/livestock/${file.filename}`);
+    const imageUrls = await saveMultipleFiles(files, 'livestock');
     
     res.json({ success: true, images: imageUrls });
   } catch (error) {
@@ -114,7 +103,7 @@ export const handleAgricultureImages = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No files uploaded' });
     }
     
-    const imageUrls = files.map(file => `/uploads/agriculture/${file.filename}`);
+    const imageUrls = await saveMultipleFiles(files, 'agriculture');
     
     res.json({ success: true, images: imageUrls });
   } catch (error) {
@@ -130,7 +119,7 @@ export const handleCategoryImage = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
     
-    const imageUrl = `/uploads/categories/${file.filename}`;
+    const imageUrl = await saveFile(file, 'categories');
     
     res.json({ success: true, image: imageUrl });
   } catch (error) {
@@ -139,8 +128,8 @@ export const handleCategoryImage = async (req, res) => {
   }
 };
 
-// Export des configurations multer pour utilisation dans les routes
-export const propertyUpload = multer({ storage: propertyStorage, limits: { fileSize: 10 * 1024 * 1024 } });
-export const livestockUpload = multer({ storage: livestockStorage, limits: { fileSize: 10 * 1024 * 1024 } });
-export const agricultureUpload = multer({ storage: agricultureStorage, limits: { fileSize: 10 * 1024 * 1024 } });
-export const categoryUpload = multer({ storage: categoryStorage, limits: { fileSize: 5 * 1024 * 1024 } });
+// Export des configurations multer (pour compatibilité)
+export const propertyUpload = upload;
+export const livestockUpload = upload;
+export const agricultureUpload = upload;
+export const categoryUpload = upload;
