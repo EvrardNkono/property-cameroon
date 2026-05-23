@@ -5,7 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import multer from 'multer'; // ← Ajoute cette importation
+import multer from 'multer';
 
 // Import des routes
 import authRoutes from './routes/auth.routes.js';
@@ -41,68 +41,54 @@ dotenv.config();
 
 const app = express();
 
-// ========== 🔥 CONFIGURATION CORS COMPLÈTE ==========
-// Liste des origines autorisées
-const allowedOrigins = [
-  'http://localhost:3000',                    // Frontend local (React)
-  'http://localhost:5000',                    // Backend local
-  'http://localhost:5173',                    // Vite local
-  'https://www.propertycameroon.com',         // Ton domaine avec www
-  'https://propertycameroon.com',              // Ton domaine sans www
-  'https://property-cameroon-frontend.vercel.app',  // Frontend Vercel (si différent)
-  'https://property-cameroon-backend.vercel.app',   // Backend Vercel lui-même
-  /\.vercel\.app$/,                           // Tous les sous-domaines Vercel
-  /\.propertycameroon\.com$/                  // Tous les sous-domaines de ton site
-];
+// ========== 🔥 CONFIGURATION CORS SIMPLIFIÉE POUR VERCEL ==========
+// Ce middleware doit être AVANT toutes les routes
 
-// Configuration CORS
-app.use(cors({
-  origin: function(origin, callback) {
-    // Permettre les requêtes sans origin (ex: Postman, apps mobile)
-    if (!origin) return callback(null, true);
-    
-    // Vérifier si l'origine est autorisée
-    const isAllowed = allowedOrigins.some(allowed => {
-      if (allowed instanceof RegExp) {
-        return allowed.test(origin);
-      }
-      return allowed === origin;
-    });
-    
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      console.warn(`⚠️ CORS bloque l'origine: ${origin}`);
-      callback(null, true); // ⚠️ En développement, on accepte toutes
-      // En production, décommente la ligne ci-dessous:
-      // callback(new Error(`CORS policy: ${origin} not allowed`));
-    }
-  },
-  credentials: true,                          // Permettre les cookies/sessions
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'X-Requested-With',
-    'Accept',
-    'Origin'
-  ],
-  exposedHeaders: ['Content-Length', 'X-Requested-With'],
-  optionsSuccessStatus: 200,                  // Pour les vieux navigateurs
-  preflightContinue: false,
-  maxAge: 86400                               // Cache preflight pour 24h
-}));
-
-// ✅ AJOUTER DES HEADERS DE SÉCURITÉ SUPPLÉMENTAIRES
+// Middleware CORS personnalisé (plus fiable sur Vercel)
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  // Autoriser toutes les origines en développement, seulement ton domaine en prod
+  const allowedOrigins = [
+    'https://www.propertycameroon.com',
+    'https://propertycameroon.com',
+    'https://property-cameroon-frontend.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5000',
+    'http://localhost:5173'
+  ];
+  
+  const origin = req.headers.origin;
+  
+  // En production, ne répondre qu'aux origines autorisées
+  if (process.env.NODE_ENV === 'production') {
+    if (origin && allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    } else if (origin) {
+      console.log(`🔒 CORS: Origine bloquée - ${origin}`);
+      // Ne pas bloquer complètement, mais logguer
+    }
+    // Toujours autoriser la requête (pour debug)
+    res.setHeader('Access-Control-Allow-Origin', origin || 'https://www.propertycameroon.com');
+  } else {
+    // En développement, tout autoriser
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  }
+  
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Length, X-Requested-With');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  
+  // Répondre immédiatement aux requêtes OPTIONS (preflight)
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
   next();
 });
 
-// Gestion explicite des requêtes OPTIONS (preflight)
-app.options('*', cors());  // Répondre à toutes les requêtes OPTIONS
+// Alternative: Si le middleware ci-dessus ne fonctionne pas, essaie cette ligne unique
+// app.use(cors({ origin: '*', credentials: false }));
 
 // ✅ AUGMENTER LA LIMITE POUR LES GROS PAYLOADS (IMAGES)
 app.use(express.json({ limit: '50mb' }));
