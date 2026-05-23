@@ -2,13 +2,12 @@
 import User from '../models/User.model.js';
 import jwt from 'jsonwebtoken';
 
-// ✅ CORRECTION : Inclure les rôles dans le token
 const generateToken = (user) => {
   return jwt.sign(
     { 
       id: user._id, 
       email: user.email,
-      roles: user.roles  // ← Ajouter les rôles ici
+      roles: user.roles
     }, 
     process.env.JWT_SECRET, 
     { expiresIn: process.env.JWT_EXPIRE || '7d' }
@@ -20,28 +19,26 @@ export const register = async (req, res) => {
     const { name, email, password, phone, roles } = req.body;
     const parsedRoles = typeof roles === 'string' ? JSON.parse(roles) : roles || ['BUYER'];
     
-    // Vérifier si l'utilisateur existe déjà
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ success: false, message: 'User already exists' });
     }
     
-    // Créer l'utilisateur
     const userData = {
       name,
       email,
       password,
       phone,
       roles: parsedRoles,
-      status: 'PENDING',  // ← Normaliser en majuscules
-      kycStatus: 'NOT_SUBMITTED'  // ← Normaliser en majuscules
+      status: 'PENDING',
+      kycStatus: 'NOT_SUBMITTED'
     };
     
-    // Gérer l'upload du document KYC si INVESTOR
+    // Gérer l'upload du document KYC
     if (req.file) {
       userData.kycDocuments = [{
         type: 'ID_CARD',
-        url: `/uploads/kyc/${req.file.filename}`,
+        url: req.file.filename, // ← Contient soit l'URL Blob soit le chemin local
         uploadedAt: new Date(),
         verifiedAt: null
       }];
@@ -77,26 +74,24 @@ export const login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
     
-    // Vérifier si le compte est en attente de validation
     if (user.status === 'PENDING') {
       return res.status(403).json({ 
         success: false, 
-        message: 'Your account is pending admin approval. You will receive an email once approved.' 
+        message: 'Your account is pending admin approval.' 
       });
     }
     
     if (user.status === 'BANNED') {
-      return res.status(403).json({ success: false, message: 'Account is banned', banReason: user.banReason });
+      return res.status(403).json({ success: false, message: 'Account is banned' });
     }
     
     if (user.status === 'REJECTED') {
-      return res.status(403).json({ success: false, message: 'Your registration was rejected. Please contact support.' });
+      return res.status(403).json({ success: false, message: 'Your registration was rejected.' });
     }
     
     user.lastLogin = new Date();
     await user.save();
     
-    // ✅ Générer token avec l'utilisateur complet (inclut les rôles)
     const token = generateToken(user);
     
     res.json({
