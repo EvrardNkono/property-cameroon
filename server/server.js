@@ -1,9 +1,11 @@
-﻿console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
+﻿// backend/index.js
+console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
 console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import multer from 'multer'; // ← Ajoute cette importation
 
 // Import des routes
 import authRoutes from './routes/auth.routes.js';
@@ -39,8 +41,68 @@ dotenv.config();
 
 const app = express();
 
-// Middlewares
-app.use(cors());
+// ========== 🔥 CONFIGURATION CORS COMPLÈTE ==========
+// Liste des origines autorisées
+const allowedOrigins = [
+  'http://localhost:3000',                    // Frontend local (React)
+  'http://localhost:5000',                    // Backend local
+  'http://localhost:5173',                    // Vite local
+  'https://www.propertycameroon.com',         // Ton domaine avec www
+  'https://propertycameroon.com',              // Ton domaine sans www
+  'https://property-cameroon-frontend.vercel.app',  // Frontend Vercel (si différent)
+  'https://property-cameroon-backend.vercel.app',   // Backend Vercel lui-même
+  /\.vercel\.app$/,                           // Tous les sous-domaines Vercel
+  /\.propertycameroon\.com$/                  // Tous les sous-domaines de ton site
+];
+
+// Configuration CORS
+app.use(cors({
+  origin: function(origin, callback) {
+    // Permettre les requêtes sans origin (ex: Postman, apps mobile)
+    if (!origin) return callback(null, true);
+    
+    // Vérifier si l'origine est autorisée
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return allowed === origin;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️ CORS bloque l'origine: ${origin}`);
+      callback(null, true); // ⚠️ En développement, on accepte toutes
+      // En production, décommente la ligne ci-dessous:
+      // callback(new Error(`CORS policy: ${origin} not allowed`));
+    }
+  },
+  credentials: true,                          // Permettre les cookies/sessions
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin'
+  ],
+  exposedHeaders: ['Content-Length', 'X-Requested-With'],
+  optionsSuccessStatus: 200,                  // Pour les vieux navigateurs
+  preflightContinue: false,
+  maxAge: 86400                               // Cache preflight pour 24h
+}));
+
+// ✅ AJOUTER DES HEADERS DE SÉCURITÉ SUPPLÉMENTAIRES
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  next();
+});
+
+// Gestion explicite des requêtes OPTIONS (preflight)
+app.options('*', cors());  // Répondre à toutes les requêtes OPTIONS
 
 // ✅ AUGMENTER LA LIMITE POUR LES GROS PAYLOADS (IMAGES)
 app.use(express.json({ limit: '50mb' }));
