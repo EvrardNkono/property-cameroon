@@ -41,12 +41,8 @@ dotenv.config();
 
 const app = express();
 
-// ========== 🔥 CONFIGURATION CORS SIMPLIFIÉE POUR VERCEL ==========
-// Ce middleware doit être AVANT toutes les routes
-
-// Middleware CORS personnalisé (plus fiable sur Vercel)
+// ========== CONFIGURATION CORS SIMPLIFIÉE ==========
 app.use((req, res, next) => {
-  // Autoriser toutes les origines en développement, seulement ton domaine en prod
   const allowedOrigins = [
     'https://www.propertycameroon.com',
     'https://propertycameroon.com',
@@ -58,18 +54,7 @@ app.use((req, res, next) => {
   
   const origin = req.headers.origin;
   
-  // En production, ne répondre qu'aux origines autorisées
-  if (process.env.NODE_ENV === 'production') {
-    if (origin && allowedOrigins.includes(origin)) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-    } else if (origin) {
-      console.log(`🔒 CORS: Origine bloquée - ${origin}`);
-      // Ne pas bloquer complètement, mais logguer
-    }
-    // Toujours autoriser la requête (pour debug)
-    res.setHeader('Access-Control-Allow-Origin', origin || 'https://www.propertycameroon.com');
-  } else {
-    // En développement, tout autoriser
+  if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
     res.setHeader('Access-Control-Allow-Origin', origin || '*');
   }
   
@@ -79,7 +64,6 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Expose-Headers', 'Content-Length, X-Requested-With');
   res.setHeader('Access-Control-Max-Age', '86400');
   
-  // Répondre immédiatement aux requêtes OPTIONS (preflight)
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -87,20 +71,23 @@ app.use((req, res, next) => {
   next();
 });
 
-// Alternative: Si le middleware ci-dessus ne fonctionne pas, essaie cette ligne unique
-// app.use(cors({ origin: '*', credentials: false }));
-
-// ✅ AUGMENTER LA LIMITE POUR LES GROS PAYLOADS (IMAGES)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Servir les fichiers statiques (uploads)
-app.use('/uploads', express.static('uploads'));
+// ⚠️ SUR VERCEL : NE PAS SERVIR DE FICHIERS STATIQUES
+// Cette ligne ne doit être active qu'en développement
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/uploads', express.static('uploads'));
+}
 
-// Connexion MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('✅ MongoDB connected successfully'))
-  .catch((err) => console.error('❌ MongoDB connection error:', err.message));
+// Connexion MongoDB (seulement si URI existe)
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log('✅ MongoDB connected successfully'))
+    .catch((err) => console.error('❌ MongoDB connection error:', err.message));
+} else {
+  console.log('⚠️ MONGODB_URI not set, running without database');
+}
 
 // ========== ROUTES API ==========
 app.use('/api/auth', authRoutes);
@@ -117,20 +104,12 @@ app.use('/api/livestock', livestockRoutes);
 app.use('/api/livestock-categories', livestockCategoryRoutes);
 
 // ========== ROUTES D'UPLOAD ==========
-// Upload pour propriétés immobilières
 app.post('/api/upload/property-images', propertyUpload.array('images', 10), handlePropertyImages);
-
-// Upload pour livestock (animaux)
 app.post('/api/upload/livestock-images', livestockUpload.array('images', 10), handleLivestockImages);
-
-// Upload pour agriculture (produits agricoles)
 app.post('/api/upload/agriculture-images', agricultureUpload.array('images', 10), handleAgricultureImages);
-
-// Upload pour catégories livestock
 app.post('/api/upload/category-image', categoryUpload.single('image'), handleCategoryImage);
 
 // ========== ROUTES DE TEST ==========
-// Route de santé
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date() });
 });
@@ -140,7 +119,6 @@ app.get('/', (req, res) => {
 });
 
 // ========== GESTION DES ERREURS ==========
-// Gestion des erreurs 404
 app.use((req, res) => {
   res.status(404).json({ 
     success: false, 
@@ -148,30 +126,18 @@ app.use((req, res) => {
   });
 });
 
-// Gestion des erreurs globales
 app.use((err, req, res, next) => {
   console.error('❌ Error:', err.stack);
   
-  // Gestion spécifique pour payload too large
   if (err.type === 'entity.too.large') {
-    return res.status(413).json({ 
-      success: false, 
-      message: 'Payload too large. Maximum size is 50MB.' 
-    });
+    return res.status(413).json({ success: false, message: 'Payload too large. Maximum size is 50MB.' });
   }
   
-  // Gestion des erreurs multer
   if (err instanceof multer.MulterError) {
     if (err.code === 'FILE_TOO_LARGE') {
-      return res.status(413).json({
-        success: false,
-        message: 'File too large. Maximum size is 10MB.'
-      });
+      return res.status(413).json({ success: false, message: 'File too large. Maximum size is 10MB.' });
     }
-    return res.status(400).json({
-      success: false,
-      message: err.message
-    });
+    return res.status(400).json({ success: false, message: err.message });
   }
   
   res.status(err.status || 500).json({
@@ -187,12 +153,6 @@ if (process.env.NODE_ENV !== 'production') {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📍 http://localhost:${PORT}`);
     console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
-    console.log(`📦 Max payload size: 50MB`);
-    console.log(`📸 Upload endpoints:`);
-    console.log(`   - /api/upload/property-images`);
-    console.log(`   - /api/upload/livestock-images`);
-    console.log(`   - /api/upload/agriculture-images`);
-    console.log(`   - /api/upload/category-image`);
   });
 }
 
