@@ -1,4 +1,4 @@
-﻿// backend/index.js - VERSION MINIMALISTE QUI FONCTIONNE SUR VERCEL
+﻿// backend/index.js - VERSION MINIMALISTE CORRIGÉE
 import express from 'express';
 import cors from 'cors';
 
@@ -11,7 +11,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.options('*', cors());
+// ❌ Supprime cette ligne → app.options('*', cors());
 
 app.use(express.json());
 
