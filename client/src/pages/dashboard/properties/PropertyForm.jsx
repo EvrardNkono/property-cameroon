@@ -5,12 +5,14 @@ import {
   ArrowLeft, Save, Trash2, Image, Plus, X, 
   MapPin, Home, Maximize2, DollarSign, FileText,
   CheckCircle2, Loader2, Upload, Building2,
-  School, ShoppingBasket, Fuel, Coffee
+  School, ShoppingBasket, Fuel, Coffee, BedDouble,
+  DoorOpen, Warehouse, Store, Briefcase, Trees,
+  Hotel, Tent, Factory, ParkingCircle
 } from 'lucide-react';
 import api from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
 
-// ✅ Détection de l'environnement pour l'URL d'upload
+// ✅ Environment detection for upload URL
 const isDevelopment = typeof window !== 'undefined' && 
                       (window.location.hostname === 'localhost' || 
                        window.location.hostname === '127.0.0.1' ||
@@ -20,18 +22,15 @@ const BACKEND_URL = isDevelopment
   ? 'http://localhost:5000'
   : 'https://property-cameroon-backend.vercel.app';
 
-// 📸 Fonction pour obtenir l'URL complète de l'image
+// 📸 Function to get full image URL
 const getImageUrl = (image) => {
   if (!image) return null;
-  // Si c'est déjà une URL complète (Vercel Blob ou autre)
   if (image.startsWith('http')) return image;
-  // Si c'est un chemin relatif avec /uploads
   if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
-  // Si c'est juste le nom du fichier
   return `${BACKEND_URL}/uploads/properties/${image}`;
 };
 
-// 📸 Fonction de compression d'images
+// 📸 Image compression function
 const compressImage = (file, quality = 0.6, maxWidth = 1024) => {
   return new Promise((resolve) => {
     if (file.size < 500 * 1024) {
@@ -83,7 +82,7 @@ const PropertyForm = () => {
   
   const [formData, setFormData] = useState({
     title: '',
-    category: 'Land',
+    category: 'House',
     description: '',
     location: {
       city: '',
@@ -105,7 +104,16 @@ const PropertyForm = () => {
       hasRoad: false,
       isFenced: false,
       bedrooms: '',
-      bathrooms: ''
+      bathrooms: '',
+      floor: '',           
+      hasElevator: false,  
+      hasBalcony: false,   
+      isFurnished: false,  
+      showWindow: false,   
+      zone: '',            
+      hasParking: false,   
+      hasGarden: false,    
+      landType: ''         
     },
     amenities: {
       schools: '',
@@ -119,16 +127,53 @@ const PropertyForm = () => {
 
   const [imageUrls, setImageUrls] = useState([]);
 
+  // ✅ COMPLETE CATEGORIES - exactly the ones you gave me
   const categories = [
-    { id: 'Land', label: 'Land', icon: <MapPin size={18} /> },
-    { id: 'Real Estate', label: 'Real Estate', icon: <Home size={18} /> },
-    { id: 'Commercial', label: 'Commercial', icon: <Building2 size={18} /> }
+    // HOUSES
+    { id: 'House', label: '🏠 House', icon: <Home size={18} />, type: 'house' },
+    { id: 'Villa', label: '🏛️ Villa', icon: <Hotel size={18} />, type: 'house' },
+    { id: 'Duplex', label: '🏘️ Duplex', icon: <Building2 size={18} />, type: 'house' },
+    
+    // APARTMENTS
+    { id: 'Apartment', label: '🏢 Apartment', icon: <Building2 size={18} />, type: 'apartment' },
+    { id: 'Studio', label: '📐 Studio', icon: <DoorOpen size={18} />, type: 'apartment' },
+    
+    // ROOMS
+    { id: 'Room', label: '🛏️ Room', icon: <BedDouble size={18} />, type: 'room' },
+    
+    // LAND
+    { id: 'Land', label: '🗺️ Land', icon: <MapPin size={18} />, type: 'land' },
+    { id: 'Agricultural Land', label: '🌾 Agricultural Land', icon: <Trees size={18} />, type: 'land' },
+    
+    // COMMERCIAL
+    { id: 'Commercial Space', label: '🏪 Commercial Space', icon: <Store size={18} />, type: 'commercial' },
+    { id: 'Office', label: '💼 Office', icon: <Briefcase size={18} />, type: 'commercial' },
+    { id: 'Warehouse', label: '📦 Warehouse', icon: <Warehouse size={18} />, type: 'commercial' },
+    { id: 'Shop', label: '🛍️ Shop', icon: <ShoppingBasket size={18} />, type: 'commercial' },
+    
+    // OTHER
+    { id: 'Industrial Space', label: '🏭 Industrial Space', icon: <Factory size={18} />, type: 'other' },
+    { id: 'Parking', label: '🅿️ Parking', icon: <ParkingCircle size={18} />, type: 'other' }
   ];
 
   const regions = [
     'Center', 'South', 'West', 'North-West', 'Littoral', 
     'Adamawa', 'North', 'Far-North', 'East'
   ];
+
+  // Determine category type for conditional display
+  const getCurrentCategoryType = () => {
+    const cat = categories.find(c => c.id === formData.category);
+    return cat ? cat.type : 'other';
+  };
+
+  const categoryType = getCurrentCategoryType();
+  const isLand = categoryType === 'land';
+  const isHouse = categoryType === 'house';
+  const isApartment = categoryType === 'apartment';
+  const isRoom = categoryType === 'room';
+  const isCommercial = categoryType === 'commercial';
+  const isOther = categoryType === 'other';
 
   useEffect(() => {
     if (id) {
@@ -146,7 +191,7 @@ const PropertyForm = () => {
       
       setFormData({
         title: property.title || '',
-        category: property.category || 'Land',
+        category: property.category || 'House',
         description: property.description || '',
         location: {
           city: property.location?.city || '',
@@ -171,7 +216,16 @@ const PropertyForm = () => {
           hasRoad: property.features?.hasRoad || false,
           isFenced: property.features?.isFenced || false,
           bedrooms: property.features?.bedrooms || '',
-          bathrooms: property.features?.bathrooms || ''
+          bathrooms: property.features?.bathrooms || '',
+          floor: property.features?.floor || '',
+          hasElevator: property.features?.hasElevator || false,
+          hasBalcony: property.features?.hasBalcony || false,
+          isFurnished: property.features?.isFurnished || false,
+          showWindow: property.features?.showWindow || false,
+          zone: property.features?.zone || '',
+          hasParking: property.features?.hasParking || false,
+          hasGarden: property.features?.hasGarden || false,
+          landType: property.features?.landType || ''
         },
         amenities: {
           schools: property.amenities?.schools?.names?.join(', ') || '',
@@ -282,7 +336,6 @@ const PropertyForm = () => {
     try {
       let uploadedImageUrls = [];
       
-      // ✅ CORRECTION : Upload des nouvelles images avec URL dynamique
       if (imageFiles.length > 0) {
         const uploadFormData = new FormData();
         imageFiles.forEach(file => {
@@ -359,7 +412,16 @@ const PropertyForm = () => {
           hasRoad: formData.features.hasRoad,
           isFenced: formData.features.isFenced,
           bedrooms: formData.features.bedrooms ? parseInt(formData.features.bedrooms) : null,
-          bathrooms: formData.features.bathrooms ? parseInt(formData.features.bathrooms) : null
+          bathrooms: formData.features.bathrooms ? parseInt(formData.features.bathrooms) : null,
+          floor: formData.features.floor ? parseInt(formData.features.floor) : null,
+          hasElevator: formData.features.hasElevator,
+          hasBalcony: formData.features.hasBalcony,
+          isFurnished: formData.features.isFurnished,
+          showWindow: formData.features.showWindow,
+          zone: formData.features.zone,
+          hasParking: formData.features.hasParking,
+          hasGarden: formData.features.hasGarden,
+          landType: formData.features.landType
         },
         amenities: amenitiesData,
         status: formData.status,
@@ -412,9 +474,6 @@ const PropertyForm = () => {
       </div>
     );
   }
-
-  const isLand = formData.category === 'Land';
-  const isRealEstate = formData.category === 'Real Estate';
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -632,7 +691,7 @@ const PropertyForm = () => {
           </div>
         </div>
 
-        {/* Features */}
+        {/* Features - Conditional based on category type */}
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-100 bg-slate-50/50">
             <h2 className="font-bold text-[#0a2619] flex items-center gap-2">
@@ -640,8 +699,363 @@ const PropertyForm = () => {
             </h2>
           </div>
           <div className="p-6">
-            {isLand ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* HOUSE features (House, Villa, Duplex) */}
+            {isHouse && (
+              <div className="space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Bedrooms</label>
+                    <input
+                      type="number"
+                      name="features.bedrooms"
+                      value={formData.features.bedrooms}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+                      placeholder="3"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Bathrooms</label>
+                    <input
+                      type="number"
+                      name="features.bathrooms"
+                      value={formData.features.bathrooms}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+                      placeholder="2"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hasElectricity"
+                      checked={formData.features.hasElectricity}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-slate-700">Electricity</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hasWater"
+                      checked={formData.features.hasWater}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-slate-700">Water</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hasParking"
+                      checked={formData.features.hasParking}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-slate-700">Parking</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hasGarden"
+                      checked={formData.features.hasGarden}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-slate-700">Garden</span>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* APARTMENT features (Apartment, Studio) */}
+            {isApartment && (
+              <div className="space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Floor</label>
+                    <input
+                      type="number"
+                      name="features.floor"
+                      value={formData.features.floor}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+                      placeholder="3"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Bedrooms</label>
+                    <input
+                      type="number"
+                      name="features.bedrooms"
+                      value={formData.features.bedrooms}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+                      placeholder="2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Bathrooms</label>
+                    <input
+                      type="number"
+                      name="features.bathrooms"
+                      value={formData.features.bathrooms}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+                      placeholder="1"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hasElectricity"
+                      checked={formData.features.hasElectricity}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-slate-700">Electricity</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hasWater"
+                      checked={formData.features.hasWater}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-slate-700">Water</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hasElevator"
+                      checked={formData.features.hasElevator}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-slate-700">Elevator</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hasBalcony"
+                      checked={formData.features.hasBalcony}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-slate-700">Balcony</span>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* ROOM features */}
+            {isRoom && (
+              <div className="space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Surface Area (m²)</label>
+                    <input
+                      type="number"
+                      name="surface.value"
+                      value={formData.surface.value}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+                      placeholder="15"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Room Type</label>
+                    <select
+                      name="features.isFurnished"
+                      value={formData.features.isFurnished ? "furnished" : "unfurnished"}
+                      onChange={(e) => {
+                        const syntheticEvent = {
+                          target: {
+                            name: 'features.isFurnished',
+                            type: 'checkbox',
+                            checked: e.target.value === 'furnished'
+                          }
+                        };
+                        handleChange(syntheticEvent);
+                      }}
+                      className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+                    >
+                      <option value="unfurnished">Unfurnished</option>
+                      <option value="furnished">Furnished</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hasElectricity"
+                      checked={formData.features.hasElectricity}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-slate-700">Electricity</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hasWater"
+                      checked={formData.features.hasWater}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-slate-700">Water</span>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* LAND features (Land, Agricultural Land) */}
+            {isLand && (
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Land Type</label>
+                  <select
+                    name="features.landType"
+                    value={formData.features.landType}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+                  >
+                    <option value="">Select land type</option>
+                    <option value="buildable">Buildable</option>
+                    <option value="agricultural">Agricultural</option>
+                    <option value="commercial">Commercial</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hasElectricity"
+                      checked={formData.features.hasElectricity}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-slate-700">Electricity nearby</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hasWater"
+                      checked={formData.features.hasWater}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-slate-700">Water nearby</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hasRoad"
+                      checked={formData.features.hasRoad}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-slate-700">Road Access</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="isFenced"
+                      checked={formData.features.isFenced}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-slate-700">Fenced</span>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* COMMERCIAL features */}
+            {isCommercial && (
+              <div className="space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Commercial Zone</label>
+                    <select
+                      name="features.zone"
+                      value={formData.features.zone}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+                    >
+                      <option value="">Select zone type</option>
+                      <option value="commercial">Commercial Zone</option>
+                      <option value="residential">Residential Zone</option>
+                      <option value="mixed">Mixed Zone</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Show Window</label>
+                    <select
+                      name="features.showWindow"
+                      value={formData.features.showWindow ? "yes" : "no"}
+                      onChange={(e) => {
+                        const syntheticEvent = {
+                          target: {
+                            name: 'features.showWindow',
+                            type: 'checkbox',
+                            checked: e.target.value === 'yes'
+                          }
+                        };
+                        handleChange(syntheticEvent);
+                      }}
+                      className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+                    >
+                      <option value="no">No Show Window</option>
+                      <option value="yes">Has Show Window</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hasElectricity"
+                      checked={formData.features.hasElectricity}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-slate-700">Electricity</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hasWater"
+                      checked={formData.features.hasWater}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-slate-700">Water</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="hasParking"
+                      checked={formData.features.hasParking}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-slate-700">Parking</span>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* OTHER features (Industrial, Parking) */}
+            {isOther && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -672,63 +1086,8 @@ const PropertyForm = () => {
                   />
                   <span className="text-sm text-slate-700">Road Access</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="isFenced"
-                    checked={formData.features.isFenced}
-                    onChange={handleChange}
-                    className="w-4 h-4 rounded"
-                  />
-                  <span className="text-sm text-slate-700">Fenced</span>
-                </label>
               </div>
-            ) : isRealEstate ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Bedrooms</label>
-                  <input
-                    type="number"
-                    name="features.bedrooms"
-                    value={formData.features.bedrooms}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
-                    placeholder="3"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Bathrooms</label>
-                  <input
-                    type="number"
-                    name="features.bathrooms"
-                    value={formData.features.bathrooms}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
-                    placeholder="2"
-                  />
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="hasElectricity"
-                    checked={formData.features.hasElectricity}
-                    onChange={handleChange}
-                    className="w-4 h-4 rounded"
-                  />
-                  <span className="text-sm text-slate-700">Electricity</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="hasWater"
-                    checked={formData.features.hasWater}
-                    onChange={handleChange}
-                    className="w-4 h-4 rounded"
-                  />
-                  <span className="text-sm text-slate-700">Water</span>
-                </label>
-              </div>
-            ) : null}
+            )}
           </div>
         </div>
 

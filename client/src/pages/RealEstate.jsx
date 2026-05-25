@@ -1,4 +1,4 @@
-// frontend/src/pages/RealEstate.jsx - VERSION AVEC LOG DANS LE MAP
+// frontend/src/pages/RealEstate.jsx - AVEC TOUTES LES CATÉGORIES DÉTAILLÉES
 
 import React, { useState, useEffect } from 'react';
 import PropertyCard from '../components/real-estate/PropertyCard';
@@ -7,7 +7,10 @@ import Footer from '../components/Footer';
 import api from '../services/api';
 import { 
   Search, X, Home, Building2, 
-  MapPin, Filter, ChevronDown, AlertCircle
+  MapPin, Filter, ChevronDown, AlertCircle,
+  Hotel, BedDouble, DoorOpen, Trees, Store, 
+  Briefcase, Warehouse, ShoppingBasket, Factory, 
+  ParkingCircle, Heart, Star
 } from 'lucide-react';
 
 const isDevelopment = typeof window !== 'undefined' && 
@@ -22,24 +25,20 @@ const BACKEND_URL = isDevelopment
 const getImageUrl = (image) => {
   if (!image) return null;
   
-  // ❌ IGNORER les URLs blob (temporaires d'upload)
   if (image.startsWith('blob:')) {
     console.log('⚠️ Image blob ignorée:', image);
     return null;
   }
   
-  // ❌ En production, ignorer les URLs localhost
   if (!isDevelopment && image.includes('localhost')) {
     console.log('⚠️ Image localhost ignorée en production:', image);
     return null;
   }
   
-  // ✅ Garder les URLs HTTP/HTTPS valides (Vercel Blob)
   if (image.startsWith('http')) {
     return image;
   }
   
-  // ✅ Pour les chemins relatifs
   if (image.startsWith('/uploads')) {
     return `${BACKEND_URL}${image}`;
   }
@@ -58,7 +57,6 @@ const RealEstate = () => {
   
   const [filters, setFilters] = useState({
     category: 'all',
-    listingType: 'all',
     minPrice: '',
     maxPrice: '',
     city: 'all',
@@ -74,60 +72,58 @@ const RealEstate = () => {
   }, [filters, properties, searchTerm]);
 
   const fetchProperties = async () => {
-  try {
-    setLoading(true);
-    const response = await api.getProperties({ status: 'PUBLISHED' });
-    
-    // ✅ Filtrer les images invalides
-    const propertiesWithImages = (response.properties || []).map(prop => ({
-      ...prop,
-      images: (prop.images || []).filter(img => {
-        if (!img) return false;
-        if (img.startsWith('blob:')) return false;
-        if (!isDevelopment && img.includes('localhost')) return false;
-        return true;
-      })
-    }));
-    
-    // Calcul des statistiques
-    let totalImages = 0;
-    let validImageUrls = 0;
-    
-    propertiesWithImages.forEach(prop => {
-      if (prop.images && prop.images.length > 0) {
-        totalImages += prop.images.length;
-        prop.images.forEach(img => {
-          if (getImageUrl(img)) validImageUrls++;
-        });
-      }
-    });
-    
-    setDebugInfo({
-      totalProperties: propertiesWithImages.length,
-      totalImages,
-      validImageUrls,
-      sampleProperty: propertiesWithImages[0] ? {
-        title: propertiesWithImages[0].title,
-        images: propertiesWithImages[0].images,
-        generatedUrl: getImageUrl(propertiesWithImages[0].images?.[0])
-      } : null
-    });
-    
-    console.log('🔍 DEBUG IMAGES:', {
-      totalProperties: propertiesWithImages.length,
-      totalImages,
-      validImageUrls,
-      firstPropertyImages: propertiesWithImages[0]?.images
-    });
-    
-    setProperties(propertiesWithImages);
-  } catch (err) {
-    console.error('Error fetching properties:', err);
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+      const response = await api.getProperties({ status: 'PUBLISHED' });
+      
+      const propertiesWithImages = (response.properties || []).map(prop => ({
+        ...prop,
+        images: (prop.images || []).filter(img => {
+          if (!img) return false;
+          if (img.startsWith('blob:')) return false;
+          if (!isDevelopment && img.includes('localhost')) return false;
+          return true;
+        })
+      }));
+      
+      let totalImages = 0;
+      let validImageUrls = 0;
+      
+      propertiesWithImages.forEach(prop => {
+        if (prop.images && prop.images.length > 0) {
+          totalImages += prop.images.length;
+          prop.images.forEach(img => {
+            if (getImageUrl(img)) validImageUrls++;
+          });
+        }
+      });
+      
+      setDebugInfo({
+        totalProperties: propertiesWithImages.length,
+        totalImages,
+        validImageUrls,
+        sampleProperty: propertiesWithImages[0] ? {
+          title: propertiesWithImages[0].title,
+          images: propertiesWithImages[0].images,
+          generatedUrl: getImageUrl(propertiesWithImages[0].images?.[0])
+        } : null
+      });
+      
+      console.log('🔍 DEBUG IMAGES:', {
+        totalProperties: propertiesWithImages.length,
+        totalImages,
+        validImageUrls,
+        firstPropertyImages: propertiesWithImages[0]?.images
+      });
+      
+      setProperties(propertiesWithImages);
+    } catch (err) {
+      console.error('Error fetching properties:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const applyFilters = () => {
     let filtered = [...properties];
@@ -139,12 +135,9 @@ const RealEstate = () => {
       );
     }
     
+    // ✅ FILTRE PAR CATÉGORIE EXACTE
     if (filters.category !== 'all') {
       filtered = filtered.filter(p => p.category === filters.category);
-    }
-    
-    if (filters.listingType !== 'all') {
-      filtered = filtered.filter(p => p.listingType === filters.listingType);
     }
     
     if (filters.minPrice) {
@@ -172,7 +165,6 @@ const RealEstate = () => {
   const resetFilters = () => {
     setFilters({
       category: 'all',
-      listingType: 'all',
       minPrice: '',
       maxPrice: '',
       city: 'all',
@@ -181,10 +173,45 @@ const RealEstate = () => {
     setSearchTerm('');
   };
 
+  // ✅ TOUTES LES CATÉGORIES DÉTAILLÉES POUR LE FILTRE
   const categories = [
-    { id: 'all', label: 'All Properties', icon: <Home size={16} /> },
-    { id: 'Land', label: 'Land', icon: <MapPin size={16} /> },
-    { id: 'Real Estate', label: 'Real Estate', icon: <Building2 size={16} /> }
+    { id: 'all', label: 'All Properties', icon: <Home size={16} />, group: 'all' },
+    
+    // HOUSES
+    { id: 'House', label: 'House', icon: <Home size={16} />, group: 'houses' },
+    { id: 'Villa', label: 'Villa', icon: <Hotel size={16} />, group: 'houses' },
+    { id: 'Duplex', label: 'Duplex', icon: <Building2 size={16} />, group: 'houses' },
+    
+    // APARTMENTS
+    { id: 'Apartment', label: 'Apartment', icon: <Building2 size={16} />, group: 'apartments' },
+    { id: 'Studio', label: 'Studio', icon: <DoorOpen size={16} />, group: 'apartments' },
+    
+    // ROOMS
+    { id: 'Room', label: 'Room', icon: <BedDouble size={16} />, group: 'rooms' },
+    
+    // LAND
+    { id: 'Land', label: 'Land', icon: <MapPin size={16} />, group: 'land' },
+    { id: 'Agricultural Land', label: 'Agricultural Land', icon: <Trees size={16} />, group: 'land' },
+    
+    // COMMERCIAL
+    { id: 'Commercial Space', label: 'Commercial Space', icon: <Store size={16} />, group: 'commercial' },
+    { id: 'Office', label: 'Office', icon: <Briefcase size={16} />, group: 'commercial' },
+    { id: 'Warehouse', label: 'Warehouse', icon: <Warehouse size={16} />, group: 'commercial' },
+    { id: 'Shop', label: 'Shop', icon: <ShoppingBasket size={16} />, group: 'commercial' },
+    
+    // OTHER
+    { id: 'Industrial Space', label: 'Industrial Space', icon: <Factory size={16} />, group: 'other' },
+    { id: 'Parking', label: 'Parking', icon: <ParkingCircle size={16} />, group: 'other' }
+  ];
+
+  // Groupes de catégories pour un affichage organisé
+  const categoryGroups = [
+    { name: 'Houses', key: 'houses', icon: <Home size={14} /> },
+    { name: 'Apartments', key: 'apartments', icon: <Building2 size={14} /> },
+    { name: 'Rooms', key: 'rooms', icon: <BedDouble size={14} /> },
+    { name: 'Land', key: 'land', icon: <MapPin size={14} /> },
+    { name: 'Commercial', key: 'commercial', icon: <Store size={14} /> },
+    { name: 'Other', key: 'other', icon: <Star size={14} /> }
   ];
   
   const cities = ['all', 'Douala', 'Yaoundé', 'Garoua', 'Bafoussam', 'Bamenda', 'Limbe', 'Kribi'];
@@ -212,10 +239,10 @@ const RealEstate = () => {
           <div className="max-w-7xl mx-auto flex items-center gap-3">
             <AlertCircle size={20} className="text-yellow-600" />
             <div className="text-sm text-yellow-700">
-              <strong>Aucune image trouvée</strong> - {debugInfo.totalProperties} propriété(s) chargée(s), 0 image(s).
+              <strong>No images found</strong> - {debugInfo.totalProperties} property(ies) loaded, 0 image(s).
               {debugInfo.sampleProperty && (
                 <span className="block text-xs mt-1">
-                  Exemple: "{debugInfo.sampleProperty.title}" - Images: {JSON.stringify(debugInfo.sampleProperty.images)}
+                  Example: "{debugInfo.sampleProperty.title}" - Images: {JSON.stringify(debugInfo.sampleProperty.images)}
                 </span>
               )}
             </div>
@@ -265,33 +292,68 @@ const RealEstate = () => {
 
           {showFilters && (
             <div className="mt-6 p-6 bg-gray-100 rounded-2xl">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-                <div>
-                  <label className="block text-xs font-semibold uppercase text-gray-500 mb-2">Category</label>
-                  <div className="flex flex-wrap gap-2">
-                    {categories.map(cat => (
-                      <button
-                        key={cat.id}
-                        onClick={() => setFilters({...filters, category: cat.id})}
-                        className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                          filters.category === cat.id
-                            ? 'bg-emerald-600 text-white'
-                            : 'bg-white text-gray-600 hover:bg-gray-200'
-                        }`}
-                      >
-                        {cat.icon}
-                        {cat.label}
-                      </button>
-                    ))}
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* Category Filter - Organisé par groupes */}
+                <div className="lg:col-span-2">
+                  <label className="block text-xs font-semibold uppercase text-gray-500 mb-3">Property Type</label>
+                  <div className="space-y-4">
+                    {categoryGroups.map(group => {
+                      const groupCategories = categories.filter(c => c.group === group.key);
+                      if (groupCategories.length === 0) return null;
+                      
+                      const selectedInGroup = groupCategories.some(c => filters.category === c.id);
+                      
+                      return (
+                        <div key={group.key}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-emerald-600">{group.icon}</span>
+                            <span className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">{group.name}</span>
+                            {selectedInGroup && (
+                              <span className="ml-auto text-[8px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">Selected</span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-2 ml-1">
+                            {groupCategories.map(cat => (
+                              <button
+                                key={cat.id}
+                                onClick={() => setFilters({...filters, category: cat.id})}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                  filters.category === cat.id
+                                    ? 'bg-emerald-600 text-white shadow-md'
+                                    : 'bg-white text-gray-600 hover:bg-gray-200 border border-gray-100'
+                                }`}
+                              >
+                                {cat.icon}
+                                {cat.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    
+                    {/* Bouton All Properties */}
+                    <button
+                      onClick={() => setFilters({...filters, category: 'all'})}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all mt-2 ${
+                        filters.category === 'all'
+                          ? 'bg-emerald-600 text-white shadow-md'
+                          : 'bg-white text-gray-600 hover:bg-gray-200 border border-gray-100'
+                      }`}
+                    >
+                      <Heart size={14} />
+                      All Properties
+                    </button>
                   </div>
                 </div>
 
+                {/* City Filter */}
                 <div>
                   <label className="block text-xs font-semibold uppercase text-gray-500 mb-2">City</label>
                   <select
                     value={filters.city}
                     onChange={(e) => setFilters({...filters, city: e.target.value})}
-                    className="w-full px-4 py-3 bg-white border-0 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                    className="w-full px-4 py-2.5 bg-white border-0 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
                   >
                     {cities.map(city => (
                       <option key={city} value={city}>
@@ -301,6 +363,7 @@ const RealEstate = () => {
                   </select>
                 </div>
 
+                {/* Bedrooms Filter */}
                 <div>
                   <label className="block text-xs font-semibold uppercase text-gray-500 mb-2">Bedrooms</label>
                   <div className="flex flex-wrap gap-2">
@@ -308,7 +371,7 @@ const RealEstate = () => {
                       <button
                         key={opt}
                         onClick={() => setFilters({...filters, bedrooms: opt})}
-                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                           filters.bedrooms === opt
                             ? 'bg-emerald-600 text-white'
                             : 'bg-white text-gray-600 hover:bg-gray-200'
@@ -319,33 +382,38 @@ const RealEstate = () => {
                     ))}
                   </div>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase text-gray-500 mb-2">Price Range</label>
-                  <select
-                    onChange={(e) => {
-                      const [min, max] = e.target.value.split('-');
-                      setFilters({...filters, minPrice: min === 'all' ? '' : min, maxPrice: max === 'all' ? '' : max});
-                    }}
-                    className="w-full px-4 py-3 bg-white border-0 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
-                  >
-                    <option value="all-all">All</option>
-                    <option value="-50000000">Under 50M</option>
-                    <option value="50000000-100000000">50M - 100M</option>
-                    <option value="100000000-200000000">100M - 200M</option>
-                    <option value="200000000-all">200M+</option>
-                  </select>
-                </div>
               </div>
 
-              <div className="flex justify-end mt-5 pt-4 border-t border-gray-200">
-                <button
-                  onClick={resetFilters}
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-gray-700"
-                >
-                  <X size={16} />
-                  Reset all filters
-                </button>
+              {/* Price Range - deuxième ligne */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 pt-5 border-t border-gray-200">
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold uppercase text-gray-500 mb-2">Price Range (FCFA)</label>
+                  <div className="flex gap-3">
+                    <input
+                      type="number"
+                      placeholder="Min price"
+                      value={filters.minPrice}
+                      onChange={(e) => setFilters({...filters, minPrice: e.target.value})}
+                      className="flex-1 px-4 py-2.5 bg-white border-0 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Max price"
+                      value={filters.maxPrice}
+                      onChange={(e) => setFilters({...filters, maxPrice: e.target.value})}
+                      className="flex-1 px-4 py-2.5 bg-white border-0 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-end justify-end">
+                  <button
+                    onClick={resetFilters}
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 bg-white rounded-xl"
+                  >
+                    <X size={16} />
+                    Reset all
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -358,6 +426,11 @@ const RealEstate = () => {
           <p className="text-gray-500">
             <span className="font-semibold text-emerald-600">{filteredProperties.length}</span> properties found
           </p>
+          {filters.category !== 'all' && (
+            <span className="text-xs bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full">
+              Filtering by: {categories.find(c => c.id === filters.category)?.label || filters.category}
+            </span>
+          )}
         </div>
       </div>
 
@@ -383,12 +456,11 @@ const RealEstate = () => {
                 const firstImage = property.images?.[0];
                 const imageUrl = getImageUrl(firstImage);
                 
-                // 🔍 LOG POUR VOIR CE QUI EST PASSE
-                console.log('📸 RealEstate - Propriété:', {
+                console.log('📸 RealEstate - Property:', {
                   title: property.title,
+                  category: property.category, // ✅ Catégorie exacte
                   firstImage: firstImage,
-                  imageUrl: imageUrl,
-                  toutesLesImages: property.images
+                  imageUrl: imageUrl
                 });
                 
                 return (
@@ -399,7 +471,7 @@ const RealEstate = () => {
                       title: property.title,
                       image: imageUrl || 'https://via.placeholder.com/400x300?text=No+Image',
                       status: property.status === 'PUBLISHED' ? 'sale' : 'lease',
-                      category: property.category,
+                      category: property.category, // ✅ Catégorie exacte passée à PropertyCard
                       price: `${property.price?.amount?.toLocaleString() || 0}`,
                       location: `${property.location?.city || ''}, ${property.location?.region || ''}`,
                       type: property.category?.toLowerCase() === 'land' ? 'land' : 'building',
