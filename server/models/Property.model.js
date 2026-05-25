@@ -2,7 +2,26 @@
 
 const propertySchema = new mongoose.Schema({
   title: { type: String, required: true },
-  category: { type: String, enum: ['Land', 'Real Estate', 'Commercial'], required: true },
+  category: { 
+    type: String, 
+    enum: [
+      'House',
+      'Villa',
+      'Duplex',
+      'Apartment',
+      'Studio',
+      'Room',
+      'Land',
+      'Agricultural Land',
+      'Commercial Space',
+      'Office',
+      'Warehouse',
+      'Shop',
+      'Industrial Space',
+      'Parking'
+    ], 
+    required: true 
+  },
   location: {
     city: String,
     district: String,
@@ -22,7 +41,21 @@ const propertySchema = new mongoose.Schema({
     hasRoad: Boolean,
     isFenced: Boolean,
     bedrooms: { type: Number, default: 0 },
-    bathrooms: { type: Number, default: 0 }
+    bathrooms: { type: Number, default: 0 },
+    // ✅ NOUVEAUX CHAMPS POUR APPARTEMENTS
+    floor: { type: Number, default: null },
+    hasElevator: { type: Boolean, default: false },
+    hasBalcony: { type: Boolean, default: false },
+    // ✅ NOUVEAU CHAMP POUR CHAMBRES (MEUBLÉ/NON MEUBLÉ)
+    isFurnished: { type: Boolean, default: false },
+    // ✅ NOUVEAUX CHAMPS POUR COMMERCIAUX
+    showWindow: { type: Boolean, default: false },
+    zone: { type: String, default: '' },
+    // ✅ NOUVEAUX CHAMPS POUR MAISONS
+    hasParking: { type: Boolean, default: false },
+    hasGarden: { type: Boolean, default: false },
+    // ✅ NOUVEAU CHAMP POUR TERRAINS
+    landType: { type: String, default: '' }
   },
   // ✅ Amenities renseignées par le propriétaire (optionnel)
   amenities: {
