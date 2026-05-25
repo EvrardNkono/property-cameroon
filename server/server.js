@@ -1,9 +1,26 @@
 ﻿// backend/index.js
+
+import dns from 'dns';
+dns.setDefaultResultOrder('ipv4first'); // Force IPv4
+
+// CHARGER DOTENV EN PREMIER
+import dotenv from 'dotenv';
+dotenv.config();
+
+// VÉRIFIER LES VARIABLES D'ENVIRONNEMENT AVANT TOUT
+console.log('=== CONFIGURATION ===');
+console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
+if (process.env.MONGODB_URI) {
+  // Masquer les identifiants pour la sécurité
+  const maskedUri = process.env.MONGODB_URI.replace(/\/\/(.*)@/, '//***:***@');
+  console.log('MONGODB_URI (masked):', maskedUri);
+}
 console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
+console.log('====================');
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import multer from 'multer';
 
@@ -36,8 +53,6 @@ import {
   agricultureUpload,
   categoryUpload
 } from './controllers/upload.controller.js';
-
-dotenv.config();
 
 const app = express();
 
@@ -75,19 +90,40 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // ⚠️ SUR VERCEL : NE PAS SERVIR DE FICHIERS STATIQUES
-// Cette ligne ne doit être active qu'en développement
 if (process.env.NODE_ENV !== 'production') {
   app.use('/uploads', express.static('uploads'));
 }
 
-// Connexion MongoDB (seulement si URI existe)
-if (process.env.MONGODB_URI) {
-  mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('✅ MongoDB connected successfully'))
-    .catch((err) => console.error('❌ MongoDB connection error:', err.message));
-} else {
-  console.log('⚠️ MONGODB_URI not set, running without database');
-}
+// ========== FONCTION DE CONNEXION MONGODB AMÉLIORÉE ==========
+const connectMongoDB = async () => {
+  if (!process.env.MONGODB_URI) {
+    console.log('⚠️ MONGODB_URI not set, running without database');
+    return false;
+  }
+
+  try {
+    // Configuration avec timeouts
+    const mongooseOptions = {
+      serverSelectionTimeoutMS: 5000,  // Timeout de sélection du serveur (5 secondes)
+      socketTimeoutMS: 45000,          // Timeout des sockets (45 secondes)
+      connectTimeoutMS: 10000,         // Timeout de connexion (10 secondes)
+      family: 4,                       // Forcer IPv4
+    };
+
+    console.log('🔄 Connecting to MongoDB...');
+    await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
+    console.log('✅ MongoDB connected successfully');
+    return true;
+  } catch (error) {
+    console.error('❌ MongoDB connection error:', error.message);
+    if (error.name === 'MongooseServerSelectionError') {
+      console.error('   → Vérifiez que MongoDB est en cours d\'exécution');
+      console.error('   → Vérifiez l\'URI de connexion');
+      console.error('   → Vérifiez votre connexion internet (si MongoDB Atlas)');
+    }
+    return false;
+  }
+};
 
 // ========== ROUTES API ==========
 app.use('/api/auth', authRoutes);
@@ -111,7 +147,20 @@ app.post('/api/upload/category-image', categoryUpload.single('image'), handleCat
 
 // ========== ROUTES DE TEST ==========
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date() });
+  const dbStatus = mongoose.connection.readyState;
+  const dbStatusText = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  }[dbStatus] || 'unknown';
+  
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date(),
+    database: dbStatusText,
+    mongodb_uri_exists: !!process.env.MONGODB_URI
+  });
 });
 
 app.get('/', (req, res) => {
@@ -146,14 +195,26 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Démarrage du serveur (uniquement en développement)
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📍 http://localhost:${PORT}`);
-    console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
-  });
-}
+// ========== DÉMARRAGE DU SERVEUR AMÉLIORÉ ==========
+const startServer = async () => {
+  // Attendre la connexion MongoDB avant de démarrer le serveur
+  await connectMongoDB();
+  
+  // Démarrer le serveur uniquement en développement
+  if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📍 http://localhost:${PORT}`);
+      console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
+    });
+  }
+};
+
+// Démarrer le serveur
+startServer().catch(err => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
+});
 
 export default app;
