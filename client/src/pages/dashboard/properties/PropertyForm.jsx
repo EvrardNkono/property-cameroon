@@ -10,15 +10,25 @@ import {
 import api from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
 
+// ✅ Détection de l'environnement pour l'URL d'upload
+const isDevelopment = typeof window !== 'undefined' && 
+                      (window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname === '');
+
+const BACKEND_URL = isDevelopment 
+  ? 'http://localhost:5000'
+  : 'https://property-cameroon-backend.vercel.app';
+
 // 📸 Fonction pour obtenir l'URL complète de l'image
 const getImageUrl = (image) => {
   if (!image) return null;
-  // Si c'est déjà une URL complète
+  // Si c'est déjà une URL complète (Vercel Blob ou autre)
   if (image.startsWith('http')) return image;
   // Si c'est un chemin relatif avec /uploads
-  if (image.startsWith('/uploads')) return `http://localhost:5000${image}`;
+  if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
   // Si c'est juste le nom du fichier
-  return `http://localhost:5000/uploads/properties/${image}`;
+  return `${BACKEND_URL}/uploads/properties/${image}`;
 };
 
 // 📸 Fonction de compression d'images
@@ -132,7 +142,6 @@ const PropertyForm = () => {
       const response = await api.getPropertyById(id);
       const property = response.property;
       
-      // ✅ Normaliser les URLs des images existantes
       const normalizedImages = (property.images || []).map(img => getImageUrl(img));
       
       setFormData({
@@ -170,13 +179,11 @@ const PropertyForm = () => {
           stations: property.amenities?.stations?.names?.join(', ') || '',
           bakeries: property.amenities?.bakeries?.names?.join(', ') || ''
         },
-        images: property.images || [],  // Garder les chemins originaux pour l'envoi
+        images: property.images || [],
         status: property.status || 'PENDING'
       });
       
-      // ✅ Utiliser les URLs normalisées pour l'affichage
       setImageUrls(normalizedImages);
-      
       console.log('📸 Loaded images:', normalizedImages);
       
     } catch (err) {
@@ -219,7 +226,6 @@ const PropertyForm = () => {
     const files = Array.from(e.target.files);
     const MAX_IMAGES = 10;
     
-    // Vérifier le nombre total d'images
     const currentImageCount = imageUrls.length;
     
     if (currentImageCount + files.length > MAX_IMAGES) {
@@ -247,20 +253,16 @@ const PropertyForm = () => {
 
   const removeImage = (index) => {
     const urlToRemove = imageUrls[index];
-    
-    // Vérifier si c'est une image existante (URL complète) ou une nouvelle (blob URL)
     const isExistingImage = urlToRemove.startsWith('http') && !urlToRemove.includes('blob');
     
     if (isExistingImage) {
-      // Trouver le chemin relatif correspondant dans formData.images
       const relativePath = formData.images.find(img => 
         getImageUrl(img) === urlToRemove || 
-        `http://localhost:5000/uploads/properties/${img}` === urlToRemove
+        `${BACKEND_URL}/uploads/properties/${img}` === urlToRemove
       );
       
       if (relativePath) {
         setImagesToDelete(prev => [...prev, relativePath]);
-        // Retirer l'image de formData.images
         setFormData(prev => ({
           ...prev,
           images: prev.images.filter(img => img !== relativePath)
@@ -268,7 +270,6 @@ const PropertyForm = () => {
       }
     }
     
-    // Retirer de l'affichage
     setImageUrls(prev => prev.filter((_, i) => i !== index));
     setImageFiles(prev => prev.filter((_, i) => i !== index));
   };
@@ -281,28 +282,31 @@ const PropertyForm = () => {
     try {
       let uploadedImageUrls = [];
       
-      // Upload des nouvelles images
+      // ✅ CORRECTION : Upload des nouvelles images avec URL dynamique
       if (imageFiles.length > 0) {
-        const formData = new FormData();
+        const uploadFormData = new FormData();
         imageFiles.forEach(file => {
-          formData.append('images', file);
+          uploadFormData.append('images', file);
         });
         
-        const uploadResponse = await fetch('http://localhost:5000/api/upload/property-images', {
+        console.log('📤 Uploading images to:', `${BACKEND_URL}/api/upload/property-images`);
+        
+        const uploadResponse = await fetch(`${BACKEND_URL}/api/upload/property-images`, {
           method: 'POST',
-          body: formData,
+          body: uploadFormData,
         });
         
         const uploadResult = await uploadResponse.json();
         if (uploadResult.success) {
           uploadedImageUrls = uploadResult.images;
+          console.log('✅ Images uploaded:', uploadedImageUrls);
+        } else {
+          console.error('Upload failed:', uploadResult);
         }
       }
       
-      // Fusion des images existantes et nouvelles
       let finalImageUrls;
       if (id) {
-        // Garder les images existantes non supprimées + nouvelles
         const keptImages = formData.images || [];
         finalImageUrls = [...keptImages, ...uploadedImageUrls];
       } else {
