@@ -189,45 +189,61 @@ const MOCK_DATA = {
   properties: []
 };
 
-// ========== FONCTION DE CONNEXION MONGODB POUR VERCEL ==========
+// ========== FONCTION DE CONNEXION MONGODB CORRIGÉE ==========
 const connectMongoDB = async () => {
   if (!process.env.MONGODB_URI) {
     console.log('⚠️ MONGODB_URI not set, running in mock mode');
     return false;
   }
 
+  // Si déjà connecté, retourner true
+  if (mongoose.connection.readyState === 1) {
+    console.log('✅ MongoDB already connected');
+    return true;
+  }
+
+  // Si en cours de connexion, attendre
+  if (mongoose.connection.readyState === 2) {
+    console.log('⏳ MongoDB connection in progress, waiting...');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    return mongoose.connection.readyState === 1;
+  }
+
   try {
+    // Désactiver complètement le buffering
     mongoose.set('bufferCommands', false);
-    mongoose.set('bufferTimeoutMS', 10000);
+    mongoose.set('autoIndex', false);
+    mongoose.set('autoCreate', false);
     
     const mongooseOptions = {
-      serverSelectionTimeoutMS: 60000,
-      socketTimeoutMS: 120000,
-      connectTimeoutMS: 60000,
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 10000,
       family: 4,
       retryWrites: true,
       retryReads: true,
-      maxPoolSize: 5,
-      minPoolSize: 1,
-      maxIdleTimeMS: 30000,
-      heartbeatFrequencyMS: 30000
+      maxPoolSize: 10,
+      minPoolSize: 2,
+      heartbeatFrequencyMS: 5000
     };
 
-    console.log('🔄 Connecting to MongoDB on Vercel...');
+    console.log('🔄 Connecting Mongoose to MongoDB...');
+    
+    // Force la déconnexion si existante
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
+    }
+    
     await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
-    console.log('✅ MongoDB connected successfully');
+    console.log('✅ Mongoose connected successfully');
     
     mongoose.connection.on('error', (err) => {
-      console.error('MongoDB connection error after connect:', err);
-    });
-    
-    mongoose.connection.on('disconnected', () => {
-      console.log('⚠️ MongoDB disconnected - Switching to mock mode');
+      console.error('Mongoose error:', err);
     });
     
     return true;
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error.message);
+    console.error('❌ Mongoose connection error:', error.message);
     return false;
   }
 };
