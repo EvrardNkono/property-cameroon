@@ -1,36 +1,54 @@
-// backend/check-categories.js
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import LivestockCategory from './models/LivestockCategory.model.js';
+// scripts/analyze-weetyu.js
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 
-dotenv.config();
+const WEETYU_URL = 'https://weetyu.com/en';
 
-const checkCategories = async () => {
+async function analyzeWebsite() {
+  console.log('🔍 Analyzing weetyu.com structure...\n');
+  
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ Connected to MongoDB\n');
+    // Récupérer la page principale
+    const response = await axios.get(WEETYU_URL, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
     
-    const categories = await LivestockCategory.find({});
+    const $ = cheerio.load(response.data);
     
-    console.log(`📊 Categories found: ${categories.length}\n`);
+    console.log('📄 Page title:', $('title').text());
+    console.log('\n📋 Classes et structures trouvées:\n');
     
-    if (categories.length === 0) {
-      console.log('❌ NO CATEGORIES FOUND!');
-      console.log('\n💡 You need to create the categories first.');
-      console.log('   Go to Dashboard → Admin → Livestock Categories');
-      console.log('   Or run the create-categories.js script');
-    } else {
-      console.log('Existing categories:');
-      categories.forEach(cat => {
-        console.log(`   - ${cat.slug}: ${cat.title} (Active: ${cat.isActive})`);
-      });
-    }
+    // Chercher les conteneurs de propriétés
+    const possibleContainers = [
+      '.property', '.listing', '.item', '.card', 
+      '[class*="property"]', '[class*="listing"]', 
+      '[class*="item"]', '[class*="card"]'
+    ];
     
-    process.exit(0);
+    possibleContainers.forEach(selector => {
+      const elements = $(selector);
+      if (elements.length > 0) {
+        console.log(`✅ ${selector}: ${elements.length} éléments trouvés`);
+        if (elements.length > 0) {
+          const firstElement = elements.first();
+          console.log(`   Classes: ${firstElement.attr('class')}`);
+          console.log(`   HTML sample: ${firstElement.html()?.substring(0, 200)}...\n`);
+        }
+      }
+    });
+    
+    // Chercher les URLs de détails
+    const links = $('a[href*="/property"], a[href*="/detail"], a[href*="/ad"]');
+    console.log(`\n🔗 Liens potentiels vers détails: ${links.length}`);
+    links.slice(0, 5).each((i, link) => {
+      console.log(`   - ${$(link).attr('href')}`);
+    });
+    
   } catch (error) {
-    console.error('❌ Error:', error.message);
-    process.exit(1);
+    console.error('❌ Error analyzing website:', error.message);
   }
-};
+}
 
-checkCategories();
+analyzeWebsite();
