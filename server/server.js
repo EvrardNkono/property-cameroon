@@ -12,7 +12,6 @@ console.log('=== CONFIGURATION ===');
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
 if (process.env.MONGODB_URI) {
-  // Masquer les identifiants pour la sécurité
   const maskedUri = process.env.MONGODB_URI.replace(/\/\/(.*)@/, '//***:***@');
   console.log('MONGODB_URI (masked):', maskedUri);
 }
@@ -70,7 +69,6 @@ app.use((req, res, next) => {
   
   const origin = req.headers.origin;
   
-  // Autoriser l'origine si elle est dans la liste ou si c'est Vercel
   if (allowedOrigins.includes(origin) || (origin && origin.includes('vercel.app')) || process.env.NODE_ENV !== 'production') {
     res.setHeader('Access-Control-Allow-Origin', origin || '*');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -94,6 +92,83 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 if (process.env.NODE_ENV !== 'production') {
   app.use('/uploads', express.static('uploads'));
 }
+
+// ========== ROUTE DEBUG MONGO (PLACÉE AVANT LE MIDDLEWARE) ==========
+// Cette route n'est PAS bloquée par le middleware de vérification MongoDB
+app.get('/api/debug-mongo', async (req, res) => {
+  const { MongoClient } = await import('mongodb');
+  const uri = process.env.MONGODB_URI;
+  
+  res.setHeader('Content-Type', 'text/plain');
+  
+  if (!uri) {
+    res.send('❌ MONGODB_URI n\'est pas définie dans les variables d\'environnement');
+    return;
+  }
+  
+  res.write('🔍 DIAGNOSTIC MONGODB ATLAS - CONNEXION DIRECTE\n');
+  res.write('='.repeat(60) + '\n\n');
+  res.write(`URI existe: OUI\n`);
+  res.write(`URI (masquée): ${uri.replace(/\/\/(.*)@/, '//***:***@')}\n\n`);
+  
+  try {
+    res.write('🔄 Tentative de connexion directe avec MongoDB driver...\n');
+    const client = new MongoClient(uri, {
+      serverSelectionTimeoutMS: 15000,
+      connectTimeoutMS: 15000,
+    });
+    
+    const startTime = Date.now();
+    await client.connect();
+    const connectTime = Date.now() - startTime;
+    
+    res.write(`✅ CONNEXION RÉUSSIE (${connectTime}ms)\n\n`);
+    
+    const db = client.db('property_cameroon');
+    const collections = await db.listCollections().toArray();
+    res.write(`📚 Collections trouvées (${collections.length}):\n`);
+    if (collections.length > 0) {
+      collections.forEach(c => res.write(`   - ${c.name}\n`));
+    } else {
+      res.write(`   (aucune collection trouvée)\n`);
+    }
+    
+    res.write(`\n📊 Base de données: ${db.databaseName}\n`);
+    res.write('\n👋 Test terminé avec succès !\n');
+    res.write('\n💡 MongoDB est CONNECTÉ. Votre site va maintenant utiliser les VRAIES données.\n');
+    
+    await client.close();
+  } catch (error) {
+    res.write(`❌ ÉCHEC DE CONNEXION\n`);
+    res.write(`Message: ${error.message}\n`);
+    res.write(`Type: ${error.name}\n`);
+    res.write(`Code: ${error.code || 'N/A'}\n\n`);
+    
+    res.write('🔧 DIAGNOSTIC:\n');
+    if (error.message.includes('bad auth') || error.message.includes('authentication')) {
+      res.write('   → ❌ Mot de passe ou nom d\'utilisateur INCORRECT\n');
+      res.write('   → Solution: Changez le mot de passe dans MongoDB Atlas\n');
+    } else if (error.message.includes('timed out') || error.message.includes('timeout')) {
+      res.write('   → ❌ TIMEOUT - MongoDB Atlas bloque la connexion\n');
+      res.write('   → Solution: Ajoutez 0.0.0.0/0 dans Network Access\n');
+    } else if (error.message.includes('ENOTFOUND')) {
+      res.write('   → ❌ Cluster introuvable\n');
+      res.write('   → Solution: Vérifiez le nom du cluster dans l\'URI\n');
+    } else if (error.message.includes('getaddrinfo')) {
+      res.write('   → ❌ DNS ERROR - Problème réseau Vercel\n');
+      res.write('   → Solution: Attendez 5 minutes ou redéployez\n');
+    } else {
+      res.write(`   → ⚠️ Erreur non spécifique: ${error.message}\n`);
+    }
+    
+    res.write('\n📋 ACTIONS À FAIRE:\n');
+    res.write('   1. MongoDB Atlas → Network Access → Ajoutez 0.0.0.0/0\n');
+    res.write('   2. MongoDB Atlas → Database Access → Réinitialisez le mot de passe\n');
+    res.write('   3. Mettez à jour MONGODB_URI sur Vercel\n');
+    res.write('   4. Redéployez: vercel --prod\n');
+  }
+  res.end();
+});
 
 // ========== DONNÉES MOCK POUR MODE DÉGRADÉ ==========
 const MOCK_DATA = {
@@ -122,30 +197,26 @@ const connectMongoDB = async () => {
   }
 
   try {
-    // Désactiver le buffering - CRUCIAL pour Vercel serverless
     mongoose.set('bufferCommands', false);
     mongoose.set('bufferTimeoutMS', 10000);
     
-    // Configuration optimisée pour Vercel avec timeouts plus longs
     const mongooseOptions = {
-      serverSelectionTimeoutMS: 60000,  // Augmenté à 60s
-      socketTimeoutMS: 120000,          // Augmenté à 120s
-      connectTimeoutMS: 60000,          // Augmenté à 60s
-      family: 4,                        // Forcer IPv4
+      serverSelectionTimeoutMS: 60000,
+      socketTimeoutMS: 120000,
+      connectTimeoutMS: 60000,
+      family: 4,
       retryWrites: true,
       retryReads: true,
       maxPoolSize: 5,
       minPoolSize: 1,
       maxIdleTimeMS: 30000,
-      heartbeatFrequencyMS: 30000       // Augmenté
+      heartbeatFrequencyMS: 30000
     };
 
     console.log('🔄 Connecting to MongoDB on Vercel...');
-    console.log('⏱️ Timeouts: 60s selection, 120s socket, 60s connect');
     await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
     console.log('✅ MongoDB connected successfully');
     
-    // Écouter les événements de connexion
     mongoose.connection.on('error', (err) => {
       console.error('MongoDB connection error after connect:', err);
     });
@@ -157,19 +228,17 @@ const connectMongoDB = async () => {
     return true;
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
-    if (error.name === 'MongooseServerSelectionError') {
-      console.error('   → Impossible de rejoindre MongoDB Atlas sur Vercel');
-      console.error('   → Vérifiez que les IPs sont autorisées (0.0.0.0/0)');
-      console.error('   → Vérifiez que l\'URI est correcte');
-      console.error('   → Vérifiez le mot de passe');
-    }
     return false;
   }
 };
 
 // ========== MIDDLEWARE DE FALLBACK (MODE DÉGRADÉ) ==========
-// Permet au site de fonctionner même sans MongoDB
 app.use('/api', (req, res, next) => {
+  // Exclure la route debug-mongo (déjà traitée avant)
+  if (req.url.includes('/debug-mongo')) {
+    return next();
+  }
+  
   // Si MongoDB est connecté, on laisse passer
   if (mongoose.connection.readyState === 1) {
     return next();
@@ -179,7 +248,6 @@ app.use('/api', (req, res, next) => {
   
   // Pour les requêtes GET, on retourne des données mock
   if (req.method === 'GET') {
-    // Propriétés
     if (req.url.includes('/properties')) {
       return res.json({
         success: true,
@@ -189,7 +257,6 @@ app.use('/api', (req, res, next) => {
       });
     }
     
-    // Catégories livestock
     if (req.url.includes('/livestock-categories')) {
       return res.json({
         success: true,
@@ -199,7 +266,6 @@ app.use('/api', (req, res, next) => {
       });
     }
     
-    // Agriculture
     if (req.url.includes('/agriculture')) {
       return res.json({
         success: true,
@@ -262,7 +328,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Diagnostic amélioré avec test direct MongoDB
 app.get('/api/diagnostic', async (req, res) => {
   const diagnostics = {
     timestamp: new Date(),
@@ -277,117 +342,11 @@ app.get('/api/diagnostic', async (req, res) => {
       3: 'disconnecting'
     }[mongoose.connection.readyState] || 'unknown',
     node_version: process.version,
-    mongoose_version: mongoose.version
+    mongoose_version: mongoose.version,
+    mock_mode_active: mongoose.connection.readyState !== 1
   };
   
-  // Test direct avec le driver MongoDB (sans Mongoose)
-  if (process.env.MONGODB_URI) {
-    const { MongoClient } = await import('mongodb');
-    const uri = process.env.MONGODB_URI;
-    
-    diagnostics.direct_test = {
-      status: 'testing',
-      message: 'Test de connexion direct avec MongoDB driver...'
-    };
-    
-    try {
-      const client = new MongoClient(uri, {
-        serverSelectionTimeoutMS: 15000,
-        connectTimeoutMS: 15000,
-      });
-      
-      const startTime = Date.now();
-      await client.connect();
-      const connectTime = Date.now() - startTime;
-      
-      const db = client.db('property_cameroon');
-      const collections = await db.listCollections().toArray();
-      
-      diagnostics.direct_test = {
-        success: true,
-        connect_time_ms: connectTime,
-        collections: collections.map(c => c.name),
-        database_name: db.databaseName,
-        message: '✅ Connexion MongoDB réussie !'
-      };
-      
-      await client.close();
-    } catch (error) {
-      diagnostics.direct_test = {
-        success: false,
-        error: error.message,
-        error_name: error.name,
-        error_code: error.code || 'N/A',
-        suggestion: error.message.includes('bad auth') ? '❌ Mot de passe incorrect - Vérifiez MONGODB_URI' :
-                    error.message.includes('getaddrinfo') ? '❌ DNS error - Problème réseau Vercel' :
-                    error.message.includes('timed out') ? '❌ Timeout - Vérifiez Network Access dans MongoDB Atlas' :
-                    error.message.includes('ENOTFOUND') ? '❌ Nom de cluster incorrect' :
-                    '❌ Erreur inconnue'
-      };
-    }
-  }
-  
   res.json(diagnostics);
-});
-
-app.get('/api/debug-mongo', async (req, res) => {
-  const { MongoClient } = await import('mongodb');
-  const uri = process.env.MONGODB_URI;
-  
-  res.setHeader('Content-Type', 'text/plain');
-  
-  if (!uri) {
-    res.send('❌ MONGODB_URI n\'est pas définie dans les variables d\'environnement');
-    return;
-  }
-  
-  res.write('🔍 DIAGNOSTIC MONGODB ATLAS\n');
-  res.write('=' .repeat(50) + '\n\n');
-  res.write(`URI existe: OUI\n`);
-  res.write(`URI (masquée): ${uri.replace(/\/\/(.*)@/, '//***:***@')}\n\n`);
-  
-  try {
-    res.write('🔄 Tentative de connexion directe...\n');
-    const client = new MongoClient(uri, {
-      serverSelectionTimeoutMS: 20000,
-      connectTimeoutMS: 20000,
-    });
-    
-    const startTime = Date.now();
-    await client.connect();
-    const connectTime = Date.now() - startTime;
-    
-    res.write(`✅ CONNEXION RÉUSSIE (${connectTime}ms)\n\n`);
-    
-    const db = client.db('property_cameroon');
-    const collections = await db.listCollections().toArray();
-    res.write(`📚 Collections trouvées (${collections.length}):\n`);
-    collections.forEach(c => res.write(`   - ${c.name}\n`));
-    
-    await client.close();
-    res.write('\n👋 Test terminé avec succès\n');
-  } catch (error) {
-    res.write(`❌ ÉCHEC DE CONNEXION\n`);
-    res.write(`Message: ${error.message}\n`);
-    res.write(`Type: ${error.name}\n`);
-    res.write(`Code: ${error.code || 'N/A'}\n\n`);
-    
-    if (error.message.includes('bad auth')) {
-      res.write('🔧 SOLUTION: Mot de passe incorrect\n');
-      res.write('   1. Allez dans MongoDB Atlas → Database Access\n');
-      res.write('   2. Modifiez le mot de passe de l\'utilisateur\n');
-      res.write('   3. Mettez à jour MONGODB_URI sur Vercel\n');
-    } else if (error.message.includes('timed out')) {
-      res.write('🔧 SOLUTION: Timeout - IP non autorisée\n');
-      res.write('   1. MongoDB Atlas → Network Access\n');
-      res.write('   2. Ajoutez 0.0.0.0/0\n');
-      res.write('   3. Attendez 1-2 minutes\n');
-    } else if (error.message.includes('ENOTFOUND')) {
-      res.write('🔧 SOLUTION: Cluster introuvable\n');
-      res.write('   1. Vérifiez le nom du cluster dans l\'URI\n');
-      res.write('   2. Vérifiez que le cluster existe\n');
-    }
-  }
 });
 
 app.get('/', (req, res) => {
@@ -424,14 +383,12 @@ app.use((err, req, res, next) => {
 
 // ========== DÉMARRAGE DU SERVEUR POUR VERCEL ==========
 const startServer = async () => {
-  // Essayer de se connecter à MongoDB
   const connected = await connectMongoDB();
   
   if (!connected && process.env.NODE_ENV === 'production') {
     console.log('📦 Running in MOCK MODE - API returns sample data');
-    console.log('   MongoDB connection will be retried periodically');
+    console.log('🔗 Go to /api/debug-mongo to test MongoDB connection');
     
-    // Réessayer toutes les 30 secondes
     setInterval(async () => {
       if (mongoose.connection.readyState !== 1) {
         console.log('🔄 Retrying MongoDB connection...');
@@ -440,20 +397,17 @@ const startServer = async () => {
     }, 30000);
   }
   
-  // Démarrer le serveur uniquement en développement
   if (process.env.NODE_ENV !== 'production') {
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📍 http://localhost:${PORT}`);
       console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
-      console.log(`🔍 Diagnostic: http://localhost:${PORT}/api/diagnostic`);
       console.log(`🛠️ Debug MongoDB: http://localhost:${PORT}/api/debug-mongo`);
     });
   }
 };
 
-// Démarrer le serveur
 startServer().catch(err => {
   console.error('Failed to start server:', err);
   if (process.env.NODE_ENV !== 'production') {
