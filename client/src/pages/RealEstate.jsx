@@ -15,36 +15,28 @@ const BACKEND_URL = isDevelopment
   ? 'http://localhost:5000'
   : 'https://property-cameroon-backend.vercel.app';
 
-// ✅ Fonction CORRIGÉE pour les images Vercel Blob
+// ✅ Fonction SIMPLIFIÉE pour obtenir l'URL de l'image
 const getImageUrl = (imagePath) => {
   if (!imagePath) return null;
   
-  // Vercel Blob URL (déjà complète)
-  if (imagePath.startsWith('https://') && imagePath.includes('.blob.vercel-storage.com')) {
-    return imagePath;
+  // Si c'est déjà une URL complète (HTTP/HTTPS) - c'est le cas pour Vercel Blob
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    // En production, accepter toutes les URLs HTTPS
+    if (!isDevelopment && imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    // En développement, accepter aussi localhost
+    if (isDevelopment) {
+      return imagePath;
+    }
   }
   
-  // Autres URLs HTTPS (mais pas blob Vercel)
-  if (imagePath.startsWith('https://') && !imagePath.includes('localhost')) {
-    return imagePath;
-  }
-  
-  // URLs HTTP (seulement en développement)
-  if (isDevelopment && imagePath.startsWith('http://localhost')) {
-    return imagePath;
-  }
-  
-  // Chemins relatifs (uniquement en développement)
+  // Pour les chemins relatifs (développement uniquement)
   if (isDevelopment && imagePath.startsWith('/uploads')) {
     return `${BACKEND_URL}${imagePath}`;
   }
   
-  // En production, les anciens chemins locaux ne fonctionnent plus
-  if (!isDevelopment && imagePath.startsWith('/uploads')) {
-    console.warn('Legacy image not available in production:', imagePath);
-    return null;
-  }
-  
+  console.warn('Image URL non supportée:', imagePath);
   return null;
 };
 
@@ -100,21 +92,19 @@ const RealEstate = () => {
       setLoading(true);
       const response = await api.getProperties({ status: 'PUBLISHED' });
       
-      // Nettoyer les images invalides
-      const cleanedProperties = (response.properties || []).map(prop => ({
-        ...prop,
-        images: (prop.images || []).filter(img => {
-          // Garder uniquement les URLs valides
-          if (!img) return false;
-          // Garder les URLs Vercel Blob
-          if (img.startsWith('https://') && img.includes('.blob.vercel-storage.com')) return true;
-          // En développement, garder les chemins locaux
-          if (isDevelopment && (img.startsWith('/uploads') || img.startsWith('http://localhost'))) return true;
-          return false;
-        })
-      }));
+      console.log('📦 Propriétés reçues:', response.properties?.length);
       
-      setProperties(cleanedProperties);
+      // Afficher les URLs des images pour debug
+      if (response.properties && response.properties.length > 0) {
+        const firstProperty = response.properties[0];
+        console.log('🔍 Première propriété:', {
+          title: firstProperty.title,
+          images: firstProperty.images,
+          imageUrls: (firstProperty.images || []).map(img => getImageUrl(img))
+        });
+      }
+      
+      setProperties(response.properties || []);
     } catch (err) {
       console.error('Error fetching properties:', err);
       setError(err.message);
@@ -208,7 +198,6 @@ const RealEstate = () => {
         </div>
       </section>
 
-      {/* Filtres */}
       <div 
         ref={filtersRef}
         className={`sticky top-16 z-20 bg-white shadow-md px-4 sm:px-6 py-4 transition-transform duration-300 ${
@@ -456,13 +445,22 @@ const RealEstate = () => {
                 const firstImage = property.images?.[0];
                 const imageUrl = getImageUrl(firstImage);
                 
+                // Debug pour la première propriété
+                if (property.title === filteredProperties[0]?.title) {
+                  console.log('🖼️ Image debug:', {
+                    title: property.title,
+                    originalImage: firstImage,
+                    generatedUrl: imageUrl
+                  });
+                }
+                
                 return (
                   <PropertyCard 
                     key={property._id}
                     property={{
                       id: property._id,
                       title: property.title,
-                      image: imageUrl || '/api/placeholder/400/300',
+                      image: imageUrl || 'https://via.placeholder.com/400x300?text=No+Image',
                       status: property.status === 'PUBLISHED' ? 'sale' : 'lease',
                       category: property.category,
                       price: `${property.price?.amount?.toLocaleString() || 0}`,
