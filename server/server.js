@@ -187,7 +187,6 @@ app.get('/api/test-real-data', async (req, res) => {
     await client.connect();
     const db = client.db('property_cameroon');
     
-    // Récupérer les vraies données
     const livestockCategories = await db
       .collection('livestockcategories')
       .find({ isActive: true })
@@ -251,85 +250,118 @@ const MOCK_DATA = {
   properties: []
 };
 
-// ========== FONCTION DE CONNEXION MONGODB CORRIGÉE ==========
+// ========== FONCTION DE CONNEXION MONGODB AVEC AUTO-RECONNECTION ==========
 let connectionRetryCount = 0;
-const maxRetries = 5;
+const maxRetries = 10;
+let isConnecting = false;
 
 const connectMongoDB = async () => {
+  if (isConnecting) {
+    console.log('⏳ Connection already in progress, waiting...');
+    while (isConnecting && mongoose.connection.readyState !== 1) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    return mongoose.connection.readyState === 1;
+  }
+
   if (!process.env.MONGODB_URI) {
     console.log('⚠️ MONGODB_URI not set, running in mock mode');
     return false;
   }
 
-  // Si déjà connecté, retourner true
   if (mongoose.connection.readyState === 1) {
     console.log('✅ MongoDB already connected');
     return true;
   }
 
-  // Si en cours de connexion, attendre
-  if (mongoose.connection.readyState === 2) {
-    console.log('⏳ MongoDB connection in progress, waiting...');
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    return mongoose.connection.readyState === 1;
-  }
-
+  isConnecting = true;
+  
   try {
     console.log(`🔄 Connection attempt ${connectionRetryCount + 1}/${maxRetries}`);
     
-    // Désactiver complètement le buffering
-    mongoose.set('bufferCommands', false);
+    // IMPORTANT: Activer bufferCommands pour permettre la mise en file d'attente
+    mongoose.set('bufferCommands', true);
+    mongoose.set('bufferTimeoutMS', 10000);
     mongoose.set('autoIndex', false);
     mongoose.set('autoCreate', false);
     
     const mongooseOptions = {
-      serverSelectionTimeoutMS: 15000,
-      socketTimeoutMS: 60000,
-      connectTimeoutMS: 15000,
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 120000,
+      connectTimeoutMS: 30000,
       family: 4,
       retryWrites: true,
       retryReads: true,
       maxPoolSize: 10,
       minPoolSize: 2,
-      heartbeatFrequencyMS: 10000
+      heartbeatFrequencyMS: 10000,
     };
 
     console.log('🔄 Connecting Mongoose to MongoDB...');
     
-    // Force la déconnexion si existante
     if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect();
+      try {
+        await mongoose.disconnect();
+      } catch(e) { /* ignore */ }
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
     
     await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
     console.log('✅ Mongoose connected successfully');
     
+    // Gestion des événements de connexion
     mongoose.connection.on('error', (err) => {
-      console.error('Mongoose error:', err);
+      console.error('Mongoose connection error:', err.message);
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+      console.log('⚠️ MongoDB disconnected - Will reconnect on next request');
+    });
+    
+    mongoose.connection.on('reconnected', () => {
+      console.log('✅ MongoDB reconnected successfully');
     });
     
     connectionRetryCount = 0;
+    isConnecting = false;
     return true;
   } catch (error) {
     console.error(`❌ Attempt ${connectionRetryCount + 1} failed:`, error.message);
     connectionRetryCount++;
+    isConnecting = false;
     
     if (connectionRetryCount < maxRetries) {
-      console.log(`⏳ Retrying in 5 seconds...`);
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      const delay = Math.min(10000, 2000 * connectionRetryCount);
+      console.log(`⏳ Retrying in ${delay/1000} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
       return connectMongoDB();
     }
     
-    console.error('❌ All connection attempts failed');
+    console.error('❌ All connection attempts failed - running in mock mode');
     return false;
   }
 };
 
+// Middleware pour garantir la connexion avant chaque requête API
+app.use('/api', async (req, res, next) => {
+  // Exclure les routes de debug
+  if (req.url.includes('/debug-mongo') || req.url.includes('/test-real-data') || req.url.includes('/health') || req.url.includes('/diagnostic')) {
+    return next();
+  }
+  
+  // Si MongoDB n'est pas connecté, tenter une reconnexion
+  if (mongoose.connection.readyState !== 1) {
+    console.log(`🔄 Ensuring connection for ${req.method} ${req.url}...`);
+    await connectMongoDB();
+  }
+  
+  next();
+});
+
 // ========== MIDDLEWARE DE FALLBACK (MODE DÉGRADÉ) ==========
 app.use('/api', (req, res, next) => {
   // Exclure les routes de debug
-  if (req.url.includes('/debug-mongo') || req.url.includes('/test-real-data')) {
+  if (req.url.includes('/debug-mongo') || req.url.includes('/test-real-data') || req.url.includes('/health') || req.url.includes('/diagnostic')) {
     return next();
   }
   
@@ -488,15 +520,7 @@ const startServer = async () => {
     console.log('📦 Running in MOCK MODE - API returns sample data');
     console.log('🔗 Go to /api/debug-mongo to test MongoDB connection');
     console.log('🔗 Go to /api/test-real-data to see real data');
-    
-    // Continuer à réessayer toutes les 30 secondes
-    setInterval(async () => {
-      if (mongoose.connection.readyState !== 1) {
-        console.log('🔄 Retrying MongoDB connection...');
-        connectionRetryCount = 0;
-        await connectMongoDB();
-      }
-    }, 30000);
+    console.log('💡 MongoDB will auto-reconnect on first API request');
   } else if (connected) {
     console.log('🎉 MongoDB connected! Real data is now available.');
   }
