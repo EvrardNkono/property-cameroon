@@ -1,4 +1,4 @@
-// frontend/src/pages/RealEstate.jsx - AVEC TOUTES LES CATÉGORIES DÉTAILLÉES
+// frontend/src/pages/RealEstate.jsx - AVEC FILTRE MEUBLÉ/NON MEUBLÉ
 
 import React, { useState, useEffect } from 'react';
 import PropertyCard from '../components/real-estate/PropertyCard';
@@ -10,7 +10,7 @@ import {
   MapPin, Filter, ChevronDown, AlertCircle,
   Hotel, BedDouble, DoorOpen, Trees, Store, 
   Briefcase, Warehouse, ShoppingBasket, Factory, 
-  ParkingCircle, Heart, Star
+  ParkingCircle, Heart, Star, Sofa, Armchair
 } from 'lucide-react';
 
 const isDevelopment = typeof window !== 'undefined' && 
@@ -60,7 +60,8 @@ const RealEstate = () => {
     minPrice: '',
     maxPrice: '',
     city: 'all',
-    bedrooms: 'all'
+    bedrooms: 'all',
+    furnished: 'all'  // ✅ NEW FILTER: 'all', 'furnished', 'unfurnished'
   });
 
   useEffect(() => {
@@ -135,7 +136,7 @@ const RealEstate = () => {
       );
     }
     
-    // ✅ FILTRE PAR CATÉGORIE EXACTE
+    // ✅ FILTER BY EXACT CATEGORY
     if (filters.category !== 'all') {
       filtered = filtered.filter(p => p.category === filters.category);
     }
@@ -159,6 +160,20 @@ const RealEstate = () => {
       }
     }
     
+    // ✅ NEW: FILTER BY FURNISHED STATUS (only for Room category or all)
+    if (filters.furnished !== 'all') {
+      filtered = filtered.filter(p => {
+        // Check if property has isFurnished feature
+        const isFurnished = p.features?.isFurnished === true;
+        if (filters.furnished === 'furnished') {
+          return isFurnished === true;
+        } else if (filters.furnished === 'unfurnished') {
+          return isFurnished === false;
+        }
+        return true;
+      });
+    }
+    
     setFilteredProperties(filtered);
   };
 
@@ -168,12 +183,13 @@ const RealEstate = () => {
       minPrice: '',
       maxPrice: '',
       city: 'all',
-      bedrooms: 'all'
+      bedrooms: 'all',
+      furnished: 'all'  // ✅ Reset furnished filter
     });
     setSearchTerm('');
   };
 
-  // ✅ TOUTES LES CATÉGORIES DÉTAILLÉES POUR LE FILTRE
+  // ✅ ALL DETAILED CATEGORIES FOR FILTER
   const categories = [
     { id: 'all', label: 'All Properties', icon: <Home size={16} />, group: 'all' },
     
@@ -204,7 +220,7 @@ const RealEstate = () => {
     { id: 'Parking', label: 'Parking', icon: <ParkingCircle size={16} />, group: 'other' }
   ];
 
-  // Groupes de catégories pour un affichage organisé
+  // Category groups for organized display
   const categoryGroups = [
     { name: 'Houses', key: 'houses', icon: <Home size={14} /> },
     { name: 'Apartments', key: 'apartments', icon: <Building2 size={14} /> },
@@ -293,7 +309,7 @@ const RealEstate = () => {
           {showFilters && (
             <div className="mt-6 p-6 bg-gray-100 rounded-2xl">
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                {/* Category Filter - Organisé par groupes */}
+                {/* Category Filter - Organized by groups */}
                 <div className="lg:col-span-2">
                   <label className="block text-xs font-semibold uppercase text-gray-500 mb-3">Property Type</label>
                   <div className="space-y-4">
@@ -332,7 +348,7 @@ const RealEstate = () => {
                       );
                     })}
                     
-                    {/* Bouton All Properties */}
+                    {/* All Properties Button */}
                     <button
                       onClick={() => setFilters({...filters, category: 'all'})}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all mt-2 ${
@@ -384,8 +400,52 @@ const RealEstate = () => {
                 </div>
               </div>
 
-              {/* Price Range - deuxième ligne */}
+              {/* ✅ NEW: Furnished Filter Row */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 pt-5 border-t border-gray-200">
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-gray-500 mb-2 flex items-center gap-2">
+                    <Sofa size={14} />
+                    Furnished Status
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setFilters({...filters, furnished: 'all'})}
+                      className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                        filters.furnished === 'all'
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-white text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      All
+                    </button>
+                    <button
+                      onClick={() => setFilters({...filters, furnished: 'furnished'})}
+                      className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1 ${
+                        filters.furnished === 'furnished'
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-white text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      <Armchair size={12} />
+                      Furnished
+                    </button>
+                    <button
+                      onClick={() => setFilters({...filters, furnished: 'unfurnished'})}
+                      className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                        filters.furnished === 'unfurnished'
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-white text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      Unfurnished
+                    </button>
+                  </div>
+                  <p className="text-[9px] text-gray-400 mt-1">
+                    Only applies to rooms and apartments
+                  </p>
+                </div>
+
+                {/* Price Range */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-semibold uppercase text-gray-500 mb-2">Price Range (FCFA)</label>
                   <div className="flex gap-3">
@@ -405,15 +465,17 @@ const RealEstate = () => {
                     />
                   </div>
                 </div>
-                <div className="flex items-end justify-end">
-                  <button
-                    onClick={resetFilters}
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 bg-white rounded-xl"
-                  >
-                    <X size={16} />
-                    Reset all
-                  </button>
-                </div>
+              </div>
+
+              {/* Reset Button Row */}
+              <div className="flex justify-end mt-5 pt-3">
+                <button
+                  onClick={resetFilters}
+                  className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 bg-white rounded-xl"
+                >
+                  <X size={16} />
+                  Reset all filters
+                </button>
               </div>
             </div>
           )}
@@ -422,15 +484,23 @@ const RealEstate = () => {
 
       {/* Results Count */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center flex-wrap gap-2">
           <p className="text-gray-500">
             <span className="font-semibold text-emerald-600">{filteredProperties.length}</span> properties found
           </p>
-          {filters.category !== 'all' && (
-            <span className="text-xs bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full">
-              Filtering by: {categories.find(c => c.id === filters.category)?.label || filters.category}
-            </span>
-          )}
+          <div className="flex gap-2">
+            {filters.category !== 'all' && (
+              <span className="text-xs bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full">
+                {categories.find(c => c.id === filters.category)?.label || filters.category}
+              </span>
+            )}
+            {filters.furnished !== 'all' && (
+              <span className="text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full flex items-center gap-1">
+                <Sofa size={10} />
+                {filters.furnished === 'furnished' ? 'Furnished' : 'Unfurnished'}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -458,7 +528,8 @@ const RealEstate = () => {
                 
                 console.log('📸 RealEstate - Property:', {
                   title: property.title,
-                  category: property.category, // ✅ Catégorie exacte
+                  category: property.category,
+                  isFurnished: property.features?.isFurnished,
                   firstImage: firstImage,
                   imageUrl: imageUrl
                 });
@@ -471,13 +542,14 @@ const RealEstate = () => {
                       title: property.title,
                       image: imageUrl || 'https://via.placeholder.com/400x300?text=No+Image',
                       status: property.status === 'PUBLISHED' ? 'sale' : 'lease',
-                      category: property.category, // ✅ Catégorie exacte passée à PropertyCard
+                      category: property.category,
                       price: `${property.price?.amount?.toLocaleString() || 0}`,
                       location: `${property.location?.city || ''}, ${property.location?.region || ''}`,
                       type: property.category?.toLowerCase() === 'land' ? 'land' : 'building',
                       size: property.surface?.value || 0,
                       beds: property.features?.bedrooms || 3,
-                      baths: property.features?.bathrooms || 2
+                      baths: property.features?.bathrooms || 2,
+                      isFurnished: property.features?.isFurnished || false  // ✅ Pass furnished status
                     }}
                   />
                 );

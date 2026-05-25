@@ -54,6 +54,15 @@ const getCategoryColor = (category) => {
   return colors[category] || 'bg-slate-50 text-slate-700';
 };
 
+// 🎨 Icône pour le statut meublé/non meublé
+const getFurnishedIcon = (isFurnished) => {
+  return isFurnished ? '🛋️' : '📦';
+};
+
+const getFurnishedLabel = (isFurnished) => {
+  return isFurnished ? 'Furnished' : 'Unfurnished';
+};
+
 const PropertyCard = ({ property }) => {
   const isSale = property.status === 'sale';
 
@@ -81,8 +90,12 @@ const PropertyCard = ({ property }) => {
   console.log('🏷️ PropertyCard - Catégorie reçue:', {
     title: property.title,
     category: property.category,
+    isFurnished: property.isFurnished,
     categoryType: typeof property.category
   });
+
+  // Déterminer si c'est une chambre ou un appartement (pour afficher le statut meublé)
+  const showFurnishedStatus = property.category === 'Room' || property.category === 'Apartment' || property.category === 'Studio';
 
   return (
     <div className="group bg-white border border-slate-100 hover:shadow-2xl transition-all duration-500 relative flex flex-col h-full">
@@ -103,11 +116,23 @@ const PropertyCard = ({ property }) => {
           {isSale ? 'For Sale' : 'For Lease'}
         </div>
 
-        {/* ✅ CATEGORY TAG AMÉLIORÉ - Avec icône et couleur spécifique */}
+        {/* ✅ CATEGORY TAG - Avec icône et couleur spécifique */}
         <div className={`absolute bottom-4 right-4 backdrop-blur-md px-3 py-1.5 text-[8px] uppercase font-black tracking-tighter rounded-lg shadow-md flex items-center gap-1.5 ${getCategoryColor(property.category)}`}>
           <span className="text-sm">{getCategoryIcon(property.category)}</span>
           <span>{property.category}</span>
         </div>
+
+        {/* ✅ NEW: FURNISHED BADGE (top right for Rooms/Apartments) */}
+        {showFurnishedStatus && property.isFurnished !== undefined && (
+          <div className={`absolute top-4 right-4 px-3 py-1.5 text-[8px] font-black uppercase tracking-widest rounded-lg shadow-md flex items-center gap-1.5 ${
+            property.isFurnished 
+              ? 'bg-amber-500 text-white' 
+              : 'bg-gray-500 text-white'
+          }`}>
+            <span className="text-xs">{getFurnishedIcon(property.isFurnished)}</span>
+            <span>{getFurnishedLabel(property.isFurnished)}</span>
+          </div>
+        )}
       </div>
 
       {/* Details Section */}
@@ -132,10 +157,21 @@ const PropertyCard = ({ property }) => {
               <span className="text-xs text-slate-900 font-bold">{processedProperty.size} m²</span>
             </div>
           ) : property.category === 'Room' ? (
-            <div className="flex flex-col">
-              <span className="text-[8px] text-slate-400 uppercase tracking-widest">Room Area</span>
-              <span className="text-xs text-slate-900 font-bold">{processedProperty.size} m²</span>
-            </div>
+            <>
+              <div className="flex flex-col">
+                <span className="text-[8px] text-slate-400 uppercase tracking-widest">Room Area</span>
+                <span className="text-xs text-slate-900 font-bold">{processedProperty.size} m²</span>
+              </div>
+              {/* ✅ Afficher le statut meublé aussi ici pour les chambres */}
+              {property.isFurnished !== undefined && (
+                <div className="flex flex-col">
+                  <span className="text-[8px] text-slate-400 uppercase tracking-widest">Status</span>
+                  <span className="text-xs font-semibold flex items-center gap-1">
+                    {property.isFurnished ? '🛋️ Furnished' : '📦 Unfurnished'}
+                  </span>
+                </div>
+              )}
+            </>
           ) : property.category === 'Parking' ? (
             <div className="flex flex-col">
               <span className="text-[8px] text-slate-400 uppercase tracking-widest">Parking Spots</span>
@@ -151,6 +187,15 @@ const PropertyCard = ({ property }) => {
                 <span className="text-[8px] text-slate-400 uppercase tracking-widest">Baths</span>
                 <span className="text-xs text-slate-900 font-bold">{processedProperty.baths || 'N/A'}</span>
               </div>
+              {/* ✅ Afficher le statut meublé aussi pour les appartements/studios */}
+              {showFurnishedStatus && property.isFurnished !== undefined && (
+                <div className="flex flex-col">
+                  <span className="text-[8px] text-slate-400 uppercase tracking-widest">Status</span>
+                  <span className="text-xs font-semibold flex items-center gap-1">
+                    {property.isFurnished ? '🛋️ Furnished' : '📦 Unfurnished'}
+                  </span>
+                </div>
+              )}
             </>
           )}
           
