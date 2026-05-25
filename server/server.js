@@ -7,7 +7,7 @@ dns.setDefaultResultOrder('ipv4first'); // Force IPv4
 import dotenv from 'dotenv';
 dotenv.config();
 
-// VÉRIFIER LES VARIABLES D'ENVIRONNEMENT AVANT TOUT
+// VÉRIFIER LES VARIABES D'ENVIRONNEMENT AVANT TOUT
 console.log('=== CONFIGURATION ===');
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
@@ -94,7 +94,6 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // ========== ROUTE DEBUG MONGO (PLACÉE AVANT LE MIDDLEWARE) ==========
-// Cette route n'est PAS bloquée par le middleware de vérification MongoDB
 app.get('/api/debug-mongo', async (req, res) => {
   const { MongoClient } = await import('mongodb');
   const uri = process.env.MONGODB_URI;
@@ -170,6 +169,69 @@ app.get('/api/debug-mongo', async (req, res) => {
   res.end();
 });
 
+// ========== ROUTE TEST REAL DATA (PLACÉE AVANT LE MIDDLEWARE) ==========
+app.get('/api/test-real-data', async (req, res) => {
+  const { MongoClient } = await import('mongodb');
+  const uri = process.env.MONGODB_URI;
+  
+  if (!uri) {
+    return res.status(500).json({ error: 'MONGODB_URI non définie' });
+  }
+
+  try {
+    const client = new MongoClient(uri, {
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
+    });
+    
+    await client.connect();
+    const db = client.db('property_cameroon');
+    
+    // Récupérer les vraies données
+    const livestockCategories = await db
+      .collection('livestockcategories')
+      .find({ isActive: true })
+      .limit(10)
+      .toArray();
+    
+    const properties = await db
+      .collection('properties')
+      .find({ status: 'PUBLISHED' })
+      .limit(10)
+      .toArray();
+    
+    const users = await db
+      .collection('users')
+      .find({})
+      .limit(5)
+      .toArray();
+    
+    res.json({
+      success: true,
+      message: '✅ VRAIES données depuis MongoDB Atlas !',
+      timestamp: new Date(),
+      stats: {
+        livestockCategories_count: livestockCategories.length,
+        properties_count: properties.length,
+        users_count: users.length
+      },
+      samples: {
+        livestockCategories: livestockCategories.slice(0, 3),
+        properties: properties.slice(0, 3)
+      }
+    });
+    
+    await client.close();
+  } catch (error) {
+    console.error('Test real data error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      type: error.name
+    });
+  }
+});
+
 // ========== DONNÉES MOCK POUR MODE DÉGRADÉ ==========
 const MOCK_DATA = {
   livestockCategories: [
@@ -190,6 +252,9 @@ const MOCK_DATA = {
 };
 
 // ========== FONCTION DE CONNEXION MONGODB CORRIGÉE ==========
+let connectionRetryCount = 0;
+const maxRetries = 5;
+
 const connectMongoDB = async () => {
   if (!process.env.MONGODB_URI) {
     console.log('⚠️ MONGODB_URI not set, running in mock mode');
@@ -205,26 +270,28 @@ const connectMongoDB = async () => {
   // Si en cours de connexion, attendre
   if (mongoose.connection.readyState === 2) {
     console.log('⏳ MongoDB connection in progress, waiting...');
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 3000));
     return mongoose.connection.readyState === 1;
   }
 
   try {
+    console.log(`🔄 Connection attempt ${connectionRetryCount + 1}/${maxRetries}`);
+    
     // Désactiver complètement le buffering
     mongoose.set('bufferCommands', false);
     mongoose.set('autoIndex', false);
     mongoose.set('autoCreate', false);
     
     const mongooseOptions = {
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
-      connectTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 15000,
+      socketTimeoutMS: 60000,
+      connectTimeoutMS: 15000,
       family: 4,
       retryWrites: true,
       retryReads: true,
       maxPoolSize: 10,
       minPoolSize: 2,
-      heartbeatFrequencyMS: 5000
+      heartbeatFrequencyMS: 10000
     };
 
     console.log('🔄 Connecting Mongoose to MongoDB...');
@@ -232,6 +299,7 @@ const connectMongoDB = async () => {
     // Force la déconnexion si existante
     if (mongoose.connection.readyState !== 0) {
       await mongoose.disconnect();
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
     
     await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
@@ -241,17 +309,27 @@ const connectMongoDB = async () => {
       console.error('Mongoose error:', err);
     });
     
+    connectionRetryCount = 0;
     return true;
   } catch (error) {
-    console.error('❌ Mongoose connection error:', error.message);
+    console.error(`❌ Attempt ${connectionRetryCount + 1} failed:`, error.message);
+    connectionRetryCount++;
+    
+    if (connectionRetryCount < maxRetries) {
+      console.log(`⏳ Retrying in 5 seconds...`);
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      return connectMongoDB();
+    }
+    
+    console.error('❌ All connection attempts failed');
     return false;
   }
 };
 
 // ========== MIDDLEWARE DE FALLBACK (MODE DÉGRADÉ) ==========
 app.use('/api', (req, res, next) => {
-  // Exclure la route debug-mongo (déjà traitée avant)
-  if (req.url.includes('/debug-mongo')) {
+  // Exclure les routes de debug
+  if (req.url.includes('/debug-mongo') || req.url.includes('/test-real-data')) {
     return next();
   }
   
@@ -399,18 +477,28 @@ app.use((err, req, res, next) => {
 
 // ========== DÉMARRAGE DU SERVEUR POUR VERCEL ==========
 const startServer = async () => {
+  console.log('🚀 Starting server...');
+  
+  // Attendre 2 secondes avant la première tentative
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
   const connected = await connectMongoDB();
   
   if (!connected && process.env.NODE_ENV === 'production') {
     console.log('📦 Running in MOCK MODE - API returns sample data');
     console.log('🔗 Go to /api/debug-mongo to test MongoDB connection');
+    console.log('🔗 Go to /api/test-real-data to see real data');
     
+    // Continuer à réessayer toutes les 30 secondes
     setInterval(async () => {
       if (mongoose.connection.readyState !== 1) {
         console.log('🔄 Retrying MongoDB connection...');
+        connectionRetryCount = 0;
         await connectMongoDB();
       }
     }, 30000);
+  } else if (connected) {
+    console.log('🎉 MongoDB connected! Real data is now available.');
   }
   
   if (process.env.NODE_ENV !== 'production') {
@@ -420,6 +508,7 @@ const startServer = async () => {
       console.log(`📍 http://localhost:${PORT}`);
       console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
       console.log(`🛠️ Debug MongoDB: http://localhost:${PORT}/api/debug-mongo`);
+      console.log(`📊 Test real data: http://localhost:${PORT}/api/test-real-data`);
     });
   }
 };
