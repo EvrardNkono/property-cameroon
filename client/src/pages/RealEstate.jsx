@@ -1,4 +1,4 @@
-// frontend/src/pages/RealEstate.jsx - VERSION MODERNISÉE
+// frontend/src/pages/RealEstate.jsx - VERSION AVEC DEBUG
 
 import React, { useState, useEffect } from 'react';
 import PropertyCard from '../components/real-estate/PropertyCard';
@@ -6,9 +6,8 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
 import { 
-  Search, SlidersHorizontal, X, Home, Building2, 
-  MapPin, Bed, Bath, Maximize2, DollarSign, Filter,
-  ChevronDown
+  Search, X, Home, Building2, 
+  MapPin, Filter, ChevronDown, AlertCircle
 } from 'lucide-react';
 
 const isDevelopment = typeof window !== 'undefined' && 
@@ -34,6 +33,7 @@ const RealEstate = () => {
   const [error, setError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debugInfo, setDebugInfo] = useState(null);
   
   const [filters, setFilters] = useState({
     category: 'all',
@@ -56,7 +56,40 @@ const RealEstate = () => {
     try {
       setLoading(true);
       const response = await api.getProperties({ status: 'PUBLISHED' });
-      setProperties(response.properties || []);
+      
+      // 🔍 DEBUG : Analyser les images
+      const propertiesWithImages = response.properties || [];
+      let totalImages = 0;
+      let validImageUrls = 0;
+      
+      propertiesWithImages.forEach(prop => {
+        if (prop.images && prop.images.length > 0) {
+          totalImages += prop.images.length;
+          prop.images.forEach(img => {
+            if (getImageUrl(img)) validImageUrls++;
+          });
+        }
+      });
+      
+      setDebugInfo({
+        totalProperties: propertiesWithImages.length,
+        totalImages,
+        validImageUrls,
+        sampleProperty: propertiesWithImages[0] ? {
+          title: propertiesWithImages[0].title,
+          images: propertiesWithImages[0].images,
+          generatedUrl: getImageUrl(propertiesWithImages[0].images?.[0])
+        } : null
+      });
+      
+      console.log('🔍 DEBUG IMAGES:', {
+        totalProperties: propertiesWithImages.length,
+        totalImages,
+        validImageUrls,
+        firstPropertyImages: propertiesWithImages[0]?.images
+      });
+      
+      setProperties(propertiesWithImages);
     } catch (err) {
       console.error('Error fetching properties:', err);
       setError(err.message);
@@ -68,7 +101,6 @@ const RealEstate = () => {
   const applyFilters = () => {
     let filtered = [...properties];
     
-    // Search term
     if (searchTerm) {
       filtered = filtered.filter(p => 
         p.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -76,17 +108,14 @@ const RealEstate = () => {
       );
     }
     
-    // Category
     if (filters.category !== 'all') {
       filtered = filtered.filter(p => p.category === filters.category);
     }
     
-    // Listing type
     if (filters.listingType !== 'all') {
       filtered = filtered.filter(p => p.listingType === filters.listingType);
     }
     
-    // Price
     if (filters.minPrice) {
       filtered = filtered.filter(p => p.price?.amount >= parseInt(filters.minPrice));
     }
@@ -94,12 +123,10 @@ const RealEstate = () => {
       filtered = filtered.filter(p => p.price?.amount <= parseInt(filters.maxPrice));
     }
     
-    // City
     if (filters.city !== 'all') {
       filtered = filtered.filter(p => p.location?.city === filters.city);
     }
     
-    // Bedrooms
     if (filters.bedrooms !== 'all') {
       if (filters.bedrooms === '5+') {
         filtered = filtered.filter(p => p.features?.bedrooms >= 5);
@@ -130,13 +157,6 @@ const RealEstate = () => {
   ];
   
   const cities = ['all', 'Douala', 'Yaoundé', 'Garoua', 'Bafoussam', 'Bamenda', 'Limbe', 'Kribi'];
-  const priceRanges = [
-    { label: 'All', min: '', max: '' },
-    { label: 'Under 50M', min: '', max: 50000000 },
-    { label: '50M - 100M', min: 50000000, max: 100000000 },
-    { label: '100M - 200M', min: 100000000, max: 200000000 },
-    { label: '200M+', min: 200000000, max: '' }
-  ];
 
   const activeFiltersCount = Object.values(filters).filter(v => v !== 'all' && v !== '').length;
 
@@ -155,6 +175,23 @@ const RealEstate = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+      
+      {/* Panel de debug (visible uniquement en développement ou si problème) */}
+      {debugInfo && debugInfo.totalImages === 0 && (
+        <div className="bg-yellow-50 border-b border-yellow-200 p-4">
+          <div className="max-w-7xl mx-auto flex items-center gap-3">
+            <AlertCircle size={20} className="text-yellow-600" />
+            <div className="text-sm text-yellow-700">
+              <strong>Aucune image trouvée</strong> - {debugInfo.totalProperties} propriété(s) chargée(s), 0 image(s).
+              {debugInfo.sampleProperty && (
+                <span className="block text-xs mt-1">
+                  Exemple: "{debugInfo.sampleProperty.title}" - Images: {JSON.stringify(debugInfo.sampleProperty.images)}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Hero Section */}
       <section className="relative bg-emerald-900 text-white pt-32 pb-20">
@@ -198,7 +235,7 @@ const RealEstate = () => {
 
           {/* Filter Panel */}
           {showFilters && (
-            <div className="mt-6 p-6 bg-gray-100 rounded-2xl animate-in slide-in-from-top duration-300">
+            <div className="mt-6 p-6 bg-gray-100 rounded-2xl">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
                 <div>
                   <label className="block text-xs font-semibold uppercase text-gray-500 mb-2">Category</label>
@@ -236,24 +273,6 @@ const RealEstate = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase text-gray-500 mb-2">Price Range</label>
-                  <select
-                    value={`${filters.minPrice}-${filters.maxPrice}`}
-                    onChange={(e) => {
-                      const [min, max] = e.target.value.split('-');
-                      setFilters({...filters, minPrice: min === 'all' ? '' : min, maxPrice: max === 'all' ? '' : max});
-                    }}
-                    className="w-full px-4 py-3 bg-white border-0 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
-                  >
-                    {priceRanges.map(range => (
-                      <option key={range.label} value={`${range.min}-${range.max}`}>
-                        {range.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
                   <label className="block text-xs font-semibold uppercase text-gray-500 mb-2">Bedrooms</label>
                   <div className="flex flex-wrap gap-2">
                     {['all', '1', '2', '3', '4', '5+'].map(opt => (
@@ -270,6 +289,23 @@ const RealEstate = () => {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-gray-500 mb-2">Price Range</label>
+                  <select
+                    onChange={(e) => {
+                      const [min, max] = e.target.value.split('-');
+                      setFilters({...filters, minPrice: min === 'all' ? '' : min, maxPrice: max === 'all' ? '' : max});
+                    }}
+                    className="w-full px-4 py-3 bg-white border-0 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                  >
+                    <option value="all-all">All</option>
+                    <option value="-50000000">Under 50M</option>
+                    <option value="50000000-100000000">50M - 100M</option>
+                    <option value="100000000-200000000">100M - 200M</option>
+                    <option value="200000000-all">200M+</option>
+                  </select>
                 </div>
               </div>
 
@@ -293,9 +329,6 @@ const RealEstate = () => {
           <p className="text-gray-500">
             <span className="font-semibold text-emerald-600">{filteredProperties.length}</span> properties found
           </p>
-          {filteredProperties.length > 0 && (
-            <p className="text-sm text-gray-400">Showing {Math.min(12, filteredProperties.length)} results per page</p>
-          )}
         </div>
       </div>
 
