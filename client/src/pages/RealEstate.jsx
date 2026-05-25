@@ -1,10 +1,15 @@
-// frontend/src/pages/RealEstate.jsx - VERSION CORRIGÉE
+// frontend/src/pages/RealEstate.jsx - VERSION MODERNISÉE
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropertyCard from '../components/real-estate/PropertyCard';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
+import { 
+  Search, SlidersHorizontal, X, Home, Building2, 
+  MapPin, Bed, Bath, Maximize2, DollarSign, Filter,
+  ChevronDown
+} from 'lucide-react';
 
 const isDevelopment = typeof window !== 'undefined' && 
                       (window.location.hostname === 'localhost' || 
@@ -15,14 +20,10 @@ const BACKEND_URL = isDevelopment
   ? 'http://localhost:5000'
   : 'https://property-cameroon-backend.vercel.app';
 
-// ✅ FONCTION IDENTIQUE À CELLE DE PropertyForm (qui fonctionne)
 const getImageUrl = (image) => {
   if (!image) return null;
-  // Si c'est déjà une URL complète
   if (image.startsWith('http')) return image;
-  // Si c'est un chemin relatif avec /uploads
   if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
-  // Si c'est juste le nom du fichier
   return `${BACKEND_URL}/uploads/properties/${image}`;
 };
 
@@ -31,39 +32,17 @@ const RealEstate = () => {
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showFilters, setShowFilters] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const filtersRef = useRef(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   
   const [filters, setFilters] = useState({
     category: 'all',
-    type: 'all',
+    listingType: 'all',
     minPrice: '',
     maxPrice: '',
     city: 'all',
-    minSurface: '',
-    bedrooms: 'all',
-    bathrooms: 'all'
+    bedrooms: 'all'
   });
-  
-  const categories = ['all', 'Apartment', 'House', 'Land', 'Commercial', 'Villa'];
-  const cities = ['all', 'Douala', 'Yaoundé', 'Garoua', 'Bafoussam', 'Bamenda', 'Limbe', 'Kribi'];
-  const bedroomOptions = ['all', '1', '2', '3', '4', '5+'];
-  const bathroomOptions = ['all', '1', '2', '3', '4+'];
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > lastScrollY && window.scrollY > 100) {
-        setShowFilters(false);
-      } else if (window.scrollY < lastScrollY) {
-        setShowFilters(true);
-      }
-      setLastScrollY(window.scrollY);
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
 
   useEffect(() => {
     fetchProperties();
@@ -71,15 +50,12 @@ const RealEstate = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [filters, properties]);
+  }, [filters, properties, searchTerm]);
 
   const fetchProperties = async () => {
     try {
       setLoading(true);
       const response = await api.getProperties({ status: 'PUBLISHED' });
-      
-      console.log('📦 Propriétés reçues:', response.properties?.length);
-      
       setProperties(response.properties || []);
     } catch (err) {
       console.error('Error fetching properties:', err);
@@ -92,24 +68,38 @@ const RealEstate = () => {
   const applyFilters = () => {
     let filtered = [...properties];
     
+    // Search term
+    if (searchTerm) {
+      filtered = filtered.filter(p => 
+        p.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.location?.city?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Category
     if (filters.category !== 'all') {
       filtered = filtered.filter(p => p.category === filters.category);
     }
-    if (filters.type !== 'all') {
-      filtered = filtered.filter(p => p.listingType === filters.type);
+    
+    // Listing type
+    if (filters.listingType !== 'all') {
+      filtered = filtered.filter(p => p.listingType === filters.listingType);
     }
+    
+    // Price
     if (filters.minPrice) {
       filtered = filtered.filter(p => p.price?.amount >= parseInt(filters.minPrice));
     }
     if (filters.maxPrice) {
       filtered = filtered.filter(p => p.price?.amount <= parseInt(filters.maxPrice));
     }
+    
+    // City
     if (filters.city !== 'all') {
       filtered = filtered.filter(p => p.location?.city === filters.city);
     }
-    if (filters.minSurface) {
-      filtered = filtered.filter(p => p.surface?.value >= parseInt(filters.minSurface));
-    }
+    
+    // Bedrooms
     if (filters.bedrooms !== 'all') {
       if (filters.bedrooms === '5+') {
         filtered = filtered.filter(p => p.features?.bedrooms >= 5);
@@ -117,40 +107,45 @@ const RealEstate = () => {
         filtered = filtered.filter(p => p.features?.bedrooms === parseInt(filters.bedrooms));
       }
     }
-    if (filters.bathrooms !== 'all') {
-      if (filters.bathrooms === '4+') {
-        filtered = filtered.filter(p => p.features?.bathrooms >= 4);
-      } else {
-        filtered = filtered.filter(p => p.features?.bathrooms === parseInt(filters.bathrooms));
-      }
-    }
     
     setFilteredProperties(filtered);
-  };
-
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
   };
 
   const resetFilters = () => {
     setFilters({
       category: 'all',
-      type: 'all',
+      listingType: 'all',
       minPrice: '',
       maxPrice: '',
       city: 'all',
-      minSurface: '',
-      bedrooms: 'all',
-      bathrooms: 'all'
+      bedrooms: 'all'
     });
+    setSearchTerm('');
   };
+
+  const categories = [
+    { id: 'all', label: 'All Properties', icon: <Home size={16} /> },
+    { id: 'Land', label: 'Land', icon: <MapPin size={16} /> },
+    { id: 'Real Estate', label: 'Real Estate', icon: <Building2 size={16} /> }
+  ];
+  
+  const cities = ['all', 'Douala', 'Yaoundé', 'Garoua', 'Bafoussam', 'Bamenda', 'Limbe', 'Kribi'];
+  const priceRanges = [
+    { label: 'All', min: '', max: '' },
+    { label: 'Under 50M', min: '', max: 50000000 },
+    { label: '50M - 100M', min: 50000000, max: 100000000 },
+    { label: '100M - 200M', min: 100000000, max: 200000000 },
+    { label: '200M+', min: 200000000, max: '' }
+  ];
+
+  const activeFiltersCount = Object.values(filters).filter(v => v !== 'all' && v !== '').length;
 
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
         <Navbar />
         <div className="flex justify-center items-center h-96">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pc-gold"></div>
+          <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
         <Footer />
       </div>
@@ -158,264 +153,170 @@ const RealEstate = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      <section className="pt-40 pb-12 px-4 sm:px-6 bg-gradient-to-r from-slate-50 to-slate-100">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif text-slate-900 mb-4">
-              Real Estate Portfolio
-            </h1>
-            <p className="text-slate-600 text-sm sm:text-base max-w-2xl mx-auto px-4">
-              Discover our exclusive collection of certified properties across Cameroon's prime locations.
-            </p>
-          </div>
+      {/* Hero Section */}
+      <section className="relative bg-emerald-900 text-white pt-32 pb-20">
+        <div className="absolute inset-0 bg-black/40"></div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4">
+            Real Estate Portfolio
+          </h1>
+          <p className="text-lg text-emerald-100 max-w-2xl mx-auto">
+            Discover exceptional properties across Cameroon's most desirable locations
+          </p>
         </div>
       </section>
 
-      <div 
-        ref={filtersRef}
-        className={`sticky top-16 z-20 bg-white shadow-md px-4 sm:px-6 py-4 transition-transform duration-300 ${
-          showFilters ? 'translate-y-0' : '-translate-y-full'
-        }`}
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="hidden lg:block">
-            <div className="grid grid-cols-4 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Category</label>
-                <select
-                  value={filters.category}
-                  onChange={(e) => handleFilterChange('category', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
-                >
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>
-                      {cat === 'all' ? 'All Categories' : cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Listing Type</label>
-                <select
-                  value={filters.type}
-                  onChange={(e) => handleFilterChange('type', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
-                >
-                  <option value="all">All Types</option>
-                  <option value="sale">For Sale</option>
-                  <option value="rent">For Rent</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">City</label>
-                <select
-                  value={filters.city}
-                  onChange={(e) => handleFilterChange('city', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
-                >
-                  {cities.map(city => (
-                    <option key={city} value={city}>
-                      {city === 'all' ? 'All Cities' : city}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Min Price (FCFA)</label>
-                <input
-                  type="number"
-                  value={filters.minPrice}
-                  onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                  placeholder="0"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Max Price (FCFA)</label>
-                <input
-                  type="number"
-                  value={filters.maxPrice}
-                  onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                  placeholder="Unlimited"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Min Surface (m²)</label>
-                <input
-                  type="number"
-                  value={filters.minSurface}
-                  onChange={(e) => handleFilterChange('minSurface', e.target.value)}
-                  placeholder="0"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Bedrooms</label>
-                <select
-                  value={filters.bedrooms}
-                  onChange={(e) => handleFilterChange('bedrooms', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
-                >
-                  {bedroomOptions.map(opt => (
-                    <option key={opt} value={opt}>
-                      {opt === 'all' ? 'Any' : opt === '5+' ? '5+' : `${opt}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">Bathrooms</label>
-                <select
-                  value={filters.bathrooms}
-                  onChange={(e) => handleFilterChange('bathrooms', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
-                >
-                  {bathroomOptions.map(opt => (
-                    <option key={opt} value={opt}>
-                      {opt === 'all' ? 'Any' : opt === '4+' ? '4+' : `${opt}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
+      {/* Search Bar */}
+      <div className="sticky top-0 z-30 bg-white shadow-lg -mt-8 rounded-t-3xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by title or city..."
+                className="w-full pl-12 pr-4 py-4 bg-gray-100 border-0 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-gray-800"
+              />
             </div>
-            
-            <div className="flex justify-end mt-4">
-              <button
-                onClick={resetFilters}
-                className="px-4 py-2 text-sm border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition"
-              >
-                Reset Filters
-              </button>
-            </div>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center justify-center gap-2 px-6 py-4 bg-emerald-600 text-white rounded-2xl font-semibold hover:bg-emerald-700 transition-all"
+            >
+              <Filter size={20} />
+              Filters
+              {activeFiltersCount > 0 && (
+                <span className="ml-1 px-2 py-0.5 bg-emerald-500 text-xs rounded-full">{activeFiltersCount}</span>
+              )}
+              <ChevronDown size={18} className={`transform transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            </button>
           </div>
 
-          <div className="lg:hidden">
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => {
-                  const mobileFilters = document.getElementById('mobile-filters');
-                  mobileFilters.classList.toggle('hidden');
-                }}
-                className="px-4 py-2 bg-pc-gold text-white rounded-lg text-sm"
-              >
-                Filter Properties
-              </button>
-              <button
-                onClick={resetFilters}
-                className="px-4 py-2 border border-slate-300 rounded-lg text-sm"
-              >
-                Reset
-              </button>
-              <span className="text-sm text-slate-600 self-center">
-                {filteredProperties.length} found
-              </span>
-            </div>
-            
-            <div id="mobile-filters" className="hidden mt-4 space-y-3">
-              <select
-                value={filters.category}
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
-              >
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>
-                    {cat === 'all' ? 'Category' : cat}
-                  </option>
-                ))}
-              </select>
-              
-              <select
-                value={filters.type}
-                onChange={(e) => handleFilterChange('type', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
-              >
-                <option value="all">Type</option>
-                <option value="sale">For Sale</option>
-                <option value="rent">For Rent</option>
-              </select>
-              
-              <select
-                value={filters.city}
-                onChange={(e) => handleFilterChange('city', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
-              >
-                {cities.map(city => (
-                  <option key={city} value={city}>
-                    {city === 'all' ? 'City' : city}
-                  </option>
-                ))}
-              </select>
-              
-              <div className="flex gap-3">
-                <input
-                  type="number"
-                  value={filters.minPrice}
-                  onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                  placeholder="Min Price"
-                  className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg"
-                />
-                <input
-                  type="number"
-                  value={filters.maxPrice}
-                  onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                  placeholder="Max Price"
-                  className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg"
-                />
+          {/* Filter Panel */}
+          {showFilters && (
+            <div className="mt-6 p-6 bg-gray-100 rounded-2xl animate-in slide-in-from-top duration-300">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-gray-500 mb-2">Category</label>
+                  <div className="flex flex-wrap gap-2">
+                    {categories.map(cat => (
+                      <button
+                        key={cat.id}
+                        onClick={() => setFilters({...filters, category: cat.id})}
+                        className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                          filters.category === cat.id
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-white text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {cat.icon}
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-gray-500 mb-2">City</label>
+                  <select
+                    value={filters.city}
+                    onChange={(e) => setFilters({...filters, city: e.target.value})}
+                    className="w-full px-4 py-3 bg-white border-0 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                  >
+                    {cities.map(city => (
+                      <option key={city} value={city}>
+                        {city === 'all' ? 'All Cities' : city}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-gray-500 mb-2">Price Range</label>
+                  <select
+                    value={`${filters.minPrice}-${filters.maxPrice}`}
+                    onChange={(e) => {
+                      const [min, max] = e.target.value.split('-');
+                      setFilters({...filters, minPrice: min === 'all' ? '' : min, maxPrice: max === 'all' ? '' : max});
+                    }}
+                    className="w-full px-4 py-3 bg-white border-0 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                  >
+                    {priceRanges.map(range => (
+                      <option key={range.label} value={`${range.min}-${range.max}`}>
+                        {range.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-gray-500 mb-2">Bedrooms</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['all', '1', '2', '3', '4', '5+'].map(opt => (
+                      <button
+                        key={opt}
+                        onClick={() => setFilters({...filters, bedrooms: opt})}
+                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                          filters.bedrooms === opt
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-white text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {opt === 'all' ? 'Any' : opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-              
-              <div className="flex gap-3">
-                <input
-                  type="number"
-                  value={filters.minSurface}
-                  onChange={(e) => handleFilterChange('minSurface', e.target.value)}
-                  placeholder="Min m²"
-                  className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg"
-                />
-                <select
-                  value={filters.bedrooms}
-                  onChange={(e) => handleFilterChange('bedrooms', e.target.value)}
-                  className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg"
+
+              <div className="flex justify-end mt-5 pt-4 border-t border-gray-200">
+                <button
+                  onClick={resetFilters}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-gray-700"
                 >
-                  {bedroomOptions.map(opt => (
-                    <option key={opt} value={opt}>
-                      {opt === 'all' ? 'Beds' : opt === '5+' ? '5+ Beds' : `${opt}`}
-                    </option>
-                  ))}
-                </select>
+                  <X size={16} />
+                  Reset all filters
+                </button>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
+      {/* Results Count */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
+        <div className="flex justify-between items-center">
+          <p className="text-gray-500">
+            <span className="font-semibold text-emerald-600">{filteredProperties.length}</span> properties found
+          </p>
+          {filteredProperties.length > 0 && (
+            <p className="text-sm text-gray-400">Showing {Math.min(12, filteredProperties.length)} results per page</p>
+          )}
+        </div>
+      </div>
+
+      {/* Properties Grid */}
       <section className="py-12 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           {filteredProperties.length === 0 ? (
-            <div className="text-center py-20">
-              <svg className="mx-auto h-16 w-16 text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              <p className="text-slate-500 text-lg">No properties match your criteria</p>
+            <div className="text-center py-20 bg-white rounded-3xl">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-6">
+                <Search size={32} className="text-gray-400" />
+              </div>
+              <p className="text-gray-500 text-lg">No properties match your criteria</p>
               <button
                 onClick={resetFilters}
-                className="mt-4 px-6 py-2 bg-pc-gold text-white rounded-lg hover:bg-opacity-90 transition"
+                className="mt-6 px-6 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition"
               >
                 Clear all filters
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 md:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {filteredProperties.map((property) => {
                 const firstImage = property.images?.[0];
                 const imageUrl = getImageUrl(firstImage);
