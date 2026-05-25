@@ -56,29 +56,29 @@ import {
 
 const app = express();
 
-// ========== CONFIGURATION CORS SIMPLIFIÉE ==========
+// ========== CONFIGURATION CORS POUR VERCEL ==========
 app.use((req, res, next) => {
   const allowedOrigins = [
-  'https://www.propertycameroon.com',
-  'https://propertycameroon.com',
-  'https://property-cameroon-frontend.vercel.app',
-  'https://property-cameroon.vercel.app',  // ← AJOUTEZ CETTE LIGNE
-  'http://localhost:3000',
-  'http://localhost:5000',
-  'http://localhost:5173'
-];
+    'https://www.propertycameroon.com',
+    'https://propertycameroon.com',
+    'https://property-cameroon-frontend.vercel.app',
+    'https://property-cameroon.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5000',
+    'http://localhost:5173'
+  ];
   
   const origin = req.headers.origin;
   
-  if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+  // Autoriser l'origine si elle est dans la liste ou si c'est Vercel
+  if (allowedOrigins.includes(origin) || (origin && origin.includes('vercel.app')) || process.env.NODE_ENV !== 'production') {
     res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Length, X-Requested-With');
+    res.setHeader('Access-Control-Max-Age', '86400');
   }
-  
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-  res.setHeader('Access-Control-Expose-Headers', 'Content-Length, X-Requested-With');
-  res.setHeader('Access-Control-Max-Age', '86400');
   
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -95,7 +95,7 @@ if (process.env.NODE_ENV !== 'production') {
   app.use('/uploads', express.static('uploads'));
 }
 
-// ========== FONCTION DE CONNEXION MONGODB AMÉLIORÉE ==========
+// ========== FONCTION DE CONNEXION MONGODB POUR VERCEL ==========
 const connectMongoDB = async () => {
   if (!process.env.MONGODB_URI) {
     console.log('⚠️ MONGODB_URI not set, running without database');
@@ -103,28 +103,60 @@ const connectMongoDB = async () => {
   }
 
   try {
-    // Configuration avec timeouts
+    // Désactiver le buffering - CRUCIAL pour Vercel serverless
+    mongoose.set('bufferCommands', false);
+    mongoose.set('bufferTimeoutMS', 10000);
+    
+    // Configuration optimisée pour Vercel
     const mongooseOptions = {
-      serverSelectionTimeoutMS: 5000,  // Timeout de sélection du serveur (5 secondes)
-      socketTimeoutMS: 45000,          // Timeout des sockets (45 secondes)
-      connectTimeoutMS: 10000,         // Timeout de connexion (10 secondes)
-      family: 4,                       // Forcer IPv4
+      serverSelectionTimeoutMS: 30000,  // Augmenté à 30s pour Vercel
+      socketTimeoutMS: 60000,           // Augmenté à 60s
+      connectTimeoutMS: 30000,          // Augmenté à 30s
+      family: 4,                        // Forcer IPv4
+      retryWrites: true,
+      retryReads: true,
+      maxPoolSize: 5,                   // Limiter pour serverless
+      minPoolSize: 1,
+      maxIdleTimeMS: 30000,
+      heartbeatFrequencyMS: 10000
     };
 
-    console.log('🔄 Connecting to MongoDB...');
+    console.log('🔄 Connecting to MongoDB on Vercel...');
     await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
     console.log('✅ MongoDB connected successfully');
+    
+    // Écouter les événements de connexion
+    mongoose.connection.on('error', (err) => {
+      console.error('MongoDB connection error after connect:', err);
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+      console.log('MongoDB disconnected');
+    });
+    
     return true;
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
     if (error.name === 'MongooseServerSelectionError') {
-      console.error('   → Vérifiez que MongoDB est en cours d\'exécution');
-      console.error('   → Vérifiez l\'URI de connexion');
-      console.error('   → Vérifiez votre connexion internet (si MongoDB Atlas)');
+      console.error('   → Impossible de rejoindre MongoDB Atlas sur Vercel');
+      console.error('   → Vérifiez que les IPs sont autorisées (0.0.0.0/0)');
+      console.error('   → Vérifiez que l\'URI est correcte');
     }
     return false;
   }
 };
+
+// Middleware pour vérifier MongoDB avant les routes
+app.use('/api', (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      success: false,
+      message: 'Base de données en cours de connexion. Veuillez réessayer.',
+      readyState: mongoose.connection.readyState
+    });
+  }
+  next();
+});
 
 // ========== ROUTES API ==========
 app.use('/api/auth', authRoutes);
@@ -160,8 +192,45 @@ app.get('/api/health', (req, res) => {
     status: 'OK', 
     timestamp: new Date(),
     database: dbStatusText,
-    mongodb_uri_exists: !!process.env.MONGODB_URI
+    mongodb_uri_exists: !!process.env.MONGODB_URI,
+    vercel_env: process.env.VERCEL === '1' ? true : false
   });
+});
+
+app.get('/api/diagnostic', async (req, res) => {
+  const diagnostics = {
+    timestamp: new Date(),
+    environment: process.env.NODE_ENV,
+    vercel: process.env.VERCEL === '1',
+    mongodb_uri_exists: !!process.env.MONGODB_URI,
+    mongodb_connection_state: mongoose.connection.readyState,
+    mongodb_connection_state_text: {
+      0: 'disconnected',
+      1: 'connected',
+      2: 'connecting',
+      3: 'disconnecting'
+    }[mongoose.connection.readyState],
+    node_version: process.version,
+    mongoose_version: mongoose.version
+  };
+  
+  // Tenter de se reconnecter si déconnecté
+  if (mongoose.connection.readyState !== 1 && process.env.MONGODB_URI) {
+    diagnostics.reconnecting = true;
+    try {
+      await mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 20000,
+      });
+      diagnostics.reconnect_result = 'success';
+      diagnostics.mongodb_connection_state = mongoose.connection.readyState;
+    } catch (error) {
+      diagnostics.reconnect_result = 'failed';
+      diagnostics.reconnect_error = error.message;
+    }
+  }
+  
+  res.json(diagnostics);
 });
 
 app.get('/', (req, res) => {
@@ -196,10 +265,21 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ========== DÉMARRAGE DU SERVEUR AMÉLIORÉ ==========
+// ========== DÉMARRAGE DU SERVEUR POUR VERCEL ==========
 const startServer = async () => {
-  // Attendre la connexion MongoDB avant de démarrer le serveur
-  await connectMongoDB();
+  // Essayer de se connecter à MongoDB (ne pas bloquer le démarrage)
+  const connected = await connectMongoDB();
+  
+  if (!connected && process.env.NODE_ENV === 'production') {
+    console.warn('⚠️ Server starting without MongoDB connection');
+    console.warn('   Les routes renverront des erreurs 503 jusqu\'à reconnexion');
+    
+    // Réessayer après 10 secondes
+    setTimeout(async () => {
+      console.log('🔄 Retrying MongoDB connection...');
+      await connectMongoDB();
+    }, 10000);
+  }
   
   // Démarrer le serveur uniquement en développement
   if (process.env.NODE_ENV !== 'production') {
@@ -208,6 +288,7 @@ const startServer = async () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📍 http://localhost:${PORT}`);
       console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
+      console.log(`🔍 Diagnostic: http://localhost:${PORT}/api/diagnostic`);
     });
   }
 };
@@ -215,7 +296,9 @@ const startServer = async () => {
 // Démarrer le serveur
 startServer().catch(err => {
   console.error('Failed to start server:', err);
-  process.exit(1);
+  if (process.env.NODE_ENV !== 'production') {
+    process.exit(1);
+  }
 });
 
 export default app;
