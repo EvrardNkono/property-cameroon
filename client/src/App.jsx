@@ -120,6 +120,10 @@ function App() {
               <Route path="admin/inventory" element={<GlobalInventory />} />
               <Route path="admin/finances" element={<FinancialControl />} />
               
+              {/* ✅ AJOUT : Admin - Gestion des biens immobiliers */}
+              <Route path="admin/properties/new" element={<PropertyForm />} />
+              <Route path="admin/properties/edit/:id" element={<PropertyForm />} />
+              
               {/* Admin - Agriculture */}
               <Route path="admin/agriculture" element={<AgriculturalInventory />} />
               <Route path="admin/agricultural-products" element={<AgriculturalManagement />} />
@@ -141,7 +145,7 @@ function App() {
               {/* User - Section Agriculture Owner - PRODUITS */}
               <Route path="agriculture" element={<AgriculturalManagement />} />
               
-              {/* ✅ NOUVEAU: User - Section Agriculture Owner - TERRES */}
+              {/* User - Section Agriculture Owner - TERRES */}
               <Route path="my-agricultural-lands" element={<MyAgriculturalLands />} />
               
               {/* User - Section investisseur */}

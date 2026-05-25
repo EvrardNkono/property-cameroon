@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   MapPin, 
   Home, 
@@ -16,6 +17,7 @@ import { AdminSectionHeader, AdminStatusBadge, AdminActionButton } from '../../.
 import api from '../../../services/api';
 
 const GlobalInventory = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [properties, setProperties] = useState([]);
@@ -75,30 +77,31 @@ const GlobalInventory = () => {
     }
   };
 
+  // ✅ Navigation vers le formulaire d'édition (comme les utilisateurs)
   const handleEditProperty = (id) => {
-    // À implémenter - ouvrir modal d'édition
-    console.log('Edit property:', id);
+    navigate(`/dashboard/admin/properties/edit/${id}`);
   };
 
-  const handleViewProperty = (id) => {
-    // À implémenter - voir les détails
-    console.log('View property:', id);
-  };
-
+  // ✅ Navigation vers le formulaire de création (comme les utilisateurs)
   const handleCreateProperty = () => {
-    // À implémenter - ouvrir modal de création
-    console.log('Create new property');
+    navigate('/dashboard/admin/properties/new');
   };
 
+  // ✅ Ouverture de la page publique du bien
+  const handleViewProperty = (id) => {
+    window.open(`/property/${id}`, '_blank');
+  };
+
+  // ✅ Navigation vers la gestion des catégories
   const handleCategories = () => {
-    console.log('Open categories');
+    navigate('/dashboard/admin/categories');
   };
 
   // Formater le prix
   const formatPrice = (price) => {
     if (!price) return '0 FCFA';
     if (typeof price === 'object') {
-      return `${price.amount.toLocaleString()} ${price.currency || 'FCFA'}`;
+      return `${price.amount?.toLocaleString() || 0} ${price.currency || 'FCFA'}`;
     }
     return `${price.toLocaleString()} FCFA`;
   };
@@ -107,7 +110,7 @@ const GlobalInventory = () => {
   const formatSurface = (surface) => {
     if (!surface) return 'N/A';
     if (typeof surface === 'object') {
-      return `${surface.value}${surface.unit || 'm²'}`;
+      return `${surface.value || 0}${surface.unit || 'm²'}`;
     }
     return `${surface} m²`;
   };
