@@ -1,5 +1,5 @@
 // frontend/src/pages/RealEstate.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropertyCard from '../components/real-estate/PropertyCard';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -14,31 +14,26 @@ const BACKEND_URL = isDevelopment
   ? 'http://localhost:5000'
   : 'https://property-cameroon-backend.vercel.app';
 
-// Fonction pour obtenir l'URL correcte d'une image
+// Fonction améliorée pour obtenir l'URL correcte d'une image
 const getImageUrl = (imagePath) => {
   if (!imagePath) return null;
   
-  // Si c'est déjà une URL complète (http:// ou https://)
+  // Si c'est déjà une URL complète
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
     return imagePath;
   }
   
-  // Si c'est une URL blob (upload temporaire)
+  // Si c'est une URL blob
   if (imagePath.startsWith('blob:')) {
     return imagePath;
   }
   
-  // Si c'est un chemin relatif commençant par /uploads
+  // Si c'est un chemin relatif
   if (imagePath.startsWith('/uploads')) {
     return `${BACKEND_URL}${imagePath}`;
   }
   
-  // Sinon, on suppose que c'est juste le nom du fichier
-  if (imagePath.includes('/uploads/properties/')) {
-    return `${BACKEND_URL}${imagePath}`;
-  }
-  
-  // Si c'est un simple nom de fichier
+  // Si c'est un nom de fichier simple
   return `${BACKEND_URL}/uploads/properties/${imagePath}`;
 };
 
@@ -47,6 +42,9 @@ const RealEstate = () => {
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showFilters, setShowFilters] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const filtersRef = useRef(null);
   
   // État des filtres
   const [filters, setFilters] = useState({
@@ -60,11 +58,25 @@ const RealEstate = () => {
     bathrooms: 'all'
   });
   
-  // Options pour les filtres
   const categories = ['all', 'Apartment', 'House', 'Land', 'Commercial', 'Villa'];
   const cities = ['all', 'Douala', 'Yaoundé', 'Garoua', 'Bafoussam', 'Bamenda', 'Limbe', 'Kribi'];
   const bedroomOptions = ['all', '1', '2', '3', '4', '5+'];
   const bathroomOptions = ['all', '1', '2', '3', '4+'];
+
+  // Masquer les filtres quand on descend
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > lastScrollY && window.scrollY > 100) {
+        setShowFilters(false);
+      } else if (window.scrollY < lastScrollY) {
+        setShowFilters(true);
+      }
+      setLastScrollY(window.scrollY);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   useEffect(() => {
     fetchProperties();
@@ -77,17 +89,15 @@ const RealEstate = () => {
   const fetchProperties = async () => {
     try {
       setLoading(true);
-      console.log(`🌍 RealEstate - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
-      console.log(`🔗 Backend URL: ${BACKEND_URL}`);
-      
       const response = await api.getProperties({ status: 'PUBLISHED' });
       
-      // Debug: Afficher les premières images pour vérifier
-      if (response.properties && response.properties.length > 0) {
-        console.log('🔍 Sample property images:', response.properties[0].images);
-      }
+      // Nettoyer et valider les images
+      const cleanedProperties = (response.properties || []).map(prop => ({
+        ...prop,
+        images: (prop.images || []).filter(img => img && !img.includes('blob:'))
+      }));
       
-      setProperties(response.properties || []);
+      setProperties(cleanedProperties);
     } catch (err) {
       console.error('Error fetching properties:', err);
       setError(err.message);
@@ -99,35 +109,24 @@ const RealEstate = () => {
   const applyFilters = () => {
     let filtered = [...properties];
     
-    // Filtre par catégorie
     if (filters.category !== 'all') {
       filtered = filtered.filter(p => p.category === filters.category);
     }
-    
-    // Filtre par type (vente/location)
     if (filters.type !== 'all') {
       filtered = filtered.filter(p => p.listingType === filters.type);
     }
-    
-    // Filtre par prix
     if (filters.minPrice) {
       filtered = filtered.filter(p => p.price?.amount >= parseInt(filters.minPrice));
     }
     if (filters.maxPrice) {
       filtered = filtered.filter(p => p.price?.amount <= parseInt(filters.maxPrice));
     }
-    
-    // Filtre par ville
     if (filters.city !== 'all') {
       filtered = filtered.filter(p => p.location?.city === filters.city);
     }
-    
-    // Filtre par surface
     if (filters.minSurface) {
       filtered = filtered.filter(p => p.surface?.value >= parseInt(filters.minSurface));
     }
-    
-    // Filtre par nombre de chambres
     if (filters.bedrooms !== 'all') {
       if (filters.bedrooms === '5+') {
         filtered = filtered.filter(p => p.features?.bedrooms >= 5);
@@ -135,8 +134,6 @@ const RealEstate = () => {
         filtered = filtered.filter(p => p.features?.bedrooms === parseInt(filters.bedrooms));
       }
     }
-    
-    // Filtre par nombre de salles de bain
     if (filters.bathrooms !== 'all') {
       if (filters.bathrooms === '4+') {
         filtered = filtered.filter(p => p.features?.bathrooms >= 4);
@@ -177,26 +174,10 @@ const RealEstate = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-white">
-        <Navbar />
-        <div className="text-center py-32">
-          <p className="text-red-600">Error: {error}</p>
-          <button onClick={fetchProperties} className="mt-4 px-4 py-2 bg-pc-gold text-white rounded">
-            Retry
-          </button>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
       
-      {/* Hero Section */}
       <section className="pt-40 pb-12 px-4 sm:px-6 bg-gradient-to-r from-slate-50 to-slate-100">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8">
@@ -210,8 +191,13 @@ const RealEstate = () => {
         </div>
       </section>
 
-      {/* Filtres */}
-      <section className="sticky top-0 z-20 bg-white shadow-md px-4 sm:px-6 py-4">
+      {/* Filtres avec apparition/disparition au scroll */}
+      <div 
+        ref={filtersRef}
+        className={`sticky top-16 z-20 bg-white shadow-md px-4 sm:px-6 py-4 transition-transform duration-300 ${
+          showFilters ? 'translate-y-0' : '-translate-y-full'
+        }`}
+      >
         <div className="max-w-7xl mx-auto">
           {/* Version Desktop */}
           <div className="hidden lg:block">
@@ -221,7 +207,7 @@ const RealEstate = () => {
                 <select
                   value={filters.category}
                   onChange={(e) => handleFilterChange('category', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-pc-gold focus:border-pc-gold"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
                 >
                   {categories.map(cat => (
                     <option key={cat} value={cat}>
@@ -236,7 +222,7 @@ const RealEstate = () => {
                 <select
                   value={filters.type}
                   onChange={(e) => handleFilterChange('type', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-pc-gold focus:border-pc-gold"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
                 >
                   <option value="all">All Types</option>
                   <option value="sale">For Sale</option>
@@ -249,7 +235,7 @@ const RealEstate = () => {
                 <select
                   value={filters.city}
                   onChange={(e) => handleFilterChange('city', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-pc-gold focus:border-pc-gold"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
                 >
                   {cities.map(city => (
                     <option key={city} value={city}>
@@ -266,7 +252,7 @@ const RealEstate = () => {
                   value={filters.minPrice}
                   onChange={(e) => handleFilterChange('minPrice', e.target.value)}
                   placeholder="0"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-pc-gold focus:border-pc-gold"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
                 />
               </div>
               
@@ -277,7 +263,7 @@ const RealEstate = () => {
                   value={filters.maxPrice}
                   onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
                   placeholder="Unlimited"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-pc-gold focus:border-pc-gold"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
                 />
               </div>
               
@@ -288,7 +274,7 @@ const RealEstate = () => {
                   value={filters.minSurface}
                   onChange={(e) => handleFilterChange('minSurface', e.target.value)}
                   placeholder="0"
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-pc-gold focus:border-pc-gold"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
                 />
               </div>
               
@@ -297,7 +283,7 @@ const RealEstate = () => {
                 <select
                   value={filters.bedrooms}
                   onChange={(e) => handleFilterChange('bedrooms', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-pc-gold focus:border-pc-gold"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
                 >
                   {bedroomOptions.map(opt => (
                     <option key={opt} value={opt}>
@@ -312,7 +298,7 @@ const RealEstate = () => {
                 <select
                   value={filters.bathrooms}
                   onChange={(e) => handleFilterChange('bathrooms', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-pc-gold focus:border-pc-gold"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
                 >
                   {bathroomOptions.map(opt => (
                     <option key={opt} value={opt}>
@@ -335,11 +321,32 @@ const RealEstate = () => {
 
           {/* Version Mobile */}
           <div className="lg:hidden">
-            <div className="flex flex-wrap gap-3 mb-3">
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => {
+                  const mobileFilters = document.getElementById('mobile-filters');
+                  mobileFilters.classList.toggle('hidden');
+                }}
+                className="px-4 py-2 bg-pc-gold text-white rounded-lg text-sm"
+              >
+                Filter Properties
+              </button>
+              <button
+                onClick={resetFilters}
+                className="px-4 py-2 border border-slate-300 rounded-lg text-sm"
+              >
+                Reset
+              </button>
+              <span className="text-sm text-slate-600 self-center">
+                {filteredProperties.length} found
+              </span>
+            </div>
+            
+            <div id="mobile-filters" className="hidden mt-4 space-y-3">
               <select
                 value={filters.category}
                 onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="flex-1 min-w-[120px] px-3 py-2 text-sm border border-slate-300 rounded-lg"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
               >
                 {categories.map(cat => (
                   <option key={cat} value={cat}>
@@ -351,17 +358,17 @@ const RealEstate = () => {
               <select
                 value={filters.type}
                 onChange={(e) => handleFilterChange('type', e.target.value)}
-                className="flex-1 min-w-[120px] px-3 py-2 text-sm border border-slate-300 rounded-lg"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
               >
                 <option value="all">Type</option>
-                <option value="sale">Sale</option>
-                <option value="rent">Rent</option>
+                <option value="sale">For Sale</option>
+                <option value="rent">For Rent</option>
               </select>
               
               <select
                 value={filters.city}
                 onChange={(e) => handleFilterChange('city', e.target.value)}
-                className="flex-1 min-w-[120px] px-3 py-2 text-sm border border-slate-300 rounded-lg"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg"
               >
                 {cities.map(city => (
                   <option key={city} value={city}>
@@ -369,73 +376,48 @@ const RealEstate = () => {
                   </option>
                 ))}
               </select>
+              
+              <div className="flex gap-3">
+                <input
+                  type="number"
+                  value={filters.minPrice}
+                  onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                  placeholder="Min Price"
+                  className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg"
+                />
+                <input
+                  type="number"
+                  value={filters.maxPrice}
+                  onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                  placeholder="Max Price"
+                  className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg"
+                />
+              </div>
+              
+              <div className="flex gap-3">
+                <input
+                  type="number"
+                  value={filters.minSurface}
+                  onChange={(e) => handleFilterChange('minSurface', e.target.value)}
+                  placeholder="Min m²"
+                  className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg"
+                />
+                <select
+                  value={filters.bedrooms}
+                  onChange={(e) => handleFilterChange('bedrooms', e.target.value)}
+                  className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg"
+                >
+                  {bedroomOptions.map(opt => (
+                    <option key={opt} value={opt}>
+                      {opt === 'all' ? 'Beds' : opt === '5+' ? '5+ Beds' : `${opt}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            
-            <div className="flex flex-wrap gap-3">
-              <input
-                type="number"
-                value={filters.minPrice}
-                onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                placeholder="Min Price"
-                className="flex-1 min-w-[100px] px-3 py-2 text-sm border border-slate-300 rounded-lg"
-              />
-              
-              <input
-                type="number"
-                value={filters.maxPrice}
-                onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                placeholder="Max Price"
-                className="flex-1 min-w-[100px] px-3 py-2 text-sm border border-slate-300 rounded-lg"
-              />
-              
-              <input
-                type="number"
-                value={filters.minSurface}
-                onChange={(e) => handleFilterChange('minSurface', e.target.value)}
-                placeholder="Min m²"
-                className="flex-1 min-w-[100px] px-3 py-2 text-sm border border-slate-300 rounded-lg"
-              />
-              
-              <select
-                value={filters.bedrooms}
-                onChange={(e) => handleFilterChange('bedrooms', e.target.value)}
-                className="flex-1 min-w-[100px] px-3 py-2 text-sm border border-slate-300 rounded-lg"
-              >
-                {bedroomOptions.map(opt => (
-                  <option key={opt} value={opt}>
-                    {opt === 'all' ? 'Beds' : opt === '5+' ? '5+ Beds' : `${opt} Bed${opt !== '1' ? 's' : ''}`}
-                  </option>
-                ))}
-              </select>
-              
-              <select
-                value={filters.bathrooms}
-                onChange={(e) => handleFilterChange('bathrooms', e.target.value)}
-                className="flex-1 min-w-[100px] px-3 py-2 text-sm border border-slate-300 rounded-lg"
-              >
-                {bathroomOptions.map(opt => (
-                  <option key={opt} value={opt}>
-                    {opt === 'all' ? 'Baths' : opt === '4+' ? '4+ Baths' : `${opt} Bath${opt !== '1' ? 's' : ''}`}
-                  </option>
-                ))}
-              </select>
-              
-              <button
-                onClick={resetFilters}
-                className="px-4 py-2 text-sm bg-pc-gold text-white rounded-lg hover:bg-opacity-90"
-              >
-                Reset
-              </button>
-            </div>
-          </div>
-          
-          <div className="mt-3 text-right">
-            <span className="text-sm text-slate-600">
-              <span className="font-semibold text-pc-gold">{filteredProperties.length}</span> properties found
-            </span>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Properties Grid */}
       <section className="py-12 px-4 sm:px-6">
@@ -456,20 +438,8 @@ const RealEstate = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 md:gap-8">
               {filteredProperties.map((property) => {
-                // Obtenir la première image
-                let firstImage = null;
-                if (property.images && property.images.length > 0) {
-                  firstImage = property.images[0];
-                }
-                
+                const firstImage = property.images?.[0];
                 const imageUrl = getImageUrl(firstImage);
-                
-                // Debug: Afficher l'URL de l'image générée
-                if (firstImage) {
-                  console.log('🖼️ Property:', property.title);
-                  console.log('   Original image:', firstImage);
-                  console.log('   Generated URL:', imageUrl);
-                }
                 
                 return (
                   <PropertyCard 
@@ -477,7 +447,7 @@ const RealEstate = () => {
                     property={{
                       id: property._id,
                       title: property.title,
-                      image: imageUrl || 'https://via.placeholder.com/400x300?text=No+Image',
+                      image: imageUrl || '/api/placeholder/400/300',
                       status: property.status === 'PUBLISHED' ? 'sale' : 'lease',
                       category: property.category,
                       price: `${property.price?.amount?.toLocaleString() || 0}`,
