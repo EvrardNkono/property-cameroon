@@ -21,9 +21,30 @@ const BACKEND_URL = isDevelopment
 
 const getImageUrl = (image) => {
   if (!image) return null;
-  if (image.startsWith('http')) return image;
-  if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
-  return `${BACKEND_URL}/uploads/properties/${image}`;
+  
+  // ❌ IGNORER les URLs blob (temporaires d'upload)
+  if (image.startsWith('blob:')) {
+    console.log('⚠️ Image blob ignorée:', image);
+    return null;
+  }
+  
+  // ❌ En production, ignorer les URLs localhost
+  if (!isDevelopment && image.includes('localhost')) {
+    console.log('⚠️ Image localhost ignorée en production:', image);
+    return null;
+  }
+  
+  // ✅ Garder les URLs HTTP/HTTPS valides (Vercel Blob)
+  if (image.startsWith('http')) {
+    return image;
+  }
+  
+  // ✅ Pour les chemins relatifs
+  if (image.startsWith('/uploads')) {
+    return `${BACKEND_URL}${image}`;
+  }
+  
+  return null;
 };
 
 const RealEstate = () => {
@@ -53,49 +74,60 @@ const RealEstate = () => {
   }, [filters, properties, searchTerm]);
 
   const fetchProperties = async () => {
-    try {
-      setLoading(true);
-      const response = await api.getProperties({ status: 'PUBLISHED' });
-      
-      const propertiesWithImages = response.properties || [];
-      let totalImages = 0;
-      let validImageUrls = 0;
-      
-      propertiesWithImages.forEach(prop => {
-        if (prop.images && prop.images.length > 0) {
-          totalImages += prop.images.length;
-          prop.images.forEach(img => {
-            if (getImageUrl(img)) validImageUrls++;
-          });
-        }
-      });
-      
-      setDebugInfo({
-        totalProperties: propertiesWithImages.length,
-        totalImages,
-        validImageUrls,
-        sampleProperty: propertiesWithImages[0] ? {
-          title: propertiesWithImages[0].title,
-          images: propertiesWithImages[0].images,
-          generatedUrl: getImageUrl(propertiesWithImages[0].images?.[0])
-        } : null
-      });
-      
-      console.log('🔍 DEBUG IMAGES:', {
-        totalProperties: propertiesWithImages.length,
-        totalImages,
-        validImageUrls,
-        firstPropertyImages: propertiesWithImages[0]?.images
-      });
-      
-      setProperties(propertiesWithImages);
-    } catch (err) {
-      console.error('Error fetching properties:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    setLoading(true);
+    const response = await api.getProperties({ status: 'PUBLISHED' });
+    
+    // ✅ Filtrer les images invalides
+    const propertiesWithImages = (response.properties || []).map(prop => ({
+      ...prop,
+      images: (prop.images || []).filter(img => {
+        if (!img) return false;
+        if (img.startsWith('blob:')) return false;
+        if (!isDevelopment && img.includes('localhost')) return false;
+        return true;
+      })
+    }));
+    
+    // Calcul des statistiques
+    let totalImages = 0;
+    let validImageUrls = 0;
+    
+    propertiesWithImages.forEach(prop => {
+      if (prop.images && prop.images.length > 0) {
+        totalImages += prop.images.length;
+        prop.images.forEach(img => {
+          if (getImageUrl(img)) validImageUrls++;
+        });
+      }
+    });
+    
+    setDebugInfo({
+      totalProperties: propertiesWithImages.length,
+      totalImages,
+      validImageUrls,
+      sampleProperty: propertiesWithImages[0] ? {
+        title: propertiesWithImages[0].title,
+        images: propertiesWithImages[0].images,
+        generatedUrl: getImageUrl(propertiesWithImages[0].images?.[0])
+      } : null
+    });
+    
+    console.log('🔍 DEBUG IMAGES:', {
+      totalProperties: propertiesWithImages.length,
+      totalImages,
+      validImageUrls,
+      firstPropertyImages: propertiesWithImages[0]?.images
+    });
+    
+    setProperties(propertiesWithImages);
+  } catch (err) {
+    console.error('Error fetching properties:', err);
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const applyFilters = () => {
     let filtered = [...properties];
