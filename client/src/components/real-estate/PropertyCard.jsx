@@ -64,7 +64,8 @@ const getFurnishedLabel = (isFurnished) => {
 };
 
 const PropertyCard = ({ property }) => {
-  const isSale = property.status === 'sale';
+  // ✅ Utiliser listingType au lieu de status
+  const isSale = property.listingType === 'sale';
 
   // 🔥 Fonction pour obtenir l'URL complète de l'image
   const getImageUrl = (image) => {
@@ -86,16 +87,18 @@ const PropertyCard = ({ property }) => {
     image: getImageUrl(property.image)
   };
 
-  // Debug pour vérifier la catégorie reçue
-  console.log('🏷️ PropertyCard - Catégorie reçue:', {
+  // Debug pour vérifier les données reçues
+  console.log('🏷️ PropertyCard - Données reçues:', {
     title: property.title,
     category: property.category,
+    listingType: property.listingType,
     isFurnished: property.isFurnished,
-    categoryType: typeof property.category
+    price: property.price
   });
 
-  // Déterminer si c'est une chambre ou un appartement (pour afficher le statut meublé)
-  const showFurnishedStatus = property.category === 'Room' || property.category === 'Apartment' || property.category === 'Studio';
+  // Déterminer si c'est une propriété résidentielle (pour afficher le statut meublé)
+  const residentialCategories = ['House', 'Villa', 'Duplex', 'Apartment', 'Studio', 'Room'];
+  const showFurnishedStatus = residentialCategories.includes(property.category);
 
   return (
     <div className="group bg-white border border-slate-100 hover:shadow-2xl transition-all duration-500 relative flex flex-col h-full">
@@ -111,9 +114,9 @@ const PropertyCard = ({ property }) => {
           }}
         />
         
-        {/* Status Badge */}
+        {/* ✅ Status Badge - basé sur listingType */}
         <div className={`absolute top-4 left-4 px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-white shadow-xl ${isSale ? 'bg-pc-gold' : 'bg-slate-900'}`}>
-          {isSale ? 'For Sale' : 'For Lease'}
+          {isSale ? 'For Sale' : 'For Rent'}
         </div>
 
         {/* ✅ CATEGORY TAG - Avec icône et couleur spécifique */}
@@ -122,7 +125,7 @@ const PropertyCard = ({ property }) => {
           <span>{property.category}</span>
         </div>
 
-        {/* ✅ NEW: FURNISHED BADGE (top right for Rooms/Apartments) */}
+        {/* ✅ FURNISHED BADGE - Pour toutes les propriétés résidentielles */}
         {showFurnishedStatus && property.isFurnished !== undefined && (
           <div className={`absolute top-4 right-4 px-3 py-1.5 text-[8px] font-black uppercase tracking-widest rounded-lg shadow-md flex items-center gap-1.5 ${
             property.isFurnished 
@@ -150,19 +153,21 @@ const PropertyCard = ({ property }) => {
         </p>
 
         {/* Dynamic Specifications - basé sur la catégorie exacte */}
-        <div className="flex items-center gap-6 border-t border-slate-50 pt-5 mb-6">
+        <div className="flex items-center gap-6 border-t border-slate-50 pt-5 mb-6 flex-wrap">
+          {/* Terrains */}
           {property.category === 'Land' || property.category === 'Agricultural Land' ? (
             <div className="flex flex-col">
               <span className="text-[8px] text-slate-400 uppercase tracking-widest">Total Area</span>
               <span className="text-xs text-slate-900 font-bold">{processedProperty.size} m²</span>
             </div>
-          ) : property.category === 'Room' ? (
+          ) : 
+          /* Chambres */
+          property.category === 'Room' ? (
             <>
               <div className="flex flex-col">
                 <span className="text-[8px] text-slate-400 uppercase tracking-widest">Room Area</span>
                 <span className="text-xs text-slate-900 font-bold">{processedProperty.size} m²</span>
               </div>
-              {/* ✅ Afficher le statut meublé aussi ici pour les chambres */}
               {property.isFurnished !== undefined && (
                 <div className="flex flex-col">
                   <span className="text-[8px] text-slate-400 uppercase tracking-widest">Status</span>
@@ -172,22 +177,36 @@ const PropertyCard = ({ property }) => {
                 </div>
               )}
             </>
-          ) : property.category === 'Parking' ? (
+          ) : 
+          /* Parking */
+          property.category === 'Parking' ? (
             <div className="flex flex-col">
               <span className="text-[8px] text-slate-400 uppercase tracking-widest">Parking Spots</span>
               <span className="text-xs text-slate-900 font-bold">{processedProperty.size || 1} spots</span>
             </div>
-          ) : (
+          ) : 
+          /* Maisons, Appartements, Studios, Villas, Duplex, Commerciaux */
+          (
             <>
-              <div className="flex flex-col">
-                <span className="text-[8px] text-slate-400 uppercase tracking-widest">Beds</span>
-                <span className="text-xs text-slate-900 font-bold">{processedProperty.beds || 'N/A'}</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[8px] text-slate-400 uppercase tracking-widest">Baths</span>
-                <span className="text-xs text-slate-900 font-bold">{processedProperty.baths || 'N/A'}</span>
-              </div>
-              {/* ✅ Afficher le statut meublé aussi pour les appartements/studios */}
+              {processedProperty.beds > 0 && (
+                <div className="flex flex-col">
+                  <span className="text-[8px] text-slate-400 uppercase tracking-widest">Beds</span>
+                  <span className="text-xs text-slate-900 font-bold">{processedProperty.beds}</span>
+                </div>
+              )}
+              {processedProperty.baths > 0 && (
+                <div className="flex flex-col">
+                  <span className="text-[8px] text-slate-400 uppercase tracking-widest">Baths</span>
+                  <span className="text-xs text-slate-900 font-bold">{processedProperty.baths}</span>
+                </div>
+              )}
+              {processedProperty.size > 0 && (
+                <div className="flex flex-col">
+                  <span className="text-[8px] text-slate-400 uppercase tracking-widest">Area</span>
+                  <span className="text-xs text-slate-900 font-bold">{processedProperty.size} m²</span>
+                </div>
+              )}
+              {/* Statut meublé pour les propriétés résidentielles */}
               {showFurnishedStatus && property.isFurnished !== undefined && (
                 <div className="flex flex-col">
                   <span className="text-[8px] text-slate-400 uppercase tracking-widest">Status</span>

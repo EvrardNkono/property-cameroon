@@ -7,7 +7,8 @@ import {
   CheckCircle2, Loader2, Upload, Building2,
   School, ShoppingBasket, Fuel, Coffee, BedDouble,
   DoorOpen, Warehouse, Store, Briefcase, Trees,
-  Hotel, Tent, Factory, ParkingCircle
+  Hotel, Tent, Factory, ParkingCircle, Sofa,
+  Tag, Calendar
 } from 'lucide-react';
 import api from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -83,6 +84,7 @@ const PropertyForm = () => {
   const [formData, setFormData] = useState({
     title: '',
     category: 'House',
+    listingType: 'sale', // ✅ NEW: 'sale' or 'rent'
     description: '',
     location: {
       city: '',
@@ -127,7 +129,7 @@ const PropertyForm = () => {
 
   const [imageUrls, setImageUrls] = useState([]);
 
-  // ✅ COMPLETE CATEGORIES - exactly the ones you gave me
+  // ✅ COMPLETE CATEGORIES
   const categories = [
     // HOUSES
     { id: 'House', label: '🏠 House', icon: <Home size={18} />, type: 'house' },
@@ -175,6 +177,9 @@ const PropertyForm = () => {
   const isCommercial = categoryType === 'commercial';
   const isOther = categoryType === 'other';
 
+  // Check if category is residential (should show furnished option)
+  const isResidential = isHouse || isApartment || isRoom;
+
   useEffect(() => {
     if (id) {
       fetchProperty();
@@ -192,6 +197,7 @@ const PropertyForm = () => {
       setFormData({
         title: property.title || '',
         category: property.category || 'House',
+        listingType: property.listingType || 'sale', // ✅ NEW
         description: property.description || '',
         location: {
           city: property.location?.city || '',
@@ -388,6 +394,7 @@ const PropertyForm = () => {
       const submitData = {
         title: formData.title,
         category: formData.category,
+        listingType: formData.listingType, // ✅ NEW
         description: formData.description,
         location: {
           city: formData.location.city,
@@ -467,6 +474,44 @@ const PropertyForm = () => {
     }
   };
 
+  // Component for Furnished Status
+  const FurnishedStatusSelector = () => (
+    <div className="mt-5 pt-4 border-t border-slate-100">
+      <div className="flex items-center gap-4 flex-wrap">
+        <span className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+          <Sofa size={14} /> Furnished Status:
+        </span>
+        <div className="flex gap-3">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="furnishedStatus"
+              value="unfurnished"
+              checked={!formData.features.isFurnished}
+              onChange={() => setFormData(prev => ({ ...prev, features: { ...prev.features, isFurnished: false } }))}
+              className="w-4 h-4 text-[#c5a059] focus:ring-[#c5a059]"
+            />
+            <span className="text-sm text-slate-700">📦 Unfurnished</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="furnishedStatus"
+              value="furnished"
+              checked={formData.features.isFurnished}
+              onChange={() => setFormData(prev => ({ ...prev, features: { ...prev.features, isFurnished: true } }))}
+              className="w-4 h-4 text-[#c5a059] focus:ring-[#c5a059]"
+            />
+            <span className="text-sm text-slate-700">🛋️ Furnished</span>
+          </label>
+        </div>
+      </div>
+      <p className="text-[8px] text-slate-400 mt-2">
+        Optional - Specify if the property comes with furniture
+      </p>
+    </div>
+  );
+
   if (fetching) {
     return (
       <div className="flex justify-center items-center h-96">
@@ -540,7 +585,7 @@ const PropertyForm = () => {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div>
                 <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Category *</label>
                 <select
@@ -554,6 +599,38 @@ const PropertyForm = () => {
                   ))}
                 </select>
               </div>
+              
+              {/* ✅ NEW: LISTING TYPE (For Sale / For Rent) */}
+              <div>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Listing Type *</label>
+                <div className="flex gap-3">
+                  <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl cursor-pointer transition-all ${formData.listingType === 'sale' ? 'bg-emerald-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+                    <input
+                      type="radio"
+                      name="listingType"
+                      value="sale"
+                      checked={formData.listingType === 'sale'}
+                      onChange={handleChange}
+                      className="hidden"
+                    />
+                    <Tag size={16} />
+                    For Sale
+                  </label>
+                  <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl cursor-pointer transition-all ${formData.listingType === 'rent' ? 'bg-emerald-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+                    <input
+                      type="radio"
+                      name="listingType"
+                      value="rent"
+                      checked={formData.listingType === 'rent'}
+                      onChange={handleChange}
+                      className="hidden"
+                    />
+                    <Calendar size={16} />
+                    For Rent
+                  </label>
+                </div>
+              </div>
+              
               <div>
                 <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Status</label>
                 <select
@@ -686,6 +763,9 @@ const PropertyForm = () => {
                     <option value="USD">USD</option>
                   </select>
                 </div>
+                {formData.listingType === 'rent' && (
+                  <p className="text-[8px] text-slate-400 mt-1">Price per month</p>
+                )}
               </div>
             </div>
           </div>
@@ -768,6 +848,7 @@ const PropertyForm = () => {
                     <span className="text-sm text-slate-700">Garden</span>
                   </label>
                 </div>
+                <FurnishedStatusSelector />
               </div>
             )}
 
@@ -851,6 +932,7 @@ const PropertyForm = () => {
                     <span className="text-sm text-slate-700">Balcony</span>
                   </label>
                 </div>
+                <FurnishedStatusSelector />
               </div>
             )}
 
@@ -868,27 +950,6 @@ const PropertyForm = () => {
                       className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
                       placeholder="15"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Room Type</label>
-                    <select
-                      name="features.isFurnished"
-                      value={formData.features.isFurnished ? "furnished" : "unfurnished"}
-                      onChange={(e) => {
-                        const syntheticEvent = {
-                          target: {
-                            name: 'features.isFurnished',
-                            type: 'checkbox',
-                            checked: e.target.value === 'furnished'
-                          }
-                        };
-                        handleChange(syntheticEvent);
-                      }}
-                      className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
-                    >
-                      <option value="unfurnished">Unfurnished</option>
-                      <option value="furnished">Furnished</option>
-                    </select>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -913,6 +974,7 @@ const PropertyForm = () => {
                     <span className="text-sm text-slate-700">Water</span>
                   </label>
                 </div>
+                <FurnishedStatusSelector />
               </div>
             )}
 
@@ -1084,162 +1146,162 @@ const PropertyForm = () => {
                     onChange={handleChange}
                     className="w-4 h-4 rounded"
                   />
-                  <span className="text-sm text-slate-700">Road Access</span>
+                    <span className="text-sm text-slate-700">Road Access</span>
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Strategic Proximity (Amenities) - Optional */}
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+              <h2 className="font-bold text-[#0a2619] flex items-center gap-2">
+                <MapPin size={18} /> Strategic Proximity (Optional)
+              </h2>
+              <p className="text-[9px] text-slate-400 mt-1">
+                Tell us about nearby landmarks. Leave empty for auto-detection from map data.
+              </p>
+            </div>
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
+                  <School size={14} /> Schools / Universities
+                </label>
+                <input
+                  type="text"
+                  name="amenities.schools"
+                  value={formData.amenities.schools}
+                  onChange={handleChange}
+                  placeholder="e.g., Lycée de Bastos, Université de Yaoundé II"
+                  className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
+                  <ShoppingBasket size={14} /> Markets / Shopping
+                </label>
+                <input
+                  type="text"
+                  name="amenities.markets"
+                  value={formData.amenities.markets}
+                  onChange={handleChange}
+                  placeholder="e.g., Marché Central, Super U Bonapriso"
+                  className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
+                  <Fuel size={14} /> Gas Stations / Fuel
+                </label>
+                <input
+                  type="text"
+                  name="amenities.stations"
+                  value={formData.amenities.stations}
+                  onChange={handleChange}
+                  placeholder="e.g., Total Bonapriso, Oil Libya"
+                  className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
+                  <Coffee size={14} /> Bakeries / Restaurants
+                </label>
+                <input
+                  type="text"
+                  name="amenities.bakeries"
+                  value={formData.amenities.bakeries}
+                  onChange={handleChange}
+                  placeholder="e.g., Boulangerie La Parisienne, Restaurant La Scala"
+                  className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Images */}
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+              <h2 className="font-bold text-[#0a2619] flex items-center gap-2">
+                <Image size={18} /> Images
+              </h2>
+              <p className="text-[9px] text-slate-400 mt-1">
+                Maximum 10 images. Upload JPEG or PNG format.
+              </p>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {imageUrls.map((url, index) => {
+                  const isExistingImage = url.startsWith('http') && !url.includes('blob');
+                  return (
+                    <div key={index} className="relative group">
+                      <img
+                        src={url}
+                        alt={`Property ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-xl"
+                        onError={(e) => {
+                          console.error('Image failed to load:', url);
+                          e.target.src = 'https://via.placeholder.com/150?text=Image+Error';
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={14} />
+                      </button>
+                      {isExistingImage && (
+                        <span className="absolute bottom-2 left-2 text-[8px] bg-green-600 text-white px-1.5 py-0.5 rounded">
+                          Existing
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-[#c5a059] transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    disabled={uploadingImage}
+                  />
+                  {uploadingImage ? (
+                    <Loader2 size={24} className="text-[#c5a059] animate-spin" />
+                  ) : (
+                    <>
+                      <Plus size={24} className="text-slate-400" />
+                      <span className="text-[10px] text-slate-400 mt-1">Add Image</span>
+                    </>
+                  )}
                 </label>
               </div>
-            )}
+            </div>
           </div>
-        </div>
 
-        {/* Strategic Proximity (Amenities) - Optional */}
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-            <h2 className="font-bold text-[#0a2619] flex items-center gap-2">
-              <MapPin size={18} /> Strategic Proximity (Optional)
-            </h2>
-            <p className="text-[9px] text-slate-400 mt-1">
-              Tell us about nearby landmarks. Leave empty for auto-detection from map data.
-            </p>
+          {/* Submit Buttons */}
+          <div className="flex gap-4">
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard/properties')}
+              className="flex-1 px-6 py-4 bg-slate-100 text-slate-600 rounded-xl font-black uppercase text-[11px] tracking-widest hover:bg-slate-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 px-6 py-4 bg-[#0a2619] text-[#c5a059] rounded-xl font-black uppercase text-[11px] tracking-widest hover:bg-[#1a3d2a] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {loading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+              {id ? 'Update Property' : 'Create Property'}
+            </button>
           </div>
-          <div className="p-6 space-y-5">
-            <div>
-              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
-                <School size={14} /> Schools / Universities
-              </label>
-              <input
-                type="text"
-                name="amenities.schools"
-                value={formData.amenities.schools}
-                onChange={handleChange}
-                placeholder="e.g., Lycée de Bastos, Université de Yaoundé II"
-                className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
-                <ShoppingBasket size={14} /> Markets / Shopping
-              </label>
-              <input
-                type="text"
-                name="amenities.markets"
-                value={formData.amenities.markets}
-                onChange={handleChange}
-                placeholder="e.g., Marché Central, Super U Bonapriso"
-                className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
-                <Fuel size={14} /> Gas Stations / Fuel
-              </label>
-              <input
-                type="text"
-                name="amenities.stations"
-                value={formData.amenities.stations}
-                onChange={handleChange}
-                placeholder="e.g., Total Bonapriso, Oil Libya"
-                className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
-                <Coffee size={14} /> Bakeries / Restaurants
-              </label>
-              <input
-                type="text"
-                name="amenities.bakeries"
-                value={formData.amenities.bakeries}
-                onChange={handleChange}
-                placeholder="e.g., Boulangerie La Parisienne, Restaurant La Scala"
-                className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Images */}
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-            <h2 className="font-bold text-[#0a2619] flex items-center gap-2">
-              <Image size={18} /> Images
-            </h2>
-            <p className="text-[9px] text-slate-400 mt-1">
-              Maximum 10 images. Upload JPEG or PNG format.
-            </p>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {imageUrls.map((url, index) => {
-                const isExistingImage = url.startsWith('http') && !url.includes('blob');
-                return (
-                  <div key={index} className="relative group">
-                    <img
-                      src={url}
-                      alt={`Property ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-xl"
-                      onError={(e) => {
-                        console.error('Image failed to load:', url);
-                        e.target.src = 'https://via.placeholder.com/150?text=Image+Error';
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X size={14} />
-                    </button>
-                    {isExistingImage && (
-                      <span className="absolute bottom-2 left-2 text-[8px] bg-green-600 text-white px-1.5 py-0.5 rounded">
-                        Existing
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-[#c5a059] transition-colors">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  disabled={uploadingImage}
-                />
-                {uploadingImage ? (
-                  <Loader2 size={24} className="text-[#c5a059] animate-spin" />
-                ) : (
-                  <>
-                    <Plus size={24} className="text-slate-400" />
-                    <span className="text-[10px] text-slate-400 mt-1">Add Image</span>
-                  </>
-                )}
-              </label>
-            </div>
-          </div>
-        </div>
-
-        {/* Submit Buttons */}
-        <div className="flex gap-4">
-          <button
-            type="button"
-            onClick={() => navigate('/dashboard/properties')}
-            className="flex-1 px-6 py-4 bg-slate-100 text-slate-600 rounded-xl font-black uppercase text-[11px] tracking-widest hover:bg-slate-200 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex-1 px-6 py-4 bg-[#0a2619] text-[#c5a059] rounded-xl font-black uppercase text-[11px] tracking-widest hover:bg-[#1a3d2a] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {loading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-            {id ? 'Update Property' : 'Create Property'}
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-};
+        </form>
+      </div>
+    );
+  };
 
 export default PropertyForm;
