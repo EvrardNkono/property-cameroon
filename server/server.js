@@ -59,13 +59,14 @@ const app = express();
 // ========== CONFIGURATION CORS SIMPLIFIÉE ==========
 app.use((req, res, next) => {
   const allowedOrigins = [
-    'https://www.propertycameroon.com',
-    'https://propertycameroon.com',
-    'https://property-cameroon-frontend.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:5000',
-    'http://localhost:5173'
-  ];
+  'https://www.propertycameroon.com',
+  'https://propertycameroon.com',
+  'https://property-cameroon-frontend.vercel.app',
+  'https://property-cameroon.vercel.app',  // ← AJOUTEZ CETTE LIGNE
+  'http://localhost:3000',
+  'http://localhost:5000',
+  'http://localhost:5173'
+];
   
   const origin = req.headers.origin;
   
