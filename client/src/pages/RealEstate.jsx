@@ -1,4 +1,4 @@
-// frontend/src/pages/RealEstate.jsx - VERSION AVEC DEBUG
+// frontend/src/pages/RealEstate.jsx - VERSION AVEC LOG DANS LE MAP
 
 import React, { useState, useEffect } from 'react';
 import PropertyCard from '../components/real-estate/PropertyCard';
@@ -57,7 +57,6 @@ const RealEstate = () => {
       setLoading(true);
       const response = await api.getProperties({ status: 'PUBLISHED' });
       
-      // 🔍 DEBUG : Analyser les images
       const propertiesWithImages = response.properties || [];
       let totalImages = 0;
       let validImageUrls = 0;
@@ -176,7 +175,6 @@ const RealEstate = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      {/* Panel de debug (visible uniquement en développement ou si problème) */}
       {debugInfo && debugInfo.totalImages === 0 && (
         <div className="bg-yellow-50 border-b border-yellow-200 p-4">
           <div className="max-w-7xl mx-auto flex items-center gap-3">
@@ -233,7 +231,6 @@ const RealEstate = () => {
             </button>
           </div>
 
-          {/* Filter Panel */}
           {showFilters && (
             <div className="mt-6 p-6 bg-gray-100 rounded-2xl">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
@@ -353,6 +350,14 @@ const RealEstate = () => {
               {filteredProperties.map((property) => {
                 const firstImage = property.images?.[0];
                 const imageUrl = getImageUrl(firstImage);
+                
+                // 🔍 LOG POUR VOIR CE QUI EST PASSE
+                console.log('📸 RealEstate - Propriété:', {
+                  title: property.title,
+                  firstImage: firstImage,
+                  imageUrl: imageUrl,
+                  toutesLesImages: property.images
+                });
                 
                 return (
                   <PropertyCard 

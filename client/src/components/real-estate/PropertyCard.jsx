@@ -35,6 +35,13 @@ const PropertyCard = ({ property }) => {
     image: getImageUrl(property.image)
   };
 
+  // Dans PropertyCard.jsx, après processedProperty
+console.log('🖼️ PropertyCard reçoit:', {
+  title: property.title,
+  imageRecue: property.image,
+  imageApresTraitement: processedProperty.image
+});
+
   return (
     <div className="group bg-white border border-slate-100 hover:shadow-2xl transition-all duration-500 relative flex flex-col h-full">
       {/* Image & Badges */}
