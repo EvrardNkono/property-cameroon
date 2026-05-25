@@ -1,4 +1,5 @@
-// frontend/src/pages/RealEstate.jsx
+// frontend/src/pages/RealEstate.jsx (version corrigée)
+
 import React, { useState, useEffect, useRef } from 'react';
 import PropertyCard from '../components/real-estate/PropertyCard';
 import Navbar from '../components/Navbar';
@@ -14,27 +15,37 @@ const BACKEND_URL = isDevelopment
   ? 'http://localhost:5000'
   : 'https://property-cameroon-backend.vercel.app';
 
-// Fonction améliorée pour obtenir l'URL correcte d'une image
+// ✅ Fonction CORRIGÉE pour les images Vercel Blob
 const getImageUrl = (imagePath) => {
   if (!imagePath) return null;
   
-  // Si c'est déjà une URL complète
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+  // Vercel Blob URL (déjà complète)
+  if (imagePath.startsWith('https://') && imagePath.includes('.blob.vercel-storage.com')) {
     return imagePath;
   }
   
-  // Si c'est une URL blob
-  if (imagePath.startsWith('blob:')) {
+  // Autres URLs HTTPS (mais pas blob Vercel)
+  if (imagePath.startsWith('https://') && !imagePath.includes('localhost')) {
     return imagePath;
   }
   
-  // Si c'est un chemin relatif
-  if (imagePath.startsWith('/uploads')) {
+  // URLs HTTP (seulement en développement)
+  if (isDevelopment && imagePath.startsWith('http://localhost')) {
+    return imagePath;
+  }
+  
+  // Chemins relatifs (uniquement en développement)
+  if (isDevelopment && imagePath.startsWith('/uploads')) {
     return `${BACKEND_URL}${imagePath}`;
   }
   
-  // Si c'est un nom de fichier simple
-  return `${BACKEND_URL}/uploads/properties/${imagePath}`;
+  // En production, les anciens chemins locaux ne fonctionnent plus
+  if (!isDevelopment && imagePath.startsWith('/uploads')) {
+    console.warn('Legacy image not available in production:', imagePath);
+    return null;
+  }
+  
+  return null;
 };
 
 const RealEstate = () => {
@@ -46,7 +57,6 @@ const RealEstate = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const filtersRef = useRef(null);
   
-  // État des filtres
   const [filters, setFilters] = useState({
     category: 'all',
     type: 'all',
@@ -63,7 +73,6 @@ const RealEstate = () => {
   const bedroomOptions = ['all', '1', '2', '3', '4', '5+'];
   const bathroomOptions = ['all', '1', '2', '3', '4+'];
 
-  // Masquer les filtres quand on descend
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > lastScrollY && window.scrollY > 100) {
@@ -91,10 +100,18 @@ const RealEstate = () => {
       setLoading(true);
       const response = await api.getProperties({ status: 'PUBLISHED' });
       
-      // Nettoyer et valider les images
+      // Nettoyer les images invalides
       const cleanedProperties = (response.properties || []).map(prop => ({
         ...prop,
-        images: (prop.images || []).filter(img => img && !img.includes('blob:'))
+        images: (prop.images || []).filter(img => {
+          // Garder uniquement les URLs valides
+          if (!img) return false;
+          // Garder les URLs Vercel Blob
+          if (img.startsWith('https://') && img.includes('.blob.vercel-storage.com')) return true;
+          // En développement, garder les chemins locaux
+          if (isDevelopment && (img.startsWith('/uploads') || img.startsWith('http://localhost'))) return true;
+          return false;
+        })
       }));
       
       setProperties(cleanedProperties);
@@ -191,7 +208,7 @@ const RealEstate = () => {
         </div>
       </section>
 
-      {/* Filtres avec apparition/disparition au scroll */}
+      {/* Filtres */}
       <div 
         ref={filtersRef}
         className={`sticky top-16 z-20 bg-white shadow-md px-4 sm:px-6 py-4 transition-transform duration-300 ${
@@ -199,7 +216,6 @@ const RealEstate = () => {
         }`}
       >
         <div className="max-w-7xl mx-auto">
-          {/* Version Desktop */}
           <div className="hidden lg:block">
             <div className="grid grid-cols-4 gap-4">
               <div>
@@ -319,7 +335,6 @@ const RealEstate = () => {
             </div>
           </div>
 
-          {/* Version Mobile */}
           <div className="lg:hidden">
             <div className="flex flex-wrap gap-3">
               <button
