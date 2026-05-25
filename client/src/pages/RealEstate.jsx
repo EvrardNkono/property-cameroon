@@ -1,10 +1,11 @@
-// frontend/src/pages/RealEstate.jsx - VERSION AVEC FILTRE HORIZONTAL MODERNE
+// frontend/src/pages/RealEstate.jsx - VERSION AVEC MOCK DATA UNIQUEMENT
 
 import React, { useState, useEffect } from 'react';
 import PropertyCard from '../components/real-estate/PropertyCard';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import api from '../services/api';
+// import api from '../services/api'; // ❌ COMMENTÉ - Backend temporairement désactivé
+import { MOCK_PROPERTIES } from '../data/mockProperties';
 import { 
   Search, X, Home, Building2, 
   MapPin, Filter, AlertCircle,
@@ -72,24 +73,60 @@ const RealEstate = () => {
     applyFilters();
   }, [filters, properties, searchTerm]);
 
+  // ✅ UTILISATION UNIQUEMENT DES MOCK DATA
   const fetchProperties = async () => {
     try {
       setLoading(true);
-      const response = await api.getProperties({ status: 'PUBLISHED' });
       
-      const propertiesWithImages = (response.properties || []).map(prop => ({
-        ...prop,
-        images: (prop.images || []).filter(img => {
-          if (!img) return false;
-          if (img.startsWith('blob:')) return false;
-          if (!isDevelopment && img.includes('localhost')) return false;
-          return true;
-        })
+      // 🔥 BACKEND COMMENTÉ - Utilisation des mock data uniquement
+      // const response = await api.getProperties({ status: 'PUBLISHED' });
+      
+      // Formater les mock data pour correspondre au format attendu
+      const formattedMockProperties = MOCK_PROPERTIES.map(prop => ({
+        _id: prop.id,
+        title: prop.title,
+        category: prop.category,
+        listingType: prop.listingType,
+        description: prop.description,
+        location: {
+          city: prop.location.city,
+          district: prop.location.district,
+          region: prop.location.region
+        },
+        surface: {
+          value: prop.surface.value,
+          unit: prop.surface.unit
+        },
+        price: {
+          amount: prop.price.amount,
+          currency: prop.price.currency
+        },
+        status: prop.status,
+        images: prop.images,
+        features: {
+          bedrooms: prop.features?.bedrooms || 0,
+          bathrooms: prop.features?.bathrooms || 0,
+          isFurnished: prop.features?.isFurnished || false,
+          hasParking: prop.features?.hasParking || false,
+          hasGarden: prop.features?.hasGarden || false,
+          hasElectricity: prop.features?.hasElectricity || false,
+          hasWater: prop.features?.hasWater || false,
+          hasRoad: prop.features?.hasRoad || false,
+          isFenced: prop.features?.isFenced || false
+        },
+        amenities: prop.amenities || {
+          schools: { count: 0, names: [] },
+          markets: { count: 0, names: [] },
+          stations: { count: 0, names: [] },
+          bakeries: { count: 0, names: [] }
+        }
       }));
       
-      setProperties(propertiesWithImages);
+      setProperties(formattedMockProperties);
+      console.log(`📦 ${formattedMockProperties.length} mock properties loaded`);
+      
     } catch (err) {
-      console.error('Error fetching properties:', err);
+      console.error('Error loading mock properties:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -122,7 +159,6 @@ const RealEstate = () => {
       filtered = filtered.filter(p => p.price?.amount <= parseInt(filters.maxPrice));
     }
     
-    // ✅ FILTER BY REGION
     if (filters.region !== 'all') {
       filtered = filtered.filter(p => p.location?.region === filters.region);
     }
@@ -167,8 +203,12 @@ const RealEstate = () => {
     { id: 'Studio', label: 'Studio', icon: <DoorOpen size={14} /> },
     { id: 'Room', label: 'Room', icon: <BedDouble size={14} /> },
     { id: 'Land', label: 'Land', icon: <MapPin size={14} /> },
+    { id: 'Agricultural Land', label: 'Agri Land', icon: <Trees size={14} /> },
     { id: 'Commercial Space', label: 'Commercial', icon: <Store size={14} /> },
     { id: 'Office', label: 'Office', icon: <Briefcase size={14} /> },
+    { id: 'Warehouse', label: 'Warehouse', icon: <Warehouse size={14} /> },
+    { id: 'Shop', label: 'Shop', icon: <ShoppingBasket size={14} /> },
+    { id: 'Industrial Space', label: 'Industrial', icon: <Factory size={14} /> },
     { id: 'Parking', label: 'Parking', icon: <ParkingCircle size={14} /> }
   ];
 
@@ -393,7 +433,7 @@ const RealEstate = () => {
 
                 {/* Quick Price Presets */}
                 <div className="md:col-span-2">
-                  <label className="block text-[10px] font-bold uppercase text-gray-400 mb-2">Quick Price</label>
+                  <label className="block text-[10px] font-bold uppercase text-gray-400 mb-2">Quick Price (FCFA)</label>
                   <div className="flex flex-wrap gap-2">
                     {[
                       { label: 'Under 50M', min: '', max: 50000000 },

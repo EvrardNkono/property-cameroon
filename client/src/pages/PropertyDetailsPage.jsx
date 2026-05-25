@@ -1,3 +1,5 @@
+// frontend/src/pages/PropertyDetailsPage.jsx - VERSION AVEC MOCK DATA UNIQUEMENT
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
@@ -8,18 +10,19 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import api from '../services/api';
+// import api from '../services/api'; // ❌ COMMENTÉ - Backend temporairement désactivé
+import { getMockPropertyById, MOCK_PROPERTIES } from '../data/mockProperties';
 
-// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+// 🔥 Détection automatique de l'environnement
 const isDevelopment = typeof window !== 'undefined' && 
                       (window.location.hostname === 'localhost' || 
                        window.location.hostname === '127.0.0.1' ||
                        window.location.hostname === '');
 
-// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+// URLs en dur selon l'environnement
 const BACKEND_URL = isDevelopment 
-  ? 'http://localhost:5000'           // URL locale
-  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+  ? 'http://localhost:5000'
+  : 'https://property-cameroon-backend.vercel.app';
 
 const PropertyDetailsPage = () => {
   const { id } = useParams();
@@ -29,10 +32,10 @@ const PropertyDetailsPage = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [autoAmenities, setAutoAmenities] = useState({
-    schools: { count: 0, names: [], source: 'auto' },
-    markets: { count: 0, names: [], source: 'auto' },
-    stations: { count: 0, names: [], source: 'auto' },
-    bakeries: { count: 0, names: [], source: 'auto' }
+    schools: { count: 0, names: [], source: 'mock', hasOwnerData: false, hasAutoData: false },
+    markets: { count: 0, names: [], source: 'mock', hasOwnerData: false, hasAutoData: false },
+    stations: { count: 0, names: [], source: 'mock', hasOwnerData: false, hasAutoData: false },
+    bakeries: { count: 0, names: [], source: 'mock', hasOwnerData: false, hasAutoData: false }
   });
   const [loadingAmenities, setLoadingAmenities] = useState(false);
   const [formData, setFormData] = useState({
@@ -42,7 +45,7 @@ const PropertyDetailsPage = () => {
   });
   const [formStatus, setFormStatus] = useState(null);
 
-  // 🔥 Fonction pour obtenir l'URL complète de l'image avec BACKEND_URL dynamique
+  // 🔥 Fonction pour obtenir l'URL complète de l'image
   const getImageUrl = (image) => {
     if (!image) return null;
     if (image.startsWith('http')) return image;
@@ -51,76 +54,103 @@ const PropertyDetailsPage = () => {
     return `${BACKEND_URL}/uploads/properties/${image}`;
   };
 
-  // Fonction pour fusionner les amenities (propriétaire + auto)
-  const mergeAmenities = (ownerAmenities, autoAmenitiesData) => {
-    const categories = ['schools', 'markets', 'stations', 'bakeries'];
-    const merged = {};
-    
-    categories.forEach(cat => {
-      const ownerNames = ownerAmenities?.[cat]?.names || [];
-      const autoNames = autoAmenitiesData?.[cat]?.names || [];
-      
-      // Fusionner sans doublons
-      const allNames = [...new Set([...ownerNames, ...autoNames])];
-      
-      merged[cat] = {
-        count: allNames.length,
-        names: allNames,
-        hasOwnerData: ownerNames.length > 0,
-        hasAutoData: autoNames.length > 0
-      };
-    });
-    
-    return merged;
-  };
-
-  // Charger les détails de la propriété depuis le backend
+  // Charger les détails de la propriété depuis les mock data
   const fetchPropertyDetails = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // 🔥 Console.log pour debug (optionnel)
-      console.log(`🌍 PropertyDetailsPage - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
-      console.log(`🔗 PropertyDetailsPage - Backend URL: ${BACKEND_URL}`);
+      console.log(`🌍 PropertyDetailsPage - Using MOCK DATA only`);
+      console.log(`🔍 Looking for property with ID: ${id}`);
       
-      const response = await api.getPropertyById(id);
-      const prop = response.property;
+      // 🔥 UTILISATION UNIQUEMENT DES MOCK DATA
+      // const response = await api.getPropertyById(id);
+      // const prop = response.property;
       
-      const allImages = (prop.images || []).map(img => getImageUrl(img)).filter(Boolean);
+      // Chercher la propriété dans les mock data
+      const mockProp = getMockPropertyById(id);
+      
+      if (!mockProp) {
+        console.error(`Property with id ${id} not found in mock data`);
+        throw new Error('Property not found');
+      }
+      
+      console.log(`✅ Found mock property: ${mockProp.title}`);
+      
+      const allImages = (mockProp.images || []).map(img => getImageUrl(img)).filter(Boolean);
       
       const formattedProperty = {
-        id: prop._id,
-        title: prop.title,
-        location: `${prop.location?.city || ''}, ${prop.location?.region || ''}`,
-        price: prop.price?.amount?.toLocaleString() || '0',
-        status: prop.status === 'PUBLISHED' ? 'sale' : 'lease',
-        type: prop.category?.toLowerCase() || 'land',
-        size: prop.surface?.value || 0,
-        surface: `${prop.surface?.value || 0} ${prop.surface?.unit || 'm²'}`,
-        beds: prop.features?.bedrooms || 3,
-        baths: prop.features?.bathrooms || 2,
-        description: prop.description,
+        id: mockProp.id,
+        title: mockProp.title,
+        location: `${mockProp.location.city || ''}, ${mockProp.location.region || ''}`,
+        price: mockProp.price?.amount?.toLocaleString() || '0',
+        status: mockProp.listingType === 'sale' ? 'sale' : 'lease',
+        type: mockProp.category?.toLowerCase() || 'land',
+        size: mockProp.surface?.value || 0,
+        surface: `${mockProp.surface?.value || 0} ${mockProp.surface?.unit || 'm²'}`,
+        beds: mockProp.features?.bedrooms || 0,
+        baths: mockProp.features?.bathrooms || 0,
+        description: mockProp.description,
         images: allImages.length > 0 ? allImages : ['https://images.unsplash.com/photo-1594759714300-8456f9f68800?q=80&w=2070&auto=format&fit=crop'],
-        coordinates: prop.location?.coordinates,
-        owner: prop.owner,
-        ownerAmenities: prop.amenities || null
+        coordinates: mockProp.location?.coordinates || null,
+        owner: null,
+        ownerAmenities: mockProp.amenities || null,
+        isFurnished: mockProp.features?.isFurnished || false,
+        hasParking: mockProp.features?.hasParking || false,
+        hasGarden: mockProp.features?.hasGarden || false,
+        hasElectricity: mockProp.features?.hasElectricity || false,
+        hasWater: mockProp.features?.hasWater || false,
+        hasElevator: mockProp.features?.hasElevator || false,
+        hasBalcony: mockProp.features?.hasBalcony || false,
+        floor: mockProp.features?.floor || null
       };
       
       setProperty(formattedProperty);
       setCurrentImageIndex(0);
       
-      if (prop._id) {
-        await fetchAmenities(prop._id, prop.amenities);
+      // Charger les amenities depuis les mock data
+      if (mockProp.amenities) {
+        const mockAmenities = {
+          schools: { 
+            count: mockProp.amenities.schools?.count || 0, 
+            names: mockProp.amenities.schools?.names || [], 
+            source: 'mock',
+            hasOwnerData: true,
+            hasAutoData: false
+          },
+          markets: { 
+            count: mockProp.amenities.markets?.count || 0, 
+            names: mockProp.amenities.markets?.names || [], 
+            source: 'mock',
+            hasOwnerData: true,
+            hasAutoData: false
+          },
+          stations: { 
+            count: mockProp.amenities.stations?.count || 0, 
+            names: mockProp.amenities.stations?.names || [], 
+            source: 'mock',
+            hasOwnerData: true,
+            hasAutoData: false
+          },
+          bakeries: { 
+            count: mockProp.amenities.bakeries?.count || 0, 
+            names: mockProp.amenities.bakeries?.names || [], 
+            source: 'mock',
+            hasOwnerData: true,
+            hasAutoData: false
+          }
+        };
+        setAutoAmenities(mockAmenities);
       }
       
     } catch (err) {
-      console.error('Error fetching property details:', err);
-      setError(err.message || 'Error loading property');
+      console.error('Error fetching mock property details:', err);
+      setError(err.message || 'Property not found');
       
+      // Propriété par défaut si non trouvée
       setProperty({
         id: id,
-        title: "Property in Douala",
+        title: "Property in Cameroon",
         location: "Douala, Cameroon",
         price: "150,000,000",
         status: "sale",
@@ -158,64 +188,37 @@ const PropertyDetailsPage = () => {
     if (lightboxOpen) setLightboxOpen(false);
   };
 
-  // Charger les amenities (fusionnées)
-  const fetchAmenities = async (propertyId, ownerAmenities) => {
-    try {
-      setLoadingAmenities(true);
-      const response = await api.getAmenitiesNearProperty(propertyId, 3);
-      
-      // ✅ Normalisation de la réponse
-      let autoData;
-      if (response.amenities) {
-        autoData = response.amenities;
-      } else if (response.data) {
-        autoData = response.data;
-      } else {
-        autoData = response;
-      }
-      
-      // ✅ S'assurer que chaque catégorie a la bonne structure
-      const categories = ['schools', 'markets', 'stations', 'bakeries'];
-      const normalizedData = {};
-      categories.forEach(cat => {
-        if (!autoData[cat] || typeof autoData[cat] !== 'object') {
-          normalizedData[cat] = { count: 0, names: [] };
-        } else {
-          normalizedData[cat] = {
-            count: autoData[cat].count || autoData[cat].names?.length || 0,
-            names: autoData[cat].names || []
-          };
-        }
-      });
-      
-      const mergedAmenities = mergeAmenities(ownerAmenities, normalizedData);
-      setAutoAmenities(mergedAmenities);
-      
-    } catch (err) {
-      console.error('Error fetching amenities:', err);
-      // Fallback...
-    }
-  };
-
   const handleContactSubmit = async (e) => {
     e.preventDefault();
     setFormStatus('loading');
     
-    try {
-      await api.createInquiry?.({
+    // Simulation d'envoi (backend commenté)
+    setTimeout(() => {
+      console.log('Inquiry submitted (mock):', {
         property: property.id,
         propertyTitle: property.title,
         ...formData
       });
-      
       setFormStatus('success');
       setFormData({ name: '', email: '', message: '' });
       setTimeout(() => setFormStatus(null), 3000);
-    } catch (err) {
-      console.error('Error sending inquiry:', err);
-      setFormStatus('error');
-      setTimeout(() => setFormStatus(null), 3000);
-    }
+    }, 1000);
+    
+    // 🔥 BACKEND COMMENTÉ
+    // try {
+    //   await api.createInquiry?.({
+    //     property: property.id,
+    //     propertyTitle: property.title,
+    //     ...formData
+    //   });
+    //   setFormStatus('success');
+    //   setFormData({ name: '', email: '', message: '' });
+    //   setTimeout(() => setFormStatus(null), 3000);
+    // } catch (err) {
+    //   console.error('Error sending inquiry:', err);
+    //   setFormStatus('error');
+    //   setTimeout(() => setFormStatus(null), 3000);
+    // }
   };
 
   const handleInputChange = (e) => {
@@ -318,8 +321,8 @@ const PropertyDetailsPage = () => {
         <div className="flex flex-col lg:flex-row justify-between items-start mb-12 gap-8">
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-4">
-              <span className="bg-pc-gold text-white px-3 py-1 text-[9px] font-black uppercase tracking-widest">
-                {property.status === 'sale' ? 'For Sale' : 'For Lease'}
+              <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white ${property.status === 'sale' ? 'bg-pc-gold' : 'bg-slate-900'}`}>
+                {property.status === 'sale' ? 'For Sale' : 'For Rent'}
               </span>
               <span className="text-slate-400 text-[9px] font-black uppercase tracking-widest">
                 Ref: #PC-{property.id?.slice(-6) || property.id}
@@ -339,7 +342,12 @@ const PropertyDetailsPage = () => {
             <div className="text-4xl font-bold text-pc-gold">
               {property.price} <span className="text-xs font-light text-white/50 ml-1 uppercase">XAF</span>
             </div>
-            {!isLand && <p className="text-[9px] text-white/30 uppercase mt-2 italic font-medium tracking-tighter">Conditions apply / monthly basis</p>}
+            {!isLand && property.status === 'rent' && (
+              <p className="text-[9px] text-white/30 uppercase mt-2 italic font-medium tracking-tighter">per month</p>
+            )}
+            {!isLand && property.status === 'sale' && (
+              <p className="text-[9px] text-white/30 uppercase mt-2 italic font-medium tracking-tighter">including fees</p>
+            )}
             <div className="flex items-center gap-2 mt-6 py-3 border-t border-white/10">
               <div className="w-2 h-2 bg-pc-green rounded-full animate-pulse"></div>
               <span className="text-[9px] font-black uppercase tracking-[0.2em] text-pc-green">Certified Legal Title</span>
@@ -410,10 +418,10 @@ const PropertyDetailsPage = () => {
                 <SpecItem icon={<Maximize size={20}/>} label="Total Area" value={`${property.size} m²`} />
               ) : (
                 <>
-                  <SpecItem icon={<Bed size={20}/>} label="Bedrooms" value={property.beds || 'N/A'} />
-                  <SpecItem icon={<Bath size={20}/>} label="Bathrooms" value={property.baths || 'N/A'} />
-                  <SpecItem icon={<Maximize size={20}/>} label="Total Surface" value={property.surface || 'N/A'} />
-                  <SpecItem icon={<Car size={20}/>} label="Parking Slot" value="Available" />
+                  {property.beds > 0 && <SpecItem icon={<Bed size={20}/>} label="Bedrooms" value={property.beds} />}
+                  {property.baths > 0 && <SpecItem icon={<Bath size={20}/>} label="Bathrooms" value={property.baths} />}
+                  <SpecItem icon={<Maximize size={20}/>} label="Total Surface" value={property.surface} />
+                  <SpecItem icon={<Car size={20}/>} label="Parking" value={property.hasParking ? "Available" : "N/A"} />
                 </>
               )}
             </div>
@@ -426,16 +434,11 @@ const PropertyDetailsPage = () => {
               </div>
             </section>
 
-            {/* NEIGHBORHOOD ANALYSIS - AVEC FUSION */}
+            {/* NEIGHBORHOOD ANALYSIS - AVEC DONNÉES MOCK */}
             <section className="bg-slate-50 p-10 md:p-16 rounded-sm">
               <div className="text-center mb-16">
                 <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-900 mb-3">Strategic Proximity</h2>
                 <div className="w-12 h-1 bg-pc-gold mx-auto"></div>
-                {loadingAmenities && (
-                  <div className="mt-4 flex justify-center">
-                    <Loader2 size={20} className="text-pc-gold animate-spin" />
-                  </div>
-                )}
                 {!loadingAmenities && property.ownerAmenities && (
                   <p className="text-[9px] text-green-600 mt-2 flex items-center justify-center gap-1">
                     <CheckCircle2 size={12} /> Includes location information provided by the owner
@@ -520,10 +523,12 @@ const PropertyDetailsPage = () => {
                 </form>
               </div>
               
-              {property.owner && property.owner.phone && (
+              {property.isFurnished !== undefined && (
                 <div className="p-8 border border-slate-100 bg-slate-50/30 text-center">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Direct Channel</p>
-                  <p className="text-lg font-serif text-slate-900">{property.owner.phone}</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Furnishing Status</p>
+                  <p className="text-lg font-serif text-slate-900">
+                    {property.isFurnished ? '🛋️ Fully Furnished' : '📦 Unfurnished'}
+                  </p>
                 </div>
               )}
             </div>
