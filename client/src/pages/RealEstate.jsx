@@ -1,4 +1,4 @@
-// frontend/src/pages/RealEstate.jsx (version corrigée)
+// frontend/src/pages/RealEstate.jsx - VERSION CORRIGÉE
 
 import React, { useState, useEffect, useRef } from 'react';
 import PropertyCard from '../components/real-estate/PropertyCard';
@@ -15,29 +15,15 @@ const BACKEND_URL = isDevelopment
   ? 'http://localhost:5000'
   : 'https://property-cameroon-backend.vercel.app';
 
-// ✅ Fonction SIMPLIFIÉE pour obtenir l'URL de l'image
-const getImageUrl = (imagePath) => {
-  if (!imagePath) return null;
-  
-  // Si c'est déjà une URL complète (HTTP/HTTPS) - c'est le cas pour Vercel Blob
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    // En production, accepter toutes les URLs HTTPS
-    if (!isDevelopment && imagePath.startsWith('https://')) {
-      return imagePath;
-    }
-    // En développement, accepter aussi localhost
-    if (isDevelopment) {
-      return imagePath;
-    }
-  }
-  
-  // Pour les chemins relatifs (développement uniquement)
-  if (isDevelopment && imagePath.startsWith('/uploads')) {
-    return `${BACKEND_URL}${imagePath}`;
-  }
-  
-  console.warn('Image URL non supportée:', imagePath);
-  return null;
+// ✅ FONCTION IDENTIQUE À CELLE DE PropertyForm (qui fonctionne)
+const getImageUrl = (image) => {
+  if (!image) return null;
+  // Si c'est déjà une URL complète
+  if (image.startsWith('http')) return image;
+  // Si c'est un chemin relatif avec /uploads
+  if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
+  // Si c'est juste le nom du fichier
+  return `${BACKEND_URL}/uploads/properties/${image}`;
 };
 
 const RealEstate = () => {
@@ -93,16 +79,6 @@ const RealEstate = () => {
       const response = await api.getProperties({ status: 'PUBLISHED' });
       
       console.log('📦 Propriétés reçues:', response.properties?.length);
-      
-      // Afficher les URLs des images pour debug
-      if (response.properties && response.properties.length > 0) {
-        const firstProperty = response.properties[0];
-        console.log('🔍 Première propriété:', {
-          title: firstProperty.title,
-          images: firstProperty.images,
-          imageUrls: (firstProperty.images || []).map(img => getImageUrl(img))
-        });
-      }
       
       setProperties(response.properties || []);
     } catch (err) {
@@ -423,7 +399,6 @@ const RealEstate = () => {
         </div>
       </div>
 
-      {/* Properties Grid */}
       <section className="py-12 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           {filteredProperties.length === 0 ? (
@@ -444,15 +419,6 @@ const RealEstate = () => {
               {filteredProperties.map((property) => {
                 const firstImage = property.images?.[0];
                 const imageUrl = getImageUrl(firstImage);
-                
-                // Debug pour la première propriété
-                if (property.title === filteredProperties[0]?.title) {
-                  console.log('🖼️ Image debug:', {
-                    title: property.title,
-                    originalImage: firstImage,
-                    generatedUrl: imageUrl
-                  });
-                }
                 
                 return (
                   <PropertyCard 
