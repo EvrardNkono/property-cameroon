@@ -11,7 +11,6 @@ import {
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api'; // ✅ BACKEND ACTIF
-// import { getMockPropertyById, MOCK_PROPERTIES } from '../data/mockProperties'; // ❌ COMMENTÉ
 
 // 🔥 Détection automatique de l'environnement
 const isDevelopment = typeof window !== 'undefined' && 
@@ -63,25 +62,34 @@ const PropertyDetailsPage = () => {
       console.log(`🌍 PropertyDetailsPage - Environment: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
       console.log(`🔗 PropertyDetailsPage - Backend URL: ${BACKEND_URL}`);
       console.log(`🔍 Looking for property with ID: ${id}`);
+      console.log(`📡 Calling API: getPropertyById(${id})`);
       
       // ✅ Appel API réel
       const response = await api.getPropertyById(id);
+      console.log(`📦 Raw API response:`, response);
       
-      // Vérifier la structure de la réponse
-      let prop = null;
-      if (response.property) {
+      // Vérifier la structure de la réponse (l'API retourne directement la propriété)
+      // Selon api.js, getPropertyById retourne directement la réponse, pas response.property
+      let prop = response;
+      
+      // Si la réponse a une propriété 'property' (backup)
+      if (response && response.property) {
         prop = response.property;
-      } else if (response.data && response.data.property) {
-        prop = response.data.property;
-      } else if (response) {
-        prop = response;
       }
+      
+      // Si la réponse a une propriété 'data'
+      if (response && response.data && response.data.property) {
+        prop = response.data.property;
+      }
+      
+      console.log(`✅ Property extracted:`, prop ? prop.title : 'NO PROPERTY FOUND');
       
       if (!prop) {
         throw new Error('Property not found');
       }
       
       console.log(`✅ Property loaded: ${prop.title}`);
+      console.log(`📸 Property images: ${prop.images?.length || 0} images`);
       
       // Traiter les images
       const allImages = (prop.images || []).map(img => getImageUrl(img)).filter(Boolean);
@@ -112,6 +120,8 @@ const PropertyDetailsPage = () => {
         hasBalcony: prop.features?.hasBalcony || false,
         floor: prop.features?.floor || null
       };
+      
+      console.log(`✅ Formatted property:`, formattedProperty);
       
       setProperty(formattedProperty);
       setCurrentImageIndex(0);
@@ -152,7 +162,8 @@ const PropertyDetailsPage = () => {
       }
       
     } catch (err) {
-      console.error('Error fetching property details:', err);
+      console.error('❌ Error fetching property details:', err);
+      console.error('Error details:', err.response?.data?.message || err.message);
       setError(err.response?.data?.message || err.message || 'Property not found');
     } finally {
       setLoading(false);
@@ -161,13 +172,13 @@ const PropertyDetailsPage = () => {
 
   // Navigation des images
   const nextImage = () => {
-    if (property) {
+    if (property && property.images) {
       setCurrentImageIndex((prev) => (prev + 1) % property.images.length);
     }
   };
 
   const prevImage = () => {
-    if (property) {
+    if (property && property.images) {
       setCurrentImageIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
     }
   };
@@ -233,7 +244,7 @@ const PropertyDetailsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
+      <div className="min-h-screen flex flex-col">
         <Navbar />
         <div className="flex justify-center items-center h-96">
           <Loader2 size={48} className="text-pc-gold animate-spin mb-4" />
@@ -260,14 +271,14 @@ const PropertyDetailsPage = () => {
   }
 
   const isLand = property.type === 'land' || property.type === 'field' || property.type === 'agricultural land';
-  const currentImage = property.images[currentImageIndex];
+  const currentImage = property.images?.[currentImageIndex] || property.images?.[0];
 
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
 
       {/* Lightbox Modal */}
-      {lightboxOpen && (
+      {lightboxOpen && property.images && (
         <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center" onClick={() => setLightboxOpen(false)}>
           <button onClick={() => setLightboxOpen(false)} className="absolute top-4 right-4 text-white p-2 hover:bg-white/10 rounded-full transition-colors">
             <X size={32} />
@@ -347,16 +358,16 @@ const PropertyDetailsPage = () => {
         <div className="mb-20">
           <div className="relative h-[500px] md:h-[650px] rounded-2xl overflow-hidden mb-4">
             <img 
-              src={currentImage} 
+              src={currentImage || 'https://images.unsplash.com/photo-1594759714300-8456f9f68800?q=80&w=2070&auto=format&fit=crop'} 
               alt={property.title}
               className="w-full h-full object-cover cursor-pointer"
               onError={(e) => {
                 e.target.src = 'https://images.unsplash.com/photo-1594759714300-8456f9f68800?q=80&w=2070&auto=format&fit=crop';
               }}
-              onClick={() => setLightboxOpen(true)}
+              onClick={() => property.images && property.images.length > 0 && setLightboxOpen(true)}
             />
             
-            {property.images.length > 1 && (
+            {property.images && property.images.length > 1 && (
               <>
                 <button 
                   onClick={prevImage}
@@ -373,12 +384,14 @@ const PropertyDetailsPage = () => {
               </>
             )}
             
-            <div className="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
-              {currentImageIndex + 1} / {property.images.length}
-            </div>
+            {property.images && property.images.length > 0 && (
+              <div className="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                {currentImageIndex + 1} / {property.images.length}
+              </div>
+            )}
           </div>
           
-          {property.images.length > 1 && (
+          {property.images && property.images.length > 1 && (
             <div className="grid grid-cols-6 gap-2 md:gap-4">
               {property.images.map((img, idx) => (
                 <div 
