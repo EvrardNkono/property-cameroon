@@ -1,11 +1,11 @@
-// frontend/src/pages/RealEstate.jsx - VERSION AVEC BACKEND UNIQUEMENT
+// frontend/src/pages/RealEstate.jsx - VERSION AVEC MOCK DATA UNIQUEMENT (SANS LOGS)
 
 import React, { useState, useEffect } from 'react';
 import PropertyCard from '../components/real-estate/PropertyCard';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import api from '../services/api'; // ✅ BACKEND ACTIF
-// import { MOCK_PROPERTIES } from '../data/mockProperties'; // ❌ COMMENTÉ - Plus utilisé
+// import api from '../services/api'; // ❌ COMMENTÉ - Backend temporairement désactivé
+import { MOCK_PROPERTIES } from '../data/mockProperties';
 import { 
   Search, X, Home, Building2, 
   MapPin, Filter, AlertCircle,
@@ -73,41 +73,15 @@ const RealEstate = () => {
     applyFilters();
   }, [filters, properties, searchTerm]);
 
-  // ✅ BACKEND ACTIF - Récupération depuis l'API
+  // ✅ UTILISATION UNIQUEMENT DES MOCK DATA
   const fetchProperties = async () => {
     try {
       setLoading(true);
-      setError(null);
       
-      console.log(`🌍 RealEstate - Environment: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
-      console.log(`🔗 RealEstate - Backend URL: ${BACKEND_URL}`);
+      // 🔥 BACKEND COMMENTÉ - Utilisation des mock data uniquement
+      // const response = await api.getProperties({ status: 'PUBLISHED' });
       
-      // Appel API pour récupérer les propriétés publiées
-      const response = await api.getProperties({ status: 'PUBLISHED' });
-      
-      // Vérifier la structure de la réponse
-      let propertiesData = [];
-      if (response.properties) {
-        propertiesData = response.properties;
-      } else if (Array.isArray(response)) {
-        propertiesData = response;
-      } else if (response.data && response.data.properties) {
-        propertiesData = response.data.properties;
-      } else if (response.data && Array.isArray(response.data)) {
-        propertiesData = response.data;
-      }
-      
-      setProperties(propertiesData);
-      console.log(`✅ ${propertiesData.length} properties loaded from backend`);
-      
-    } catch (err) {
-      console.error('Error fetching properties:', err);
-      setError(err.response?.data?.message || err.message || 'Failed to load properties');
-      
-      // Fallback option: utiliser mock data si backend indisponible (optionnel)
-      // Tu peux décommenter cette partie si tu veux un fallback
-      /*
-      console.log('⚠️ Using mock data as fallback');
+      // Formater les mock data pour correspondre au format attendu
       const formattedMockProperties = MOCK_PROPERTIES.map(prop => ({
         _id: prop.id,
         title: prop.title,
@@ -147,9 +121,12 @@ const RealEstate = () => {
           bakeries: { count: 0, names: [] }
         }
       }));
-      setProperties(formattedMockProperties);
-      */
       
+      setProperties(formattedMockProperties);
+      
+    } catch (err) {
+      console.error('Error loading mock properties:', err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -242,28 +219,6 @@ const RealEstate = () => {
         <Navbar />
         <div className="flex justify-center items-center h-96">
           <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (error && properties.length === 0) {
-    return (
-      <div className="min-h-screen bg-white">
-        <Navbar />
-        <div className="flex flex-col items-center justify-center h-96 px-4">
-          <div className="bg-red-50 text-red-600 p-6 rounded-2xl text-center max-w-md">
-            <AlertCircle size={40} className="mx-auto mb-3 text-red-500" />
-            <p className="font-bold">Error loading properties</p>
-            <p className="text-sm mt-1">{error}</p>
-            <button
-              onClick={fetchProperties}
-              className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700"
-            >
-              Try Again
-            </button>
-          </div>
         </div>
         <Footer />
       </div>

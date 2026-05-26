@@ -1,7 +1,7 @@
-// frontend/src/components/real-estate/PropertyCard.jsx - VERSION AVEC RECHARGEMENT FORCÉ
+// frontend/src/components/real-estate/PropertyCard.jsx - CORRIGÉ
 
 import React from 'react';
-// import { Link, useNavigate } from 'react-router-dom'; // COMMENTÉ - Utilisation de window.location.href à la place
+import { Link, useNavigate } from 'react-router-dom';
 
 // 🔥 Détection automatique de l'environnement
 const isDevelopment = typeof window !== 'undefined' && 
@@ -66,6 +66,8 @@ const getFurnishedLabel = (isFurnished) => {
 };
 
 const PropertyCard = ({ property }) => {
+  const navigate = useNavigate();
+  
   // ✅ Utilisation de listingType (sale/rent) depuis le backend
   const isSale = property.listingType === 'sale' || property.listingType === 'SALE';
   
@@ -112,13 +114,12 @@ const PropertyCard = ({ property }) => {
   // 🔥 Debug - Afficher l'ID dans la console
   console.log('PropertyCard - ID:', propertyId, 'Title:', property.title);
 
-  // 🔥 Gestion du clic - Force le rechargement complet de la page
-  const handleViewDetails = () => {
+  // 🔥 Gestion du clic manuelle (alternative si Link ne fonctionne pas)
+  const handleViewDetails = (e) => {
+    e.preventDefault();
     if (propertyId) {
-      console.log('🔍 Navigating to property:', propertyId);
-      console.log('📍 Target URL:', `/real-estate/${propertyId}`);
-      // Force un rechargement complet de la page
-      window.location.href = `/real-estate/${propertyId}`;
+      console.log('Navigating to:', `/real-estate/${propertyId}`);
+      navigate(`/real-estate/${propertyId}`);
     } else {
       console.error('No property ID found!', property);
     }
@@ -261,15 +262,23 @@ const PropertyCard = ({ property }) => {
           </div>
         </div>
 
-        {/* Bouton Détail - Avec rechargement forcé */}
-        <div className="mt-auto">
+        {/* Bouton Détail - Version 1: Link (recommendée) */}
+        {propertyId ? (
+          <Link 
+            to={`/real-estate/${propertyId}`} 
+            className="block w-full text-center border border-slate-900 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 hover:bg-slate-900 hover:text-white transition-all duration-300 rounded-lg"
+          >
+            View Full Details
+          </Link>
+        ) : (
+          // Fallback: bouton avec navigate manuel
           <button
             onClick={handleViewDetails}
             className="block w-full text-center border border-slate-900 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 hover:bg-slate-900 hover:text-white transition-all duration-300 rounded-lg cursor-pointer"
           >
             View Full Details
           </button>
-        </div>
+        )}
       </div>
     </div>
   );
