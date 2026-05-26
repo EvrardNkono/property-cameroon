@@ -111,8 +111,7 @@ const PropertyCard = ({ property }) => {
   const bathrooms = property.features?.bathrooms || property.baths || 0;
   const isFurnished = property.features?.isFurnished || property.isFurnished || false;
 
-  // 🔥 Debug - Afficher l'ID dans la console
-  console.log('PropertyCard - ID:', propertyId, 'Title:', property.title);
+  
 
   // 🔥 Gestion du clic manuelle (alternative si Link ne fonctionne pas)
   const handleViewDetails = (e) => {
