@@ -1,7 +1,7 @@
-// frontend/src/components/real-estate/PropertyCard.jsx
+// frontend/src/components/real-estate/PropertyCard.jsx - CORRIGÉ
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 // 🔥 Détection automatique de l'environnement
 const isDevelopment = typeof window !== 'undefined' && 
@@ -66,8 +66,13 @@ const getFurnishedLabel = (isFurnished) => {
 };
 
 const PropertyCard = ({ property }) => {
+  const navigate = useNavigate();
+  
   // ✅ Utilisation de listingType (sale/rent) depuis le backend
   const isSale = property.listingType === 'sale' || property.listingType === 'SALE';
+  
+  // 🔥 Récupérer l'ID correctement
+  const propertyId = property._id || property.id;
   
   // 🔥 Fonction pour obtenir l'URL complète de l'image avec fallback backend
   const getImageUrl = (image) => {
@@ -105,6 +110,20 @@ const PropertyCard = ({ property }) => {
   const bedrooms = property.features?.bedrooms || property.beds || 0;
   const bathrooms = property.features?.bathrooms || property.baths || 0;
   const isFurnished = property.features?.isFurnished || property.isFurnished || false;
+
+  // 🔥 Debug - Afficher l'ID dans la console
+  console.log('PropertyCard - ID:', propertyId, 'Title:', property.title);
+
+  // 🔥 Gestion du clic manuelle (alternative si Link ne fonctionne pas)
+  const handleViewDetails = (e) => {
+    e.preventDefault();
+    if (propertyId) {
+      console.log('Navigating to:', `/real-estate/${propertyId}`);
+      navigate(`/real-estate/${propertyId}`);
+    } else {
+      console.error('No property ID found!', property);
+    }
+  };
 
   return (
     <div className="group bg-white border border-slate-100 hover:shadow-2xl transition-all duration-500 relative flex flex-col h-full rounded-xl overflow-hidden">
@@ -243,15 +262,23 @@ const PropertyCard = ({ property }) => {
           </div>
         </div>
 
-        {/* Bouton Détail */}
-        <div className="mt-auto">
+        {/* Bouton Détail - Version 1: Link (recommendée) */}
+        {propertyId ? (
           <Link 
-            to={`/real-estate/${property._id || property.id}`} 
+            to={`/real-estate/${propertyId}`} 
             className="block w-full text-center border border-slate-900 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 hover:bg-slate-900 hover:text-white transition-all duration-300 rounded-lg"
           >
             View Full Details
           </Link>
-        </div>
+        ) : (
+          // Fallback: bouton avec navigate manuel
+          <button
+            onClick={handleViewDetails}
+            className="block w-full text-center border border-slate-900 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 hover:bg-slate-900 hover:text-white transition-all duration-300 rounded-lg cursor-pointer"
+          >
+            View Full Details
+          </button>
+        )}
       </div>
     </div>
   );
