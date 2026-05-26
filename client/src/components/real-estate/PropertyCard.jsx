@@ -123,6 +123,7 @@ const PropertyCard = ({ property }) => {
       console.error('No property ID found!', property);
     }
   };
+  
 
   return (
     <div className="group bg-white border border-slate-100 hover:shadow-2xl transition-all duration-500 relative flex flex-col h-full rounded-xl overflow-hidden">
