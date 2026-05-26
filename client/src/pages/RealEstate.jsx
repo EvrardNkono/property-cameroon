@@ -1,8 +1,8 @@
-// frontend/src/pages/RealEstate.jsx - VERSION AVEC FILTERBAR INTÉGRÉ
+// frontend/src/pages/RealEstate.jsx - VERSION AVEC FILTERBAR INTÉGRÉ ET LOGS
 
 import React, { useState, useEffect } from 'react';
 import PropertyCard from '../components/real-estate/PropertyCard';
-import FilterBar from '../components/real-estate/FilterBar'; // ✅ IMPORT DU FILTERBAR AMÉLIORÉ
+import FilterBar from '../components/real-estate/FilterBar';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
@@ -33,7 +33,6 @@ const RealEstate = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Filtres principaux (ceux du FilterBar)
   const [filters, setFilters] = useState({
     category: '',
     location: '',
@@ -41,7 +40,6 @@ const RealEstate = () => {
     listingType: 'all'
   });
 
-  // Filtres avancés
   const [advancedFilters, setAdvancedFilters] = useState({
     minPrice: '',
     bedrooms: 'all',
@@ -49,7 +47,6 @@ const RealEstate = () => {
   });
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-  // Régions du Cameroun
   const regions = [
     { id: 'all', label: 'All Regions' },
     { id: 'Center', label: 'Center (Yaoundé)' },
@@ -92,8 +89,19 @@ const RealEstate = () => {
         propertiesData = response.data;
       }
       
-      setProperties(propertiesData);
+      // 🔥 LOG - Afficher les premières propriétés pour vérifier les IDs
       console.log(`✅ ${propertiesData.length} properties loaded from backend`);
+      if (propertiesData.length > 0) {
+        console.log('📋 Sample property data:', {
+          id: propertiesData[0]._id,
+          title: propertiesData[0].title,
+          hasId: !!propertiesData[0]._id
+        });
+      } else {
+        console.warn('⚠️ No properties found in backend response');
+      }
+      
+      setProperties(propertiesData);
       
     } catch (err) {
       console.error('Error fetching properties:', err);
@@ -103,7 +111,6 @@ const RealEstate = () => {
     }
   };
 
-  // ✅ Gestion des changements de filtres depuis FilterBar
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
   };
@@ -111,7 +118,6 @@ const RealEstate = () => {
   const applyFilters = () => {
     let filtered = [...properties];
     
-    // Recherche textuelle
     if (searchTerm) {
       filtered = filtered.filter(p => 
         p.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -120,7 +126,6 @@ const RealEstate = () => {
       );
     }
     
-    // Filtres du FilterBar
     if (filters.category && filters.category !== '') {
       filtered = filtered.filter(p => p.category === filters.category);
     }
@@ -138,7 +143,6 @@ const RealEstate = () => {
       filtered = filtered.filter(p => p.price?.amount <= maxBudgetNum);
     }
     
-    // Filtres avancés
     if (advancedFilters.minPrice) {
       filtered = filtered.filter(p => p.price?.amount >= parseInt(advancedFilters.minPrice));
     }
@@ -176,7 +180,6 @@ const RealEstate = () => {
     setSearchTerm('');
   };
 
-  // Vérifier si des filtres sont actifs
   const hasActiveFilters = () => {
     return filters.category !== '' ||
            filters.location !== '' ||
@@ -244,7 +247,6 @@ const RealEstate = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-emerald-900 to-emerald-800 text-white pt-24 pb-20">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
@@ -261,10 +263,8 @@ const RealEstate = () => {
         </div>
       </section>
 
-      {/* ✅ FILTER BAR INTÉGRÉ */}
       <FilterBar onFilterChange={handleFilterChange} />
 
-      {/* Search Bar Additionnelle */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-6">
         <div className="relative">
           <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -278,7 +278,6 @@ const RealEstate = () => {
         </div>
       </div>
 
-      {/* Advanced Filters Toggle */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-4">
         <button
           onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
@@ -290,12 +289,10 @@ const RealEstate = () => {
         </button>
       </div>
 
-      {/* Advanced Filters Panel */}
       {showAdvancedFilters && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-4">
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Min Price */}
               <div>
                 <label className="block text-[10px] font-bold uppercase text-gray-400 mb-2">Min Price (FCFA)</label>
                 <input
@@ -307,7 +304,6 @@ const RealEstate = () => {
                 />
               </div>
 
-              {/* Bedrooms */}
               <div>
                 <label className="block text-[10px] font-bold uppercase text-gray-400 mb-2">Bedrooms</label>
                 <select
@@ -324,7 +320,6 @@ const RealEstate = () => {
                 </select>
               </div>
 
-              {/* Furnished */}
               <div>
                 <label className="block text-[10px] font-bold uppercase text-gray-400 mb-2">Furnished Status</label>
                 <select
@@ -342,7 +337,6 @@ const RealEstate = () => {
         </div>
       )}
 
-      {/* Properties Grid */}
       <section className="py-12 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           {filteredProperties.length === 0 ? (
@@ -362,15 +356,26 @@ const RealEstate = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-              {filteredProperties.map((property) => {
+              {filteredProperties.map((property, index) => {
                 const firstImage = property.images?.[0];
                 const imageUrl = getImageUrl(firstImage);
+                const propertyId = property._id;
+                
+                // 🔥 LOG - Afficher chaque propriété rendue
+                console.log(`🎴 Rendering property ${index + 1}/${filteredProperties.length}:`, {
+                  id: propertyId,
+                  title: property.title,
+                  idType: typeof propertyId,
+                  hasId: !!propertyId,
+                  url: `/real-estate/${propertyId}`
+                });
                 
                 return (
                   <PropertyCard 
-                    key={property._id}
+                    key={propertyId || index}
                     property={{
-                      id: property._id,
+                      id: propertyId,
+                      _id: propertyId,
                       title: property.title,
                       image: imageUrl || 'https://images.unsplash.com/photo-1594759714300-8456f9f68800?q=80&w=2070&auto=format&fit=crop',
                       listingType: property.listingType || 'sale',
