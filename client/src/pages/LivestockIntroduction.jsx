@@ -8,25 +8,30 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import api from '../services/api';
+import api from '../services/api'; // ✅ BACKEND ACTIF
+// import { MOCK_LIVESTOCK, getMockLivestockStats } from '../data/mockLivestock'; // ❌ COMMENTÉ
 
-// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+// 🔥 Auto environment detection
 const isDevelopment = typeof window !== 'undefined' && 
                       (window.location.hostname === 'localhost' || 
                        window.location.hostname === '127.0.0.1' ||
                        window.location.hostname === '');
 
-// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+// Hardcoded URLs based on environment
 const BACKEND_URL = isDevelopment 
-  ? 'http://localhost:5000'           // URL locale
-  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+  ? 'http://localhost:5000'           // Local URL
+  : 'https://property-cameroon-backend.vercel.app';  // Production URL
 
 // Map des icônes par nom
 const iconMap = {
   Fish: <Fish size={32} />,
   Bird: <Bird size={32} />,
   Database: <Database size={32} />,
-  Leaf: <Leaf size={32} />
+  Leaf: <Leaf size={32} />,
+  pigs: <Database size={32} />,
+  cattle: <Database size={32} />,
+  goats: <Database size={32} />,
+  sheep: <Database size={32} />
 };
 
 const LivestockIntroduction = () => {
@@ -39,7 +44,7 @@ const LivestockIntroduction = () => {
     totalValue: 0
   });
 
-  // 🔥 Fonction utilitaire pour obtenir l'URL complète d'une image
+  // Utility function to get full image URL
   const getFullImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
@@ -47,21 +52,24 @@ const LivestockIntroduction = () => {
     return `${BACKEND_URL}/uploads/${imagePath}`;
   };
 
-  const fetchCategories = async () => {
+  // ==================== BACKEND VERSION (ACTIVE) ====================
+  const fetchCategoriesFromBackend = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // 🔥 Console.log pour debug (optionnel)
-      console.log(`🌍 LivestockIntroduction - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+      console.log(`🌍 LivestockIntroduction - Environment: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
       console.log(`🔗 LivestockIntroduction - Backend URL: ${BACKEND_URL}`);
       
+      // Fetch categories from backend
       const categoriesRes = await api.getAllLivestockCategories({ isActive: true });
-      const dbCategories = categoriesRes.categories || [];
+      const dbCategories = categoriesRes.categories || categoriesRes || [];
       
+      // Fetch all livestock
       const livestockRes = await api.getAllLivestock({ status: 'AVAILABLE' });
-      const livestock = livestockRes.livestock || [];
+      const livestock = livestockRes.livestock || livestockRes || [];
       
+      // Calculate stats
       const totalValue = livestock.reduce((sum, item) => sum + (item.price?.amount || 0), 0);
       const avgRoi = livestock.length > 0 
         ? livestock.reduce((sum, item) => sum + (item.roi || 0), 0) / livestock.length 
@@ -73,6 +81,7 @@ const LivestockIntroduction = () => {
         totalValue: totalValue
       });
       
+      // Group livestock by category
       const grouped = {};
       livestock.forEach(item => {
         if (!grouped[item.category]) {
@@ -81,10 +90,11 @@ const LivestockIntroduction = () => {
         grouped[item.category].push(item);
       });
       
+      // Format categories for display
       const formattedCategories = dbCategories.map(cat => {
         const categoryAssets = grouped[cat.slug] || [];
         
-        // 🔥 Construction de l'URL de l'image avec BACKEND_URL dynamique
+        // Get category image URL
         let imageUrl = '';
         if (cat.imageType === 'upload' && cat.imageUpload) {
           imageUrl = getFullImageUrl(cat.imageUpload);
@@ -109,14 +119,74 @@ const LivestockIntroduction = () => {
       });
       
       setCategories(formattedCategories);
+      console.log(`✅ Loaded ${formattedCategories.length} categories with ${livestock.length} total assets`);
       
     } catch (err) {
       console.error('Error fetching categories:', err);
-      setError(err.message || 'Erreur de chargement des catégories');
+      setError(err.response?.data?.message || err.message || 'Error loading categories');
     } finally {
       setLoading(false);
     }
   };
+
+  // ==================== MOCK VERSION (COMMENTED OUT) ====================
+  /*
+  const fetchCategoriesFromMock = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      const livestock = MOCK_LIVESTOCK;
+      const mockStats = getMockLivestockStats();
+      
+      setStats({
+        totalAssets: mockStats.totalAssets,
+        avgROI: mockStats.avgROI,
+        totalValue: mockStats.totalValue
+      });
+      
+      const grouped = {};
+      livestock.forEach(item => {
+        if (!grouped[item.category]) {
+          grouped[item.category] = [];
+        }
+        grouped[item.category].push(item);
+      });
+      
+      const formattedCategories = Object.keys(CATEGORIES_CONFIG).map(catSlug => {
+        const config = CATEGORIES_CONFIG[catSlug];
+        const categoryAssets = grouped[catSlug] || [];
+        
+        return {
+          id: catSlug,
+          slug: catSlug,
+          title: config.title,
+          subtitle: config.subtitle,
+          description: config.description,
+          icon: iconMap[config.iconName] || <Leaf size={32} />,
+          count: categoryAssets.length,
+          totalValue: categoryAssets.reduce((sum, item) => sum + (item.price?.amount || 0), 0),
+          image: config.imageUrl,
+          marketDemand: config.marketDemand
+        };
+      });
+      
+      const activeCategories = formattedCategories.filter(cat => cat.count > 0);
+      setCategories(activeCategories);
+      
+    } catch (err) {
+      console.error('Error loading mock categories:', err);
+      setError(err.message || 'Error loading categories');
+    } finally {
+      setLoading(false);
+    }
+  };
+  */
+
+  // Choose which fetch function to use - BACKEND ACTIVE
+  const fetchCategories = fetchCategoriesFromBackend;
 
   useEffect(() => {
     fetchCategories();
@@ -130,12 +200,12 @@ const LivestockIntroduction = () => {
           <div className="w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center mb-6">
             <Leaf size={48} className="text-emerald-400" />
           </div>
-          <h2 className="text-2xl font-serif text-emerald-900 mb-3">Aucune catégorie disponible</h2>
+          <h2 className="text-2xl font-serif text-emerald-900 mb-3">No categories available</h2>
           <p className="text-emerald-600/70 text-center max-w-md mb-6">
-            Les catégories d'élevage seront bientôt disponibles.
+            Livestock categories will be available soon.
           </p>
           <Link to="/" className="text-emerald-600 text-sm font-bold underline hover:text-emerald-800">
-            Retour à l'accueil
+            Back to home
           </Link>
         </div>
         <Footer />
@@ -147,7 +217,7 @@ const LivestockIntroduction = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      {/* HERO SECTION - plus épurée */}
+      {/* HERO SECTION */}
       <section className="relative bg-gradient-to-br from-emerald-900 to-emerald-800 text-white py-24">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <motion.div
@@ -178,7 +248,7 @@ const LivestockIntroduction = () => {
         </div>
       </section>
 
-      {/* STATS SECTION - plus claire */}
+      {/* STATS SECTION */}
       <section className="py-12 bg-white border-b">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -211,23 +281,23 @@ const LivestockIntroduction = () => {
         </div>
       </section>
 
-      {/* CATEGORIES SECTION - image plus visible */}
+      {/* CATEGORIES SECTION */}
       <section className="py-16 px-6 max-w-7xl mx-auto">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-32">
             <Loader2 size={48} className="text-emerald-600 animate-spin mb-4" />
-            <p className="text-gray-500">Chargement...</p>
+            <p className="text-gray-500">Loading...</p>
           </div>
         ) : error ? (
           <div className="bg-red-50 text-red-600 p-6 rounded-2xl text-center max-w-lg mx-auto">
             <AlertCircle size={40} className="mx-auto mb-3" />
-            <p className="font-bold">Erreur de chargement</p>
+            <p className="font-bold">Loading Error</p>
             <p className="text-sm mt-1">{error}</p>
             <button 
               onClick={fetchCategories}
               className="mt-4 px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700"
             >
-              Réessayer
+              Try Again
             </button>
           </div>
         ) : (
@@ -242,7 +312,6 @@ const LivestockIntroduction = () => {
               >
                 <Link to={`/agriculture/livestock/${cat.slug}`} className="block">
                   <div className="relative h-80 rounded-2xl overflow-hidden shadow-lg">
-                    {/* Image - pleine visibilité */}
                     <img 
                       src={cat.image} 
                       alt={cat.title}
@@ -252,10 +321,8 @@ const LivestockIntroduction = () => {
                       }}
                     />
                     
-                    {/* Overlay léger au survol uniquement */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     
-                    {/* Contenu - toujours visible */}
                     <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
                       <div className="flex items-center gap-3 mb-2">
                         <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center text-white">
@@ -274,17 +341,17 @@ const LivestockIntroduction = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex gap-4">
                           <div>
-                            <p className="text-[10px] font-bold uppercase text-white/50">Actifs</p>
+                            <p className="text-[10px] font-bold uppercase text-white/50">Assets</p>
                             <p className="text-lg font-bold text-white">{cat.count}</p>
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold uppercase text-white/50">Valeur</p>
+                            <p className="text-[10px] font-bold uppercase text-white/50">Value</p>
                             <p className="text-lg font-bold text-amber-400">
                               {(cat.totalValue / 1000000).toFixed(1)}M FCFA
                             </p>
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold uppercase text-white/50">Demande</p>
+                            <p className="text-[10px] font-bold uppercase text-white/50">Demand</p>
                             <p className="text-lg font-bold text-green-400">{cat.marketDemand}</p>
                           </div>
                         </div>
@@ -300,19 +367,19 @@ const LivestockIntroduction = () => {
         )}
       </section>
 
-      {/* WHY INVEST SECTION - simplifiée */}
+      {/* WHY INVEST SECTION */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Pourquoi investir ?</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Why Invest?</h2>
             <div className="w-20 h-1 bg-amber-500 mx-auto" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: <ShieldCheck size={28} />, title: "Actifs certifiés", description: "Unités de production certifiées et sécurisées" },
-              { icon: <Clock size={28} />, title: "Cycles courts", description: "Retour sur investissement rapide" },
-              { icon: <Globe size={28} />, title: "Prêt pour l'export", description: "Accès aux marchés internationaux" }
+              { icon: <ShieldCheck size={28} />, title: "Certified Assets", description: "Certified and secured production units" },
+              { icon: <Clock size={28} />, title: "Short Cycles", description: "Fast return on investment" },
+              { icon: <Globe size={28} />, title: "Export Ready", description: "Access to international markets" }
             ].map((item, i) => (
               <div key={i} className="text-center p-6 rounded-2xl border border-gray-100 hover:shadow-lg transition-shadow">
                 <div className="w-14 h-14 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-4 text-emerald-600">
@@ -331,10 +398,10 @@ const LivestockIntroduction = () => {
         <div className="max-w-4xl mx-auto text-center">
           <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-2xl p-10 shadow-xl">
             <BadgeCheck size={48} className="text-white/80 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-white mb-3">Prêt à investir ?</h3>
-            <p className="text-emerald-100 mb-6">Programmez une consultation avec nos experts</p>
+            <h3 className="text-2xl font-bold text-white mb-3">Ready to Invest?</h3>
+            <p className="text-emerald-100 mb-6">Schedule a consultation with our experts</p>
             <button className="px-6 py-3 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition-colors inline-flex items-center gap-2">
-              Prendre rendez-vous <ArrowRight size={18} />
+              Book Appointment <ArrowRight size={18} />
             </button>
           </div>
         </div>

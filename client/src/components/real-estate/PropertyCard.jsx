@@ -66,23 +66,45 @@ const getFurnishedLabel = (isFurnished) => {
 };
 
 const PropertyCard = ({ property }) => {
-  // ✅ Utilisation de listingType (sale/rent)
-  const isSale = property.listingType === 'sale';
-
-  // 🔥 Fonction pour obtenir l'URL complète de l'image
+  // ✅ Utilisation de listingType (sale/rent) depuis le backend
+  const isSale = property.listingType === 'sale' || property.listingType === 'SALE';
+  
+  // 🔥 Fonction pour obtenir l'URL complète de l'image avec fallback backend
   const getImageUrl = (image) => {
     if (!image) return 'https://images.unsplash.com/photo-1594759714300-8456f9f68800?q=80&w=2070&auto=format&fit=crop';
     if (image.startsWith('http')) return image;
+    if (image.startsWith('blob:')) return 'https://images.unsplash.com/photo-1594759714300-8456f9f68800?q=80&w=2070&auto=format&fit=crop';
     if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
     return `${BACKEND_URL}/uploads/properties/${image}`;
   };
 
+  // Récupérer la première image du tableau d'images
+  const firstImage = property.images?.[0] || property.image;
+  
   // 🔥 Traitement de l'image
-  const processedImage = getImageUrl(property.image);
+  const processedImage = getImageUrl(firstImage);
 
   // Déterminer si c'est une propriété résidentielle (pour afficher le statut meublé)
   const residentialCategories = ['House', 'Villa', 'Duplex', 'Apartment', 'Studio', 'Room'];
   const showFurnishedStatus = residentialCategories.includes(property.category);
+
+  // Récupérer la surface (priorité à surface.value, puis size)
+  const surfaceValue = property.surface?.value || property.size || 0;
+  const surfaceUnit = property.surface?.unit || 'm²';
+
+  // Récupérer le prix
+  const priceAmount = property.price?.amount || property.price || 0;
+  const priceCurrency = property.price?.currency || 'FCFA';
+
+  // Récupérer la localisation
+  const locationText = property.location?.city 
+    ? `${property.location.city}, ${property.location.region || ''}`
+    : property.location || 'Cameroon';
+
+  // Récupérer les caractéristiques
+  const bedrooms = property.features?.bedrooms || property.beds || 0;
+  const bathrooms = property.features?.bathrooms || property.baths || 0;
+  const isFurnished = property.features?.isFurnished || property.isFurnished || false;
 
   return (
     <div className="group bg-white border border-slate-100 hover:shadow-2xl transition-all duration-500 relative flex flex-col h-full rounded-xl overflow-hidden">
@@ -111,14 +133,14 @@ const PropertyCard = ({ property }) => {
         </div>
 
         {/* ✅ Furnished Badge - Pour les propriétés résidentielles */}
-        {showFurnishedStatus && property.isFurnished !== undefined && (
+        {showFurnishedStatus && isFurnished !== undefined && (
           <div className={`absolute top-4 right-4 px-3 py-1.5 text-[8px] font-black uppercase tracking-widest rounded-lg shadow-md flex items-center gap-1.5 z-10 ${
-            property.isFurnished 
+            isFurnished 
               ? 'bg-amber-500 text-white' 
               : 'bg-gray-500 text-white'
           }`}>
-            <span className="text-xs">{getFurnishedIcon(property.isFurnished)}</span>
-            <span>{getFurnishedLabel(property.isFurnished)}</span>
+            <span className="text-xs">{getFurnishedIcon(isFurnished)}</span>
+            <span>{getFurnishedLabel(isFurnished)}</span>
           </div>
         )}
       </div>
@@ -133,7 +155,7 @@ const PropertyCard = ({ property }) => {
           </h3>
           <div className="text-right shrink-0">
             <span className="text-pc-green font-black text-sm block whitespace-nowrap">
-              {property.price} FCFA
+              {priceAmount.toLocaleString()} {priceCurrency}
             </span>
             <span className="text-[8px] text-slate-400 uppercase font-bold">
               {!isSale && '/ month'}
@@ -144,7 +166,7 @@ const PropertyCard = ({ property }) => {
         {/* Localisation */}
         <p className="text-slate-400 text-[10px] uppercase tracking-[0.2em] mb-6 flex items-center gap-2 font-medium">
           <span className="text-pc-gold text-sm">📍</span> 
-          <span className="truncate">{property.location}</span>
+          <span className="truncate">{locationText}</span>
         </p>
 
         {/* Spécifications dynamiques */}
@@ -154,7 +176,7 @@ const PropertyCard = ({ property }) => {
           {property.category === 'Land' || property.category === 'Agricultural Land' ? (
             <div className="flex flex-col">
               <span className="text-[8px] text-slate-400 uppercase tracking-widest">Total Area</span>
-              <span className="text-xs text-slate-900 font-bold">{property.size} m²</span>
+              <span className="text-xs text-slate-900 font-bold">{surfaceValue} {surfaceUnit}</span>
             </div>
           ) : 
           /* Cas des chambres */
@@ -162,13 +184,13 @@ const PropertyCard = ({ property }) => {
             <>
               <div className="flex flex-col">
                 <span className="text-[8px] text-slate-400 uppercase tracking-widest">Room Area</span>
-                <span className="text-xs text-slate-900 font-bold">{property.size} m²</span>
+                <span className="text-xs text-slate-900 font-bold">{surfaceValue} {surfaceUnit}</span>
               </div>
-              {property.isFurnished !== undefined && (
+              {isFurnished !== undefined && (
                 <div className="flex flex-col">
                   <span className="text-[8px] text-slate-400 uppercase tracking-widest">Status</span>
                   <span className="text-xs font-semibold flex items-center gap-1">
-                    {property.isFurnished ? '🛋️ Furnished' : '📦 Unfurnished'}
+                    {isFurnished ? '🛋️ Furnished' : '📦 Unfurnished'}
                   </span>
                 </div>
               )}
@@ -178,36 +200,36 @@ const PropertyCard = ({ property }) => {
           property.category === 'Parking' ? (
             <div className="flex flex-col">
               <span className="text-[8px] text-slate-400 uppercase tracking-widest">Parking Spots</span>
-              <span className="text-xs text-slate-900 font-bold">{property.size || 1} spots</span>
+              <span className="text-xs text-slate-900 font-bold">{surfaceValue || 1} spots</span>
             </div>
           ) : 
           /* Cas des maisons, appartements, villas, duplex, commerces */
           (
             <>
-              {property.beds > 0 && (
+              {bedrooms > 0 && (
                 <div className="flex flex-col">
                   <span className="text-[8px] text-slate-400 uppercase tracking-widest">Beds</span>
-                  <span className="text-xs text-slate-900 font-bold">{property.beds}</span>
+                  <span className="text-xs text-slate-900 font-bold">{bedrooms}</span>
                 </div>
               )}
-              {property.baths > 0 && (
+              {bathrooms > 0 && (
                 <div className="flex flex-col">
                   <span className="text-[8px] text-slate-400 uppercase tracking-widest">Baths</span>
-                  <span className="text-xs text-slate-900 font-bold">{property.baths}</span>
+                  <span className="text-xs text-slate-900 font-bold">{bathrooms}</span>
                 </div>
               )}
-              {property.size > 0 && (
+              {surfaceValue > 0 && (
                 <div className="flex flex-col">
                   <span className="text-[8px] text-slate-400 uppercase tracking-widest">Area</span>
-                  <span className="text-xs text-slate-900 font-bold">{property.size} m²</span>
+                  <span className="text-xs text-slate-900 font-bold">{surfaceValue} {surfaceUnit}</span>
                 </div>
               )}
               {/* Statut meublé pour les propriétés résidentielles */}
-              {showFurnishedStatus && property.isFurnished !== undefined && (
+              {showFurnishedStatus && isFurnished !== undefined && (
                 <div className="flex flex-col">
                   <span className="text-[8px] text-slate-400 uppercase tracking-widest">Status</span>
                   <span className="text-xs font-semibold flex items-center gap-1">
-                    {property.isFurnished ? '🛋️ Furnished' : '📦 Unfurnished'}
+                    {isFurnished ? '🛋️ Furnished' : '📦 Unfurnished'}
                   </span>
                 </div>
               )}
@@ -224,7 +246,7 @@ const PropertyCard = ({ property }) => {
         {/* Bouton Détail */}
         <div className="mt-auto">
           <Link 
-            to={`/real-estate/${property.id}`} 
+            to={`/real-estate/${property._id || property.id}`} 
             className="block w-full text-center border border-slate-900 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 hover:bg-slate-900 hover:text-white transition-all duration-300 rounded-lg"
           >
             View Full Details

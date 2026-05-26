@@ -1,4 +1,4 @@
-// frontend/src/pages/PropertyDetailsPage.jsx - VERSION AVEC MOCK DATA UNIQUEMENT
+// frontend/src/pages/PropertyDetailsPage.jsx - VERSION AVEC BACKEND UNIQUEMENT
 
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
@@ -10,8 +10,8 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-// import api from '../services/api'; // ❌ COMMENTÉ - Backend temporairement désactivé
-import { getMockPropertyById, MOCK_PROPERTIES } from '../data/mockProperties';
+import api from '../services/api'; // ✅ BACKEND ACTIF
+// import { getMockPropertyById, MOCK_PROPERTIES } from '../data/mockProperties'; // ❌ COMMENTÉ
 
 // 🔥 Détection automatique de l'environnement
 const isDevelopment = typeof window !== 'undefined' && 
@@ -32,10 +32,10 @@ const PropertyDetailsPage = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [autoAmenities, setAutoAmenities] = useState({
-    schools: { count: 0, names: [], source: 'mock', hasOwnerData: false, hasAutoData: false },
-    markets: { count: 0, names: [], source: 'mock', hasOwnerData: false, hasAutoData: false },
-    stations: { count: 0, names: [], source: 'mock', hasOwnerData: false, hasAutoData: false },
-    bakeries: { count: 0, names: [], source: 'mock', hasOwnerData: false, hasAutoData: false }
+    schools: { count: 0, names: [], source: 'backend', hasOwnerData: false, hasAutoData: false },
+    markets: { count: 0, names: [], source: 'backend', hasOwnerData: false, hasAutoData: false },
+    stations: { count: 0, names: [], source: 'backend', hasOwnerData: false, hasAutoData: false },
+    bakeries: { count: 0, names: [], source: 'backend', hasOwnerData: false, hasAutoData: false }
   });
   const [loadingAmenities, setLoadingAmenities] = useState(false);
   const [formData, setFormData] = useState({
@@ -54,117 +54,106 @@ const PropertyDetailsPage = () => {
     return `${BACKEND_URL}/uploads/properties/${image}`;
   };
 
-  // Charger les détails de la propriété depuis les mock data
+  // ✅ BACKEND ACTIF - Charger les détails de la propriété depuis l'API
   const fetchPropertyDetails = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log(`🌍 PropertyDetailsPage - Using MOCK DATA only`);
+      console.log(`🌍 PropertyDetailsPage - Environment: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+      console.log(`🔗 PropertyDetailsPage - Backend URL: ${BACKEND_URL}`);
       console.log(`🔍 Looking for property with ID: ${id}`);
       
-      // 🔥 UTILISATION UNIQUEMENT DES MOCK DATA
-      // const response = await api.getPropertyById(id);
-      // const prop = response.property;
+      // ✅ Appel API réel
+      const response = await api.getPropertyById(id);
       
-      // Chercher la propriété dans les mock data
-      const mockProp = getMockPropertyById(id);
+      // Vérifier la structure de la réponse
+      let prop = null;
+      if (response.property) {
+        prop = response.property;
+      } else if (response.data && response.data.property) {
+        prop = response.data.property;
+      } else if (response) {
+        prop = response;
+      }
       
-      if (!mockProp) {
-        console.error(`Property with id ${id} not found in mock data`);
+      if (!prop) {
         throw new Error('Property not found');
       }
       
-      console.log(`✅ Found mock property: ${mockProp.title}`);
+      console.log(`✅ Property loaded: ${prop.title}`);
       
-      const allImages = (mockProp.images || []).map(img => getImageUrl(img)).filter(Boolean);
+      // Traiter les images
+      const allImages = (prop.images || []).map(img => getImageUrl(img)).filter(Boolean);
       
+      // Formater la propriété pour l'affichage
       const formattedProperty = {
-        id: mockProp.id,
-        title: mockProp.title,
-        location: `${mockProp.location.city || ''}, ${mockProp.location.region || ''}`,
-        price: mockProp.price?.amount?.toLocaleString() || '0',
-        status: mockProp.listingType === 'sale' ? 'sale' : 'lease',
-        type: mockProp.category?.toLowerCase() || 'land',
-        size: mockProp.surface?.value || 0,
-        surface: `${mockProp.surface?.value || 0} ${mockProp.surface?.unit || 'm²'}`,
-        beds: mockProp.features?.bedrooms || 0,
-        baths: mockProp.features?.bathrooms || 0,
-        description: mockProp.description,
+        id: prop._id || prop.id,
+        title: prop.title || 'Property',
+        location: `${prop.location?.city || ''}, ${prop.location?.region || ''}`,
+        price: prop.price?.amount?.toLocaleString() || '0',
+        status: prop.listingType === 'sale' ? 'sale' : 'rent',
+        type: prop.category?.toLowerCase() || 'property',
+        size: prop.surface?.value || 0,
+        surface: `${prop.surface?.value || 0} ${prop.surface?.unit || 'm²'}`,
+        beds: prop.features?.bedrooms || 0,
+        baths: prop.features?.bathrooms || 0,
+        description: prop.description || 'No description available',
         images: allImages.length > 0 ? allImages : ['https://images.unsplash.com/photo-1594759714300-8456f9f68800?q=80&w=2070&auto=format&fit=crop'],
-        coordinates: mockProp.location?.coordinates || null,
-        owner: null,
-        ownerAmenities: mockProp.amenities || null,
-        isFurnished: mockProp.features?.isFurnished || false,
-        hasParking: mockProp.features?.hasParking || false,
-        hasGarden: mockProp.features?.hasGarden || false,
-        hasElectricity: mockProp.features?.hasElectricity || false,
-        hasWater: mockProp.features?.hasWater || false,
-        hasElevator: mockProp.features?.hasElevator || false,
-        hasBalcony: mockProp.features?.hasBalcony || false,
-        floor: mockProp.features?.floor || null
+        coordinates: prop.location?.coordinates || null,
+        owner: prop.owner || null,
+        ownerAmenities: prop.amenities || null,
+        isFurnished: prop.features?.isFurnished || false,
+        hasParking: prop.features?.hasParking || false,
+        hasGarden: prop.features?.hasGarden || false,
+        hasElectricity: prop.features?.hasElectricity || false,
+        hasWater: prop.features?.hasWater || false,
+        hasElevator: prop.features?.hasElevator || false,
+        hasBalcony: prop.features?.hasBalcony || false,
+        floor: prop.features?.floor || null
       };
       
       setProperty(formattedProperty);
       setCurrentImageIndex(0);
       
-      // Charger les amenities depuis les mock data
-      if (mockProp.amenities) {
-        const mockAmenities = {
+      // Charger les amenities depuis la propriété si disponibles
+      if (prop.amenities) {
+        const backendAmenities = {
           schools: { 
-            count: mockProp.amenities.schools?.count || 0, 
-            names: mockProp.amenities.schools?.names || [], 
-            source: 'mock',
+            count: prop.amenities.schools?.count || 0, 
+            names: prop.amenities.schools?.names || [], 
+            source: 'backend',
             hasOwnerData: true,
             hasAutoData: false
           },
           markets: { 
-            count: mockProp.amenities.markets?.count || 0, 
-            names: mockProp.amenities.markets?.names || [], 
-            source: 'mock',
+            count: prop.amenities.markets?.count || 0, 
+            names: prop.amenities.markets?.names || [], 
+            source: 'backend',
             hasOwnerData: true,
             hasAutoData: false
           },
           stations: { 
-            count: mockProp.amenities.stations?.count || 0, 
-            names: mockProp.amenities.stations?.names || [], 
-            source: 'mock',
+            count: prop.amenities.stations?.count || 0, 
+            names: prop.amenities.stations?.names || [], 
+            source: 'backend',
             hasOwnerData: true,
             hasAutoData: false
           },
           bakeries: { 
-            count: mockProp.amenities.bakeries?.count || 0, 
-            names: mockProp.amenities.bakeries?.names || [], 
-            source: 'mock',
+            count: prop.amenities.bakeries?.count || 0, 
+            names: prop.amenities.bakeries?.names || [], 
+            source: 'backend',
             hasOwnerData: true,
             hasAutoData: false
           }
         };
-        setAutoAmenities(mockAmenities);
+        setAutoAmenities(backendAmenities);
       }
       
     } catch (err) {
-      console.error('Error fetching mock property details:', err);
-      setError(err.message || 'Property not found');
-      
-      // Propriété par défaut si non trouvée
-      setProperty({
-        id: id,
-        title: "Property in Cameroon",
-        location: "Douala, Cameroon",
-        price: "150,000,000",
-        status: "sale",
-        type: "real-estate",
-        size: 500,
-        surface: "500 m²",
-        beds: 4,
-        baths: 3,
-        description: "Beautiful property located in a residential area of Douala.",
-        images: ['https://images.unsplash.com/photo-1594759714300-8456f9f68800?q=80&w=2070&auto=format&fit=crop'],
-        coordinates: null,
-        owner: null,
-        ownerAmenities: null
-      });
+      console.error('Error fetching property details:', err);
+      setError(err.response?.data?.message || err.message || 'Property not found');
     } finally {
       setLoading(false);
     }
@@ -188,37 +177,29 @@ const PropertyDetailsPage = () => {
     if (lightboxOpen) setLightboxOpen(false);
   };
 
+  // ✅ BACKEND ACTIF - Envoi de la demande de contact
   const handleContactSubmit = async (e) => {
     e.preventDefault();
     setFormStatus('loading');
     
-    // Simulation d'envoi (backend commenté)
-    setTimeout(() => {
-      console.log('Inquiry submitted (mock):', {
+    try {
+      await api.createInquiry({
         property: property.id,
         propertyTitle: property.title,
-        ...formData
+        name: formData.name,
+        email: formData.email,
+        message: formData.message
       });
+      
       setFormStatus('success');
       setFormData({ name: '', email: '', message: '' });
       setTimeout(() => setFormStatus(null), 3000);
-    }, 1000);
-    
-    // 🔥 BACKEND COMMENTÉ
-    // try {
-    //   await api.createInquiry?.({
-    //     property: property.id,
-    //     propertyTitle: property.title,
-    //     ...formData
-    //   });
-    //   setFormStatus('success');
-    //   setFormData({ name: '', email: '', message: '' });
-    //   setTimeout(() => setFormStatus(null), 3000);
-    // } catch (err) {
-    //   console.error('Error sending inquiry:', err);
-    //   setFormStatus('error');
-    //   setTimeout(() => setFormStatus(null), 3000);
-    // }
+      
+    } catch (err) {
+      console.error('Error sending inquiry:', err);
+      setFormStatus('error');
+      setTimeout(() => setFormStatus(null), 3000);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -253,25 +234,32 @@ const PropertyDetailsPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
-        <Loader2 size={48} className="text-pc-gold animate-spin mb-4" />
-        <p className="text-slate-500 text-sm">Loading details...</p>
+        <Navbar />
+        <div className="flex justify-center items-center h-96">
+          <Loader2 size={48} className="text-pc-gold animate-spin mb-4" />
+        </div>
+        <Footer />
       </div>
     );
   }
 
   if (error || !property) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-serif">
-        <div className="text-center">
-          <h2 className="text-2xl mb-4">Asset Not Found</h2>
-          <p className="text-slate-500 mb-6">{error || "Property does not exist"}</p>
-          <Link to="/real-estate" className="text-pc-gold uppercase text-[10px] font-black tracking-widest">Return to Catalog</Link>
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center font-serif">
+          <div className="text-center">
+            <h2 className="text-2xl mb-4">Asset Not Found</h2>
+            <p className="text-slate-500 mb-6">{error || "Property does not exist"}</p>
+            <Link to="/real-estate" className="text-pc-gold uppercase text-[10px] font-black tracking-widest">Return to Catalog</Link>
+          </div>
         </div>
+        <Footer />
       </div>
     );
   }
 
-  const isLand = property.type === 'land' || property.type === 'field';
+  const isLand = property.type === 'land' || property.type === 'field' || property.type === 'agricultural land';
   const currentImage = property.images[currentImageIndex];
 
   return (
@@ -325,7 +313,7 @@ const PropertyDetailsPage = () => {
                 {property.status === 'sale' ? 'For Sale' : 'For Rent'}
               </span>
               <span className="text-slate-400 text-[9px] font-black uppercase tracking-widest">
-                Ref: #PC-{property.id?.slice(-6) || property.id}
+                Ref: #PC-{property.id?.slice(-6) || property.id?.substring(0, 6)}
               </span>
             </div>
             <h1 className="text-4xl md:text-6xl font-serif text-slate-900 leading-[1.1] uppercase tracking-tighter mb-4">
@@ -362,6 +350,9 @@ const PropertyDetailsPage = () => {
               src={currentImage} 
               alt={property.title}
               className="w-full h-full object-cover cursor-pointer"
+              onError={(e) => {
+                e.target.src = 'https://images.unsplash.com/photo-1594759714300-8456f9f68800?q=80&w=2070&auto=format&fit=crop';
+              }}
               onClick={() => setLightboxOpen(true)}
             />
             
@@ -401,6 +392,9 @@ const PropertyDetailsPage = () => {
                     src={img} 
                     alt={`View ${idx + 1}`}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = 'https://images.unsplash.com/photo-1594759714300-8456f9f68800?q=80&w=2070&auto=format&fit=crop';
+                    }}
                   />
                 </div>
               ))}
@@ -434,7 +428,7 @@ const PropertyDetailsPage = () => {
               </div>
             </section>
 
-            {/* NEIGHBORHOOD ANALYSIS - AVEC DONNÉES MOCK */}
+            {/* NEIGHBORHOOD ANALYSIS */}
             <section className="bg-slate-50 p-10 md:p-16 rounded-sm">
               <div className="text-center mb-16">
                 <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-900 mb-3">Strategic Proximity</h2>

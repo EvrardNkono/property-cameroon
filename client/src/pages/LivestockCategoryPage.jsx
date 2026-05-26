@@ -8,18 +8,19 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import api from '../services/api';
+import api from '../services/api'; // ✅ BACKEND ACTIF
+// import { MOCK_LIVESTOCK, getMockLivestockByCategory, getMockLivestockById } from '../data/mockLivestock'; // ❌ COMMENTÉ
 
-// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+// 🔥 Auto environment detection
 const isDevelopment = typeof window !== 'undefined' && 
                       (window.location.hostname === 'localhost' || 
                        window.location.hostname === '127.0.0.1' ||
                        window.location.hostname === '');
 
-// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+// Hardcoded URLs based on environment
 const BACKEND_URL = isDevelopment 
-  ? 'http://localhost:5000'           // URL locale
-  : 'https://property-cameroon-backend.vercel.app';  // URL de production
+  ? 'http://localhost:5000'           // Local URL
+  : 'https://property-cameroon-backend.vercel.app';  // Production URL
 
 // Icon mapping
 const iconMap = {
@@ -34,7 +35,9 @@ const categoryColorMap = {
   aquaculture: { bg: "bg-gradient-to-br from-cyan-50 to-cyan-100", color: "text-cyan-700", border: "border-cyan-200", button: "bg-cyan-600 hover:bg-cyan-700" },
   poultry: { bg: "bg-gradient-to-br from-emerald-50 to-emerald-100", color: "text-emerald-700", border: "border-emerald-200", button: "bg-emerald-600 hover:bg-emerald-700" },
   cattle: { bg: "bg-gradient-to-br from-amber-50 to-amber-100", color: "text-amber-700", border: "border-amber-200", button: "bg-amber-600 hover:bg-amber-700" },
-  pigs: { bg: "bg-gradient-to-br from-rose-50 to-rose-100", color: "text-rose-700", border: "border-rose-200", button: "bg-rose-600 hover:bg-rose-700" }
+  pigs: { bg: "bg-gradient-to-br from-rose-50 to-rose-100", color: "text-rose-700", border: "border-rose-200", button: "bg-rose-600 hover:bg-rose-700" },
+  goats: { bg: "bg-gradient-to-br from-teal-50 to-teal-100", color: "text-teal-700", border: "border-teal-200", button: "bg-teal-600 hover:bg-teal-700" },
+  sheep: { bg: "bg-gradient-to-br from-indigo-50 to-indigo-100", color: "text-indigo-700", border: "border-indigo-200", button: "bg-indigo-600 hover:bg-indigo-700" }
 };
 
 const LivestockCategoryPage = () => {
@@ -48,7 +51,7 @@ const LivestockCategoryPage = () => {
   const [sortBy, setSortBy] = useState('roi');
   const [filterRoi, setFilterRoi] = useState('all');
 
-  // 🔥 Fonction getImageUrl mise à jour avec BACKEND_URL dynamique
+  // Utility function to get full image URL
   const getImageUrl = (image) => {
     if (!image) return null;
     if (image.startsWith('http')) return image;
@@ -56,26 +59,35 @@ const LivestockCategoryPage = () => {
     return `${BACKEND_URL}/uploads/livestock/${image}`;
   };
 
-  // Load category and its assets
-  const fetchCategoryData = async () => {
+  // ==================== BACKEND VERSION (ACTIVE) ====================
+  const fetchCategoryDataFromBackend = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // 🔥 Console.log pour debug (optionnel)
-      console.log(`🌍 LivestockCategoryPage - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
+      console.log(`🌍 LivestockCategoryPage - Environment: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
       console.log(`🔗 LivestockCategoryPage - Backend URL: ${BACKEND_URL}`);
+      console.log(`🔍 Fetching category: ${category}`);
       
       // Get category info
       const catResponse = await api.getLivestockCategoryBySlug(category);
-      const cat = catResponse.category;
+      const cat = catResponse.category || catResponse;
+      
+      if (!cat) {
+        throw new Error(`Category "${category}" not found`);
+      }
       
       const colors = categoryColorMap[cat.slug] || categoryColorMap.poultry;
       
-      // Get category image - 🔥 MIS À JOUR avec BACKEND_URL
-      const categoryImage = cat.imageType === 'upload' 
-        ? (cat.imageUpload ? (cat.imageUpload.startsWith('http') ? cat.imageUpload : `${BACKEND_URL}${cat.imageUpload}`) : null)
-        : cat.imageUrl;
+      // Get category image
+      let categoryImage = null;
+      if (cat.imageType === 'upload' && cat.imageUpload) {
+        categoryImage = cat.imageUpload.startsWith('http') ? cat.imageUpload : `${BACKEND_URL}${cat.imageUpload}`;
+      } else if (cat.imageUrl) {
+        categoryImage = cat.imageUrl;
+      } else {
+        categoryImage = 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000';
+      }
       
       setCategoryData({
         id: cat._id,
@@ -90,26 +102,27 @@ const LivestockCategoryPage = () => {
         buttonColor: colors.button,
         marketDemand: cat.marketDemand || '+0% YoY',
         features: cat.features || [],
-        image: categoryImage || 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000'
+        image: categoryImage
       });
       
       // Get assets for this category
       const livestockRes = await api.getLivestockByCategory(cat.slug);
-      const items = livestockRes.livestock || [];
+      const items = livestockRes.livestock || livestockRes || [];
       
       // Format assets with image URLs
       const formattedItems = items.map(item => ({
         ...item,
-        id: item._id,
+        id: item._id || item.id,
         image: item.images && item.images[0] ? getImageUrl(item.images[0]) : null,
-        location: item.location?.city || 'Cameroon'
+        location: item.location?.city || item.location || 'Cameroon'
       }));
       
       setLivestock(formattedItems);
+      console.log(`✅ Loaded ${formattedItems.length} items for category: ${cat.slug}`);
       
     } catch (err) {
       console.error('Error fetching category data:', err);
-      setError(err.message || 'Loading error');
+      setError(err.response?.data?.message || err.message || 'Loading error');
       
       // Minimal fallback
       setCategoryData({
@@ -128,6 +141,75 @@ const LivestockCategoryPage = () => {
       setLoading(false);
     }
   };
+
+  // ==================== MOCK VERSION (COMMENTED OUT) ====================
+  /*
+  const fetchCategoryDataFromMock = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      const config = CATEGORIES_CONFIG[category];
+      
+      if (!config) {
+        throw new Error(`Category "${category}" not found`);
+      }
+      
+      const colors = categoryColorMap[category] || categoryColorMap.poultry;
+      
+      setCategoryData({
+        id: category,
+        slug: category,
+        title: config.title,
+        subtitle: config.subtitle,
+        description: config.description,
+        icon: iconMap[config.iconName] || <Leaf size={32} />,
+        bg: colors.bg,
+        color: colors.color,
+        borderColor: colors.border,
+        buttonColor: colors.button,
+        marketDemand: config.marketDemand,
+        features: config.features,
+        image: config.imageUrl
+      });
+      
+      const items = getMockLivestockByCategory(category);
+      
+      const formattedItems = items.map(item => ({
+        ...item,
+        id: item.id,
+        image: item.images && item.images[0] ? item.images[0] : null,
+        location: item.location?.city || 'Cameroon'
+      }));
+      
+      setLivestock(formattedItems);
+      
+    } catch (err) {
+      console.error('Error loading mock category data:', err);
+      setError(err.message || 'Loading error');
+      
+      setCategoryData({
+        slug: category,
+        title: category?.charAt(0).toUpperCase() + category?.slice(1) || "Livestock",
+        description: "Production units available for investment.",
+        icon: <Leaf size={32} />,
+        bg: "bg-gradient-to-br from-emerald-50 to-emerald-100",
+        color: "text-emerald-700",
+        buttonColor: "bg-emerald-600 hover:bg-emerald-700",
+        marketDemand: "+0% YoY",
+        features: [],
+        image: 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  */
+
+  // Choose which fetch function to use - BACKEND ACTIVE
+  const fetchCategoryData = fetchCategoryDataFromBackend;
 
   // Sort and filter data
   const filteredAndSortedLivestock = useMemo(() => {
