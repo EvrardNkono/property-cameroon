@@ -1,12 +1,10 @@
-// frontend/src/pages/RealEstate.jsx - VERSION AVEC FILTERBAR INTÉGRÉ ET LOGS
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import PropertyCard from '../components/real-estate/PropertyCard';
 import FilterBar from '../components/real-estate/FilterBar';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
-import { Search, X, AlertCircle, ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { Search, AlertCircle, ChevronDown, SlidersHorizontal } from 'lucide-react';
 
 const isDevelopment = typeof window !== 'undefined' && 
                       (window.location.hostname === 'localhost' || 
@@ -28,186 +26,81 @@ const getImageUrl = (image) => {
 
 const RealEstate = () => {
   const [properties, setProperties] = useState([]);
-  const [filteredProperties, setFilteredProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  
   const [filters, setFilters] = useState({
-    category: '',
-    location: '',
-    maxBudget: '',
-    listingType: 'all'
+    category: '', location: '', maxBudget: '', listingType: 'all'
   });
-
   const [advancedFilters, setAdvancedFilters] = useState({
-    minPrice: '',
-    bedrooms: 'all',
-    furnished: 'all'
+    minPrice: '', bedrooms: 'all', furnished: 'all'
   });
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-
-  const regions = [
-    { id: 'all', label: 'All Regions' },
-    { id: 'Center', label: 'Center (Yaoundé)' },
-    { id: 'Littoral', label: 'Littoral (Douala)' },
-    { id: 'West', label: 'West (Bafoussam)' },
-    { id: 'North-West', label: 'North-West (Bamenda)' },
-    { id: 'South', label: 'South' },
-    { id: 'Adamawa', label: 'Adamawa' },
-    { id: 'North', label: 'North' },
-    { id: 'Far-North', label: 'Far-North' },
-    { id: 'East', label: 'East' }
-  ];
 
   useEffect(() => {
     fetchProperties();
   }, []);
 
-  useEffect(() => {
-    applyFilters();
-  }, [filters, advancedFilters, properties, searchTerm]);
-
   const fetchProperties = async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      console.log(`🌍 RealEstate - Environment: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
-      console.log(`🔗 RealEstate - Backend URL: ${BACKEND_URL}`);
-      
       const response = await api.getProperties({ status: 'PUBLISHED' });
-      
       let propertiesData = [];
-      if (response.properties) {
-        propertiesData = response.properties;
-      } else if (Array.isArray(response)) {
-        propertiesData = response;
-      } else if (response.data && response.data.properties) {
-        propertiesData = response.data.properties;
-      } else if (response.data && Array.isArray(response.data)) {
-        propertiesData = response.data;
-      }
-      
-      // 🔥 LOG - Afficher les premières propriétés pour vérifier les IDs
-      console.log(`✅ ${propertiesData.length} properties loaded from backend`);
-      if (propertiesData.length > 0) {
-        console.log('📋 Sample property data:', {
-          id: propertiesData[0]._id,
-          title: propertiesData[0].title,
-          hasId: !!propertiesData[0]._id
-        });
-      } else {
-        console.warn('⚠️ No properties found in backend response');
-      }
-      
+      if (response.properties) propertiesData = response.properties;
+      else if (Array.isArray(response)) propertiesData = response;
+      else if (response.data?.properties) propertiesData = response.data.properties;
+      else if (Array.isArray(response.data)) propertiesData = response.data;
       setProperties(propertiesData);
-      
     } catch (err) {
-      console.error('Error fetching properties:', err);
       setError(err.response?.data?.message || err.message || 'Failed to load properties');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
-  };
-
-  const applyFilters = () => {
+  // ✅ useMemo au lieu de useEffect + setState pour éviter les boucles de rendu
+  const filteredProperties = useMemo(() => {
     let filtered = [...properties];
-    
+
     if (searchTerm) {
-      filtered = filtered.filter(p => 
+      filtered = filtered.filter(p =>
         p.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.location?.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.location?.region?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
-    if (filters.category && filters.category !== '') {
-      filtered = filtered.filter(p => p.category === filters.category);
+    if (filters.category) filtered = filtered.filter(p => p.category === filters.category);
+    if (filters.listingType !== 'all') filtered = filtered.filter(p => p.listingType === filters.listingType);
+    if (filters.location) filtered = filtered.filter(p => p.location?.region === filters.location);
+    if (filters.maxBudget) {
+      const max = parseInt(filters.maxBudget.replace(/,/g, ''));
+      filtered = filtered.filter(p => p.price?.amount <= max);
     }
-    
-    if (filters.listingType && filters.listingType !== 'all') {
-      filtered = filtered.filter(p => p.listingType === filters.listingType);
-    }
-    
-    if (filters.location && filters.location !== '') {
-      filtered = filtered.filter(p => p.location?.region === filters.location);
-    }
-    
-    if (filters.maxBudget && filters.maxBudget !== '') {
-      const maxBudgetNum = parseInt(filters.maxBudget.replace(/,/g, ''));
-      filtered = filtered.filter(p => p.price?.amount <= maxBudgetNum);
-    }
-    
-    if (advancedFilters.minPrice) {
-      filtered = filtered.filter(p => p.price?.amount >= parseInt(advancedFilters.minPrice));
-    }
-    
+    if (advancedFilters.minPrice) filtered = filtered.filter(p => p.price?.amount >= parseInt(advancedFilters.minPrice));
     if (advancedFilters.bedrooms !== 'all') {
-      if (advancedFilters.bedrooms === '5+') {
-        filtered = filtered.filter(p => p.features?.bedrooms >= 5);
-      } else {
-        filtered = filtered.filter(p => p.features?.bedrooms === parseInt(advancedFilters.bedrooms));
-      }
+      if (advancedFilters.bedrooms === '5+') filtered = filtered.filter(p => p.features?.bedrooms >= 5);
+      else filtered = filtered.filter(p => p.features?.bedrooms === parseInt(advancedFilters.bedrooms));
     }
-    
     if (advancedFilters.furnished !== 'all') {
       filtered = filtered.filter(p => {
-        const isFurnished = p.features?.isFurnished === true;
-        return advancedFilters.furnished === 'furnished' ? isFurnished : !isFurnished;
+        const f = p.features?.isFurnished === true;
+        return advancedFilters.furnished === 'furnished' ? f : !f;
       });
     }
-    
-    setFilteredProperties(filtered);
-  };
+    return filtered;
+  }, [properties, searchTerm, filters, advancedFilters]);
 
   const resetFilters = () => {
-    setFilters({
-      category: '',
-      location: '',
-      maxBudget: '',
-      listingType: 'all'
-    });
-    setAdvancedFilters({
-      minPrice: '',
-      bedrooms: 'all',
-      furnished: 'all'
-    });
+    setFilters({ category: '', location: '', maxBudget: '', listingType: 'all' });
+    setAdvancedFilters({ minPrice: '', bedrooms: 'all', furnished: 'all' });
     setSearchTerm('');
   };
 
-  const hasActiveFilters = () => {
-    return filters.category !== '' ||
-           filters.location !== '' ||
-           filters.maxBudget !== '' ||
-           filters.listingType !== 'all' ||
-           advancedFilters.minPrice !== '' ||
-           advancedFilters.bedrooms !== 'all' ||
-           advancedFilters.furnished !== 'all' ||
-           searchTerm !== '';
-  };
-
-  const categories = [
-    { id: 'all', label: 'All', icon: null },
-    { id: 'House', label: 'House', icon: null },
-    { id: 'Villa', label: 'Villa', icon: null },
-    { id: 'Duplex', label: 'Duplex', icon: null },
-    { id: 'Apartment', label: 'Apartment', icon: null },
-    { id: 'Studio', label: 'Studio', icon: null },
-    { id: 'Room', label: 'Room', icon: null },
-    { id: 'Land', label: 'Land', icon: null },
-    { id: 'Agricultural Land', label: 'Agri Land', icon: null },
-    { id: 'Commercial Space', label: 'Commercial', icon: null },
-    { id: 'Office', label: 'Office', icon: null },
-    { id: 'Warehouse', label: 'Warehouse', icon: null },
-    { id: 'Shop', label: 'Shop', icon: null },
-    { id: 'Industrial Space', label: 'Industrial', icon: null },
-    { id: 'Parking', label: 'Parking', icon: null }
-  ];
+  const hasActiveFilters = 
+    filters.category !== '' || filters.location !== '' || filters.maxBudget !== '' ||
+    filters.listingType !== 'all' || advancedFilters.minPrice !== '' ||
+    advancedFilters.bedrooms !== 'all' || advancedFilters.furnished !== 'all' || searchTerm !== '';
 
   if (loading) {
     return (
@@ -230,10 +123,7 @@ const RealEstate = () => {
             <AlertCircle size={40} className="mx-auto mb-3 text-red-500" />
             <p className="font-bold">Error loading properties</p>
             <p className="text-sm mt-1">{error}</p>
-            <button
-              onClick={fetchProperties}
-              className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700"
-            >
+            <button onClick={fetchProperties} className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700">
               Try Again
             </button>
           </div>
@@ -246,9 +136,10 @@ const RealEstate = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
+
       <section className="relative bg-gradient-to-r from-emerald-900 to-emerald-800 text-white pt-24 pb-20">
-        <div className="absolute inset-0 bg-black/20"></div>
+        {/* ✅ pointer-events-none pour que l'overlay ne bloque pas les clics */}
+        <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <h1 className="text-4xl sm:text-5xl font-bold mb-3">Find Your Dream Property</h1>
           <p className="text-emerald-100 text-lg max-w-2xl mx-auto">
@@ -263,7 +154,7 @@ const RealEstate = () => {
         </div>
       </section>
 
-      <FilterBar onFilterChange={handleFilterChange} />
+      <FilterBar onFilterChange={setFilters} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-6">
         <div className="relative">
@@ -298,17 +189,16 @@ const RealEstate = () => {
                 <input
                   type="number"
                   value={advancedFilters.minPrice}
-                  onChange={(e) => setAdvancedFilters({...advancedFilters, minPrice: e.target.value})}
+                  onChange={(e) => setAdvancedFilters(p => ({...p, minPrice: e.target.value}))}
                   placeholder="e.g., 10,000,000"
                   className="w-full p-3 bg-gray-100 rounded-lg outline-none text-sm focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
-
               <div>
                 <label className="block text-[10px] font-bold uppercase text-gray-400 mb-2">Bedrooms</label>
                 <select
                   value={advancedFilters.bedrooms}
-                  onChange={(e) => setAdvancedFilters({...advancedFilters, bedrooms: e.target.value})}
+                  onChange={(e) => setAdvancedFilters(p => ({...p, bedrooms: e.target.value}))}
                   className="w-full p-3 bg-gray-100 rounded-lg outline-none text-sm focus:ring-2 focus:ring-emerald-500"
                 >
                   <option value="all">Any</option>
@@ -319,12 +209,11 @@ const RealEstate = () => {
                   <option value="5+">5+</option>
                 </select>
               </div>
-
               <div>
                 <label className="block text-[10px] font-bold uppercase text-gray-400 mb-2">Furnished Status</label>
                 <select
                   value={advancedFilters.furnished}
-                  onChange={(e) => setAdvancedFilters({...advancedFilters, furnished: e.target.value})}
+                  onChange={(e) => setAdvancedFilters(p => ({...p, furnished: e.target.value}))}
                   className="w-full p-3 bg-gray-100 rounded-lg outline-none text-sm focus:ring-2 focus:ring-emerald-500"
                 >
                   <option value="all">All</option>
@@ -345,11 +234,8 @@ const RealEstate = () => {
                 <Search size={32} className="text-gray-400" />
               </div>
               <p className="text-gray-500 text-lg">No properties match your criteria</p>
-              {hasActiveFilters() && (
-                <button
-                  onClick={resetFilters}
-                  className="mt-6 px-6 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition"
-                >
+              {hasActiveFilters && (
+                <button onClick={resetFilters} className="mt-6 px-6 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition">
                   Clear all filters
                 </button>
               )}
@@ -357,21 +243,10 @@ const RealEstate = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {filteredProperties.map((property, index) => {
-                const firstImage = property.images?.[0];
-                const imageUrl = getImageUrl(firstImage);
                 const propertyId = property._id;
-                
-                // 🔥 LOG - Afficher chaque propriété rendue
-                console.log(`🎴 Rendering property ${index + 1}/${filteredProperties.length}:`, {
-                  id: propertyId,
-                  title: property.title,
-                  idType: typeof propertyId,
-                  hasId: !!propertyId,
-                  url: `/real-estate/${propertyId}`
-                });
-                
+                const imageUrl = getImageUrl(property.images?.[0]);
                 return (
-                  <PropertyCard 
+                  <PropertyCard
                     key={propertyId || index}
                     property={{
                       id: propertyId,
@@ -380,7 +255,7 @@ const RealEstate = () => {
                       image: imageUrl || 'https://images.unsplash.com/photo-1594759714300-8456f9f68800?q=80&w=2070&auto=format&fit=crop',
                       listingType: property.listingType || 'sale',
                       category: property.category,
-                      price: `${property.price?.amount?.toLocaleString() || 0}`,
+                      price: property.price?.amount || 0,
                       location: `${property.location?.city || ''}, ${property.location?.region || ''}`,
                       size: property.surface?.value || 0,
                       beds: property.features?.bedrooms || 0,
