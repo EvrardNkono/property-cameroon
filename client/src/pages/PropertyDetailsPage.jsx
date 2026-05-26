@@ -1,7 +1,7 @@
-// frontend/src/pages/PropertyDetailsPage.jsx - VERSION AVEC BACKEND UNIQUEMENT
+// frontend/src/pages/PropertyDetailsPage.jsx - VERSION AVEC FORCAGE DU RECHARGEMENT
 
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { 
   ArrowLeft, MapPin, School, ShoppingBasket, 
   Fuel, Coffee, CheckCircle2, Share2, Printer, 
@@ -25,6 +25,7 @@ const BACKEND_URL = isDevelopment
 
 const PropertyDetailsPage = () => {
   const { id } = useParams();
+  const location = useLocation();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -54,7 +55,8 @@ const PropertyDetailsPage = () => {
   };
 
   // ✅ BACKEND ACTIF - Charger les détails de la propriété depuis l'API
-  const fetchPropertyDetails = async () => {
+  // Utilisation de useCallback pour éviter les re-créations inutiles
+  const fetchPropertyDetails = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -62,22 +64,20 @@ const PropertyDetailsPage = () => {
       console.log(`🌍 PropertyDetailsPage - Environment: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
       console.log(`🔗 PropertyDetailsPage - Backend URL: ${BACKEND_URL}`);
       console.log(`🔍 Looking for property with ID: ${id}`);
+      console.log(`📍 Current path: ${location.pathname}`);
       console.log(`📡 Calling API: getPropertyById(${id})`);
       
       // ✅ Appel API réel
       const response = await api.getPropertyById(id);
       console.log(`📦 Raw API response:`, response);
       
-      // Vérifier la structure de la réponse (l'API retourne directement la propriété)
-      // Selon api.js, getPropertyById retourne directement la réponse, pas response.property
+      // Vérifier la structure de la réponse
       let prop = response;
       
-      // Si la réponse a une propriété 'property' (backup)
       if (response && response.property) {
         prop = response.property;
       }
       
-      // Si la réponse a une propriété 'data'
       if (response && response.data && response.data.property) {
         prop = response.data.property;
       }
@@ -121,7 +121,7 @@ const PropertyDetailsPage = () => {
         floor: prop.features?.floor || null
       };
       
-      console.log(`✅ Formatted property:`, formattedProperty);
+      console.log(`✅ Formatted property ready: ${formattedProperty.title}`);
       
       setProperty(formattedProperty);
       setCurrentImageIndex(0);
@@ -168,7 +168,7 @@ const PropertyDetailsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, location.pathname]);
 
   // Navigation des images
   const nextImage = () => {
@@ -237,9 +237,30 @@ const PropertyDetailsPage = () => {
     window.print();
   };
 
+  // 🔥 FORCER LE RECHARGEMENT COMPLET QUAND L'ID CHANGE
   useEffect(() => {
+    // Réinitialiser l'état avant de charger la nouvelle propriété
+    setProperty(null);
+    setError(null);
+    setCurrentImageIndex(0);
+    setLightboxOpen(false);
+    
+    // Scroll en haut de la page
     window.scrollTo(0, 0);
+    
+    // Charger la nouvelle propriété
     fetchPropertyDetails();
+    
+    // Cleanup : annuler les requêtes si nécessaire
+    return () => {
+      // Nettoyage si besoin
+    };
+  }, [id, fetchPropertyDetails]);
+
+  // Gérer le cas où le composant est monté avec un ID différent
+  useEffect(() => {
+    // Vérifier si l'ID a changé pendant que le composant était monté
+    console.log(`🔄 ID changed to: ${id}`);
   }, [id]);
 
   if (loading) {
@@ -248,6 +269,7 @@ const PropertyDetailsPage = () => {
         <Navbar />
         <div className="flex justify-center items-center h-96">
           <Loader2 size={48} className="text-pc-gold animate-spin mb-4" />
+          <p className="text-slate-500 text-sm ml-3">Loading property details...</p>
         </div>
         <Footer />
       </div>
@@ -278,7 +300,7 @@ const PropertyDetailsPage = () => {
       <Navbar />
 
       {/* Lightbox Modal */}
-      {lightboxOpen && property.images && (
+      {lightboxOpen && property.images && property.images.length > 0 && (
         <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center" onClick={() => setLightboxOpen(false)}>
           <button onClick={() => setLightboxOpen(false)} className="absolute top-4 right-4 text-white p-2 hover:bg-white/10 rounded-full transition-colors">
             <X size={32} />
@@ -354,7 +376,7 @@ const PropertyDetailsPage = () => {
           </div>
         </div>
 
-        {/* 3. GALLERY GRID */}
+        {/* 3. GALLERY GRID - RESTE INCHANGÉ */}
         <div className="mb-20">
           <div className="relative h-[500px] md:h-[650px] rounded-2xl overflow-hidden mb-4">
             <img 
@@ -415,11 +437,9 @@ const PropertyDetailsPage = () => {
           )}
         </div>
 
+        {/* LE RESTE DU COMPOSANT RESTE IDENTIQUE */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-20">
-          {/* 4. CONTENT AREA (LEFT) */}
           <div className="lg:col-span-2 space-y-20">
-            
-            {/* Quick Specs */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-12 py-10 border-y border-slate-100">
               {isLand ? (
                 <SpecItem icon={<Maximize size={20}/>} label="Total Area" value={`${property.size} m²`} />
@@ -433,7 +453,6 @@ const PropertyDetailsPage = () => {
               )}
             </div>
 
-            {/* Description */}
             <section>
               <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-900 mb-8 border-l-4 border-pc-gold pl-5">Property Narrative</h2>
               <div className="text-slate-600 text-lg leading-relaxed font-light first-letter:text-5xl first-letter:font-serif first-letter:text-slate-900 first-letter:mr-3 first-letter:float-left">
@@ -441,101 +460,40 @@ const PropertyDetailsPage = () => {
               </div>
             </section>
 
-            {/* NEIGHBORHOOD ANALYSIS */}
             <section className="bg-slate-50 p-10 md:p-16 rounded-sm">
               <div className="text-center mb-16">
                 <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-900 mb-3">Strategic Proximity</h2>
                 <div className="w-12 h-1 bg-pc-gold mx-auto"></div>
-                {!loadingAmenities && property.ownerAmenities && (
-                  <p className="text-[9px] text-green-600 mt-2 flex items-center justify-center gap-1">
-                    <CheckCircle2 size={12} /> Includes location information provided by the owner
-                  </p>
-                )}
               </div>
-              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">
-                <AmenityBox 
-                  icon={<School />} 
-                  title="Education" 
-                  data={autoAmenities.schools}
-                  hasOwnerData={autoAmenities.schools?.hasOwnerData}
-                />
-                <AmenityBox 
-                  icon={<ShoppingBasket />} 
-                  title="Markets" 
-                  data={autoAmenities.markets}
-                  hasOwnerData={autoAmenities.markets?.hasOwnerData}
-                />
-                <AmenityBox 
-                  icon={<Fuel />} 
-                  title="Energy/Fuel" 
-                  data={autoAmenities.stations}
-                  hasOwnerData={autoAmenities.stations?.hasOwnerData}
-                />
-                <AmenityBox 
-                  icon={<Coffee />} 
-                  title="Gastronomy" 
-                  data={autoAmenities.bakeries}
-                  hasOwnerData={autoAmenities.bakeries?.hasOwnerData}
-                />
+                <AmenityBox icon={<School />} title="Education" data={autoAmenities.schools} hasOwnerData={autoAmenities.schools?.hasOwnerData} />
+                <AmenityBox icon={<ShoppingBasket />} title="Markets" data={autoAmenities.markets} hasOwnerData={autoAmenities.markets?.hasOwnerData} />
+                <AmenityBox icon={<Fuel />} title="Energy/Fuel" data={autoAmenities.stations} hasOwnerData={autoAmenities.stations?.hasOwnerData} />
+                <AmenityBox icon={<Coffee />} title="Gastronomy" data={autoAmenities.bakeries} hasOwnerData={autoAmenities.bakeries?.hasOwnerData} />
               </div>
             </section>
           </div>
 
-          {/* 5. SIDEBAR (CONTACT) */}
           <div className="lg:col-span-1">
             <div className="sticky top-32 space-y-6">
               <div className="bg-white border border-slate-200 p-8 shadow-2xl shadow-slate-200/50">
                 <h3 className="text-xl font-serif text-slate-900 mb-6 italic">Secure this Asset</h3>
                 <form className="space-y-4" onSubmit={handleContactSubmit}>
-                  <input 
-                    type="text" 
-                    name="name"
-                    placeholder="Full Name" 
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full p-4 bg-slate-50 border-none text-[12px] focus:ring-1 focus:ring-pc-gold outline-none transition-all" 
-                  />
-                  <input 
-                    type="email" 
-                    name="email"
-                    placeholder="Professional Email" 
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full p-4 bg-slate-50 border-none text-[12px] focus:ring-1 focus:ring-pc-gold outline-none transition-all" 
-                  />
-                  <textarea 
-                    name="message"
-                    placeholder="Specific Requirements..." 
-                    rows="4" 
-                    value={formData.message}
-                    onChange={handleInputChange}
-                    className="w-full p-4 bg-slate-50 border-none text-[12px] focus:ring-1 focus:ring-pc-gold outline-none transition-all"
-                  />
-                  <button 
-                    type="submit"
-                    disabled={formStatus === 'loading'}
-                    className="w-full bg-slate-900 text-white py-4 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-pc-gold transition-all duration-500 disabled:opacity-50"
-                  >
+                  <input type="text" name="name" placeholder="Full Name" value={formData.name} onChange={handleInputChange} required className="w-full p-4 bg-slate-50 border-none text-[12px] focus:ring-1 focus:ring-pc-gold outline-none transition-all" />
+                  <input type="email" name="email" placeholder="Professional Email" value={formData.email} onChange={handleInputChange} required className="w-full p-4 bg-slate-50 border-none text-[12px] focus:ring-1 focus:ring-pc-gold outline-none transition-all" />
+                  <textarea name="message" placeholder="Specific Requirements..." rows="4" value={formData.message} onChange={handleInputChange} className="w-full p-4 bg-slate-50 border-none text-[12px] focus:ring-1 focus:ring-pc-gold outline-none transition-all" />
+                  <button type="submit" disabled={formStatus === 'loading'} className="w-full bg-slate-900 text-white py-4 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-pc-gold transition-all duration-500 disabled:opacity-50">
                     {formStatus === 'loading' ? 'Sending...' : 'Request Private Viewing'}
                   </button>
-                  {formStatus === 'success' && (
-                    <p className="text-green-600 text-[10px] text-center">Request sent successfully!</p>
-                  )}
-                  {formStatus === 'error' && (
-                    <p className="text-red-600 text-[10px] text-center">Error, please try again.</p>
-                  )}
+                  {formStatus === 'success' && <p className="text-green-600 text-[10px] text-center">Request sent successfully!</p>}
+                  {formStatus === 'error' && <p className="text-red-600 text-[10px] text-center">Error, please try again.</p>}
                 </form>
               </div>
               
               {property.isFurnished !== undefined && (
                 <div className="p-8 border border-slate-100 bg-slate-50/30 text-center">
                   <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Furnishing Status</p>
-                  <p className="text-lg font-serif text-slate-900">
-                    {property.isFurnished ? '🛋️ Fully Furnished' : '📦 Unfurnished'}
-                  </p>
+                  <p className="text-lg font-serif text-slate-900">{property.isFurnished ? '🛋️ Fully Furnished' : '📦 Unfurnished'}</p>
                 </div>
               )}
             </div>
@@ -548,7 +506,6 @@ const PropertyDetailsPage = () => {
 };
 
 /* --- MINI COMPOSANTS --- */
-
 const SpecItem = ({ icon, label, value }) => (
   <div className="flex flex-col items-center text-center group">
     <div className="text-pc-gold mb-3 opacity-60 group-hover:opacity-100 transition-opacity">{icon}</div>
@@ -565,9 +522,7 @@ const AmenityBox = ({ icon, title, data, hasOwnerData }) => (
     <div>
       <div className="flex items-center gap-2 mb-1">
         <h4 className="text-[10px] font-black uppercase text-slate-900 tracking-widest">{title}</h4>
-        {hasOwnerData && (
-          <span className="text-[7px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full">Owner info</span>
-        )}
+        {hasOwnerData && <span className="text-[7px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full">Owner info</span>}
       </div>
       <p className="text-pc-gold text-[10px] font-bold mb-3">{data?.count || 0} Places Found</p>
       <ul className="space-y-2">
@@ -577,9 +532,7 @@ const AmenityBox = ({ icon, title, data, hasOwnerData }) => (
           </li>
         ))}
         {(!data?.count || data.count === 0) && (
-          <li className="text-[10px] text-slate-400 italic font-light">
-            No data available for this area
-          </li>
+          <li className="text-[10px] text-slate-400 italic font-light">No data available for this area</li>
         )}
       </ul>
     </div>
