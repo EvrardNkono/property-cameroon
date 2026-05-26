@@ -1,12 +1,12 @@
 // frontend/src/App.jsx
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 // En haut de App.jsx
-import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
+
 
 // --- IMPORTS DES PAGES PUBLIQUES ---
 import Home from './pages/Home';
