@@ -1,3 +1,5 @@
+// frontend/src/App.jsx
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
@@ -73,6 +75,18 @@ import AgriculturalProducts from './pages/AgriculturalProducts';
 // ✅ IMPORT PAGE DETAIL DES TERRES AGRICOLES
 import LandDetailPage from './pages/LandDetailPage';
 
+// 🔥 CRÉER UN COMPOSANT WRAPPER AVEC KEY POUR FORCER LE RECHARGEMENT
+const PropertyDetailsWrapper = () => {
+  const { id } = useParams();
+  return <PropertyDetailsPage key={id} />;
+};
+
+// Si useParams n'est pas disponible dans ce contexte, utilise cette alternative:
+// const PropertyDetailsWrapper = () => {
+//   const location = useLocation();
+//   return <PropertyDetailsPage key={location.pathname} />;
+// };
+
 function App() {
   return (
     <Router>
@@ -84,7 +98,12 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/real-estate" element={<RealEstatePage />} />
-            <Route path="/real-estate/:id" element={<PropertyDetailsPage />} />
+            
+            {/* 🔥 SOLUTION 1: Utiliser un wrapper avec key */}
+            <Route path="/real-estate/:id" element={<PropertyDetailsWrapper />} />
+            
+            {/* 🔥 SOLUTION 2: Alternative directe (décommente et commente la ligne du dessus si ça ne marche pas) */}
+            {/* <Route path="/real-estate/:id" element={<PropertyDetailsPage key={window.location.pathname} />} /> */}
             
             <Route path="/experts" element={<ExpertHubPage />} />
             <Route path="/global-sourcing" element={<SourcingPage />} />
