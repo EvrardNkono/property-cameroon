@@ -1,2 +1,3 @@
-2026/05/26-14:40:15.136 4660 Creating DB C:\Users\HP\Desktop\projets\property-cameroon\server\facebook_session\Default\shared_proto_db since it was missing.
-2026/05/26-14:40:15.208 4660 Reusing MANIFEST C:\Users\HP\Desktop\projets\property-cameroon\server\facebook_session\Default\shared_proto_db/MANIFEST-000001
+2026/05/26-14:58:31.698 48f8 Reusing MANIFEST C:\Users\HP\Desktop\projets\property-cameroon\server\facebook_session\Default\shared_proto_db/MANIFEST-000001
+2026/05/26-14:58:31.699 48f8 Recovering log #3
+2026/05/26-14:58:31.700 48f8 Reusing old log C:\Users\HP\Desktop\projets\property-cameroon\server\facebook_session\Default\shared_proto_db/000003.log 

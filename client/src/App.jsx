@@ -1,81 +1,86 @@
 // frontend/src/App.jsx
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import Login from './pages/Login';
-import Register from './pages/Register';
 
-// --- IMPORTS DES PAGES PUBLIQUES ---
-import Home from './pages/Home';
-import RealEstatePage from './pages/RealEstate';
-import PropertyDetailsPage from './pages/PropertyDetailsPage';
-import AgriculturePage from './pages/AgriculturePage'; 
-import ExpertisePage from './pages/Expertise'; 
-import ExpertHubPage from './pages/ExpertHubPage';
-import MarketplacePage from './pages/MarketplacePage';
-import AppointmentPage from './pages/Appointment';
-import SourcingPage from './pages/Sourcing'; 
+// --- PAGES PUBLIQUES ---
+const Home                = lazy(() => import('./pages/Home'));
+const Login               = lazy(() => import('./pages/Login'));
+const Register            = lazy(() => import('./pages/Register'));
+const RealEstatePage      = lazy(() => import('./pages/RealEstate'));
+const PropertyDetailsPage = lazy(() => import('./pages/PropertyDetailsPage'));
+const AgriculturePage     = lazy(() => import('./pages/AgriculturePage'));
+const ExpertisePage       = lazy(() => import('./pages/Expertise'));
+const ExpertHubPage       = lazy(() => import('./pages/ExpertHubPage'));
+const MarketplacePage     = lazy(() => import('./pages/MarketplacePage'));
+const AppointmentPage     = lazy(() => import('./pages/Appointment'));
+const SourcingPage        = lazy(() => import('./pages/Sourcing'));
 
 // --- PAGES INSTITUTIONNELLES ---
-import InstitutionalPage from './pages/InstitutionalProfil'; 
-import LegalCompliancePage from './pages/LegalCompliance'; 
+const InstitutionalPage   = lazy(() => import('./pages/InstitutionalProfil'));
+const LegalCompliancePage = lazy(() => import('./pages/LegalCompliance'));
 
-// --- IMPORTS BLOG ---
-import BlogPage from './pages/Blog';
+// --- BLOG ---
+const BlogPage            = lazy(() => import('./pages/Blog'));
 const BlogPostDetail = () => (
   <div className="pt-40 text-center font-serif italic text-slate-500">
     Lecture de l'article en cours de développement...
   </div>
 );
 
-// --- IMPORT LIVESTOCK ---
-import LivestockPage from './pages/LivestockIntroduction'; 
-import LivestockCategoryPage from './pages/LivestockCategoryPage';
-import ProjectDetailsPage from './pages/ProjectDetailsPage';
+// --- LIVESTOCK ---
+const LivestockPage         = lazy(() => import('./pages/LivestockIntroduction'));
+const LivestockCategoryPage = lazy(() => import('./pages/LivestockCategoryPage'));
+const ProjectDetailsPage    = lazy(() => import('./pages/ProjectDetailsPage'));
 
-// --- IMPORT CHATBOT ---
-import ChatAssistant from './components/ChatAssistant';
+// --- CHATBOT ---
+const ChatAssistant = lazy(() => import('./components/ChatAssistant'));
 
-// --- IMPORTS DASHBOARD (STRUCTURE & UTILISATEURS) ---
-import DashboardLayout from './pages/dashboard/DashboardLayout';
-import Overview from './pages/dashboard/Overview';
-import UserProfile from './pages/dashboard/UserProfile';
-import MyLands from './pages/dashboard/lands/MyLands';
-import TitleDocuments from './pages/dashboard/lands/TitleDocuments';
-import Portfolio from './pages/dashboard/invest/Portfolio';
-import YieldReports from './pages/dashboard/invest/YieldReports';
-import MyPurchases from './pages/dashboard/market/MyPurchases';
-import SourcingTracker from './pages/dashboard/market/SourcingTracker';
+// --- DASHBOARD (STRUCTURE & UTILISATEURS) ---
+const DashboardLayout    = lazy(() => import('./pages/dashboard/DashboardLayout'));
+const Overview           = lazy(() => import('./pages/dashboard/Overview'));
+const UserProfile        = lazy(() => import('./pages/dashboard/UserProfile'));
+const MyLands            = lazy(() => import('./pages/dashboard/lands/MyLands'));
+const TitleDocuments     = lazy(() => import('./pages/dashboard/lands/TitleDocuments'));
+const Portfolio          = lazy(() => import('./pages/dashboard/invest/Portfolio'));
+const YieldReports       = lazy(() => import('./pages/dashboard/invest/YieldReports'));
+const MyPurchases        = lazy(() => import('./pages/dashboard/market/MyPurchases'));
+const SourcingTracker    = lazy(() => import('./pages/dashboard/market/SourcingTracker'));
 
-// --- IMPORTS DASHBOARD (ADMINISTRATION) ---
-import AdminOverview from './pages/dashboard/admin/AdminOverview';
-import UserManagement from './pages/dashboard/admin/UserManagement';
-import GlobalInventory from './pages/dashboard/admin/GlobalInventory';
-import FinancialControl from './pages/dashboard/admin/FinancialControl';
-import AgriculturalInventory from './pages/dashboard/admin/AgriculturalInventory';
-import LivestockCategoriesManager from './pages/dashboard/admin/LivestockCategoriesManager';
-import LivestockAssetsManager from './pages/dashboard/admin/LivestockAssetsManager';  // ✅ Import du composant admin
+// --- DASHBOARD (ADMINISTRATION) ---
+const AdminOverview              = lazy(() => import('./pages/dashboard/admin/AdminOverview'));
+const UserManagement             = lazy(() => import('./pages/dashboard/admin/UserManagement'));
+const GlobalInventory            = lazy(() => import('./pages/dashboard/admin/GlobalInventory'));
+const FinancialControl           = lazy(() => import('./pages/dashboard/admin/FinancialControl'));
+const AgriculturalInventory      = lazy(() => import('./pages/dashboard/admin/AgriculturalInventory'));
+const LivestockCategoriesManager = lazy(() => import('./pages/dashboard/admin/LivestockCategoriesManager'));
+const LivestockAssetsManager     = lazy(() => import('./pages/dashboard/admin/LivestockAssetsManager'));
 
-// --- IMPORTS PROPERTY FORM ---
-import PropertyForm from './pages/dashboard/properties/PropertyForm';
+// --- PROPERTY FORM ---
+const PropertyForm = lazy(() => import('./pages/dashboard/properties/PropertyForm'));
 
-// ✅ IMPORT LIVESTOCK MANAGEMENT (pour les utilisateurs normaux)
-import LivestockManagement from './pages/dashboard/livestock/LivestockManagement';
+// --- LIVESTOCK MANAGEMENT ---
+const LivestockManagement = lazy(() => import('./pages/dashboard/livestock/LivestockManagement'));
 
-// ✅ IMPORT AGRICULTURAL MANAGEMENT (PRODUITS)
-import AgriculturalManagement from './pages/dashboard/agricultural/AgriculturalManagement';
+// --- AGRICULTURAL MANAGEMENT ---
+const AgriculturalManagement = lazy(() => import('./pages/dashboard/agricultural/AgriculturalManagement'));
+const MyAgriculturalLands    = lazy(() => import('./pages/dashboard/agricultural/MyAgriculturalLands'));
 
-// ✅ IMPORT MY AGRICULTURAL LANDS (TERRES)
-import MyAgriculturalLands from './pages/dashboard/agricultural/MyAgriculturalLands';
+// --- PAGE PUBLIQUE PRODUITS AGRICOLES ---
+const AgriculturalProducts = lazy(() => import('./pages/AgriculturalProducts'));
 
-// ✅ IMPORT PAGE PUBLIQUE DES PRODUITS AGRICOLES
-import AgriculturalProducts from './pages/AgriculturalProducts';
+// --- PAGE DETAIL TERRES AGRICOLES ---
+const LandDetailPage = lazy(() => import('./pages/LandDetailPage'));
 
-// ✅ IMPORT PAGE DETAIL DES TERRES AGRICOLES
-import LandDetailPage from './pages/LandDetailPage';
+// Spinner de chargement léger
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="w-8 h-8 border-4 border-gray-200 border-t-green-600 rounded-full animate-spin" />
+  </div>
+);
 
-// 🔥 CRÉER UN COMPOSANT WRAPPER AVEC KEY POUR FORCER LE RECHARGEMENT
+// Wrapper avec key pour forcer le rechargement
 const PropertyDetailsWrapper = () => {
   const { id } = useParams();
   return <PropertyDetailsPage key={id} />;
@@ -86,88 +91,80 @@ function App() {
     <Router>
       <AuthProvider>
         <div className="App">
-          <Routes>
-            {/* --- ROUTES PUBLIQUES PRINCIPALES --- */}
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/real-estate" element={<RealEstatePage />} />
-            
-            <Route path="/real-estate/:id" element={<PropertyDetailsWrapper />} />
-            
-            <Route path="/experts" element={<ExpertHubPage />} />
-            <Route path="/global-sourcing" element={<SourcingPage />} />
-            <Route path="/book-appointment" element={<AppointmentPage />} />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* --- ROUTES PUBLIQUES PRINCIPALES --- */}
+              <Route path="/"                    element={<Home />} />
+              <Route path="/login"               element={<Login />} />
+              <Route path="/register"            element={<Register />} />
+              <Route path="/real-estate"         element={<RealEstatePage />} />
+              <Route path="/real-estate/:id"     element={<PropertyDetailsWrapper />} />
+              <Route path="/experts"             element={<ExpertHubPage />} />
+              <Route path="/global-sourcing"     element={<SourcingPage />} />
+              <Route path="/book-appointment"    element={<AppointmentPage />} />
 
-            {/* --- ÉCOSYSTÈME AGRICULTURE --- */}
-            <Route path="/agriculture" element={<AgriculturePage />} />
-            <Route path="/agriculture/products" element={<AgriculturalProducts />} />
-            <Route path="/agriculture/land/:id" element={<LandDetailPage />} />
-            <Route path="/agriculture/marketplace" element={<MarketplacePage />} />
-            <Route path="/agriculture/expertise" element={<ExpertisePage />} />
-            
-            {/* Section Livestock */}
-            <Route path="/agriculture/livestock" element={<LivestockPage />} />
-            <Route path="/agriculture/livestock/:category" element={<LivestockCategoryPage />} />
-            <Route path="/agriculture/livestock/:category/:id" element={<ProjectDetailsPage />} />
+              {/* --- ÉCOSYSTÈME AGRICULTURE --- */}
+              <Route path="/agriculture"                          element={<AgriculturePage />} />
+              <Route path="/agriculture/products"                 element={<AgriculturalProducts />} />
+              <Route path="/agriculture/land/:id"                 element={<LandDetailPage />} />
+              <Route path="/agriculture/marketplace"              element={<MarketplacePage />} />
+              <Route path="/agriculture/expertise"                element={<ExpertisePage />} />
+              <Route path="/agriculture/livestock"                element={<LivestockPage />} />
+              <Route path="/agriculture/livestock/:category"      element={<LivestockCategoryPage />} />
+              <Route path="/agriculture/livestock/:category/:id"  element={<ProjectDetailsPage />} />
 
-            {/* --- CADRE LÉGAL & INSTITUTIONNEL --- */}
-            <Route path="/agriculture/institutional-framework" element={<InstitutionalPage />} />
-            <Route path="/agriculture/legal-safety" element={<LegalCompliancePage />} />
+              {/* --- CADRE LÉGAL & INSTITUTIONNEL --- */}
+              <Route path="/agriculture/institutional-framework" element={<InstitutionalPage />} />
+              <Route path="/agriculture/legal-safety"            element={<LegalCompliancePage />} />
 
-            {/* --- BLOG --- */}
-            <Route path="/blog" element={<BlogPage />} />
-            <Route path="/blog/:id" element={<BlogPostDetail />} />
+              {/* --- BLOG --- */}
+              <Route path="/blog"     element={<BlogPage />} />
+              <Route path="/blog/:id" element={<BlogPostDetail />} />
 
-            {/* --- ROUTES DASHBOARD --- */}
-            <Route path="/dashboard" element={<DashboardLayout />}>
-              <Route index element={<Overview />} />
-              
-              {/* Admin - Gestion principale */}
-              <Route path="admin" element={<AdminOverview />} />
-              <Route path="admin/users" element={<UserManagement />} />
-              <Route path="admin/inventory" element={<GlobalInventory />} />
-              <Route path="admin/finances" element={<FinancialControl />} />
-              
-              {/* Admin - Gestion des biens immobiliers */}
-              <Route path="admin/properties/new" element={<PropertyForm />} />
-              <Route path="admin/properties/edit/:id" element={<PropertyForm />} />
-              
-              {/* Admin - Agriculture */}
-              <Route path="admin/agriculture" element={<AgriculturalInventory />} />
-              <Route path="admin/agricultural-products" element={<AgriculturalManagement />} />
-              
-              {/* Admin - Livestock */}
-              <Route path="admin/livestock-categories" element={<LivestockCategoriesManager />} />
-              <Route path="admin/livestock" element={<LivestockAssetsManager />} />  {/* ✅ Utilise le composant admin */}
+              {/* --- DASHBOARD --- */}
+              <Route path="/dashboard" element={<DashboardLayout />}>
+                <Route index element={<Overview />} />
 
-              {/* User - Section propriétaire (Real Estate) */}
-              <Route path="profile" element={<UserProfile />} />
-              <Route path="properties" element={<MyLands />} />
-              <Route path="properties/new" element={<PropertyForm />} />
-              <Route path="properties/edit/:id" element={<PropertyForm />} />
-              <Route path="titles" element={<TitleDocuments />} />
-              
-              {/* User - Section Livestock Owner */}
-              <Route path="livestock" element={<LivestockManagement />} />
-              
-              {/* User - Section Agriculture Owner - PRODUITS */}
-              <Route path="agriculture" element={<AgriculturalManagement />} />
-              
-              {/* User - Section Agriculture Owner - TERRES */}
-              <Route path="my-agricultural-lands" element={<MyAgriculturalLands />} />
-              
-              {/* User - Section investisseur */}
-              <Route path="invest" element={<Portfolio />} />
-              <Route path="yields" element={<YieldReports />} />
-              
-              {/* User - Section acheteur */}
-              <Route path="purchases" element={<MyPurchases />} />
-              <Route path="sourcing" element={<SourcingTracker />} />
-            </Route>
-          </Routes>
-          
-          <ChatAssistant />
+                {/* Admin */}
+                <Route path="admin"                      element={<AdminOverview />} />
+                <Route path="admin/users"                element={<UserManagement />} />
+                <Route path="admin/inventory"            element={<GlobalInventory />} />
+                <Route path="admin/finances"             element={<FinancialControl />} />
+                <Route path="admin/properties/new"       element={<PropertyForm />} />
+                <Route path="admin/properties/edit/:id"  element={<PropertyForm />} />
+                <Route path="admin/agriculture"          element={<AgriculturalInventory />} />
+                <Route path="admin/agricultural-products" element={<AgriculturalManagement />} />
+                <Route path="admin/livestock-categories" element={<LivestockCategoriesManager />} />
+                <Route path="admin/livestock"            element={<LivestockAssetsManager />} />
+
+                {/* Utilisateur - Real Estate */}
+                <Route path="profile"              element={<UserProfile />} />
+                <Route path="properties"           element={<MyLands />} />
+                <Route path="properties/new"       element={<PropertyForm />} />
+                <Route path="properties/edit/:id"  element={<PropertyForm />} />
+                <Route path="titles"               element={<TitleDocuments />} />
+
+                {/* Utilisateur - Livestock */}
+                <Route path="livestock" element={<LivestockManagement />} />
+
+                {/* Utilisateur - Agriculture */}
+                <Route path="agriculture"           element={<AgriculturalManagement />} />
+                <Route path="my-agricultural-lands" element={<MyAgriculturalLands />} />
+
+                {/* Utilisateur - Investisseur */}
+                <Route path="invest"  element={<Portfolio />} />
+                <Route path="yields"  element={<YieldReports />} />
+
+                {/* Utilisateur - Acheteur */}
+                <Route path="purchases" element={<MyPurchases />} />
+                <Route path="sourcing"  element={<SourcingTracker />} />
+              </Route>
+            </Routes>
+          </Suspense>
+
+          <Suspense fallback={null}>
+            <ChatAssistant />
+          </Suspense>
         </div>
       </AuthProvider>
     </Router>
