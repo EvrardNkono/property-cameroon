@@ -1,6 +1,6 @@
 // frontend/src/App.jsx
 
-import React, { Suspense, lazy, useEffect } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -86,13 +86,24 @@ const PropertyDetailsWrapper = () => {
   return <PropertyDetailsPage key={id} />;
 };
 
-// --- COMPOSANT DE SÉLECTION DE LANGUE GOOGLE TRANSLATE ---
-const GoogleTranslateWidget = () => {
-  useEffect(() => {
-    // Évite d'ajouter le script plusieurs fois
-    if (document.getElementById('google-translate-script')) return;
+// --- COMPOSANT DE TRADUCTION MODERNE (VERT & OR) ---
+const LanguageSwitcher = () => {
+  const [currentLang, setCurrentLang] = useState(() => {
+    const saved = localStorage.getItem('preferredLanguage');
+    if (saved) return saved;
+    const browserLang = navigator.language.split('-')[0];
+    return browserLang === 'en' ? 'en' : 'fr';
+  });
+  const [isOpen, setIsOpen] = useState(false);
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
-    // Stocke la fonction d'initialisation dans window
+  // Charge Google Translate une seule fois
+  useEffect(() => {
+    if (document.getElementById('google-translate-script')) {
+      setIsScriptLoaded(true);
+      return;
+    }
+
     window.googleTranslateElementInit = () => {
       if (window.google && window.google.translate) {
         new window.google.translate.TranslateElement({
@@ -100,18 +111,29 @@ const GoogleTranslateWidget = () => {
           includedLanguages: 'fr,en',
           layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
           autoDisplay: false
-        }, 'google_translate_element');
+        }, 'google_translate_element_hidden');
+        
+        setIsScriptLoaded(true);
+        
+        const savedLang = localStorage.getItem('preferredLanguage');
+        if (savedLang === 'en') {
+          setTimeout(() => {
+            const select = document.querySelector('.goog-te-combo');
+            if (select) {
+              select.value = 'en';
+              select.dispatchEvent(new Event('change'));
+            }
+          }, 500);
+        }
       }
     };
 
-    // Ajoute le script Google Translate
     const script = document.createElement('script');
     script.id = 'google-translate-script';
     script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
     script.async = true;
     document.body.appendChild(script);
 
-    // Nettoyage (optionnel)
     return () => {
       if (script && script.parentNode) {
         script.parentNode.removeChild(script);
@@ -119,57 +141,142 @@ const GoogleTranslateWidget = () => {
     };
   }, []);
 
-  // Styles CSS pour masquer le bandeau Google et personnaliser
+  const changeLanguage = (lang) => {
+    setCurrentLang(lang);
+    localStorage.setItem('preferredLanguage', lang);
+    
+    if (isScriptLoaded) {
+      const select = document.querySelector('.goog-te-combo');
+      if (select) {
+        select.value = lang;
+        select.dispatchEvent(new Event('change'));
+      }
+    }
+    
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      {/* Bouton principal - VERT ET OR */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-lg rounded-full transition-all duration-300"
+      >
+        <span className="text-xl">
+          {currentLang === 'fr' ? '🇫🇷' : '🇬🇧'}
+        </span>
+        <span className="font-semibold text-white tracking-wide">
+          {currentLang === 'fr' ? 'FR' : 'EN'}
+        </span>
+        <svg 
+          className={`w-4 h-4 text-white transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {/* Menu déroulant - VERT ET OR */}
+      {isOpen && (
+        <>
+          <div 
+            className="fixed inset-0 z-40"
+            onClick={() => setIsOpen(false)}
+          />
+          <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl overflow-hidden z-50 border border-amber-100">
+            <button
+              onClick={() => changeLanguage('fr')}
+              className={`w-full px-4 py-3 flex items-center gap-3 transition-all duration-200 ${
+                currentLang === 'fr' 
+                  ? 'bg-gradient-to-r from-green-50 to-amber-50 text-green-700 border-r-4 border-green-600' 
+                  : 'hover:bg-gray-50 text-gray-700'
+              }`}
+            >
+              <span className="text-2xl">🇫🇷</span>
+              <div className="text-left">
+                <div className={`font-medium ${currentLang === 'fr' ? 'text-green-700' : 'text-gray-700'}`}>
+                  Français
+                </div>
+                <div className="text-xs text-gray-400">Français</div>
+              </div>
+              {currentLang === 'fr' && (
+                <svg className="w-4 h-4 ml-auto text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </button>
+            <button
+              onClick={() => changeLanguage('en')}
+              className={`w-full px-4 py-3 flex items-center gap-3 transition-all duration-200 ${
+                currentLang === 'en' 
+                  ? 'bg-gradient-to-r from-green-50 to-amber-50 text-amber-700 border-r-4 border-amber-600' 
+                  : 'hover:bg-gray-50 text-gray-700'
+              }`}
+            >
+              <span className="text-2xl">🇬🇧</span>
+              <div className="text-left">
+                <div className={`font-medium ${currentLang === 'en' ? 'text-amber-700' : 'text-gray-700'}`}>
+                  English
+                </div>
+                <div className="text-xs text-gray-400">Anglais</div>
+              </div>
+              {currentLang === 'en' && (
+                <svg className="w-4 h-4 ml-auto text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Conteneur caché pour Google Translate */}
+      <div id="google_translate_element_hidden" style={{ display: 'none' }} />
+    </div>
+  );
+};
+
+// Styles pour masquer COMPLÈTEMENT le widget Google Translate
+const hideGoogleTranslateStyles = `
+  .goog-te-banner-frame.skiptranslate {
+    display: none !important;
+  }
+  body {
+    top: 0px !important;
+  }
+  .goog-te-gadget {
+    font-size: 0 !important;
+    height: 0 !important;
+  }
+  .goog-te-gadget .goog-te-combo {
+    display: none !important;
+  }
+  .goog-te-menu-frame {
+    max-width: 100% !important;
+  }
+  .goog-te-menu2 {
+    max-width: 100% !important;
+  }
+  /* Supprime l'espace résiduel */
+  iframe.skiptranslate {
+    display: none !important;
+  }
+`;
+
+function App() {
+  // Injecte les styles de masquage
   useEffect(() => {
     const style = document.createElement('style');
-    style.innerHTML = `
-      /* Masque le bandeau "Powered by Google" */
-      .goog-te-banner-frame.skiptranslate {
-        display: none !important;
-      }
-      body {
-        top: 0px !important;
-      }
-      /* Style du widget */
-      .goog-te-gadget {
-        font-family: inherit !important;
-        font-size: 0 !important;
-      }
-      .goog-te-gadget-simple {
-        background-color: #f3f4f6 !important;
-        border: 1px solid #e5e7eb !important;
-        border-radius: 0.5rem !important;
-        padding: 0.5rem 1rem !important;
-        font-size: 0.875rem !important;
-        cursor: pointer !important;
-      }
-      .goog-te-gadget-simple:hover {
-        background-color: #e5e7eb !important;
-      }
-      .goog-te-menu-value {
-        color: #1f2937 !important;
-        font-size: 0.875rem !important;
-      }
-      .goog-te-menu-value span {
-        color: #1f2937 !important;
-      }
-      /* Cache le texte du menu déroulant par défaut */
-      .goog-te-gadget-simple .goog-te-menu-value span:first-child {
-        display: inline-block !important;
-      }
-    `;
+    style.textContent = hideGoogleTranslateStyles;
     document.head.appendChild(style);
     return () => {
       document.head.removeChild(style);
     };
   }, []);
 
-  return (
-    <div id="google_translate_element" className="translate-widget" />
-  );
-};
-
-function App() {
   return (
     <Router>
       <AuthProvider>
@@ -245,12 +352,10 @@ function App() {
             </Routes>
           </Suspense>
 
-          {/* WIDGET DE TRADUCTION - AFFICHÉ SUR TOUTES LES PAGES */}
-          <Suspense fallback={null}>
-            <div className="fixed top-20 right-4 z-50">
-              <GoogleTranslateWidget />
-            </div>
-          </Suspense>
+          {/* BOUTON DE TRADUCTION - VERT & OR - POSITION HAUT DROITE */}
+          <div className="fixed top-4 right-4 z-50">
+            <LanguageSwitcher />
+          </div>
 
           <Suspense fallback={null}>
             <ChatAssistant />
