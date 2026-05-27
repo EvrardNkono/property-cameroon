@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+
+Sitemap: https://propertycameroon.com/sitemap.xml
+Host: https://propertycameroon.com
