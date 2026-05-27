@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -6,7 +6,8 @@ import {
   Warehouse, Globe, BadgeCheck, Loader2, DollarSign, Clock,
   AlertCircle, Zap, MapPin, Users, Award, BarChart3, ChevronRight,
   Sparkles, Star, Heart, TrendingDown, PieChart, Calendar, CheckCircle,
-  Phone, Mail, MessageCircle, X, Building2, Gem, Rocket, Layers
+  Phone, Mail, MessageCircle, X, Building2, Gem, Rocket, Layers,
+  ChevronLeft
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -126,6 +127,7 @@ const faqs = [
 
 const LivestockIntroduction = () => {
   const navigate = useNavigate();
+  const scrollContainerRef = useRef(null);
   const [categories, setCategories] = useState([]);
   const [featuredLivestock, setFeaturedLivestock] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -134,6 +136,8 @@ const LivestockIntroduction = () => {
   const [showNewsletter, setShowNewsletter] = useState(false);
   const [selectedFaq, setSelectedFaq] = useState(null);
   const [emailSubmitted, setEmailSubmitted] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
   const [stats, setStats] = useState({
     totalAssets: 0,
     avgROI: 0,
@@ -151,6 +155,31 @@ const LivestockIntroduction = () => {
     if (imagePath.startsWith('/uploads')) return `${BACKEND_URL}${imagePath}`;
     return `${BACKEND_URL}/uploads/${imagePath}`;
   };
+
+  // Check scroll position for carousel
+  const checkScrollButtons = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+    }
+  };
+
+  const scroll = (direction) => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = direction === 'left' ? -400 : 400;
+      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', checkScrollButtons);
+      setTimeout(checkScrollButtons, 100);
+      return () => container.removeEventListener('scroll', checkScrollButtons);
+    }
+  }, [categories]);
 
   const fetchCategories = async () => {
     try {
@@ -223,7 +252,6 @@ const LivestockIntroduction = () => {
     }
   };
 
-  // 🔥 NOUVELLE FONCTION : Fetch featured livestock assets
   const fetchFeaturedLivestock = async () => {
     try {
       setLoadingFeatured(true);
@@ -249,7 +277,6 @@ const LivestockIntroduction = () => {
   useEffect(() => {
     fetchCategories();
     fetchFeaturedLivestock();
-    // Show newsletter modal after 10 seconds (only once)
     const timer = setTimeout(() => {
       if (!localStorage.getItem('newsletterShown')) {
         setShowNewsletter(true);
@@ -266,16 +293,6 @@ const LivestockIntroduction = () => {
       setShowNewsletter(false);
       setEmailSubmitted(false);
     }, 2000);
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } }
-  };
-
-  const cardVariants = {
-    hidden: { y: 50, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
   };
 
   if (loading) {
@@ -327,7 +344,6 @@ const LivestockIntroduction = () => {
         style={{ opacity: heroOpacity, scale: heroScale }}
         className="relative bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 text-white overflow-hidden"
       >
-        {/* Animated background particles */}
         <div className="absolute inset-0 overflow-hidden">
           {[...Array(20)].map((_, i) => (
             <motion.div
@@ -388,12 +404,12 @@ const LivestockIntroduction = () => {
             transition={{ delay: 0.2 }}
             className="flex flex-wrap gap-4 justify-center mt-10"
           >
-            <Link
-              to="#categories"
+            <button
+              onClick={() => scrollContainerRef.current?.scrollIntoView({ behavior: 'smooth' })}
               className="px-8 py-3 bg-amber-500 text-white rounded-full font-bold hover:bg-amber-600 transition-all transform hover:scale-105 inline-flex items-center gap-2"
             >
               Explore sectors <ChevronRight size={18} />
-            </Link>
+            </button>
             <button
               onClick={() => setShowNewsletter(true)}
               className="px-8 py-3 bg-white/10 backdrop-blur-sm text-white rounded-full font-bold hover:bg-white/20 transition-all inline-flex items-center gap-2"
@@ -402,7 +418,6 @@ const LivestockIntroduction = () => {
             </button>
           </motion.div>
 
-          {/* Trust badges */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -419,7 +434,7 @@ const LivestockIntroduction = () => {
         </div>
       </motion.section>
 
-      {/* ========== STATS SECTION (Enhanced) ========== */}
+      {/* ========== STATS SECTION ========== */}
       <section className="py-16 px-6 relative -mt-10 z-20">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -432,9 +447,7 @@ const LivestockIntroduction = () => {
                 className="bg-white rounded-2xl p-6 shadow-xl border border-gray-100 hover:shadow-2xl transition-all group"
               >
                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                  <div className="text-white">
-                    {stat.icon}
-                  </div>
+                  <div className="text-white">{stat.icon}</div>
                 </div>
                 <p className="text-3xl font-bold text-gray-900">
                   {stat.value !== undefined 
@@ -453,8 +466,137 @@ const LivestockIntroduction = () => {
         </div>
       </section>
 
-      {/* ========== FEATURED LIVESTOCK ASSETS (NOUVEAU) ========== */}
-      <section className="py-20 px-6 bg-white">
+      {/* ========== CATEGORIES SECTION (CARROUSEL SLIDES) ========== */}
+      <section ref={scrollContainerRef} id="categories" className="py-20 px-6 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-10"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 rounded-full mb-4">
+              <Layers size={14} className="text-amber-600" />
+              <span className="text-amber-700 text-xs font-bold uppercase tracking-wide">Investment Sectors</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900">
+              Choose Your <span className="text-emerald-600">Sector</span>
+            </h2>
+            <p className="text-gray-500 mt-3 max-w-2xl mx-auto">
+              Swipe or scroll to explore certified livestock production sectors
+            </p>
+          </motion.div>
+
+          {/* Carousel with navigation */}
+          <div className="relative">
+            {/* Left navigation button */}
+            {canScrollLeft && (
+              <button
+                onClick={() => scroll('left')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur rounded-full p-3 shadow-lg hover:bg-white transition-all -ml-4"
+              >
+                <ChevronLeft size={24} className="text-gray-700" />
+              </button>
+            )}
+
+            {/* Scrollable container */}
+            <div
+              ref={scrollContainerRef}
+              className="flex overflow-x-auto gap-6 pb-8 scroll-smooth hide-scrollbar"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {categories.map((cat, index) => (
+                <motion.div
+                  key={cat.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ y: -8 }}
+                  className="group flex-shrink-0 w-[350px] md:w-[400px]"
+                >
+                  <Link to={`/agriculture/livestock/${cat.slug}`} className="block">
+                    <div className="relative h-80 rounded-2xl overflow-hidden shadow-lg">
+                      <img 
+                        src={cat.image} 
+                        alt={cat.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        onError={(e) => {
+                          e.target.src = 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000';
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                      
+                      <div className="absolute top-4 left-4 flex gap-2">
+                        <div className={`px-3 py-1 rounded-full ${cat.colors.badge} backdrop-blur-sm`}>
+                          <span className="text-[10px] font-bold uppercase">{cat.marketDemand}</span>
+                        </div>
+                        <div className="px-3 py-1 rounded-full bg-amber-500/30 backdrop-blur-sm">
+                          <span className="text-[10px] font-bold text-amber-300">+{cat.avgRoi.toFixed(0)}% ROI</span>
+                        </div>
+                      </div>
+                      
+                      <div className="absolute bottom-0 left-0 right-0 p-5">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className={`w-10 h-10 rounded-xl ${cat.colors.iconBg} backdrop-blur-sm flex items-center justify-center text-white`}>
+                            {cat.icon}
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-white">{cat.title}</h3>
+                            <p className="text-amber-400 text-[10px] font-bold uppercase tracking-wide">{cat.subtitle}</p>
+                          </div>
+                        </div>
+                        
+                        <p className="text-white/70 text-xs line-clamp-2 mb-3">
+                          {cat.description.substring(0, 100)}...
+                        </p>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex gap-3">
+                            <div>
+                              <p className="text-[8px] font-bold uppercase text-white/50">Assets</p>
+                              <p className="text-base font-bold text-white">{cat.count}</p>
+                            </div>
+                            <div>
+                              <p className="text-[8px] font-bold uppercase text-white/50">Value</p>
+                              <p className="text-base font-bold text-amber-400">
+                                {(cat.totalValue / 1000000).toFixed(0)}M FCFA
+                              </p>
+                            </div>
+                          </div>
+                          <ArrowRight size={18} className="text-white/50 group-hover:text-amber-400 transition-colors" />
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Right navigation button */}
+            {canScrollRight && categories.length > 2 && (
+              <button
+                onClick={() => scroll('right')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur rounded-full p-3 shadow-lg hover:bg-white transition-all -mr-4"
+              >
+                <ChevronRight size={24} className="text-gray-700" />
+              </button>
+            )}
+          </div>
+
+          {/* Scroll indicator dots */}
+          {categories.length > 2 && (
+            <div className="flex justify-center gap-2 mt-6">
+              <div className="w-2 h-2 rounded-full bg-gray-300" />
+              <div className="w-2 h-2 rounded-full bg-gray-300" />
+              <div className="w-2 h-2 rounded-full bg-gray-300" />
+              <div className="w-4 h-2 rounded-full bg-amber-500" />
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ========== FEATURED LIVESTOCK ASSETS ========== */}
+      <section className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -549,7 +691,7 @@ const LivestockIntroduction = () => {
       </section>
 
       {/* ========== INVESTMENT HIGHLIGHTS ========== */}
-      <section className="py-16 px-6 bg-gradient-to-b from-gray-50 to-white">
+      <section className="py-16 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -575,7 +717,7 @@ const LivestockIntroduction = () => {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
-                className="text-center p-4 rounded-xl bg-white hover:bg-emerald-50 transition-colors group cursor-pointer shadow-sm"
+                className="text-center p-4 rounded-xl bg-gray-50 hover:bg-emerald-50 transition-colors group cursor-pointer"
               >
                 <div className={`w-12 h-12 rounded-full ${item.color.replace('text', 'bg')}/10 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform`}>
                   <div className={item.color}>{item.icon}</div>
@@ -585,106 +727,6 @@ const LivestockIntroduction = () => {
               </motion.div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ========== CATEGORIES SECTION (Enhanced) ========== */}
-      <section id="categories" className="py-20 px-6 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 rounded-full mb-4">
-              <Layers size={14} className="text-amber-600" />
-              <span className="text-amber-700 text-xs font-bold uppercase tracking-wide">Sectors</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900">
-              Available <span className="text-emerald-600">Investment Sectors</span>
-            </h2>
-            <p className="text-gray-500 mt-3 max-w-2xl mx-auto">
-              Choose from certified, high-yield livestock production units across Cameroon
-            </p>
-          </motion.div>
-
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-8"
-          >
-            {categories.map((cat, index) => (
-              <motion.div
-                key={cat.id}
-                variants={cardVariants}
-                whileHover={{ y: -8 }}
-                className="group"
-              >
-                <Link to={`/agriculture/livestock/${cat.slug}`} className="block">
-                  <div className="relative h-96 rounded-3xl overflow-hidden shadow-xl">
-                    <img 
-                      src={cat.image} 
-                      alt={cat.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000';
-                      }}
-                    />
-                    
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                    
-                    <div className="absolute top-4 left-4 flex gap-2">
-                      <div className={`px-3 py-1 rounded-full ${cat.colors.badge} backdrop-blur-sm`}>
-                        <span className="text-[10px] font-bold uppercase">{cat.marketDemand} demand</span>
-                      </div>
-                      <div className="px-3 py-1 rounded-full bg-amber-500/30 backdrop-blur-sm">
-                        <span className="text-[10px] font-bold text-amber-300">+{cat.avgRoi.toFixed(0)}% avg ROI</span>
-                      </div>
-                    </div>
-                    
-                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className={`w-12 h-12 rounded-xl ${cat.colors.iconBg} backdrop-blur-sm flex items-center justify-center text-white`}>
-                          {cat.icon}
-                        </div>
-                        <div>
-                          <h3 className="text-2xl font-bold text-white">{cat.title}</h3>
-                          <p className="text-amber-400 text-xs font-bold uppercase tracking-wide">{cat.subtitle}</p>
-                        </div>
-                      </div>
-                      
-                      <p className="text-white/80 text-sm line-clamp-2 mb-4">
-                        {cat.description.substring(0, 120)}...
-                      </p>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex gap-4">
-                          <div>
-                            <p className="text-[9px] font-bold uppercase text-white/50">Assets</p>
-                            <p className="text-lg font-bold text-white">{cat.count}</p>
-                          </div>
-                          <div>
-                            <p className="text-[9px] font-bold uppercase text-white/50">Portfolio Value</p>
-                            <p className="text-lg font-bold text-amber-400">
-                              {(cat.totalValue / 1000000).toFixed(1)}M FCFA
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                          <span className="text-white/80 text-xs">Invest now</span>
-                          <ArrowRight size={18} className="text-white/80" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
         </div>
       </section>
 
@@ -855,7 +897,7 @@ const LivestockIntroduction = () => {
         </div>
       </section>
 
-      {/* ========== CTA SECTION (Enhanced) ========== */}
+      {/* ========== CTA SECTION ========== */}
       <section className="py-20 px-6">
         <div className="max-w-5xl mx-auto">
           <motion.div
@@ -971,6 +1013,12 @@ const LivestockIntroduction = () => {
       </AnimatePresence>
 
       <Footer />
+
+      <style>{`
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 };
