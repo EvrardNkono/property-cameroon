@@ -57,7 +57,7 @@ import GlobalInventory from './pages/dashboard/admin/GlobalInventory';
 import FinancialControl from './pages/dashboard/admin/FinancialControl';
 import AgriculturalInventory from './pages/dashboard/admin/AgriculturalInventory';
 import LivestockCategoriesManager from './pages/dashboard/admin/LivestockCategoriesManager';
-import LivestockAssetsManager from './pages/dashboard/admin/LivestockAssetsManager';
+import LivestockManagement from './pages/dashboard/livestock/LivestockManagement';
 
 // --- IMPORTS PROPERTY FORM ---
 import PropertyForm from './pages/dashboard/properties/PropertyForm';
@@ -151,7 +151,7 @@ function App() {
               
               {/* Admin - Livestock */}
               <Route path="admin/livestock-categories" element={<LivestockCategoriesManager />} />
-              <Route path="admin/livestock" element={<LivestockAssetsManager />} />
+              <Route path="admin/livestock" element={<LivestockManagement />} />
 
               {/* User - Section propriétaire (Real Estate) */}
               <Route path="profile" element={<UserProfile />} />
