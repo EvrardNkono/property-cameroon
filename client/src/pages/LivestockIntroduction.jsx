@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   ArrowRight, Fish, Bird, Database, Leaf, TrendingUp, ShieldCheck, 
   Warehouse, Globe, BadgeCheck, Loader2, DollarSign, Clock,
@@ -125,8 +125,11 @@ const faqs = [
 ];
 
 const LivestockIntroduction = () => {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
+  const [featuredLivestock, setFeaturedLivestock] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingFeatured, setLoadingFeatured] = useState(false);
   const [error, setError] = useState(null);
   const [showNewsletter, setShowNewsletter] = useState(false);
   const [selectedFaq, setSelectedFaq] = useState(null);
@@ -220,8 +223,32 @@ const LivestockIntroduction = () => {
     }
   };
 
+  // 🔥 NOUVELLE FONCTION : Fetch featured livestock assets
+  const fetchFeaturedLivestock = async () => {
+    try {
+      setLoadingFeatured(true);
+      const response = await api.getAllLivestock({ status: 'AVAILABLE', limit: 6 });
+      const items = response.livestock || response || [];
+      
+      const formattedItems = items.slice(0, 6).map(item => ({
+        ...item,
+        id: item._id || item.id,
+        image: item.images && item.images[0] ? getFullImageUrl(item.images[0]) : null,
+        location: item.location?.city || item.location || 'Cameroon',
+        categorySlug: item.category?.toLowerCase().replace(/\s+/g, '-') || 'livestock'
+      }));
+      
+      setFeaturedLivestock(formattedItems);
+    } catch (err) {
+      console.error('Error fetching featured livestock:', err);
+    } finally {
+      setLoadingFeatured(false);
+    }
+  };
+
   useEffect(() => {
     fetchCategories();
+    fetchFeaturedLivestock();
     // Show newsletter modal after 10 seconds (only once)
     const timer = setTimeout(() => {
       if (!localStorage.getItem('newsletterShown')) {
@@ -426,8 +453,103 @@ const LivestockIntroduction = () => {
         </div>
       </section>
 
+      {/* ========== FEATURED LIVESTOCK ASSETS (NOUVEAU) ========== */}
+      <section className="py-20 px-6 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 rounded-full mb-4">
+              <Star size={14} className="text-amber-600" />
+              <span className="text-amber-700 text-xs font-bold uppercase tracking-wide">Top Opportunities</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900">
+              Featured <span className="text-emerald-600">Livestock Assets</span>
+            </h2>
+            <p className="text-gray-500 mt-3 max-w-2xl mx-auto">
+              Hand-picked high-yield production units ready for immediate investment
+            </p>
+          </motion.div>
+
+          {loadingFeatured ? (
+            <div className="flex justify-center py-12">
+              <Loader2 size={32} className="text-emerald-600 animate-spin" />
+            </div>
+          ) : featuredLivestock.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-400">No featured assets available at the moment.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredLivestock.map((asset, index) => (
+                <motion.div
+                  key={asset.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ y: -5 }}
+                  className="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100 group cursor-pointer"
+                  onClick={() => navigate(`/agriculture/livestock/${asset.categorySlug}/${asset.id}`)}
+                >
+                  <div className="relative h-56 overflow-hidden">
+                    <img 
+                      src={asset.image || 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000'} 
+                      alt={asset.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000';
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <div className="absolute top-3 right-3 bg-amber-500 text-white px-2 py-1 rounded-full text-[9px] font-bold">
+                      +{asset.roi || 0}% ROI
+                    </div>
+                    <div className="absolute bottom-3 left-3 flex items-center gap-1 text-white text-[9px] font-bold">
+                      <MapPin size={10} className="text-amber-400" />
+                      {asset.location}
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{asset.title}</h3>
+                    <p className="text-xs text-gray-500 mb-3 line-clamp-2">{asset.description?.substring(0, 80)}...</p>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-xs text-gray-400">Investment</p>
+                        <p className="text-lg font-bold text-emerald-700">
+                          {(asset.price?.amount / 1000000).toFixed(1)}M FCFA
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 text-emerald-600 text-xs font-bold group-hover:gap-2 transition-all">
+                        View details <ArrowRight size={12} />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center mt-10"
+          >
+            <Link
+              to="/agriculture/livestock"
+              className="inline-flex items-center gap-2 text-emerald-600 text-sm font-bold hover:text-emerald-700 transition-colors"
+            >
+              View all livestock opportunities <ArrowRight size={14} />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ========== INVESTMENT HIGHLIGHTS ========== */}
-      <section className="py-16 px-6 bg-white">
+      <section className="py-16 px-6 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -453,7 +575,7 @@ const LivestockIntroduction = () => {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
-                className="text-center p-4 rounded-xl bg-gray-50 hover:bg-emerald-50 transition-colors group cursor-pointer"
+                className="text-center p-4 rounded-xl bg-white hover:bg-emerald-50 transition-colors group cursor-pointer shadow-sm"
               >
                 <div className={`w-12 h-12 rounded-full ${item.color.replace('text', 'bg')}/10 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform`}>
                   <div className={item.color}>{item.icon}</div>
@@ -467,7 +589,7 @@ const LivestockIntroduction = () => {
       </section>
 
       {/* ========== CATEGORIES SECTION (Enhanced) ========== */}
-      <section id="categories" className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white">
+      <section id="categories" className="py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -567,7 +689,7 @@ const LivestockIntroduction = () => {
       </section>
 
       {/* ========== HOW IT WORKS ========== */}
-      <section className="py-20 px-6 bg-white">
+      <section className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -626,7 +748,7 @@ const LivestockIntroduction = () => {
       </section>
 
       {/* ========== TESTIMONIALS ========== */}
-      <section className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white">
+      <section className="py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -652,7 +774,7 @@ const LivestockIntroduction = () => {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
                 whileHover={{ y: -5 }}
-                className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
+                className="bg-gray-50 rounded-2xl p-6 shadow-lg border border-gray-100"
               >
                 <div className="flex items-center gap-4 mb-4">
                   <img 
@@ -678,7 +800,7 @@ const LivestockIntroduction = () => {
       </section>
 
       {/* ========== FAQ SECTION ========== */}
-      <section className="py-20 px-6 bg-white">
+      <section className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-3xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -703,7 +825,7 @@ const LivestockIntroduction = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
-                className="border border-gray-200 rounded-xl overflow-hidden"
+                className="border border-gray-200 rounded-xl overflow-hidden bg-white"
               >
                 <button
                   onClick={() => setSelectedFaq(selectedFaq === i ? null : i)}
