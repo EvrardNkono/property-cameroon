@@ -50,6 +50,29 @@ const LivestockManagement = () => {
     { value: 'SOLD', label: 'Sold', color: 'text-red-600' }
   ];
 
+  // ✅ Détection de l'environnement (local vs production)
+  const isDevelopment = typeof window !== 'undefined' && 
+                        (window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1');
+
+  const BACKEND_URL = isDevelopment 
+    ? 'http://localhost:5000'
+    : 'https://property-cameroon-backend.vercel.app';
+
+  // 📸 Fonction pour obtenir l'URL complète de l'image (CORRIGÉE)
+  const getImageUrl = (image) => {
+    if (!image) return null;
+    
+    // ✅ Déjà une URL complète (Vercel Blob ou externe)
+    if (image.startsWith('http')) return image;
+    
+    // ✅ Chemin local commençant par /uploads
+    if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
+    
+    // ✅ Sinon, on construit le chemin complet
+    return `${BACKEND_URL}/uploads/livestock/${image}`;
+  };
+
   // ✅ Mapping des icônes par catégorie
   const getCategoryIcon = (slug) => {
     const iconMap = {
@@ -62,38 +85,34 @@ const LivestockManagement = () => {
   };
 
   // ✅ Charger les catégories depuis l'API (créées par l'admin)
- // frontend/src/pages/dashboard/livestock/LivestockManagement.jsx
-// Modifie la fonction fetchCategories
-
-// ✅ Charger les catégories depuis l'API (créées par l'admin)
-const fetchCategories = async () => {
-  try {
-    setLoadingCategories(true);
-    const response = await api.getAllLivestockCategories({ isActive: true });
-    const cats = response.categories || [];
-    
-    // ✅ PLUS DE FILTRE ! On affiche TOUTES les catégories actives
-    const formattedCats = cats.map(cat => ({
-      value: cat.slug,
-      label: cat.title,
-      icon: getCategoryIcon(cat.slug)
-    }));
-    
-    setCategories(formattedCats);
-    console.log('📋 Categories loaded:', formattedCats);
-  } catch (err) {
-    console.error('Error fetching categories:', err);
-    // Fallback sur les catégories par défaut si l'API échoue
-    setCategories([
-      { value: 'cattle', label: 'Cattle', icon: '🐄' },
-      { value: 'poultry', label: 'Poultry', icon: '🐔' },
-      { value: 'pigs', label: 'Pigs', icon: '🐷' },
-      { value: 'aquaculture', label: 'Aquaculture', icon: '🐟' }
-    ]);
-  } finally {
-    setLoadingCategories(false);
-  }
-};
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const response = await api.getAllLivestockCategories({ isActive: true });
+      const cats = response.categories || [];
+      
+      // ✅ PLUS DE FILTRE ! On affiche TOUTES les catégories actives
+      const formattedCats = cats.map(cat => ({
+        value: cat.slug,
+        label: cat.title,
+        icon: getCategoryIcon(cat.slug)
+      }));
+      
+      setCategories(formattedCats);
+      console.log('📋 Categories loaded:', formattedCats);
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+      // Fallback sur les catégories par défaut si l'API échoue
+      setCategories([
+        { value: 'cattle', label: 'Cattle', icon: '🐄' },
+        { value: 'poultry', label: 'Poultry', icon: '🐔' },
+        { value: 'pigs', label: 'Pigs', icon: '🐷' },
+        { value: 'aquaculture', label: 'Aquaculture', icon: '🐟' }
+      ]);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
 
   // ✅ Charger les livestock
   const fetchLivestock = async () => {
@@ -147,7 +166,8 @@ const fetchCategories = async () => {
       const uploadFormData = new FormData();
       files.forEach(file => uploadFormData.append('images', file));
       
-      const response = await fetch('http://localhost:5000/api/upload/livestock-images', {
+      // ✅ Utilise BACKEND_URL dynamique
+      const response = await fetch(`${BACKEND_URL}/api/upload/livestock-images`, {
         method: 'POST',
         body: uploadFormData,
       });
@@ -275,13 +295,6 @@ const fetchCategories = async () => {
       status: item.status || 'AVAILABLE'
     });
     setShowModal(true);
-  };
-
-  const getImageUrl = (image) => {
-    if (!image) return null;
-    if (image.startsWith('http')) return image;
-    if (image.startsWith('/uploads')) return `http://localhost:5000${image}`;
-    return `http://localhost:5000/uploads/livestock/${image}`;
   };
 
   if (loading && livestock.length === 0) {
