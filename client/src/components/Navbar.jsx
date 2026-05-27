@@ -50,6 +50,7 @@ const Navbar = () => {
   const agriLinks = [
     { name: 'Overview', path: '/agriculture' },
     { name: 'Livestock', path: '/agriculture/livestock' },
+    { name: 'Agricultural Products', path: '/agriculture/products' },
     { name: 'Marketplace', path: '/agriculture/marketplace' },
   ];
 
