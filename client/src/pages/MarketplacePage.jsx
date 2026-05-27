@@ -27,12 +27,6 @@ const SOURCING_IMAGES = {
   irrigation: "/images/globalirigationkit.jfif",
   press: "/images/compactoil.jfif",
   dryer: "/images/dryingunit.jfif",
-  canton1: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80",
-  canton2: "https://images.unsplash.com/photo-1531973576160-7125cd663d86?w=900&q=80",
-  china: "https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?w=900&q=80",
-  farmer: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=900&q=80",
-  contract: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=900&q=80",
-  shipping: "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=900&q=80",
 };
 
 // Produits de sourcing (matériel chinois)
@@ -210,6 +204,14 @@ const MARKET_CATEGORIES = [
   { id: 'sourcing', name: 'Sourcing (China)', icon: '🇨🇳', color: 'from-red-600 to-rose-600' },
 ];
 
+// 🔥 FONCTION POUR OBTENIR L'URL CORRECTE DES IMAGES (comme dans LivestockCategoryPage)
+const getImageUrl = (image) => {
+  if (!image) return null;
+  if (image.startsWith('http')) return image;
+  if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
+  return `${BACKEND_URL}/uploads/livestock/${image}`;
+};
+
 // Fonction utilitaire pour afficher une location (objet ou string)
 const formatLocation = (location) => {
   if (!location) return 'Cameroon';
@@ -345,7 +347,7 @@ const AgriculturalProductCard = ({ product, onViewDetail }) => {
   );
 };
 
-// Composant Livestock Card
+// Composant Livestock Card (CORRIGÉ avec getImageUrl)
 const LivestockCard = ({ asset, onViewDetail }) => {
   const displayLocation = formatLocation(asset.location);
   
@@ -356,10 +358,12 @@ const LivestockCard = ({ asset, onViewDetail }) => {
     >
       <div className="relative h-48 overflow-hidden">
         <img 
-          src={asset.image} 
+          src={asset.image || 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=600&q=80'} 
           alt={asset.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=600&q=80'; }}
+          onError={(e) => { 
+            e.target.src = 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=600&q=80';
+          }}
         />
         <div className="absolute top-3 right-3 bg-amber-500 text-white px-2 py-1 rounded-full text-[9px] font-bold">
           +{asset.roi}% ROI
@@ -373,7 +377,7 @@ const LivestockCard = ({ asset, onViewDetail }) => {
         <div className="flex gap-3 mb-3">
           <div className="text-xs">
             <span className="text-gray-400">Capacity</span>
-            <p className="font-bold">{asset.capacity.value} {asset.capacity.unit}</p>
+            <p className="font-bold">{asset.capacity?.value} {asset.capacity?.unit}</p>
           </div>
           <div className="text-xs">
             <span className="text-gray-400">Cycle</span>
@@ -383,7 +387,7 @@ const LivestockCard = ({ asset, onViewDetail }) => {
         <div className="flex justify-between items-center">
           <div>
             <p className="text-xl font-bold text-emerald-700">
-              {(asset.price.amount / 1000000).toFixed(1)}M <span className="text-xs">{asset.price.currency}</span>
+              {(asset.price?.amount / 1000000).toFixed(1)}M <span className="text-xs">{asset.price?.currency}</span>
             </p>
           </div>
           <button className="text-emerald-600 text-xs font-bold group-hover:gap-2 transition-all flex items-center gap-1">
@@ -444,20 +448,29 @@ const MarketplacePage = () => {
   const [loading, setLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // Fonction pour normaliser les données livestock (sécuriser location)
+  // 🔥 Fonction pour normaliser les données livestock (CORRIGÉE - comme dans LivestockCategoryPage)
   const normalizeLivestockData = (items) => {
     return items.map(item => ({
       ...item,
+      id: item._id || item.id,
       location: item.location?.city ? `${item.location.city}, ${item.location.region || ''}` : (item.location || 'Cameroon'),
+      // 🔥 CORRECTION CRUCIALE : Utiliser getImageUrl comme dans LivestockCategoryPage
+      image: item.images && item.images[0] 
+        ? getImageUrl(item.images[0]) 
+        : (item.image || MOCK_LIVESTOCK.find(m => m.id === item.id)?.image || 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=600&q=80'),
       locationRaw: item.location
     }));
   };
 
-  // Fonction pour normaliser les données agricoles (sécuriser origin)
+  // Fonction pour normaliser les données agricoles
   const normalizeAgriculturalData = (items) => {
     return items.map(item => ({
       ...item,
+      id: item._id || item.id,
       origin: item.origin?.city ? `${item.origin.city}, ${item.origin.country || 'Cameroon'}` : (item.origin || 'Cameroon'),
+      image: item.images && item.images[0] 
+        ? (item.images[0].startsWith('http') ? item.images[0] : `${BACKEND_URL}${item.images[0]}`)
+        : (item.image || MOCK_AGRICULTURAL_PRODUCTS.find(m => m.id === item.id)?.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&q=80'),
       originRaw: item.origin
     }));
   };
@@ -475,7 +488,12 @@ const MarketplacePage = () => {
         // Tenter de charger les livestock depuis l'API
         const liveRes = await api.getAllLivestock({ status: 'AVAILABLE' }).catch(() => ({ livestock: [] }));
         const rawLive = liveRes.livestock?.length > 0 ? liveRes.livestock : MOCK_LIVESTOCK;
-        setLivestockAssets(normalizeLivestockData(rawLive));
+        const normalizedLive = normalizeLivestockData(rawLive);
+        setLivestockAssets(normalizedLive);
+        
+        console.log('Livestock loaded:', normalizedLive.length);
+        console.log('First livestock image:', normalizedLive[0]?.image);
+        
       } catch (err) {
         console.error('Error fetching marketplace data:', err);
         setAgriculturalProducts(normalizeAgriculturalData(MOCK_AGRICULTURAL_PRODUCTS));
@@ -520,7 +538,6 @@ const MarketplacePage = () => {
 
   const handleViewDetail = (item) => {
     setSelectedProduct(item);
-    // Navigation selon le type
     if (activeCategory === 'agricultural' || (activeCategory === 'all' && item.price?.currency && !item.roi)) {
       console.log('View agricultural product:', item);
     } else if (activeCategory === 'livestock' || (activeCategory === 'all' && item.roi)) {
@@ -534,7 +551,6 @@ const MarketplacePage = () => {
     <div className="min-h-screen bg-white">
       <Navbar />
       
-      {/* Hero selon catégorie active */}
       {activeCategory !== 'all' && <MarketplaceHero activeCategory={activeCategory} />}
       
       {activeCategory === 'all' && (
@@ -586,7 +602,6 @@ const MarketplacePage = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {getDisplayedItems().map((item, idx) => {
-                // Détection automatique du type d'item
                 const isAgricultural = item.price?.currency && !item.roi && item.unit;
                 const isLivestock = item.roi !== undefined && item.capacity;
                 const isSourcing = item.origin?.includes('China') || item.delivery;
