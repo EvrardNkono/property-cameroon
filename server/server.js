@@ -36,7 +36,7 @@ import agriculturalRoutes from './routes/agricultural.routes.js';
 import amenityRoutes from './routes/amenity.routes.js';
 import livestockRoutes from './routes/livestock.routes.js';
 import livestockCategoryRoutes from './routes/livestockCategory.routes.js';
-
+import sitemapRoutes from './routes/sitemap.js';
 // Import des controllers upload
 import { 
   uploadPropertyImages, 
@@ -427,7 +427,7 @@ app.use('/api/agriculture', agriculturalRoutes);
 app.use('/api/amenities', amenityRoutes);
 app.use('/api/livestock', livestockRoutes);
 app.use('/api/livestock-categories', livestockCategoryRoutes);
-
+app.use('/', sitemapRoutes);
 // ========== ROUTES D'UPLOAD ==========
 app.post('/api/upload/property-images', propertyUpload.array('images', 10), handlePropertyImages);
 app.post('/api/upload/livestock-images', livestockUpload.array('images', 10), handleLivestockImages);
