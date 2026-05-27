@@ -210,6 +210,30 @@ const MARKET_CATEGORIES = [
   { id: 'sourcing', name: 'Sourcing (China)', icon: '🇨🇳', color: 'from-red-600 to-rose-600' },
 ];
 
+// Fonction utilitaire pour afficher une location (objet ou string)
+const formatLocation = (location) => {
+  if (!location) return 'Cameroon';
+  if (typeof location === 'string') return location;
+  if (typeof location === 'object') {
+    if (location.city && location.region) return `${location.city}, ${location.region}`;
+    if (location.city) return location.city;
+    if (location.region) return location.region;
+  }
+  return 'Cameroon';
+};
+
+// Fonction utilitaire pour afficher une origine
+const formatOrigin = (origin) => {
+  if (!origin) return 'Cameroon';
+  if (typeof origin === 'string') return origin;
+  if (typeof origin === 'object') {
+    if (origin.city && origin.country) return `${origin.city}, ${origin.country}`;
+    if (origin.city) return origin.city;
+    if (origin.country) return origin.country;
+  }
+  return 'Cameroon';
+};
+
 // Composant Hero par catégorie
 const MarketplaceHero = ({ activeCategory }) => {
   const heroes = {
@@ -276,6 +300,8 @@ const MarketplaceHero = ({ activeCategory }) => {
 
 // Composant Product Card pour les produits agricoles
 const AgriculturalProductCard = ({ product, onViewDetail }) => {
+  const displayOrigin = formatOrigin(product.origin);
+  
   return (
     <div 
       className="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100 group cursor-pointer hover:shadow-xl transition-all hover:-translate-y-1"
@@ -300,7 +326,7 @@ const AgriculturalProductCard = ({ product, onViewDetail }) => {
       <div className="p-5">
         <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{product.name}</h3>
         <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
-          <span className="flex items-center gap-1">📍 {product.origin}</span>
+          <span className="flex items-center gap-1">📍 {displayOrigin}</span>
         </div>
         <p className="text-gray-500 text-xs mb-3 line-clamp-2">{product.description}</p>
         <div className="flex justify-between items-center">
@@ -321,6 +347,8 @@ const AgriculturalProductCard = ({ product, onViewDetail }) => {
 
 // Composant Livestock Card
 const LivestockCard = ({ asset, onViewDetail }) => {
+  const displayLocation = formatLocation(asset.location);
+  
   return (
     <div 
       className="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100 group cursor-pointer hover:shadow-xl transition-all hover:-translate-y-1"
@@ -337,7 +365,7 @@ const LivestockCard = ({ asset, onViewDetail }) => {
           +{asset.roi}% ROI
         </div>
         <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full text-white text-[9px] font-bold flex items-center gap-1">
-          📍 {asset.location}
+          📍 {displayLocation}
         </div>
       </div>
       <div className="p-5">
@@ -369,6 +397,8 @@ const LivestockCard = ({ asset, onViewDetail }) => {
 
 // Composant Sourcing Card
 const SourcingCard = ({ product, onViewDetail }) => {
+  const displayOrigin = formatOrigin(product.origin);
+  
   return (
     <div 
       className="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100 group cursor-pointer hover:shadow-xl transition-all hover:-translate-y-1"
@@ -388,7 +418,7 @@ const SourcingCard = ({ product, onViewDetail }) => {
       <div className="p-5">
         <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{product.title}</h3>
         <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
-          <span>🇨🇳 {product.origin}</span>
+          <span>🇨🇳 {displayOrigin}</span>
           <span>🚢 {product.delivery}</span>
         </div>
         <p className="text-gray-500 text-xs mb-3 line-clamp-2">{product.desc}</p>
@@ -414,6 +444,24 @@ const MarketplacePage = () => {
   const [loading, setLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
+  // Fonction pour normaliser les données livestock (sécuriser location)
+  const normalizeLivestockData = (items) => {
+    return items.map(item => ({
+      ...item,
+      location: item.location?.city ? `${item.location.city}, ${item.location.region || ''}` : (item.location || 'Cameroon'),
+      locationRaw: item.location
+    }));
+  };
+
+  // Fonction pour normaliser les données agricoles (sécuriser origin)
+  const normalizeAgriculturalData = (items) => {
+    return items.map(item => ({
+      ...item,
+      origin: item.origin?.city ? `${item.origin.city}, ${item.origin.country || 'Cameroon'}` : (item.origin || 'Cameroon'),
+      originRaw: item.origin
+    }));
+  };
+
   // Charger les données depuis l'API
   useEffect(() => {
     const fetchData = async () => {
@@ -421,15 +469,17 @@ const MarketplacePage = () => {
       try {
         // Tenter de charger les produits agricoles depuis l'API
         const agriRes = await api.get('/agriculture/products').catch(() => ({ products: [] }));
-        setAgriculturalProducts(agriRes.products?.length > 0 ? agriRes.products : MOCK_AGRICULTURAL_PRODUCTS);
+        const rawAgri = agriRes.products?.length > 0 ? agriRes.products : MOCK_AGRICULTURAL_PRODUCTS;
+        setAgriculturalProducts(normalizeAgriculturalData(rawAgri));
         
         // Tenter de charger les livestock depuis l'API
         const liveRes = await api.getAllLivestock({ status: 'AVAILABLE' }).catch(() => ({ livestock: [] }));
-        setLivestockAssets(liveRes.livestock?.length > 0 ? liveRes.livestock : MOCK_LIVESTOCK);
+        const rawLive = liveRes.livestock?.length > 0 ? liveRes.livestock : MOCK_LIVESTOCK;
+        setLivestockAssets(normalizeLivestockData(rawLive));
       } catch (err) {
         console.error('Error fetching marketplace data:', err);
-        setAgriculturalProducts(MOCK_AGRICULTURAL_PRODUCTS);
-        setLivestockAssets(MOCK_LIVESTOCK);
+        setAgriculturalProducts(normalizeAgriculturalData(MOCK_AGRICULTURAL_PRODUCTS));
+        setLivestockAssets(normalizeLivestockData(MOCK_LIVESTOCK));
       } finally {
         setLoading(false);
       }
@@ -471,11 +521,9 @@ const MarketplacePage = () => {
   const handleViewDetail = (item) => {
     setSelectedProduct(item);
     // Navigation selon le type
-    if (activeCategory === 'agricultural' || (activeCategory === 'all' && item.price?.currency)) {
-      // navigate(`/agriculture/products/${item.id}`);
+    if (activeCategory === 'agricultural' || (activeCategory === 'all' && item.price?.currency && !item.roi)) {
       console.log('View agricultural product:', item);
     } else if (activeCategory === 'livestock' || (activeCategory === 'all' && item.roi)) {
-      // navigate(`/agriculture/livestock/${item.category?.toLowerCase()}/${item.id}`);
       console.log('View livestock asset:', item);
     } else {
       console.log('View sourcing product:', item);
@@ -538,11 +586,16 @@ const MarketplacePage = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {getDisplayedItems().map((item, idx) => {
-                if (activeCategory === 'agricultural' || (activeCategory === 'all' && item.price?.currency && !item.roi)) {
+                // Détection automatique du type d'item
+                const isAgricultural = item.price?.currency && !item.roi && item.unit;
+                const isLivestock = item.roi !== undefined && item.capacity;
+                const isSourcing = item.origin?.includes('China') || item.delivery;
+                
+                if (activeCategory === 'agricultural' || (activeCategory === 'all' && isAgricultural)) {
                   return <AgriculturalProductCard key={item.id || idx} product={item} onViewDetail={handleViewDetail} />;
-                } else if (activeCategory === 'livestock' || (activeCategory === 'all' && item.roi)) {
+                } else if (activeCategory === 'livestock' || (activeCategory === 'all' && isLivestock)) {
                   return <LivestockCard key={item.id || idx} asset={item} onViewDetail={handleViewDetail} />;
-                } else if (activeCategory === 'sourcing' || (activeCategory === 'all' && item.origin?.includes('China'))) {
+                } else if (activeCategory === 'sourcing' || (activeCategory === 'all' && isSourcing)) {
                   return <SourcingCard key={item.id || idx} product={item} onViewDetail={handleViewDetail} />;
                 }
                 return null;
@@ -576,9 +629,6 @@ const MarketplacePage = () => {
       </section>
 
       <Footer />
-
-      {/* ArrowRight icon component inline */}
-      <svg style={{ display: 'none' }} />
     </div>
   );
 };
