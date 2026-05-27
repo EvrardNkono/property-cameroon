@@ -311,7 +311,7 @@ const AgriculturePage = () => {
       {/* 🔥 EPIC HERO SECTION */}
       <section className="relative pt-48 pb-32 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/40 via-black to-black z-0"></div>
-        <div className="absolute inset-0 bg-[url('/images/heroagri.png')] bg-cover bg-center opacity-20 z-0"></div>
+        <div className="absolute inset-0 bg-[url('/images/heroagri.webp')] bg-cover bg-center opacity-20 z-0"></div>
         <div className="absolute top-20 right-0 w-96 h-96 bg-emerald-500 rounded-full blur-[150px] opacity-20"></div>
         
         <div className="max-w-7xl mx-auto px-8 relative z-10">

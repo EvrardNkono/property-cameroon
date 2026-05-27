@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const INVESTMENTS = [
   {
@@ -8,6 +8,7 @@ const INVESTMENTS = [
     yield: "+22%",
     term: "Short-Cycle",
     image: "/images/palm-plantation.jpg",
+    imageWebp: "/images/palm-plantation.webp",
   },
   {
     id: 2,
@@ -16,6 +17,7 @@ const INVESTMENTS = [
     yield: "+18%",
     term: "18 Months",
     image: "/images/propertyananas.jfif",
+    imageWebp: "/images/propertyananas.webp",
   },
   {
     id: 3,
@@ -24,10 +26,63 @@ const INVESTMENTS = [
     yield: "+15%",
     term: "Long-Term",
     image: "/images/propertycacao.jfif",
+    imageWebp: "/images/propertycacao.webp",
   }
 ];
 
+// Composant Image optimisé
+const OptimizedImage = ({ src, webpSrc, alt, className }) => {
+  const [loaded, setLoaded] = useState(false);
+  const [inView, setInView] = useState(false);
+  const imgRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '100px' }
+    );
+
+    if (imgRef.current) observer.observe(imgRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={imgRef} className="absolute inset-0 w-full h-full">
+      {!loaded && (
+        <div className="absolute inset-0 bg-slate-200 animate-pulse" />
+      )}
+      {inView && (
+        <picture>
+          <source srcSet={webpSrc} type="image/webp" />
+          <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+            onLoad={() => setLoaded(true)}
+            className={`${className} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
+          />
+        </picture>
+      )}
+    </div>
+  );
+};
+
 const InvestmentGrid = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
     <section className="py-16 md:py-24 px-6 md:px-12 max-w-[1600px] mx-auto bg-white font-sans">
       {/* Section Header */}
@@ -45,15 +100,16 @@ const InvestmentGrid = () => {
         </p>
       </div>
 
-      {/* Bento Grid - Correction de la hauteur ici */}
+      {/* Bento Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         
-        {/* Main Card (Large) - Hauteur fixe sur mobile pour forcer la visibilité */}
+        {/* Main Card (Large) */}
         <div className="md:col-span-2 relative group overflow-hidden bg-slate-200 min-h-[400px] md:h-[600px]">
-          <img 
-            src={INVESTMENTS[0].image} 
+          <OptimizedImage
+            src={INVESTMENTS[0].image}
+            webpSrc={INVESTMENTS[0].imageWebp}
             alt={INVESTMENTS[0].title}
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent"></div>
           
@@ -76,10 +132,11 @@ const InvestmentGrid = () => {
         <div className="grid grid-cols-1 gap-4 md:gap-6">
           {INVESTMENTS.slice(1).map((inv) => (
             <div key={inv.id} className="relative group overflow-hidden bg-slate-200 min-h-[300px] md:h-full">
-              <img 
-                src={inv.image} 
+              <OptimizedImage
+                src={inv.image}
+                webpSrc={inv.imageWebp}
                 alt={inv.title}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-slate-900/60 transition-opacity duration-500 group-hover:opacity-80"></div>
               
@@ -87,7 +144,7 @@ const InvestmentGrid = () => {
                 <h3 className="text-xl font-serif text-white mb-1 leading-tight">{inv.title}</h3>
                 <div className="flex justify-between items-center mt-4 pt-4 border-t border-white/10">
                   <span className="text-pc-gold font-bold text-lg">{inv.yield}</span>
-                  <button className="text-[9px] text-white uppercase tracking-widest font-bold border-b border-pc-gold/50 pb-1">
+                  <button className="text-[9px] text-white uppercase tracking-widest font-bold border-b border-pc-gold/50 pb-1 hover:text-pc-gold transition-colors">
                     View Details
                   </button>
                 </div>
@@ -96,6 +153,18 @@ const InvestmentGrid = () => {
           ))}
         </div>
       </div>
+
+      {/* CSS pour désactiver les hover sur mobile */}
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .group:hover .group-hover\\:scale-110 {
+            transform: scale(1) !important;
+          }
+          .group-hover\\:opacity-80:hover {
+            opacity: 0.6 !important;
+          }
+        }
+      `}</style>
     </section>
   );
 };

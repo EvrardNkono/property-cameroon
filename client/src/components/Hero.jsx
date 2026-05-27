@@ -8,8 +8,8 @@ const Hero = () => {
 
   // Images disponibles initiales
   const initialImages = [
-    { id: 'img0', src: '/images/heroimo.jfif', label: 'Real Estate', alt: 'Real Estate' },
-    { id: 'img1', src: '/images/heroagri.jfif', label: 'Agriculture', alt: 'Agriculture' },
+    { id: 'img0', src: '/images/heroimo.webp', label: 'Real Estate', alt: 'Real Estate' },
+    { id: 'img1', src: '/images/heroagri.webp', label: 'Agriculture', alt: 'Agriculture' },
     { id: 'img2', src: '/images/lifstock.jfif', label: 'Livestock', alt: 'Livestock' }
   ];
 
