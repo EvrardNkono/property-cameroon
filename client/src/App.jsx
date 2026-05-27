@@ -5,8 +5,6 @@ import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-
 import { AuthProvider } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
-// En haut de App.jsx
-
 
 // --- IMPORTS DES PAGES PUBLIQUES ---
 import Home from './pages/Home';
@@ -57,12 +55,12 @@ import GlobalInventory from './pages/dashboard/admin/GlobalInventory';
 import FinancialControl from './pages/dashboard/admin/FinancialControl';
 import AgriculturalInventory from './pages/dashboard/admin/AgriculturalInventory';
 import LivestockCategoriesManager from './pages/dashboard/admin/LivestockCategoriesManager';
-import LivestockManagement from './pages/dashboard/livestock/LivestockManagement';
+import LivestockAssetsManager from './pages/dashboard/admin/LivestockAssetsManager';  // ✅ Import du composant admin
 
 // --- IMPORTS PROPERTY FORM ---
 import PropertyForm from './pages/dashboard/properties/PropertyForm';
 
-// ✅ IMPORT LIVESTOCK MANAGEMENT
+// ✅ IMPORT LIVESTOCK MANAGEMENT (pour les utilisateurs normaux)
 import LivestockManagement from './pages/dashboard/livestock/LivestockManagement';
 
 // ✅ IMPORT AGRICULTURAL MANAGEMENT (PRODUITS)
@@ -83,12 +81,6 @@ const PropertyDetailsWrapper = () => {
   return <PropertyDetailsPage key={id} />;
 };
 
-// Si useParams n'est pas disponible dans ce contexte, utilise cette alternative:
-// const PropertyDetailsWrapper = () => {
-//   const location = useLocation();
-//   return <PropertyDetailsPage key={location.pathname} />;
-// };
-
 function App() {
   return (
     <Router>
@@ -101,11 +93,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/real-estate" element={<RealEstatePage />} />
             
-            {/* 🔥 SOLUTION 1: Utiliser un wrapper avec key */}
             <Route path="/real-estate/:id" element={<PropertyDetailsWrapper />} />
-            
-            {/* 🔥 SOLUTION 2: Alternative directe (décommente et commente la ligne du dessus si ça ne marche pas) */}
-            {/* <Route path="/real-estate/:id" element={<PropertyDetailsPage key={window.location.pathname} />} /> */}
             
             <Route path="/experts" element={<ExpertHubPage />} />
             <Route path="/global-sourcing" element={<SourcingPage />} />
@@ -141,7 +129,7 @@ function App() {
               <Route path="admin/inventory" element={<GlobalInventory />} />
               <Route path="admin/finances" element={<FinancialControl />} />
               
-              {/* ✅ AJOUT : Admin - Gestion des biens immobiliers */}
+              {/* Admin - Gestion des biens immobiliers */}
               <Route path="admin/properties/new" element={<PropertyForm />} />
               <Route path="admin/properties/edit/:id" element={<PropertyForm />} />
               
@@ -151,7 +139,7 @@ function App() {
               
               {/* Admin - Livestock */}
               <Route path="admin/livestock-categories" element={<LivestockCategoriesManager />} />
-              <Route path="admin/livestock" element={<LivestockManagement />} />
+              <Route path="admin/livestock" element={<LivestockAssetsManager />} />  {/* ✅ Utilise le composant admin */}
 
               {/* User - Section propriétaire (Real Estate) */}
               <Route path="profile" element={<UserProfile />} />
