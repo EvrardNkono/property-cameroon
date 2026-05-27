@@ -86,7 +86,9 @@ const PropertyDetailsWrapper = () => {
   return <PropertyDetailsPage key={id} />;
 };
 
-// --- COMPOSANT DE TRADUCTION MODERNE (VERT & OR) ---
+// ============================================================
+// COMPOSANT DE TRADUCTION LUXE - CHARTER VERT & OR
+// ============================================================
 const LanguageSwitcher = () => {
   const [currentLang, setCurrentLang] = useState(() => {
     const saved = localStorage.getItem('preferredLanguage');
@@ -95,14 +97,10 @@ const LanguageSwitcher = () => {
     return browserLang === 'en' ? 'en' : 'fr';
   });
   const [isOpen, setIsOpen] = useState(false);
-  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
-  // Charge Google Translate une seule fois
+  // Charge Google Translate et le cache complètement
   useEffect(() => {
-    if (document.getElementById('google-translate-script')) {
-      setIsScriptLoaded(true);
-      return;
-    }
+    if (document.getElementById('google-translate-script')) return;
 
     window.googleTranslateElementInit = () => {
       if (window.google && window.google.translate) {
@@ -112,8 +110,6 @@ const LanguageSwitcher = () => {
           layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
           autoDisplay: false
         }, 'google_translate_element_hidden');
-        
-        setIsScriptLoaded(true);
         
         const savedLang = localStorage.getItem('preferredLanguage');
         if (savedLang === 'en') {
@@ -133,24 +129,16 @@ const LanguageSwitcher = () => {
     script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
     script.async = true;
     document.body.appendChild(script);
-
-    return () => {
-      if (script && script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-    };
   }, []);
 
   const changeLanguage = (lang) => {
     setCurrentLang(lang);
     localStorage.setItem('preferredLanguage', lang);
     
-    if (isScriptLoaded) {
-      const select = document.querySelector('.goog-te-combo');
-      if (select) {
-        select.value = lang;
-        select.dispatchEvent(new Event('change'));
-      }
+    const select = document.querySelector('.goog-te-combo');
+    if (select) {
+      select.value = lang;
+      select.dispatchEvent(new Event('change'));
     }
     
     setIsOpen(false);
@@ -158,123 +146,135 @@ const LanguageSwitcher = () => {
 
   return (
     <div className="relative">
-      {/* Bouton principal - VERT ET OR */}
+      {/* BOUTON PRINCIPAL - DESIGN LUXE */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-lg rounded-full transition-all duration-300"
+        className="group relative flex items-center gap-3 px-5 py-2.5 rounded-full font-medium transition-all duration-300 overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #1a4d2c 0%, #2d6a3b 100%)',
+          boxShadow: '0 8px 20px -4px rgba(0,0,0,0.15), 0 0 0 1px rgba(212, 175, 55, 0.3) inset'
+        }}
       >
-        <span className="text-xl">
+        {/* Effet de brillance au hover */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+        
+        {/* Drapeau avec effet 3D */}
+        <span className="text-xl drop-shadow-md">
           {currentLang === 'fr' ? '🇫🇷' : '🇬🇧'}
         </span>
-        <span className="font-semibold text-white tracking-wide">
-          {currentLang === 'fr' ? 'FR' : 'EN'}
+        
+        {/* Texte avec couleur OR */}
+        <span className="font-semibold tracking-wide text-amber-400">
+          {currentLang === 'fr' ? 'FRANÇAIS' : 'ENGLISH'}
         </span>
+        
+        {/* Icône flèche dorée */}
         <svg 
-          className={`w-4 h-4 text-white transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-amber-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
           fill="none" 
           stroke="currentColor" 
+          strokeWidth="2.5"
           viewBox="0 0 24 24"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
-      {/* Menu déroulant - VERT ET OR */}
+      {/* MENU DÉROULANT - DESIGN PREMIUM */}
       {isOpen && (
         <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
           <div 
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl overflow-hidden z-50 border border-amber-100">
+            className="absolute right-0 mt-3 w-64 rounded-2xl overflow-hidden z-50 animate-fadeInUp"
+            style={{
+              background: '#ffffff',
+              boxShadow: '0 20px 35px -10px rgba(0,0,0,0.2), 0 0 0 1px rgba(212, 175, 55, 0.2)'
+            }}
+          >
+            {/* Option FRANÇAIS */}
             <button
               onClick={() => changeLanguage('fr')}
-              className={`w-full px-4 py-3 flex items-center gap-3 transition-all duration-200 ${
+              className={`w-full px-5 py-4 flex items-center gap-4 transition-all duration-200 ${
                 currentLang === 'fr' 
-                  ? 'bg-gradient-to-r from-green-50 to-amber-50 text-green-700 border-r-4 border-green-600' 
-                  : 'hover:bg-gray-50 text-gray-700'
+                  ? 'bg-gradient-to-r from-emerald-50 to-transparent' 
+                  : 'hover:bg-gray-50'
               }`}
             >
-              <span className="text-2xl">🇫🇷</span>
-              <div className="text-left">
-                <div className={`font-medium ${currentLang === 'fr' ? 'text-green-700' : 'text-gray-700'}`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${
+                currentLang === 'fr' ? 'bg-emerald-100 shadow-inner' : 'bg-gray-100'
+              }`}>
+                🇫🇷
+              </div>
+              <div className="flex-1 text-left">
+                <div className={`font-semibold ${currentLang === 'fr' ? 'text-emerald-700' : 'text-gray-700'}`}>
                   Français
                 </div>
-                <div className="text-xs text-gray-400">Français</div>
+                <div className="text-xs text-gray-400">Langue principale</div>
               </div>
               {currentLang === 'fr' && (
-                <svg className="w-4 h-4 ml-auto text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-glow" />
               )}
             </button>
+
+            {/* Séparateur OR */}
+            <div className="h-px bg-gradient-to-r from-transparent via-amber-400 to-transparent mx-4" />
+
+            {/* Option ENGLISH */}
             <button
               onClick={() => changeLanguage('en')}
-              className={`w-full px-4 py-3 flex items-center gap-3 transition-all duration-200 ${
+              className={`w-full px-5 py-4 flex items-center gap-4 transition-all duration-200 ${
                 currentLang === 'en' 
-                  ? 'bg-gradient-to-r from-green-50 to-amber-50 text-amber-700 border-r-4 border-amber-600' 
-                  : 'hover:bg-gray-50 text-gray-700'
+                  ? 'bg-gradient-to-r from-amber-50 to-transparent' 
+                  : 'hover:bg-gray-50'
               }`}
             >
-              <span className="text-2xl">🇬🇧</span>
-              <div className="text-left">
-                <div className={`font-medium ${currentLang === 'en' ? 'text-amber-700' : 'text-gray-700'}`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${
+                currentLang === 'en' ? 'bg-amber-100 shadow-inner' : 'bg-gray-100'
+              }`}>
+                🇬🇧
+              </div>
+              <div className="flex-1 text-left">
+                <div className={`font-semibold ${currentLang === 'en' ? 'text-amber-600' : 'text-gray-700'}`}>
                   English
                 </div>
-                <div className="text-xs text-gray-400">Anglais</div>
+                <div className="text-xs text-gray-400">International</div>
               </div>
               {currentLang === 'en' && (
-                <svg className="w-4 h-4 ml-auto text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+                <div className="w-2 h-2 rounded-full bg-amber-500 shadow-glow" />
               )}
             </button>
           </div>
         </>
       )}
 
-      {/* Conteneur caché pour Google Translate */}
+      {/* Google Translate caché */}
       <div id="google_translate_element_hidden" style={{ display: 'none' }} />
     </div>
   );
 };
 
-// Styles pour masquer COMPLÈTEMENT le widget Google Translate
-const hideGoogleTranslateStyles = `
-  .goog-te-banner-frame.skiptranslate {
+// Styles pour masquer Google Translate proprement
+const globalStyles = `
+  .goog-te-banner-frame.skiptranslate, .goog-te-gadget, iframe.skiptranslate {
     display: none !important;
   }
-  body {
-    top: 0px !important;
+  body { top: 0px !important; }
+  .goog-te-combo { display: none !important; }
+  
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  .goog-te-gadget {
-    font-size: 0 !important;
-    height: 0 !important;
-  }
-  .goog-te-gadget .goog-te-combo {
-    display: none !important;
-  }
-  .goog-te-menu-frame {
-    max-width: 100% !important;
-  }
-  .goog-te-menu2 {
-    max-width: 100% !important;
-  }
-  /* Supprime l'espace résiduel */
-  iframe.skiptranslate {
-    display: none !important;
-  }
+  .animate-fadeInUp { animation: fadeInUp 0.2s ease-out; }
+  
+  .shadow-glow { box-shadow: 0 0 6px currentColor; }
 `;
 
 function App() {
-  // Injecte les styles de masquage
   useEffect(() => {
     const style = document.createElement('style');
-    style.textContent = hideGoogleTranslateStyles;
+    style.textContent = globalStyles;
     document.head.appendChild(style);
-    return () => {
-      document.head.removeChild(style);
-    };
   }, []);
 
   return (
@@ -283,7 +283,6 @@ function App() {
         <div className="App">
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              {/* --- ROUTES PUBLIQUES PRINCIPALES --- */}
               <Route path="/"                    element={<Home />} />
               <Route path="/login"               element={<Login />} />
               <Route path="/register"            element={<Register />} />
@@ -292,8 +291,6 @@ function App() {
               <Route path="/experts"             element={<ExpertHubPage />} />
               <Route path="/global-sourcing"     element={<SourcingPage />} />
               <Route path="/book-appointment"    element={<AppointmentPage />} />
-
-              {/* --- ÉCOSYSTÈME AGRICULTURE --- */}
               <Route path="/agriculture"                          element={<AgriculturePage />} />
               <Route path="/agriculture/products"                 element={<AgriculturalProducts />} />
               <Route path="/agriculture/land/:id"                 element={<LandDetailPage />} />
@@ -302,20 +299,12 @@ function App() {
               <Route path="/agriculture/livestock"                element={<LivestockPage />} />
               <Route path="/agriculture/livestock/:category"      element={<LivestockCategoryPage />} />
               <Route path="/agriculture/livestock/:category/:id"  element={<ProjectDetailsPage />} />
-
-              {/* --- CADRE LÉGAL & INSTITUTIONNEL --- */}
               <Route path="/agriculture/institutional-framework" element={<InstitutionalPage />} />
               <Route path="/agriculture/legal-safety"            element={<LegalCompliancePage />} />
-
-              {/* --- BLOG --- */}
               <Route path="/blog"     element={<BlogPage />} />
               <Route path="/blog/:id" element={<BlogPostDetail />} />
-
-              {/* --- DASHBOARD --- */}
               <Route path="/dashboard" element={<DashboardLayout />}>
                 <Route index element={<Overview />} />
-
-                {/* Admin */}
                 <Route path="admin"                      element={<AdminOverview />} />
                 <Route path="admin/users"                element={<UserManagement />} />
                 <Route path="admin/inventory"            element={<GlobalInventory />} />
@@ -326,34 +315,24 @@ function App() {
                 <Route path="admin/agricultural-products" element={<AgriculturalManagement />} />
                 <Route path="admin/livestock-categories" element={<LivestockCategoriesManager />} />
                 <Route path="admin/livestock"            element={<LivestockAssetsManager />} />
-
-                {/* Utilisateur - Real Estate */}
                 <Route path="profile"              element={<UserProfile />} />
                 <Route path="properties"           element={<MyLands />} />
                 <Route path="properties/new"       element={<PropertyForm />} />
                 <Route path="properties/edit/:id"  element={<PropertyForm />} />
                 <Route path="titles"               element={<TitleDocuments />} />
-
-                {/* Utilisateur - Livestock */}
                 <Route path="livestock" element={<LivestockManagement />} />
-
-                {/* Utilisateur - Agriculture */}
                 <Route path="agriculture"           element={<AgriculturalManagement />} />
                 <Route path="my-agricultural-lands" element={<MyAgriculturalLands />} />
-
-                {/* Utilisateur - Investisseur */}
                 <Route path="invest"  element={<Portfolio />} />
                 <Route path="yields"  element={<YieldReports />} />
-
-                {/* Utilisateur - Acheteur */}
                 <Route path="purchases" element={<MyPurchases />} />
                 <Route path="sourcing"  element={<SourcingTracker />} />
               </Route>
             </Routes>
           </Suspense>
 
-          {/* BOUTON DE TRADUCTION - VERT & OR - POSITION HAUT DROITE */}
-          <div className="fixed top-4 right-4 z-50">
+          {/* BOUTON DE TRADUCTION LUXE */}
+          <div className="fixed top-6 right-6 z-50">
             <LanguageSwitcher />
           </div>
 
