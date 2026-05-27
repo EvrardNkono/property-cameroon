@@ -1,6 +1,6 @@
 // frontend/src/App.jsx
 
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -86,6 +86,89 @@ const PropertyDetailsWrapper = () => {
   return <PropertyDetailsPage key={id} />;
 };
 
+// --- COMPOSANT DE SÉLECTION DE LANGUE GOOGLE TRANSLATE ---
+const GoogleTranslateWidget = () => {
+  useEffect(() => {
+    // Évite d'ajouter le script plusieurs fois
+    if (document.getElementById('google-translate-script')) return;
+
+    // Stocke la fonction d'initialisation dans window
+    window.googleTranslateElementInit = () => {
+      if (window.google && window.google.translate) {
+        new window.google.translate.TranslateElement({
+          pageLanguage: 'fr',
+          includedLanguages: 'fr,en',
+          layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+          autoDisplay: false
+        }, 'google_translate_element');
+      }
+    };
+
+    // Ajoute le script Google Translate
+    const script = document.createElement('script');
+    script.id = 'google-translate-script';
+    script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+    script.async = true;
+    document.body.appendChild(script);
+
+    // Nettoyage (optionnel)
+    return () => {
+      if (script && script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
+  }, []);
+
+  // Styles CSS pour masquer le bandeau Google et personnaliser
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      /* Masque le bandeau "Powered by Google" */
+      .goog-te-banner-frame.skiptranslate {
+        display: none !important;
+      }
+      body {
+        top: 0px !important;
+      }
+      /* Style du widget */
+      .goog-te-gadget {
+        font-family: inherit !important;
+        font-size: 0 !important;
+      }
+      .goog-te-gadget-simple {
+        background-color: #f3f4f6 !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 0.5rem !important;
+        padding: 0.5rem 1rem !important;
+        font-size: 0.875rem !important;
+        cursor: pointer !important;
+      }
+      .goog-te-gadget-simple:hover {
+        background-color: #e5e7eb !important;
+      }
+      .goog-te-menu-value {
+        color: #1f2937 !important;
+        font-size: 0.875rem !important;
+      }
+      .goog-te-menu-value span {
+        color: #1f2937 !important;
+      }
+      /* Cache le texte du menu déroulant par défaut */
+      .goog-te-gadget-simple .goog-te-menu-value span:first-child {
+        display: inline-block !important;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  return (
+    <div id="google_translate_element" className="translate-widget" />
+  );
+};
+
 function App() {
   return (
     <Router>
@@ -160,6 +243,13 @@ function App() {
                 <Route path="sourcing"  element={<SourcingTracker />} />
               </Route>
             </Routes>
+          </Suspense>
+
+          {/* WIDGET DE TRADUCTION - AFFICHÉ SUR TOUTES LES PAGES */}
+          <Suspense fallback={null}>
+            <div className="fixed top-20 right-4 z-50">
+              <GoogleTranslateWidget />
+            </div>
           </Suspense>
 
           <Suspense fallback={null}>
