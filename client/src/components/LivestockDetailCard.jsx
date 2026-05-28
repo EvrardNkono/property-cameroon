@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, ShieldCheck, Thermometer, Activity, ArrowRight, X } from 'lucide-react';
-// import api from '../services/api'; // À décommenter quand backend sera prêt
 
-// 🔥 Auto environment detection
+// ✅ PAS BESOIN DE CHANGER LA DÉTECTION D'ENVIRONNEMENT
 const isDevelopment = typeof window !== 'undefined' && 
                       (window.location.hostname === 'localhost' || 
                        window.location.hostname === '127.0.0.1' ||
                        window.location.hostname === '');
 
-// Hardcoded URLs based on environment
 const BACKEND_URL = isDevelopment 
-  ? 'http://localhost:5000'           // Local URL
-  : 'https://property-cameroon-backend.vercel.app';  // Production URL
+  ? 'http://localhost:5000'
+  : 'https://property-cameroon-backend.vercel.app';
 
-// Hook pour récupérer la langue actuelle
+// ✅ Hook pour récupérer la langue (amélioré)
 const useCurrentLang = () => {
   const [lang, setLang] = useState('fr');
   
@@ -26,14 +24,95 @@ const useCurrentLang = () => {
     
     const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
     setLang(finalLang);
+    
+    // ✅ Optionnel: sauvegarder la langue préférée
+    if (!storedLang && finalLang !== 'fr') {
+      localStorage.setItem('preferredLanguage', finalLang);
+    }
   }, []);
   
   return lang;
 };
 
-const LivestockDetailCard = ({ data }) => {
+// ✅ NOUVEAU: Hook pour récupérer les données avec la bonne langue
+const useLivestockData = (id) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const currentLang = useCurrentLang();
+  
+  useEffect(() => {
+    if (!id) return;
+    
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // ✅ AJOUTER le paramètre lang à l'appel API
+        const response = await fetch(`${BACKEND_URL}/api/livestock/${id}?lang=${currentLang}`);
+        
+        if (!response.ok) throw new Error('Failed to fetch');
+        
+        const result = await response.json();
+        // Le backend retourne { success: true, livestock: {...}, lang: 'fr' }
+        setData(result.livestock || result.data);
+      } catch (err) {
+        console.error('Error fetching livestock:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [id, currentLang]); // ✅ Re-fetch quand la langue change
+  
+  return { data, loading, error };
+};
+
+const LivestockDetailCard = ({ data: propData, id }) => {
   const [activeTab, setActiveTab] = useState('conditions');
   const currentLang = useCurrentLang();
+  
+  // ✅ Si on reçoit un ID mais pas de data, on fetch
+  const { data: fetchedData, loading, error } = useLivestockData(id);
+  
+  // Utiliser les données passées en prop ou celles fetchées
+  const data = propData || fetchedData;
+  
+  // ✅ Gérer l'état de chargement
+  if (loading) {
+    return (
+      <div className="bg-white rounded-[2rem] p-8 text-center">
+        <div className="animate-pulse">
+          <div className="h-64 bg-gray-200 rounded-xl mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+        </div>
+        <p className="text-emerald-900/60 mt-4">
+          {currentLang === 'fr' ? 'Chargement...' : 'Loading...'}
+        </p>
+      </div>
+    );
+  }
+  
+  // ✅ Gérer les erreurs
+  if (error) {
+    return (
+      <div className="bg-white rounded-[2rem] p-8 text-center">
+        <p className="text-red-500 mb-2">
+          {currentLang === 'fr' ? 'Erreur de chargement' : 'Loading error'}
+        </p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="text-emerald-600 underline"
+        >
+          {currentLang === 'fr' ? 'Réessayer' : 'Try again'}
+        </button>
+      </div>
+    );
+  }
+
+  if (!data) return null;
 
   // Utility function to ensure image has correct URL
   const getImageUrl = (image) => {
@@ -43,61 +122,31 @@ const LivestockDetailCard = ({ data }) => {
     return `${BACKEND_URL}/uploads/livestock/${image}`;
   };
 
-  // Debug log (optional)
-  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-    console.log(`🌍 LivestockDetailCard - Environment: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
-    console.log(`🔗 LivestockDetailCard - Backend URL: ${BACKEND_URL}`);
-    console.log(`🌐 Current language: ${currentLang}`);
-  }
-
-  if (!data) return null;
-
-  // ==================== MAPPING DONNÉES BACKEND ====================
-  // Le backend a déjà traduit les données si ?lang=en est présent
-  // Donc on utilise directement les champs traduits
-  
+  // ✅ MAPPING SIMPLIFIÉ - Le backend a déjà traduit !
   const backendData = {
-    // Identifiants
     id: data._id || data.id,
-    
-    // Informations de base (déjà traduites par le backend)
-    name: data.title || data.name,
+    name: data.title,  // ← Déjà dans la bonne langue grâce à ?lang=
     owner: data.owner?.name || data.owner || "CAPEF Certified Farm",
-    category: data.category,
+    category: data.category,  // ← Déjà dans la bonne langue
     type: data.category,
-    
-    // Description et conditions (déjà traduites par le backend)
-    conditionsDesc: data.description || "Modern livestock facility with complete infrastructure. Includes training and technical support.",
+    conditionsDesc: data.description || "Modern livestock facility with complete infrastructure.",
     temp: data.features?.hasElectricity ? "Climate Controlled" : "Natural Ventilation",
-    
-    // Localisation (déjà traduite par le backend)
     location: data.location?.city || data.location || "Cameroon",
     zone: data.location?.district || data.location?.city || "Cameroon",
-    locationDesc: data.location?.description || `Located in ${data.location?.city || "Cameroon"}, ${data.location?.region || ""}. Easy access to main roads and markets.`,
-    
-    // Performance
+    locationDesc: data.location?.description || `Located in ${data.location?.city || "Cameroon"}`,
     cycle: data.cycleDuration || "6-12 months",
     maturite: data.capacity?.value ? `${data.capacity.value} ${data.capacity.unit || "units"}` : "Varies by breed",
-    
-    // Prix
     price: data.price?.amount ? `${(data.price.amount / 1000000).toFixed(1)}M` : "Contact for pricing",
-    
-    // Images
-    image: data.images && data.images[0] ? data.images[0] : null,
-    
-    // ROI
+    image: data.images?.[0] || null,
     roi: data.roi || 0,
-    
-    // Status
     status: data.status || 'AVAILABLE'
   };
 
-  // Ensure image uses correct URL
   if (backendData.image && !backendData.image.startsWith('http')) {
     backendData.image = getImageUrl(backendData.image);
   }
 
-  // Textes traduits pour l'interface (toujours en français car l'utilisateur a choisi sa langue)
+  // ✅ Textes traduits pour l'interface
   const getLocalizedText = () => {
     const texts = {
       fr: {
@@ -113,7 +162,10 @@ const LivestockDetailCard = ({ data }) => {
         contact: "Contactez-nous",
         climateControlled: "Climatisé",
         naturalVentilation: "Ventilation naturelle",
-        certifiedOperation: "Opération Certifiée"
+        certifiedOperation: "Opération Certifiée",
+        loading: "Chargement...",
+        error: "Erreur de chargement",
+        retry: "Réessayer"
       },
       en: {
         certified: "Certified",
@@ -128,16 +180,17 @@ const LivestockDetailCard = ({ data }) => {
         contact: "Contact us",
         climateControlled: "Climate Controlled",
         naturalVentilation: "Natural Ventilation",
-        certifiedOperation: "Certified Operation"
+        certifiedOperation: "Certified Operation",
+        loading: "Loading...",
+        error: "Loading error",
+        retry: "Try again"
       }
     };
-    
     return texts[currentLang] || texts.fr;
   };
 
   const t = getLocalizedText();
 
-  // Fonction pour gérer la réservation
   const handleReserve = async () => {
     console.log('Reserving livestock unit:', backendData.id);
     const reserveMessage = currentLang === 'fr' 
@@ -150,7 +203,7 @@ const LivestockDetailCard = ({ data }) => {
     <div className="bg-white rounded-[2rem] md:rounded-[3rem] overflow-hidden border border-emerald-900/5 shadow-2xl w-full max-w-6xl mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-2">
         
-        {/* --- IMAGE --- */}
+        {/* IMAGE */}
         <div className="relative h-[300px] lg:h-auto overflow-hidden">
           <img 
             src={backendData.image || 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000'} 
@@ -164,7 +217,6 @@ const LivestockDetailCard = ({ data }) => {
             {backendData.type || backendData.category}
           </div>
           
-          {/* ROI Badge */}
           {backendData.roi > 0 && (
             <div className="absolute top-6 right-6 bg-amber-500 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">
               +{backendData.roi}% ROI
@@ -172,7 +224,7 @@ const LivestockDetailCard = ({ data }) => {
           )}
         </div>
 
-        {/* --- CONTENT --- */}
+        {/* CONTENT */}
         <div className="p-8 lg:p-14 bg-[#fdfcf0]/30 flex flex-col justify-center">
           <div className="mb-6">
             <div className="flex items-center gap-2 text-emerald-900/40 text-[10px] font-bold uppercase tracking-widest mb-3">
@@ -185,7 +237,7 @@ const LivestockDetailCard = ({ data }) => {
             </p>
           </div>
 
-          {/* --- TABS --- */}
+          {/* TABS */}
           <div className="flex gap-6 border-b border-emerald-900/10 mb-6">
             {[
               { id: 'conditions', label: t.conditions },
@@ -207,7 +259,7 @@ const LivestockDetailCard = ({ data }) => {
             ))}
           </div>
 
-          {/* --- TAB CONTENT --- */}
+          {/* TAB CONTENT */}
           <div className="min-h-[120px]">
             <AnimatePresence mode="wait">
               <motion.div
@@ -225,8 +277,8 @@ const LivestockDetailCard = ({ data }) => {
                         <Thermometer size={14} className="text-amber-600" />
                         <span className="text-[9px] font-bold uppercase text-emerald-900">
                           {backendData.temp === "Climate Controlled" 
-                            ? (currentLang === 'fr' ? "Climatisé" : "Climate Controlled")
-                            : (currentLang === 'fr' ? "Ventilation naturelle" : "Natural Ventilation")}
+                            ? t.climateControlled
+                            : t.naturalVentilation}
                         </span>
                       </div>
                     </div>
@@ -259,7 +311,7 @@ const LivestockDetailCard = ({ data }) => {
             </AnimatePresence>
           </div>
 
-          {/* --- CTA --- */}
+          {/* CTA */}
           <div className="mt-10 pt-8 border-t border-emerald-900/5 flex flex-wrap items-center justify-between gap-4">
             <div>
               <span className="block text-[8px] font-black text-emerald-900/30 uppercase">{t.projectCost}</span>
