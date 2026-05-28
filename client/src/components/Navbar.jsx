@@ -1,7 +1,126 @@
+// frontend/src/components/Navbar.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Shield, ChevronDown, X, ArrowRight, Menu, User, LogIn, LogOut, UserCircle } from 'lucide-react';
+import { Shield, ChevronDown, X, ArrowRight, Menu, User, LogIn, LogOut, UserCircle, Globe } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+
+// Composant LanguageSwitcher intégré directement dans Navbar
+const LanguageSwitcher = () => {
+  const [currentLang, setCurrentLang] = useState(() => {
+    const saved = localStorage.getItem('preferredLanguage');
+    if (saved) return saved;
+    const browserLang = navigator.language.split('-')[0];
+    return browserLang === 'en' ? 'en' : 'fr';
+  });
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (document.getElementById('google-translate-script')) return;
+
+    window.googleTranslateElementInit = () => {
+      if (window.google && window.google.translate) {
+        new window.google.translate.TranslateElement({
+          pageLanguage: 'fr',
+          includedLanguages: 'fr,en',
+          layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+          autoDisplay: false
+        }, 'google_translate_element_hidden');
+        
+        const savedLang = localStorage.getItem('preferredLanguage');
+        if (savedLang === 'en') {
+          setTimeout(() => {
+            const select = document.querySelector('.goog-te-combo');
+            if (select) {
+              select.value = 'en';
+              select.dispatchEvent(new Event('change'));
+            }
+          }, 500);
+        }
+      }
+    };
+
+    const script = document.createElement('script');
+    script.id = 'google-translate-script';
+    script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
+
+  const changeLanguage = (lang) => {
+    setCurrentLang(lang);
+    localStorage.setItem('preferredLanguage', lang);
+    
+    const select = document.querySelector('.goog-te-combo');
+    if (select) {
+      select.value = lang;
+      select.dispatchEvent(new Event('change'));
+    }
+    
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-all group"
+      >
+        <Globe size={16} className="text-slate-600 group-hover:text-emerald-600 transition-colors" />
+        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700">
+          {currentLang === 'fr' ? 'FR' : 'EN'}
+        </span>
+        <ChevronDown size={10} className={`text-slate-500 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <div className="absolute right-0 mt-3 w-48 rounded-2xl overflow-hidden z-50 bg-white shadow-2xl border border-slate-100 animate-fadeInUp">
+            <button
+              onClick={() => changeLanguage('fr')}
+              className={`w-full px-4 py-3 flex items-center gap-3 transition-all duration-200 ${
+                currentLang === 'fr' 
+                  ? 'bg-gradient-to-r from-emerald-50 to-transparent' 
+                  : 'hover:bg-gray-50'
+              }`}
+            >
+              <span className="text-xl">🇫🇷</span>
+              <div className="flex-1 text-left">
+                <div className={`text-xs font-semibold ${currentLang === 'fr' ? 'text-emerald-700' : 'text-gray-700'}`}>
+                  Français
+                </div>
+              </div>
+              {currentLang === 'fr' && (
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              )}
+            </button>
+            
+            <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+            
+            <button
+              onClick={() => changeLanguage('en')}
+              className={`w-full px-4 py-3 flex items-center gap-3 transition-all duration-200 ${
+                currentLang === 'en' 
+                  ? 'bg-gradient-to-r from-amber-50 to-transparent' 
+                  : 'hover:bg-gray-50'
+              }`}
+            >
+              <span className="text-xl">🇬🇧</span>
+              <div className="flex-1 text-left">
+                <div className={`text-xs font-semibold ${currentLang === 'en' ? 'text-amber-600' : 'text-gray-700'}`}>
+                  English
+                </div>
+              </div>
+              {currentLang === 'en' && (
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+              )}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,7 +137,6 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Fermer le dropdown au clic en dehors
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (isProfileOpen && !event.target.closest('.profile-dropdown')) {
@@ -29,7 +147,6 @@ const Navbar = () => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, [isProfileOpen]);
 
-  // Empêcher le scroll du body quand le menu mobile est ouvert
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -94,7 +211,6 @@ const Navbar = () => {
         <div className={`mx-auto transition-all duration-700 px-4 md:px-6 ${
           isScrolled ? 'max-w-[95%] lg:max-w-[1100px]' : 'max-w-[1440px]'
         }`}>
-          {/* La bulle est TOUJOURS présente */}
           <div className={`relative flex justify-between items-center transition-all duration-700 px-4 md:px-8 ${
             isScrolled 
               ? 'bg-white/70 backdrop-blur-2xl py-3 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-[#c8a84b]/20' 
@@ -117,7 +233,7 @@ const Navbar = () => {
               </div>
             </Link>
             
-            {/* DESKTOP NAV - CSS pur sans framer-motion */}
+            {/* DESKTOP NAV */}
             <nav className="hidden lg:flex items-center space-x-12 relative z-10">
               {navLinks.map((link) => (
                 <Link 
@@ -130,7 +246,7 @@ const Navbar = () => {
                 </Link>
               ))}
 
-              {/* DROPDOWN AGRICULTURE - CSS pur */}
+              {/* DROPDOWN AGRICULTURE */}
               <div className="relative group/dropdown">
                 <button className="text-[10px] uppercase tracking-[0.3em] font-bold text-slate-500 flex items-center gap-1 group-hover/dropdown:text-slate-950 transition-colors">
                   Agriculture 
@@ -155,8 +271,11 @@ const Navbar = () => {
               </div>
             </nav>
 
-            {/* RIGHT ACTIONS - Desktop */}
-            <div className="hidden lg:flex relative z-10 items-center gap-4">
+            {/* RIGHT ACTIONS - Desktop - avec LanguageSwitcher intégré */}
+            <div className="hidden lg:flex relative z-10 items-center gap-3">
+              {/* LANGUAGE SWITCHER */}
+              <LanguageSwitcher />
+
               {/* ACCOUNT BUTTON */}
               <div className="relative profile-dropdown">
                 <button 
@@ -181,7 +300,6 @@ const Navbar = () => {
                   <ChevronDown size={12} className={`text-slate-500 transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {/* Dropdown Menu - CSS pur */}
                 <div 
                   className={`absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-50 transition-all duration-200 origin-top-right ${
                     isProfileOpen 
@@ -249,8 +367,11 @@ const Navbar = () => {
               </Link>
             </div>
 
-            {/* RIGHT ACTIONS - Mobile */}
+            {/* RIGHT ACTIONS - Mobile - avec LanguageSwitcher */}
             <div className="flex lg:hidden items-center gap-2">
+              {/* Language Switcher mobile (version compacte) */}
+              <LanguageSwitcher />
+              
               <button 
                 onClick={() => setIsOpen(true)} 
                 className="p-2 text-slate-950 hover:bg-slate-100 rounded-full transition-colors"
@@ -263,7 +384,7 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* MOBILE MENU - CSS pur */}
+      {/* MOBILE MENU */}
       <div 
         className={`fixed inset-0 bg-black/50 z-[200] transition-all duration-300 ${
           isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
@@ -375,6 +496,17 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+
+      {/* Styles d'animation */}
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeInUp {
+          animation: fadeInUp 0.2s ease-out;
+        }
+      `}</style>
     </>
   );
 };
