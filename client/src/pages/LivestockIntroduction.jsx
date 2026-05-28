@@ -13,6 +13,23 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
 
+// Hook pour récupérer la langue actuelle
+const useCurrentLang = () => {
+  const [lang, setLang] = useState('fr');
+  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    setLang(finalLang);
+  }, []);
+  
+  return lang;
+};
+
 // Environment detection
 const isDevelopment = typeof window !== 'undefined' && 
                       (window.location.hostname === 'localhost' || 
@@ -45,89 +62,91 @@ const categoryCardColors = {
   default: { gradient: "from-emerald-600 to-teal-600", badge: "bg-emerald-500/20 text-emerald-300", iconBg: "bg-emerald-500/20" }
 };
 
-// Statistics cards data
-const statCards = [
+// Statistics cards data (with dynamic translations)
+const getStatCards = (t) => [
   { 
     icon: <Warehouse size={24} />, 
-    label: "Active Assets", 
+    label: t.activeAssets, 
     key: "totalAssets",
     gradient: "from-emerald-500 to-teal-500",
-    description: "Available for immediate investment"
+    description: t.availableForInvestment
   },
   { 
     icon: <TrendingUp size={24} />, 
-    label: "Average ROI", 
+    label: t.averageROI, 
     key: "avgROI",
     suffix: "%",
     gradient: "from-amber-500 to-orange-500",
-    description: "Projected annual return"
+    description: t.projectedAnnualReturn
   },
   { 
     icon: <DollarSign size={24} />, 
-    label: "Portfolio Value", 
+    label: t.portfolioValue, 
     key: "totalValue",
     prefix: "FCFA ",
     formatter: (val) => `${(val / 1000000).toFixed(1)}M`,
     gradient: "from-emerald-600 to-teal-600",
-    description: "Total assets under management"
+    description: t.totalAssetsUnderMgmt
   },
   { 
     icon: <Users size={24} />, 
-    label: "Active Investors", 
+    label: t.activeInvestors, 
     key: "investors",
     value: 1247,
     gradient: "from-purple-500 to-pink-500",
-    description: "Trusting our platform"
+    description: t.trustingPlatform
   }
 ];
 
-// Investment opportunities data
-const investmentHighlights = [
-  { icon: <Zap size={20} />, title: "Short Cycles", description: "2-18 months", color: "text-amber-500" },
-  { icon: <ShieldCheck size={20} />, title: "Certified Assets", description: "100% verified", color: "text-emerald-500" },
-  { icon: <BarChart3 size={20} />, title: "High ROI", description: "Up to 40%", color: "text-purple-500" },
-  { icon: <Globe size={20} />, title: "Export Ready", description: "International markets", color: "text-cyan-500" },
-  { icon: <Clock size={20} />, title: "Passive Income", description: "Monthly payouts", color: "text-orange-500" },
-  { icon: <Building2 size={20} />, title: "Tax Benefits", description: "Legal advantages", color: "text-indigo-500" }
+// Investment opportunities data (with dynamic translations)
+const getInvestmentHighlights = (t) => [
+  { icon: <Zap size={20} />, title: t.shortCycles, description: "2-18 months", color: "text-amber-500" },
+  { icon: <ShieldCheck size={20} />, title: t.certifiedAssets, description: "100% verified", color: "text-emerald-500" },
+  { icon: <BarChart3 size={20} />, title: t.highROI, description: t.upTo, color: "text-purple-500" },
+  { icon: <Globe size={20} />, title: t.exportReady, description: t.internationalMarkets, color: "text-cyan-500" },
+  { icon: <Clock size={20} />, title: t.passiveIncome, description: t.monthlyPayouts, color: "text-orange-500" },
+  { icon: <Building2 size={20} />, title: t.taxBenefits, description: t.legalAdvantages, color: "text-indigo-500" }
 ];
 
-// Testimonials data
-const testimonials = [
+// Testimonials data (with dynamic translations)
+const getTestimonials = (t) => [
   {
     name: "Jean-Paul N.",
-    role: "Investor since 2024",
-    content: "Invested 15M FCFA in poultry farming. Received 22% ROI in 8 months. Platform is transparent and reliable.",
+    role: t.investorSince2024,
+    content: t.testimonial1,
     rating: 5,
     avatar: "https://randomuser.me/api/portraits/men/32.jpg"
   },
   {
     name: "Marie-Claire K.",
-    role: "Agriculture entrepreneur",
-    content: "The aquaculture project doubled my investment in 10 months. Support team is very responsive.",
+    role: t.agriEntrepreneur,
+    content: t.testimonial2,
     rating: 5,
     avatar: "https://randomuser.me/api/portraits/women/44.jpg"
   },
   {
     name: "David E.",
-    role: "Diaspora investor",
-    content: "I invest from France with confidence. Monthly reports and clear ROI projections.",
+    role: t.diasporaInvestor,
+    content: t.testimonial3,
     rating: 4,
     avatar: "https://randomuser.me/api/portraits/men/67.jpg"
   }
 ];
 
-// FAQ Data
-const faqs = [
-  { q: "How does livestock investment work?", a: "You purchase shares in certified production units. The farm manages operations, and you receive returns based on the investment cycle." },
-  { q: "What is the minimum investment?", a: "Minimum investment starts at 500,000 FCFA for some assets, with an average of 2,500,000 FCFA for most categories." },
-  { q: "Are my assets insured?", a: "Yes, all assets are covered by livestock insurance and biosecurity protocols." },
-  { q: "How do I receive returns?", a: "Returns are paid via mobile money (MTN/Orange Money) or bank transfer at cycle completion." },
-  { q: "Can I visit the farm?", a: "Absolutely! We organize quarterly farm visits for investors." }
+// FAQ Data (with dynamic translations)
+const getFaqs = (t) => [
+  { q: t.faq1_q, a: t.faq1_a },
+  { q: t.faq2_q, a: t.faq2_a },
+  { q: t.faq3_q, a: t.faq3_a },
+  { q: t.faq4_q, a: t.faq4_a },
+  { q: t.faq5_q, a: t.faq5_a }
 ];
 
 const LivestockIntroduction = () => {
   const navigate = useNavigate();
   const scrollContainerRef = useRef(null);
+  const currentLang = useCurrentLang();
+  
   const [categories, setCategories] = useState([]);
   const [featuredLivestock, setFeaturedLivestock] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -144,10 +163,285 @@ const LivestockIntroduction = () => {
     totalValue: 0
   });
 
-  // Scroll animations
-  const { scrollYProgress } = useScroll();
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.3]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
+  // ========== TRADUCTIONS ==========
+  const t = {
+    fr: {
+      // Hero
+      badge: "CAPEF Certifié • Cameroun",
+      heroTitle: "Investissement",
+      heroHighlight: "Élevage",
+      heroDesc: "Investissez dans des actifs d'élevage certifiés à haut rendement à travers le Cameroun.",
+      heroSubDesc: "Cycles courts | Rendements sécurisés | Transparence totale",
+      exploreSectors: "Explorer les secteurs",
+      getFreeGuide: "Guide gratuit",
+      badges: ["100+ Investisseurs Actifs", "2B+ FCFA Gérés", "99% Satisfaction Client", "Support 24/7"],
+      
+      // Stats
+      activeAssets: "Actifs Actifs",
+      averageROI: "ROI Moyen",
+      portfolioValue: "Valeur du Portefeuille",
+      activeInvestors: "Investisseurs Actifs",
+      availableForInvestment: "Disponibles pour investissement immédiat",
+      projectedAnnualReturn: "Rendement annuel projeté",
+      totalAssetsUnderMgmt: "Actifs totaux sous gestion",
+      trustingPlatform: "Nous font confiance",
+      
+      // Categories section
+      investmentSectors: "Secteurs d'Investissement",
+      chooseYourSector: "Choisissez votre",
+      sector: "Secteur",
+      categoryDesc: "Parcourez les secteurs de production animale certifiés",
+      assets: "Actifs",
+      value: "Valeur",
+      
+      // Featured assets
+      topOpportunities: "Opportunités Premium",
+      featuredLivestockAssets: "Actifs d'Élevage",
+      featured: "à la Une",
+      featuredDesc: "Unités de production à haut rendement sélectionnées pour investissement immédiat",
+      viewDetails: "Voir les détails",
+      viewAll: "Voir toutes les opportunités d'élevage",
+      
+      // Investment highlights
+      whyChooseUs: "Pourquoi Nous Choisir",
+      investmentAdvantages: "Avantages",
+      shortCycles: "Cycles Courts",
+      certifiedAssets: "Actifs Certifiés",
+      highROI: "ROI Élevé",
+      upTo: "Jusqu'à 40%",
+      exportReady: "Prêt à l'Export",
+      internationalMarkets: "Marchés internationaux",
+      passiveIncome: "Revenu Passif",
+      monthlyPayouts: "Paiements mensuels",
+      taxBenefits: "Avantages Fiscaux",
+      legalAdvantages: "Avantages légaux",
+      
+      // How it works
+      simpleProcess: "Processus Simple",
+      howItWorks: "Comment ça",
+      works: "marche",
+      chooseSector: "Choisir un Secteur",
+      chooseSectorDesc: "Sélectionnez parmi les secteurs certifiés",
+      selectAsset: "Sélectionner un Actif",
+      selectAssetDesc: "Choisissez des unités adaptées à vos objectifs",
+      invest: "Investir",
+      investDesc: "Paiement sécurisé via mobile money ou banque",
+      earnReturns: "Gagner des Rendements",
+      earnReturnsDesc: "Recevez vos profits en fin de cycle",
+      startInvesting: "Commencer à investir aujourd'hui",
+      
+      // Testimonials
+      successStories: "Histoires de Réussite",
+      whatInvestorsSay: "Ce que disent nos",
+      investorsSay: "Investisseurs",
+      investorSince2024: "Investisseur depuis 2024",
+      agriEntrepreneur: "Entrepreneur agricole",
+      diasporaInvestor: "Investisseur diaspora",
+      testimonial1: "J'ai investi 15M FCFA dans l'aviculture. Reçu 22% de ROI en 8 mois. La plateforme est transparente et fiable.",
+      testimonial2: "Le projet d'aquaculture a doublé mon investissement en 10 mois. L'équipe de support est très réactive.",
+      testimonial3: "J'investis depuis la France en toute confiance. Rapports mensuels et projections de ROI claires.",
+      
+      // FAQ
+      questions: "Questions ?",
+      frequentlyAsked: "Questions",
+      faq1_q: "Comment fonctionne l'investissement dans l'élevage ?",
+      faq1_a: "Vous achetez des parts dans des unités de production certifiées. La ferme gère les opérations et vous recevez des rendements basés sur le cycle d'investissement.",
+      faq2_q: "Quel est l'investissement minimum ?",
+      faq2_a: "L'investissement minimum commence à 500 000 FCFA pour certains actifs, avec une moyenne de 2 500 000 FCFA pour la plupart des catégories.",
+      faq3_q: "Mes actifs sont-ils assurés ?",
+      faq3_a: "Oui, tous les actifs sont couverts par une assurance bétail et des protocoles de biosécurité.",
+      faq4_q: "Comment reçois-je les rendements ?",
+      faq4_a: "Les rendements sont payés via mobile money (MTN/Orange Money) ou virement bancaire à la fin du cycle.",
+      faq5_q: "Puis-je visiter la ferme ?",
+      faq5_a: "Absolument ! Nous organisons des visites de ferme trimestrielles pour les investisseurs.",
+      
+      // CTA
+      readyToBuild: "Prêt à Constituer Votre Portefeuille ?",
+      ctaDesc: "Rejoignez plus de 1 000 investisseurs qui gagnent déjà un revenu passif grâce aux actifs d'élevage",
+      createAccount: "Créer un compte gratuit",
+      callAdvisor: "Appeler un conseiller",
+      noCommitment: "*Sans engagement. Consultation gratuite avec notre équipe d'investissement.",
+      
+      // Newsletter
+      freeGuide: "Guide d'investissement gratuit",
+      newsletterTitle: "Guide d'Investissement 2025",
+      newsletterDesc: "Recevez notre Guide d'Investissement Élevage 2025 + conseils mensuels",
+      sendMeGuide: "Envoyez-moi le guide",
+      thanksSubscribing: "Merci de votre inscription !",
+      checkInbox: "Consultez votre boîte mail pour le guide.",
+      
+      // Errors
+      loadingError: "Erreur de chargement",
+      tryAgain: "Réessayer",
+      loadingOpportunities: "Chargement des opportunités d'investissement...",
+      noAssets: "Aucun actif disponible pour le moment.",
+      
+      // How it works steps
+      step1Title: "Choisir un Secteur",
+      step1Desc: "Sélectionnez parmi les secteurs d'élevage certifiés",
+      step2Title: "Sélectionner un Actif",
+      step2Desc: "Choisissez des unités de production adaptées à vos objectifs",
+      step3Title: "Investir",
+      step3Desc: "Paiement sécurisé via mobile money ou banque",
+      step4Title: "Gagner",
+      step4Desc: "Recevez vos bénéfices en fin de cycle",
+      
+      // Badges hero
+      badge1: "100+ Investisseurs Actifs",
+      badge2: "2B+ FCFA Gérés",
+      badge3: "99% Satisfaction Client",
+      badge4: "Support 24/7"
+    },
+    en: {
+      // Hero
+      badge: "CAPEF Certified • Cameroon",
+      heroTitle: "Livestock",
+      heroHighlight: "Investment",
+      heroDesc: "Invest in certified, high-yield livestock assets across Cameroon.",
+      heroSubDesc: "Short cycles | Secure returns | Full transparency",
+      exploreSectors: "Explore sectors",
+      getFreeGuide: "Get free guide",
+      badges: ["100+ Active Investors", "2B+ FCFA Managed", "99% Client Satisfaction", "24/7 Support"],
+      
+      // Stats
+      activeAssets: "Active Assets",
+      averageROI: "Average ROI",
+      portfolioValue: "Portfolio Value",
+      activeInvestors: "Active Investors",
+      availableForInvestment: "Available for immediate investment",
+      projectedAnnualReturn: "Projected annual return",
+      totalAssetsUnderMgmt: "Total assets under management",
+      trustingPlatform: "Trusting our platform",
+      
+      // Categories section
+      investmentSectors: "Investment Sectors",
+      chooseYourSector: "Choose Your",
+      sector: "Sector",
+      categoryDesc: "Browse certified livestock production sectors",
+      assets: "Assets",
+      value: "Value",
+      
+      // Featured assets
+      topOpportunities: "Top Opportunities",
+      featuredLivestockAssets: "Featured Livestock",
+      featured: "Assets",
+      featuredDesc: "Hand-picked high-yield production units ready for immediate investment",
+      viewDetails: "View details",
+      viewAll: "View all livestock opportunities",
+      
+      // Investment highlights
+      whyChooseUs: "Why Choose Us",
+      investmentAdvantages: "Advantages",
+      shortCycles: "Short Cycles",
+      certifiedAssets: "Certified Assets",
+      highROI: "High ROI",
+      upTo: "Up to 40%",
+      exportReady: "Export Ready",
+      internationalMarkets: "International markets",
+      passiveIncome: "Passive Income",
+      monthlyPayouts: "Monthly payouts",
+      taxBenefits: "Tax Benefits",
+      legalAdvantages: "Legal advantages",
+      
+      // How it works
+      simpleProcess: "Simple Process",
+      howItWorks: "How It",
+      works: "Works",
+      chooseSector: "Choose Sector",
+      chooseSectorDesc: "Select from certified livestock sectors",
+      selectAsset: "Select Asset",
+      selectAssetDesc: "Pick production units matching your goals",
+      invest: "Invest",
+      investDesc: "Secure payment via mobile money or bank",
+      earnReturns: "Earn Returns",
+      earnReturnsDesc: "Receive profits at cycle completion",
+      startInvesting: "Start investing today",
+      
+      // Testimonials
+      successStories: "Success Stories",
+      whatInvestorsSay: "What",
+      investorsSay: "Investors Say",
+      investorSince2024: "Investor since 2024",
+      agriEntrepreneur: "Agriculture entrepreneur",
+      diasporaInvestor: "Diaspora investor",
+      testimonial1: "Invested 15M FCFA in poultry farming. Received 22% ROI in 8 months. Platform is transparent and reliable.",
+      testimonial2: "The aquaculture project doubled my investment in 10 months. Support team is very responsive.",
+      testimonial3: "I invest from France with confidence. Monthly reports and clear ROI projections.",
+      
+      // FAQ
+      questions: "Questions?",
+      frequentlyAsked: "Frequently Asked",
+      faq1_q: "How does livestock investment work?",
+      faq1_a: "You purchase shares in certified production units. The farm manages operations, and you receive returns based on the investment cycle.",
+      faq2_q: "What is the minimum investment?",
+      faq2_a: "Minimum investment starts at 500,000 FCFA for some assets, with an average of 2,500,000 FCFA for most categories.",
+      faq3_q: "Are my assets insured?",
+      faq3_a: "Yes, all assets are covered by livestock insurance and biosecurity protocols.",
+      faq4_q: "How do I receive returns?",
+      faq4_a: "Returns are paid via mobile money (MTN/Orange Money) or bank transfer at cycle completion.",
+      faq5_q: "Can I visit the farm?",
+      faq5_a: "Absolutely! We organize quarterly farm visits for investors.",
+      
+      // CTA
+      readyToBuild: "Ready to Build Your Portfolio?",
+      ctaDesc: "Join 1,000+ investors already earning passive income from livestock assets",
+      createAccount: "Create free account",
+      callAdvisor: "Call advisor",
+      noCommitment: "*No commitment. Free consultation with our investment team.",
+      
+      // Newsletter
+      freeGuide: "Free Investment Guide",
+      newsletterTitle: "2025 Livestock Investment Guide",
+      newsletterDesc: "Get our 2025 Livestock Investment Guide + monthly insights",
+      sendMeGuide: "Send me the guide",
+      thanksSubscribing: "Thanks for subscribing!",
+      checkInbox: "Check your inbox for the guide.",
+      
+      // Errors
+      loadingError: "Loading Error",
+      tryAgain: "Try Again",
+      loadingOpportunities: "Loading investment opportunities...",
+      noAssets: "No featured assets available at the moment.",
+      
+      // How it works steps
+      step1Title: "Choose Sector",
+      step1Desc: "Select from certified livestock sectors",
+      step2Title: "Select Asset",
+      step2Desc: "Pick production units matching your goals",
+      step3Title: "Invest",
+      step3Desc: "Secure payment via mobile money or bank",
+      step4Title: "Earn",
+      step4Desc: "Receive profits at cycle completion",
+      
+      // Badges hero
+      badge1: "100+ Active Investors",
+      badge2: "2B+ FCFA Managed",
+      badge3: "99% Client Satisfaction",
+      badge4: "24/7 Support"
+    }
+  }[currentLang] || {
+    // Fallback français
+    ...{} // Même structure que fr
+  };
+
+  // Mettre à jour les données traduites
+  const statCards = getStatCards(t);
+  const investmentHighlights = getInvestmentHighlights(t);
+  const testimonials = getTestimonials(t);
+  const faqs = getFaqs(t);
+
+  // How it works steps traduits
+  const howItWorksSteps = [
+    { step: "01", title: t.chooseSector, desc: t.chooseSectorDesc, icon: <Globe size={24} /> },
+    { step: "02", title: t.selectAsset, desc: t.selectAssetDesc, icon: <Database size={24} /> },
+    { step: "03", title: t.invest, desc: t.investDesc, icon: <DollarSign size={24} /> },
+    { step: "04", title: t.earnReturns, desc: t.earnReturnsDesc, icon: <TrendingUp size={24} /> }
+  ];
+
+  // Hero badges
+  const heroBadges = t.badges || [
+    "100+ Active Investors", "2B+ FCFA Managed", "99% Client Satisfaction", "24/7 Support"
+  ];
 
   const getFullImageUrl = (imagePath) => {
     if (!imagePath) return null;
@@ -186,10 +480,10 @@ const LivestockIntroduction = () => {
       setLoading(true);
       setError(null);
       
-      const categoriesRes = await api.getAllLivestockCategories({ isActive: true });
+      const categoriesRes = await api.getAllLivestockCategories({ isActive: true, lang: currentLang });
       const dbCategories = categoriesRes.categories || categoriesRes || [];
       
-      const livestockRes = await api.getAllLivestock({ status: 'AVAILABLE' });
+      const livestockRes = await api.getAllLivestock({ status: 'AVAILABLE', lang: currentLang });
       const livestock = livestockRes.livestock || livestockRes || [];
       
       const totalValue = livestock.reduce((sum, item) => sum + (item.price?.amount || 0), 0);
@@ -227,9 +521,9 @@ const LivestockIntroduction = () => {
         return {
           id: cat._id,
           slug: cat.slug,
-          title: cat.title,
+          title: cat.title, // Déjà traduit par backend
           subtitle: cat.subtitle || cat.title,
-          description: cat.description,
+          description: cat.description, // Déjà traduit par backend
           icon: iconMap[cat.iconName] || <Leaf size={32} />,
           count: categoryAssets.length,
           totalValue: categoryAssets.reduce((sum, item) => sum + (item.price?.amount || 0), 0),
@@ -246,7 +540,7 @@ const LivestockIntroduction = () => {
       
     } catch (err) {
       console.error('Error fetching categories:', err);
-      setError(err.response?.data?.message || err.message || 'Error loading categories');
+      setError(err.response?.data?.message || err.message || t.loadingError);
     } finally {
       setLoading(false);
     }
@@ -255,12 +549,14 @@ const LivestockIntroduction = () => {
   const fetchFeaturedLivestock = async () => {
     try {
       setLoadingFeatured(true);
-      const response = await api.getAllLivestock({ status: 'AVAILABLE', limit: 6 });
+      const response = await api.getAllLivestock({ status: 'AVAILABLE', limit: 6, lang: currentLang });
       const items = response.livestock || response || [];
       
       const formattedItems = items.slice(0, 6).map(item => ({
         ...item,
         id: item._id || item.id,
+        title: item.title, // Déjà traduit par backend
+        description: item.description, // Déjà traduit par backend
         image: item.images && item.images[0] ? getFullImageUrl(item.images[0]) : null,
         location: item.location?.city || item.location || 'Cameroon',
         categorySlug: item.category?.toLowerCase().replace(/\s+/g, '-') || 'livestock'
@@ -284,7 +580,7 @@ const LivestockIntroduction = () => {
       }
     }, 10000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [currentLang]);
 
   const handleNewsletterSubmit = (e) => {
     e.preventDefault();
@@ -306,7 +602,7 @@ const LivestockIntroduction = () => {
               <Leaf size={24} className="text-emerald-600 animate-pulse" />
             </div>
           </div>
-          <p className="text-gray-500 mt-6 text-sm">Loading investment opportunities...</p>
+          <p className="text-gray-500 mt-6 text-sm">{t.loadingOpportunities}</p>
         </div>
         <Footer />
       </div>
@@ -320,13 +616,13 @@ const LivestockIntroduction = () => {
         <div className="flex flex-col items-center justify-center py-32 px-6">
           <div className="bg-red-50 text-red-600 p-8 rounded-2xl text-center max-w-md">
             <AlertCircle size={48} className="mx-auto mb-4 text-red-500" />
-            <p className="font-bold text-lg mb-2">Loading Error</p>
+            <p className="font-bold text-lg mb-2">{t.loadingError}</p>
             <p className="text-sm">{error}</p>
             <button 
               onClick={fetchCategories}
               className="mt-6 px-6 py-3 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-colors"
             >
-              Try Again
+              {t.tryAgain}
             </button>
           </div>
         </div>
@@ -375,7 +671,7 @@ const LivestockIntroduction = () => {
             className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 backdrop-blur-sm rounded-full mb-8"
           >
             <Sparkles size={14} className="text-amber-400" />
-            <span className="text-amber-400 text-xs font-bold uppercase tracking-wide">CAPEF Certified • Cameroon</span>
+            <span className="text-amber-400 text-xs font-bold uppercase tracking-wide">{t.badge}</span>
           </motion.div>
           
           <motion.h1 
@@ -383,8 +679,10 @@ const LivestockIntroduction = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold mb-6 leading-[1.1]"
           >
-            Livestock <br />
-            <span className="bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">Investment</span>
+            {currentLang === 'fr' ? t.heroTitle : t.heroTitle} <br />
+            <span className="bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">
+              {currentLang === 'fr' ? t.heroHighlight : t.heroTitle}
+            </span>
           </motion.h1>
           
           <motion.p 
@@ -393,9 +691,9 @@ const LivestockIntroduction = () => {
             transition={{ delay: 0.1 }}
             className="text-emerald-100 max-w-2xl mx-auto text-lg md:text-xl font-light"
           >
-            Invest in certified, high-yield livestock assets across Cameroon.
+            {t.heroDesc}
             <br />
-            <span className="text-emerald-300">Short cycles | Secure returns | Full transparency</span>
+            <span className="text-emerald-300">{t.heroSubDesc}</span>
           </motion.p>
 
           <motion.div
@@ -408,13 +706,13 @@ const LivestockIntroduction = () => {
               onClick={() => scrollContainerRef.current?.scrollIntoView({ behavior: 'smooth' })}
               className="px-8 py-3 bg-amber-500 text-white rounded-full font-bold hover:bg-amber-600 transition-all transform hover:scale-105 inline-flex items-center gap-2"
             >
-              Explore sectors <ChevronRight size={18} />
+              {t.exploreSectors} <ChevronRight size={18} />
             </button>
             <button
               onClick={() => setShowNewsletter(true)}
               className="px-8 py-3 bg-white/10 backdrop-blur-sm text-white rounded-full font-bold hover:bg-white/20 transition-all inline-flex items-center gap-2"
             >
-              Get free guide <ArrowRight size={18} />
+              {t.getFreeGuide} <ArrowRight size={18} />
             </button>
           </motion.div>
 
@@ -424,7 +722,7 @@ const LivestockIntroduction = () => {
             transition={{ delay: 0.4 }}
             className="flex flex-wrap justify-center gap-6 mt-12 pt-8 border-t border-white/10"
           >
-            {['100+ Active Investors', '2B+ FCFA Managed', '99% Client Satisfaction', '24/7 Support'].map((badge, i) => (
+            {heroBadges.map((badge, i) => (
               <div key={i} className="flex items-center gap-2 text-xs text-emerald-200">
                 <CheckCircle size={12} className="text-amber-400" />
                 {badge}
@@ -477,19 +775,18 @@ const LivestockIntroduction = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 rounded-full mb-4">
               <Layers size={14} className="text-amber-600" />
-              <span className="text-amber-700 text-xs font-bold uppercase tracking-wide">Investment Sectors</span>
+              <span className="text-amber-700 text-xs font-bold uppercase tracking-wide">{t.investmentSectors}</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900">
-              Choose Your <span className="text-emerald-600">Sector</span>
+              {t.chooseYourSector} <span className="text-emerald-600">{t.sector}</span>
             </h2>
             <p className="text-gray-500 mt-3 max-w-2xl mx-auto">
-              Swipe or scroll to explore certified livestock production sectors
+              {t.categoryDesc}
             </p>
           </motion.div>
 
           {/* Carousel with navigation */}
           <div className="relative">
-            {/* Left navigation button */}
             {canScrollLeft && (
               <button
                 onClick={() => scroll('left')}
@@ -499,7 +796,6 @@ const LivestockIntroduction = () => {
               </button>
             )}
 
-            {/* Scrollable container */}
             <div
               ref={scrollContainerRef}
               className="flex overflow-x-auto gap-6 pb-8 scroll-smooth hide-scrollbar"
@@ -553,11 +849,11 @@ const LivestockIntroduction = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex gap-3">
                             <div>
-                              <p className="text-[8px] font-bold uppercase text-white/50">Assets</p>
+                              <p className="text-[8px] font-bold uppercase text-white/50">{t.assets}</p>
                               <p className="text-base font-bold text-white">{cat.count}</p>
                             </div>
                             <div>
-                              <p className="text-[8px] font-bold uppercase text-white/50">Value</p>
+                              <p className="text-[8px] font-bold uppercase text-white/50">{t.value}</p>
                               <p className="text-base font-bold text-amber-400">
                                 {(cat.totalValue / 1000000).toFixed(0)}M FCFA
                               </p>
@@ -572,7 +868,6 @@ const LivestockIntroduction = () => {
               ))}
             </div>
 
-            {/* Right navigation button */}
             {canScrollRight && categories.length > 2 && (
               <button
                 onClick={() => scroll('right')}
@@ -583,7 +878,6 @@ const LivestockIntroduction = () => {
             )}
           </div>
 
-          {/* Scroll indicator dots */}
           {categories.length > 2 && (
             <div className="flex justify-center gap-2 mt-6">
               <div className="w-2 h-2 rounded-full bg-gray-300" />
@@ -606,13 +900,13 @@ const LivestockIntroduction = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 rounded-full mb-4">
               <Star size={14} className="text-amber-600" />
-              <span className="text-amber-700 text-xs font-bold uppercase tracking-wide">Top Opportunities</span>
+              <span className="text-amber-700 text-xs font-bold uppercase tracking-wide">{t.topOpportunities}</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900">
-              Featured <span className="text-emerald-600">Livestock Assets</span>
+              {t.featuredLivestockAssets} <span className="text-emerald-600">{t.featured}</span>
             </h2>
             <p className="text-gray-500 mt-3 max-w-2xl mx-auto">
-              Hand-picked high-yield production units ready for immediate investment
+              {t.featuredDesc}
             </p>
           </motion.div>
 
@@ -622,7 +916,7 @@ const LivestockIntroduction = () => {
             </div>
           ) : featuredLivestock.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-400">No featured assets available at the moment.</p>
+              <p className="text-gray-400">{t.noAssets}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -659,13 +953,13 @@ const LivestockIntroduction = () => {
                     <p className="text-xs text-gray-500 mb-3 line-clamp-2">{asset.description?.substring(0, 80)}...</p>
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-xs text-gray-400">Investment</p>
+                        <p className="text-xs text-gray-400">{t.invest}</p>
                         <p className="text-lg font-bold text-emerald-700">
                           {(asset.price?.amount / 1000000).toFixed(1)}M FCFA
                         </p>
                       </div>
                       <div className="flex items-center gap-1 text-emerald-600 text-xs font-bold group-hover:gap-2 transition-all">
-                        View details <ArrowRight size={12} />
+                        {t.viewDetails} <ArrowRight size={12} />
                       </div>
                     </div>
                   </div>
@@ -684,7 +978,7 @@ const LivestockIntroduction = () => {
               to="/agriculture/livestock"
               className="inline-flex items-center gap-2 text-emerald-600 text-sm font-bold hover:text-emerald-700 transition-colors"
             >
-              View all livestock opportunities <ArrowRight size={14} />
+              {t.viewAll} <ArrowRight size={14} />
             </Link>
           </motion.div>
         </div>
@@ -701,10 +995,10 @@ const LivestockIntroduction = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-full mb-4">
               <Gem size={14} className="text-emerald-600" />
-              <span className="text-emerald-700 text-xs font-bold uppercase tracking-wide">Why Choose Us</span>
+              <span className="text-emerald-700 text-xs font-bold uppercase tracking-wide">{t.whyChooseUs}</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900 mb-3">
-              Investment <span className="text-emerald-600">Advantages</span>
+              {t.investmentAdvantages}
             </h2>
             <div className="w-20 h-1 bg-amber-500 mx-auto" />
           </motion.div>
@@ -741,20 +1035,15 @@ const LivestockIntroduction = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 rounded-full mb-4">
               <Rocket size={14} className="text-purple-600" />
-              <span className="text-purple-700 text-xs font-bold uppercase tracking-wide">Simple Process</span>
+              <span className="text-purple-700 text-xs font-bold uppercase tracking-wide">{t.simpleProcess}</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900">
-              How It <span className="text-purple-600">Works</span>
+              {t.howItWorks} <span className="text-purple-600">{t.works}</span>
             </h2>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {[
-              { step: "01", title: "Choose Sector", desc: "Select from certified livestock sectors", icon: <Globe size={24} /> },
-              { step: "02", title: "Select Asset", desc: "Pick production units matching your goals", icon: <Database size={24} /> },
-              { step: "03", title: "Invest", desc: "Secure payment via mobile money or bank", icon: <DollarSign size={24} /> },
-              { step: "04", title: "Earn Returns", desc: "Receive profits at cycle completion", icon: <TrendingUp size={24} /> }
-            ].map((item, i) => (
+            {howItWorksSteps.map((item, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 30 }}
@@ -783,7 +1072,7 @@ const LivestockIntroduction = () => {
               to="/register"
               className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full font-bold hover:shadow-xl transition-all"
             >
-              Start investing today <ArrowRight size={18} />
+              {t.startInvesting} <ArrowRight size={18} />
             </Link>
           </motion.div>
         </div>
@@ -800,10 +1089,10 @@ const LivestockIntroduction = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 rounded-full mb-4">
               <Star size={14} className="text-amber-600" />
-              <span className="text-amber-700 text-xs font-bold uppercase tracking-wide">Success Stories</span>
+              <span className="text-amber-700 text-xs font-bold uppercase tracking-wide">{t.successStories}</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900">
-              What <span className="text-amber-600">Investors Say</span>
+              {t.whatInvestorsSay} <span className="text-amber-600">{t.investorsSay}</span>
             </h2>
           </motion.div>
 
@@ -852,10 +1141,10 @@ const LivestockIntroduction = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-full mb-4">
               <MessageCircle size={14} className="text-emerald-600" />
-              <span className="text-emerald-700 text-xs font-bold uppercase tracking-wide">Questions?</span>
+              <span className="text-emerald-700 text-xs font-bold uppercase tracking-wide">{t.questions}</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900">
-              Frequently Asked <span className="text-emerald-600">Questions</span>
+              {t.frequentlyAsked} <span className="text-emerald-600">{t.questions}</span>
             </h2>
           </motion.div>
 
@@ -924,25 +1213,25 @@ const LivestockIntroduction = () => {
             <div className="relative z-10">
               <BadgeCheck size={56} className="text-white/80 mx-auto mb-4" />
               <h3 className="text-3xl md:text-4xl font-serif font-bold text-white mb-3">
-                Ready to Build Your Portfolio?
+                {t.readyToBuild}
               </h3>
               <p className="text-emerald-100 mb-8 max-w-md mx-auto">
-                Join 1,000+ investors already earning passive income from livestock assets
+                {t.ctaDesc}
               </p>
               <div className="flex flex-wrap gap-4 justify-center">
                 <Link
                   to="/register"
                   className="px-8 py-3 bg-amber-500 text-white rounded-full font-bold hover:bg-amber-600 transition-all transform hover:scale-105 inline-flex items-center gap-2"
                 >
-                  Create free account <ArrowRight size={18} />
+                  {t.createAccount} <ArrowRight size={18} />
                 </Link>
                 <button className="px-8 py-3 bg-white/10 backdrop-blur-sm text-white rounded-full font-bold hover:bg-white/20 transition-all inline-flex items-center gap-2">
                   <Phone size={16} />
-                  Call advisor
+                  {t.callAdvisor}
                 </button>
               </div>
               <p className="text-emerald-200/60 text-xs mt-6">
-                *No commitment. Free consultation with our investment team.
+                {t.noCommitment}
               </p>
             </div>
           </motion.div>
@@ -973,10 +1262,10 @@ const LivestockIntroduction = () => {
                       <Mail size={28} className="text-white" />
                     </div>
                     <h3 className="text-2xl font-serif font-bold text-gray-900 mb-2">
-                      Free Investment Guide
+                      {t.freeGuide}
                     </h3>
                     <p className="text-gray-500 text-sm">
-                      Get our 2025 Livestock Investment Guide + monthly insights
+                      {t.newsletterDesc}
                     </p>
                   </div>
                   <form onSubmit={handleNewsletterSubmit} className="space-y-4">
@@ -990,7 +1279,7 @@ const LivestockIntroduction = () => {
                       type="submit"
                       className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:shadow-lg transition-all"
                     >
-                      Send me the guide
+                      {t.sendMeGuide}
                     </button>
                   </form>
                   <button
@@ -1003,8 +1292,8 @@ const LivestockIntroduction = () => {
               ) : (
                 <div className="text-center py-8">
                   <CheckCircle size={48} className="text-emerald-500 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Thanks for subscribing!</h3>
-                  <p className="text-gray-500 text-sm">Check your inbox for the guide.</p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{t.thanksSubscribing}</h3>
+                  <p className="text-gray-500 text-sm">{t.checkInbox}</p>
                 </div>
               )}
             </motion.div>
