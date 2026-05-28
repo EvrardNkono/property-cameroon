@@ -1,4 +1,5 @@
 ﻿// backend/index.js
+
 import dns from 'dns';
 dns.setDefaultResultOrder('ipv4first'); // Force IPv4
 
@@ -22,9 +23,6 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import multer from 'multer';
 
-// IMPORT DU MIDDLEWARE DE TRADUCTION
-import autoTranslate from './middleware/translateMiddleware.js';
-
 // Import des routes
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
@@ -39,7 +37,6 @@ import amenityRoutes from './routes/amenity.routes.js';
 import livestockRoutes from './routes/livestock.routes.js';
 import livestockCategoryRoutes from './routes/livestockCategory.routes.js';
 import sitemapRoutes from './routes/sitemap.js';
-
 // Import des controllers upload
 import { 
   uploadPropertyImages, 
@@ -90,18 +87,6 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-
-// ========== MIDDLEWARE DE TRADUCTION AUTOMATIQUE ==========
-// Appliqué à TOUTES les routes API (sauf les routes de debug)
-app.use('/api', (req, res, next) => {
-  // Exclure les routes de debug de la traduction
-  const excludedPaths = ['/debug-mongo', '/test-real-data', '/health', '/diagnostic'];
-  if (excludedPaths.some(path => req.url.includes(path))) {
-    return next();
-  }
-  // Appliquer la traduction automatique
-  autoTranslate(req, res, next);
-});
 
 // ⚠️ SUR VERCEL : NE PAS SERVIR DE FICHIERS STATIQUES
 if (process.env.NODE_ENV !== 'production') {
@@ -294,6 +279,7 @@ const connectMongoDB = async () => {
   try {
     console.log(`🔄 Connection attempt ${connectionRetryCount + 1}/${maxRetries}`);
     
+    // IMPORTANT: Activer bufferCommands pour permettre la mise en file d'attente
     mongoose.set('bufferCommands', true);
     mongoose.set('bufferTimeoutMS', 10000);
     mongoose.set('autoIndex', false);
@@ -323,6 +309,7 @@ const connectMongoDB = async () => {
     await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
     console.log('✅ Mongoose connected successfully');
     
+    // Gestion des événements de connexion
     mongoose.connection.on('error', (err) => {
       console.error('Mongoose connection error:', err.message);
     });
@@ -441,7 +428,6 @@ app.use('/api/amenities', amenityRoutes);
 app.use('/api/livestock', livestockRoutes);
 app.use('/api/livestock-categories', livestockCategoryRoutes);
 app.use('/', sitemapRoutes);
-
 // ========== ROUTES D'UPLOAD ==========
 app.post('/api/upload/property-images', propertyUpload.array('images', 10), handlePropertyImages);
 app.post('/api/upload/livestock-images', livestockUpload.array('images', 10), handleLivestockImages);
@@ -464,8 +450,7 @@ app.get('/api/health', (req, res) => {
     database: dbStatusText,
     mongodb_uri_exists: !!process.env.MONGODB_URI,
     vercel_env: process.env.VERCEL === '1' ? true : false,
-    mock_mode: mongoose.connection.readyState !== 1,
-    translation_active: true
+    mock_mode: mongoose.connection.readyState !== 1
   });
 });
 
@@ -484,8 +469,7 @@ app.get('/api/diagnostic', async (req, res) => {
     }[mongoose.connection.readyState] || 'unknown',
     node_version: process.version,
     mongoose_version: mongoose.version,
-    mock_mode_active: mongoose.connection.readyState !== 1,
-    translation_middleware: 'active'
+    mock_mode_active: mongoose.connection.readyState !== 1
   };
   
   res.json(diagnostics);
@@ -526,7 +510,6 @@ app.use((err, req, res, next) => {
 // ========== DÉMARRAGE DU SERVEUR POUR VERCEL ==========
 const startServer = async () => {
   console.log('🚀 Starting server...');
-  console.log('🌐 Translation middleware enabled - Auto-translates API responses');
   
   // Attendre 2 secondes avant la première tentative
   await new Promise(resolve => setTimeout(resolve, 2000));
