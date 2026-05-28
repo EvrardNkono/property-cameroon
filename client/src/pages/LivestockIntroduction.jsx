@@ -163,6 +163,10 @@ const LivestockIntroduction = () => {
     totalValue: 0
   });
 
+  const { scrollYProgress } = useScroll();
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.3]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
+
   // ========== TRADUCTIONS ==========
   const t = {
     fr: {
