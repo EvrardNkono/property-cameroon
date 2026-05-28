@@ -300,7 +300,7 @@ const AgricultureCarousel = () => {
                   <div className="bg-slate-50 rounded-xl p-3 text-center">
                     <ShoppingBag size={16} className="text-amber-500 mx-auto mb-1" />
                     <p className="text-[8px] font-bold uppercase text-slate-500">Stock</p>
-                    <p className="text-[10px] font-semibold text-slate-700">> 1000</p>
+                    <p className="text-[10px] font-semibold text-slate-700"> 1000</p>
                   </div>
                 </div>
               </div>
