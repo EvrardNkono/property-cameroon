@@ -1,18 +1,35 @@
 // frontend/src/pages/Login.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Loader2, ArrowRight, Building2, ShieldCheck, Globe } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
-// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+// Hook pour récupérer la langue actuelle
+const useCurrentLang = () => {
+  const [lang, setLang] = useState('fr');
+  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    setLang(finalLang);
+  }, []);
+  
+  return lang;
+};
+
+// 🔥 Détection automatique de l'environnement
 const isDevelopment = typeof window !== 'undefined' && 
                       (window.location.hostname === 'localhost' || 
                        window.location.hostname === '127.0.0.1' ||
                        window.location.hostname === '');
 
-// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+// URLs en dur selon l'environnement
 const BACKEND_URL = isDevelopment 
   ? 'http://localhost:5000'           // URL locale
   : 'https://property-cameroon-backend.vercel.app';  // URL de production
@@ -24,11 +41,82 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const currentLang = useCurrentLang();
+
+  // ========== TRADUCTIONS ==========
+  const t = {
+    fr: {
+      // Branding
+      welcomeBack: "Bon Retour",
+      welcomeDesc: "Accédez à votre tableau de bord d'investissement, suivez votre portefeuille et gérez vos actifs sur la première plateforme immobilière du Cameroun.",
+      certifiedTitles: "Titres fonciers certifiés",
+      panAfricanNetwork: "Réseau d'investissement panafricain",
+      
+      // Form
+      signIn: "Connexion",
+      accessYourSpace: "Accédez à votre espace privé",
+      emailAddress: "Adresse email",
+      password: "Mot de passe",
+      forgotPassword: "Mot de passe oublié ?",
+      signInButton: "SE CONNECTER",
+      noAccount: "Pas de compte ?",
+      createAccount: "Créer un compte",
+      
+      // Errors
+      connectionFailed: "Échec de la connexion",
+      
+      // Placeholders
+      emailPlaceholder: "vous@exemple.com",
+      passwordPlaceholder: "••••••••"
+    },
+    en: {
+      // Branding
+      welcomeBack: "Welcome Back",
+      welcomeDesc: "Access your investment dashboard, track your portfolio, and manage your assets across Cameroon's premier real estate platform.",
+      certifiedTitles: "Certified legal titles",
+      panAfricanNetwork: "Pan-African investment network",
+      
+      // Form
+      signIn: "Sign In",
+      accessYourSpace: "Access your private space",
+      emailAddress: "Email Address",
+      password: "Password",
+      forgotPassword: "Forgot password?",
+      signInButton: "SIGN IN",
+      noAccount: "Don't have an account?",
+      createAccount: "Create an account",
+      
+      // Errors
+      connectionFailed: "Connection failed",
+      
+      // Placeholders
+      emailPlaceholder: "you@example.com",
+      passwordPlaceholder: "••••••••"
+    }
+  }[currentLang] || {
+    // Fallback français
+    welcomeBack: "Bon Retour",
+    welcomeDesc: "Accédez à votre tableau de bord d'investissement, suivez votre portefeuille et gérez vos actifs sur la première plateforme immobilière du Cameroun.",
+    certifiedTitles: "Titres fonciers certifiés",
+    panAfricanNetwork: "Réseau d'investissement panafricain",
+    signIn: "Connexion",
+    accessYourSpace: "Accédez à votre espace privé",
+    emailAddress: "Adresse email",
+    password: "Mot de passe",
+    forgotPassword: "Mot de passe oublié ?",
+    signInButton: "SE CONNECTER",
+    noAccount: "Pas de compte ?",
+    createAccount: "Créer un compte",
+    connectionFailed: "Échec de la connexion",
+    emailPlaceholder: "vous@exemple.com",
+    passwordPlaceholder: "••••••••"
+  };
 
   // 🔥 Console.log pour debug (optionnel)
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     console.log(`🌍 Login page - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
     console.log(`🔗 Login page - Backend URL: ${BACKEND_URL}`);
+    console.log(`🌐 Current language: ${currentLang}`);
   }
 
   const handleSubmit = async (e) => {
@@ -40,7 +128,7 @@ const Login = () => {
       await login(email, password);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message || 'Connection failed');
+      setError(err.message || t.connectionFailed);
     } finally {
       setLoading(false);
     }
@@ -64,20 +152,20 @@ const Login = () => {
                   <Building2 size={40} className="text-amber-400" />
                 </div>
                 <h1 className="text-5xl font-serif text-emerald-900 mb-4">
-                  Welcome Back
+                  {t.welcomeBack}
                 </h1>
                 <p className="text-emerald-700 text-lg mb-8">
-                  Access your investment dashboard, track your portfolio, and manage your assets across Cameroon's premier real estate platform.
+                  {t.welcomeDesc}
                 </p>
                 
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <ShieldCheck size={20} className="text-emerald-600" />
-                    <span className="text-sm text-emerald-700">Certified legal titles</span>
+                    <span className="text-sm text-emerald-700">{t.certifiedTitles}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Globe size={20} className="text-emerald-600" />
-                    <span className="text-sm text-emerald-700">Pan-African investment network</span>
+                    <span className="text-sm text-emerald-700">{t.panAfricanNetwork}</span>
                   </div>
                 </div>
               </div>
@@ -90,8 +178,8 @@ const Login = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-2xl mb-4">
                 <Building2 size={32} className="text-emerald-700" />
               </div>
-              <h2 className="text-2xl font-serif text-emerald-900">Sign In</h2>
-              <p className="text-emerald-600 text-sm mt-1">Access your private space</p>
+              <h2 className="text-2xl font-serif text-emerald-900">{t.signIn}</h2>
+              <p className="text-emerald-600 text-sm mt-1">{t.accessYourSpace}</p>
             </div>
 
             {error && (
@@ -103,13 +191,13 @@ const Login = () => {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">
-                  Email Address
+                  {t.emailAddress}
                 </label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t.emailPlaceholder}
                   className="w-full px-4 py-3 bg-emerald-50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                   required
                 />
@@ -117,13 +205,13 @@ const Login = () => {
               
               <div>
                 <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">
-                  Password
+                  {t.password}
                 </label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder={t.passwordPlaceholder}
                   className="w-full px-4 py-3 bg-emerald-50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                   required
                 />
@@ -131,7 +219,7 @@ const Login = () => {
 
               <div className="flex justify-end">
                 <Link to="/forgot-password" className="text-[10px] text-emerald-500 hover:text-emerald-700 transition-colors">
-                  Forgot password?
+                  {t.forgotPassword}
                 </Link>
               </div>
 
@@ -144,7 +232,7 @@ const Login = () => {
                   <Loader2 className="animate-spin" size={20} />
                 ) : (
                   <>
-                    Sign In
+                    {t.signInButton}
                     <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
@@ -153,9 +241,9 @@ const Login = () => {
 
             <div className="mt-8 pt-6 border-t border-emerald-100 text-center">
               <p className="text-[10px] text-emerald-500">
-                Don't have an account?{' '}
+                {t.noAccount}{' '}
                 <Link to="/register" className="font-bold text-emerald-700 hover:text-emerald-900 underline transition-colors">
-                  Create an account
+                  {t.createAccount}
                 </Link>
               </p>
             </div>

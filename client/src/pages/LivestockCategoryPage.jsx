@@ -12,6 +12,23 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
 
+// Hook pour récupérer la langue actuelle
+const useCurrentLang = () => {
+  const [lang, setLang] = useState('fr');
+  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    setLang(finalLang);
+  }, []);
+  
+  return lang;
+};
+
 // Environment detection
 const isDevelopment = typeof window !== 'undefined' && 
                       (window.location.hostname === 'localhost' || 
@@ -93,58 +110,63 @@ const categoryColorMap = {
   }
 };
 
-// Investment insights per category
-const categoryInvestmentData = {
-  aquaculture: {
-    why: "Cameroon's fish farming is growing at +18% YoY. Fresh fish demand exceeds supply by 40%. With overfishing in natural waters, aquaculture is the future.",
-    roiExplanation: "Short cycle (6-8 months), low mortality rate, consistent demand from restaurants and households.",
-    risks: "Water quality sensitivity, dependency on imported feed (fishmeal, soy).",
-    taxAdvantage: "VAT exemption on aquaculture equipment (nets, pumps, aerators).",
-    marketDrivers: ["Rising frozen fish prices", "Health consciousness", "Urban population growth"],
-    roiRange: "18-35%",
-    minInvestment: "2,500,000 FCFA"
-  },
-  poultry: {
-    why: "Poultry is the most consumed meat after fish. +25% surge in local chicken demand as frozen imports become expensive.",
-    roiExplanation: "Very short cycle (2-4 months), rapid capital rotation, holiday demand spikes (Christmas, Easter, Ramadan).",
-    risks: "Avian disease susceptibility, maize price volatility.",
-    taxAdvantage: "Tax credit for young farmers (2025 Finance Law).",
-    marketDrivers: ["Import substitution", "Street food culture", "Ceremony demand"],
-    roiRange: "22-40%",
-    minInvestment: "4,000,000 FCFA"
-  },
-  cattle: {
-    why: "Cattle are a traditional store of value. Beef demand rises with urbanization.",
-    roiExplanation: "Long cycle (12-18 months) but stable returns. Price per kilo increases annually.",
-    risks: "Drought, farmer-herder conflicts, high transport costs.",
-    taxAdvantage: "Subsidies for fattening and genetic stock (MINEPIA program).",
-    marketDrivers: ["Wedding ceremonies", "Butchery expansion", "Export potential"],
-    roiRange: "8-18%",
-    minInvestment: "14,000,000 FCFA"
-  },
-  pigs: {
-    why: "Pork is the third most consumed meat in Cameroon. Highly prized in maquis and celebrations.",
-    roiExplanation: "Medium cycle (6-8 months). 'Village pork' commands +30% premium price.",
-    risks: "African Swine Fever (ASF), feed cost volatility.",
-    taxAdvantage: "Property tax reduction for modern pig farms in peri-urban zones.",
-    marketDrivers: ["Maquis culture", "Year-end feasts", "Affordable protein"],
-    roiRange: "18-30%",
-    minInvestment: "9,500,000 FCFA"
-  },
-  goats: {
-    why: "Small ruminants are the best entry point for small investors. Low capital, high ROI.",
-    roiExplanation: "Short cycle (5-7 months). Prices spike +50-100% during Tabaski.",
-    risks: "Low (high hardiness). Main risk is theft.",
-    taxAdvantage: "Business license exemption for farms under 50 heads.",
-    marketDrivers: ["Ramadan/Tabaski demand", "Dowry ceremonies", "Low entry barrier"],
-    roiRange: "22-38%",
-    minInvestment: "5,000,000 FCFA"
-  }
+// Fonction pour obtenir les données d'investissement traduites
+const getInvestmentData = (slug, t) => {
+  const baseData = {
+    aquaculture: {
+      why: t.investWhyAquaculture,
+      roiExplanation: t.roiExplanationAquaculture,
+      risks: t.risksAquaculture,
+      taxAdvantage: t.taxAdvantageAquaculture,
+      marketDrivers: [t.marketDriver1Aqua, t.marketDriver2Aqua, t.marketDriver3Aqua],
+      roiRange: "18-35%",
+      minInvestment: "2,500,000 FCFA"
+    },
+    poultry: {
+      why: t.investWhyPoultry,
+      roiExplanation: t.roiExplanationPoultry,
+      risks: t.risksPoultry,
+      taxAdvantage: t.taxAdvantagePoultry,
+      marketDrivers: [t.marketDriver1Poultry, t.marketDriver2Poultry, t.marketDriver3Poultry],
+      roiRange: "22-40%",
+      minInvestment: "4,000,000 FCFA"
+    },
+    cattle: {
+      why: t.investWhyCattle,
+      roiExplanation: t.roiExplanationCattle,
+      risks: t.risksCattle,
+      taxAdvantage: t.taxAdvantageCattle,
+      marketDrivers: [t.marketDriver1Cattle, t.marketDriver2Cattle, t.marketDriver3Cattle],
+      roiRange: "8-18%",
+      minInvestment: "14,000,000 FCFA"
+    },
+    pigs: {
+      why: t.investWhyPigs,
+      roiExplanation: t.roiExplanationPigs,
+      risks: t.risksPigs,
+      taxAdvantage: t.taxAdvantagePigs,
+      marketDrivers: [t.marketDriver1Pigs, t.marketDriver2Pigs, t.marketDriver3Pigs],
+      roiRange: "18-30%",
+      minInvestment: "9,500,000 FCFA"
+    },
+    goats: {
+      why: t.investWhyGoats,
+      roiExplanation: t.roiExplanationGoats,
+      risks: t.risksGoats,
+      taxAdvantage: t.taxAdvantageGoats,
+      marketDrivers: [t.marketDriver1Goats, t.marketDriver2Goats, t.marketDriver3Goats],
+      roiRange: "22-38%",
+      minInvestment: "5,000,000 FCFA"
+    }
+  };
+  
+  return baseData[slug] || baseData.poultry;
 };
 
 const LivestockCategoryPage = () => {
   const { category } = useParams();
   const navigate = useNavigate();
+  const currentLang = useCurrentLang();
   
   const [categoryData, setCategoryData] = useState(null);
   const [livestock, setLivestock] = useState([]);
@@ -159,6 +181,257 @@ const LivestockCategoryPage = () => {
   const [calculatorInput, setCalculatorInput] = useState({ amount: 1000000, months: 12 });
   const [hoveredCard, setHoveredCard] = useState(null);
 
+  // ========== TRADUCTIONS ==========
+  const t = {
+    fr: {
+      // Navigation
+      backToSectors: "Retour à tous les secteurs",
+      investmentSector: "Secteur d'Investissement",
+      investmentHub: "Hub d'Investissement",
+      marketStatus: "Statut du Marché",
+      yearOverYear: "Croissance annuelle",
+      availableAssets: "Actifs Disponibles",
+      avgRoi: "ROI Moyen",
+      totalValue: "Valeur Totale",
+      minInvestment: "Investissement Min",
+      calculateMyRoi: "Calculer mon ROI",
+      
+      // Investment section
+      whyInvest: "Pourquoi investir ?",
+      roiExplanation: "Explication du ROI",
+      taxAdvantage: "Avantage fiscal",
+      keyRisks: "Risques clés",
+      marketDrivers: "Moteurs du marché",
+      roiRange: "Fourchette ROI",
+      
+      // Category specific investment data
+      investWhyAquaculture: "L'aquaculture camerounaise croît de +18% par an. La demande de poisson frais dépasse l'offre de 40%.",
+      roiExplanationAquaculture: "Cycle court (6-8 mois), faible taux de mortalité, demande constante des restaurants et ménages.",
+      risksAquaculture: "Sensibilité à la qualité de l'eau, dépendance aux aliments importés.",
+      taxAdvantageAquaculture: "Exonération de TVA sur les équipements aquacoles (filets, pompes, aérateurs).",
+      marketDriver1Aqua: "Hausse des prix du poisson congelé",
+      marketDriver2Aqua: "Conscience santé",
+      marketDriver3Aqua: "Croissance démographique urbaine",
+      
+      investWhyPoultry: "La volaille est la viande la plus consommée après le poisson. Hausse de +25% de la demande locale.",
+      roiExplanationPoultry: "Cycle très court (2-4 mois), rotation rapide du capital, pics de demande pendant les fêtes.",
+      risksPoultry: "Sensibilité aux maladies aviaires, volatilité des prix du maïs.",
+      taxAdvantagePoultry: "Crédit d'impôt pour les jeunes agriculteurs (Loi de Finances 2025).",
+      marketDriver1Poultry: "Substitution aux importations",
+      marketDriver2Poultry: "Culture de rue",
+      marketDriver3Poultry: "Demande cérémonielle",
+      
+      investWhyCattle: "Les bovins sont une valeur de refuge traditionnelle. La demande de bœuf augmente avec l'urbanisation.",
+      roiExplanationCattle: "Cycle long (12-18 mois) mais rendements stables. Le prix au kilo augmente annuellement.",
+      risksCattle: "Sécheresse, conflits éleveurs-agriculteurs, coûts de transport élevés.",
+      taxAdvantageCattle: "Subventions pour l'engraissement (programme MINEPIA).",
+      marketDriver1Cattle: "Cérémonies de mariage",
+      marketDriver2Cattle: "Expansion des boucheries",
+      marketDriver3Cattle: "Potentiel d'export",
+      
+      investWhyPigs: "Le porc est la troisième viande la plus consommée au Cameroun. Très prisé dans les maquis.",
+      roiExplanationPigs: "Cycle moyen (6-8 mois). Le 'porc villageois' bénéficie d'une prime de +30%.",
+      risksPigs: "Peste porcine africaine (PPA), volatilité des prix des aliments.",
+      taxAdvantagePigs: "Réduction de taxe foncière pour les fermes porcines modernes.",
+      marketDriver1Pigs: "Culture des maquis",
+      marketDriver2Pigs: "Fêtes de fin d'année",
+      marketDriver3Pigs: "Protéine abordable",
+      
+      investWhyGoats: "Les petits ruminants sont le meilleur point d'entrée pour les petits investisseurs.",
+      roiExplanationGoats: "Cycle court (5-7 mois). Les prix grimpent de +50-100% pendant la Tabaski.",
+      risksGoats: "Faible (très rustique). Risque principal : le vol.",
+      taxAdvantageGoats: "Exemption de patente pour les fermes de moins de 50 têtes.",
+      marketDriver1Goats: "Demande Ramadan/Tabaski",
+      marketDriver2Goats: "Cérémonies de dot",
+      marketDriver3Goats: "Barrière d'entrée basse",
+      
+      // Filters
+      highestRoi: "ROI le plus élevé",
+      highestValue: "Valeur la plus élevée",
+      largestCapacity: "Plus grande capacité",
+      allRoiLevels: "Tous les niveaux de ROI",
+      low: "Faible (0% - 15%)",
+      medium: "Moyen (15% - 25%)",
+      high: "Élevé (25%+)",
+      
+      // Asset card
+      unitValue: "Valeur unitaire",
+      capacity: "Capacité",
+      cycle: "Cycle",
+      water: "Eau",
+      power: "Électricité",
+      vet: "Vétérinaire",
+      feedStorage: "Stockage aliment",
+      viewDetails: "Voir détails",
+      projectedWithReinvestment: "Projection avec réinvestissement",
+      
+      // Compare
+      compareAssets: "Comparer les actifs",
+      clearAll: "Tout effacer",
+      compare: "Comparer",
+      assetSelected: "actif sélectionné",
+      assetsSelected: "actifs sélectionnés",
+      
+      // Calculator
+      roiCalculator: "Calculateur de ROI",
+      investmentAmount: "Montant d'investissement (FCFA)",
+      investmentPeriod: "Période d'investissement (mois)",
+      projectedReturn: "Rendement projeté",
+      basedOnAvgRoi: "Basé sur le ROI moyen de ce secteur",
+      disclaimer: "*Les performances passées ne garantissent pas les rendements futurs. Ceci est une estimation.",
+      
+      // Empty state
+      noAssetsAvailable: "Aucun actif d'investissement disponible dans ce secteur.",
+      exploreOtherSectors: "Explorer d'autres secteurs",
+      
+      // Loading
+      loadingData: "Chargement des données du secteur...",
+      loadingError: "Erreur de chargement",
+      categoryNotFound: "Catégorie non trouvée",
+      
+      // Badges
+      projected: "Projection",
+      
+      // Sort options
+      sortByRoi: "ROI le plus élevé",
+      sortByPrice: "Valeur la plus élevée",
+      sortByCapacity: "Plus grande capacité"
+    },
+    en: {
+      // Navigation
+      backToSectors: "Back to all sectors",
+      investmentSector: "Investment Sector",
+      investmentHub: "Investment Hub",
+      marketStatus: "Market Status",
+      yearOverYear: "Year-over-Year growth",
+      availableAssets: "Available Assets",
+      avgRoi: "Avg ROI",
+      totalValue: "Total Value",
+      minInvestment: "Min Investment",
+      calculateMyRoi: "Calculate my ROI",
+      
+      // Investment section
+      whyInvest: "Why invest?",
+      roiExplanation: "ROI explanation",
+      taxAdvantage: "Tax advantage",
+      keyRisks: "Key risks",
+      marketDrivers: "Market Drivers",
+      roiRange: "ROI Range",
+      
+      // Category specific investment data
+      investWhyAquaculture: "Cameroon's fish farming is growing at +18% YoY. Fresh fish demand exceeds supply by 40%.",
+      roiExplanationAquaculture: "Short cycle (6-8 months), low mortality rate, consistent demand from restaurants and households.",
+      risksAquaculture: "Water quality sensitivity, dependency on imported feed.",
+      taxAdvantageAquaculture: "VAT exemption on aquaculture equipment (nets, pumps, aerators).",
+      marketDriver1Aqua: "Rising frozen fish prices",
+      marketDriver2Aqua: "Health consciousness",
+      marketDriver3Aqua: "Urban population growth",
+      
+      investWhyPoultry: "Poultry is the most consumed meat after fish. +25% surge in local chicken demand.",
+      roiExplanationPoultry: "Very short cycle (2-4 months), rapid capital rotation, holiday demand spikes.",
+      risksPoultry: "Avian disease susceptibility, maize price volatility.",
+      taxAdvantagePoultry: "Tax credit for young farmers (2025 Finance Law).",
+      marketDriver1Poultry: "Import substitution",
+      marketDriver2Poultry: "Street food culture",
+      marketDriver3Poultry: "Ceremony demand",
+      
+      investWhyCattle: "Cattle are a traditional store of value. Beef demand rises with urbanization.",
+      roiExplanationCattle: "Long cycle (12-18 months) but stable returns. Price per kilo increases annually.",
+      risksCattle: "Drought, farmer-herder conflicts, high transport costs.",
+      taxAdvantageCattle: "Subsidies for fattening (MINEPIA program).",
+      marketDriver1Cattle: "Wedding ceremonies",
+      marketDriver2Cattle: "Butchery expansion",
+      marketDriver3Cattle: "Export potential",
+      
+      investWhyPigs: "Pork is the third most consumed meat in Cameroon. Highly prized in maquis.",
+      roiExplanationPigs: "Medium cycle (6-8 months). 'Village pork' commands +30% premium price.",
+      risksPigs: "African Swine Fever (ASF), feed cost volatility.",
+      taxAdvantagePigs: "Property tax reduction for modern pig farms.",
+      marketDriver1Pigs: "Maquis culture",
+      marketDriver2Pigs: "Year-end feasts",
+      marketDriver3Pigs: "Affordable protein",
+      
+      investWhyGoats: "Small ruminants are the best entry point for small investors.",
+      roiExplanationGoats: "Short cycle (5-7 months). Prices spike +50-100% during Tabaski.",
+      risksGoats: "Low (high hardiness). Main risk is theft.",
+      taxAdvantageGoats: "Business license exemption for farms under 50 heads.",
+      marketDriver1Goats: "Ramadan/Tabaski demand",
+      marketDriver2Goats: "Dowry ceremonies",
+      marketDriver3Goats: "Low entry barrier",
+      
+      // Filters
+      highestRoi: "Highest ROI",
+      highestValue: "Highest Value",
+      largestCapacity: "Largest Capacity",
+      allRoiLevels: "All ROI levels",
+      low: "Low (0% - 15%)",
+      medium: "Medium (15% - 25%)",
+      high: "High (25%+)",
+      
+      // Asset card
+      unitValue: "Unit Value",
+      capacity: "Capacity",
+      cycle: "Cycle",
+      water: "Water",
+      power: "Power",
+      vet: "Vet",
+      feedStorage: "Feed storage",
+      viewDetails: "View details",
+      projectedWithReinvestment: "Projected with reinvestment",
+      
+      // Compare
+      compareAssets: "Compare Assets",
+      clearAll: "Clear all",
+      compare: "Compare",
+      assetSelected: "asset selected",
+      assetsSelected: "assets selected",
+      
+      // Calculator
+      roiCalculator: "ROI Calculator",
+      investmentAmount: "Investment Amount (FCFA)",
+      investmentPeriod: "Investment Period (months)",
+      projectedReturn: "Projected Return",
+      basedOnAvgRoi: "Based on average ROI for this sector",
+      disclaimer: "*Past performance does not guarantee future returns. This is an estimate.",
+      
+      // Empty state
+      noAssetsAvailable: "No investment assets available in this sector.",
+      exploreOtherSectors: "Explore other sectors",
+      
+      // Loading
+      loadingData: "Loading sector data...",
+      loadingError: "Loading Error",
+      categoryNotFound: "Category not found",
+      
+      // Badges
+      projected: "Projected",
+      
+      // Sort options
+      sortByRoi: "Highest ROI",
+      sortByPrice: "Highest Value",
+      sortByCapacity: "Largest Capacity"
+    }
+  }[currentLang] || {
+    // Fallback français
+    backToSectors: "Retour à tous les secteurs",
+    investmentSector: "Secteur d'Investissement",
+    investmentHub: "Hub d'Investissement",
+    marketStatus: "Statut du Marché",
+    yearOverYear: "Croissance annuelle",
+    availableAssets: "Actifs Disponibles",
+    avgRoi: "ROI Moyen",
+    totalValue: "Valeur Totale",
+    minInvestment: "Investissement Min",
+    calculateMyRoi: "Calculer mon ROI",
+    whyInvest: "Pourquoi investir ?",
+    roiExplanation: "Explication du ROI",
+    taxAdvantage: "Avantage fiscal",
+    keyRisks: "Risques clés",
+    marketDrivers: "Moteurs du marché",
+    roiRange: "Fourchette ROI",
+    // ... autres traductions par défaut
+  };
+
   const getImageUrl = (image) => {
     if (!image) return null;
     if (image.startsWith('http')) return image;
@@ -170,13 +443,13 @@ const LivestockCategoryPage = () => {
     try {
       setLoading(true);
       
-      const catResponse = await api.getLivestockCategoryBySlug(category);
+      const catResponse = await api.getLivestockCategoryBySlug(category, { lang: currentLang });
       const cat = catResponse.category || catResponse;
       
       if (!cat) throw new Error(`Category "${category}" not found`);
       
       const colors = categoryColorMap[cat.slug] || categoryColorMap.poultry;
-      const investData = categoryInvestmentData[cat.slug] || categoryInvestmentData.poultry;
+      const investData = getInvestmentData(cat.slug, t);
       
       let categoryImage = null;
       if (cat.imageType === 'upload' && cat.imageUpload) {
@@ -207,12 +480,14 @@ const LivestockCategoryPage = () => {
         investData: investData
       });
       
-      const livestockRes = await api.getLivestockByCategory(cat.slug);
+      const livestockRes = await api.getLivestockByCategory(cat.slug, { lang: currentLang });
       const items = livestockRes.livestock || livestockRes || [];
       
       const formattedItems = items.map(item => ({
         ...item,
         id: item._id || item.id,
+        title: item.title,
+        description: item.description,
         image: item.images && item.images[0] ? getImageUrl(item.images[0]) : null,
         location: item.location?.city || item.location || 'Cameroon',
         region: item.location?.region || 'Cameroon'
@@ -222,7 +497,7 @@ const LivestockCategoryPage = () => {
       
     } catch (err) {
       console.error('Error fetching category data:', err);
-      setError(err.response?.data?.message || err.message || 'Loading error');
+      setError(err.response?.data?.message || err.message || t.loadingError);
     } finally {
       setLoading(false);
     }
@@ -275,7 +550,7 @@ const LivestockCategoryPage = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
     fetchCategoryData();
-  }, [category]);
+  }, [category, currentLang]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -293,7 +568,7 @@ const LivestockCategoryPage = () => {
         <Navbar />
         <div className="flex flex-col items-center justify-center h-[calc(100vh-80px)]">
           <Loader2 size={48} className="text-emerald-600 animate-spin mb-4" />
-          <p className="text-gray-500 text-sm">Loading sector data...</p>
+          <p className="text-gray-500 text-sm">{t.loadingData}</p>
         </div>
         <Footer />
       </div>
@@ -307,10 +582,10 @@ const LivestockCategoryPage = () => {
         <div className="flex flex-col items-center justify-center h-[calc(100vh-80px)] px-4">
           <div className="bg-red-50 text-red-600 p-6 rounded-2xl text-center max-w-md">
             <AlertCircle size={40} className="mx-auto mb-3 text-red-500" />
-            <p className="font-bold">Loading Error</p>
-            <p className="text-sm mt-1">{error || "Category not found"}</p>
+            <p className="font-bold">{t.loadingError}</p>
+            <p className="text-sm mt-1">{error || t.categoryNotFound}</p>
             <Link to="/agriculture/livestock" className="mt-4 inline-block text-emerald-600 underline text-sm">
-              ← Back to sectors
+              ← {t.backToSectors}
             </Link>
           </div>
         </div>
@@ -334,7 +609,7 @@ const LivestockCategoryPage = () => {
             className="group inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-all"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-            Back to all sectors
+            {t.backToSectors}
           </Link>
         </nav>
 
@@ -348,7 +623,7 @@ const LivestockCategoryPage = () => {
               className={`inline-flex items-center gap-3 px-4 py-2 rounded-full ${categoryData.bg} ${categoryData.color} mb-6`}
             >
               {categoryData.icon}
-              <span className="text-xs font-bold uppercase tracking-wide">Investment Sector</span>
+              <span className="text-xs font-bold uppercase tracking-wide">{t.investmentSector}</span>
             </motion.div>
             
             <motion.h1 
@@ -357,7 +632,7 @@ const LivestockCategoryPage = () => {
               className="text-5xl md:text-6xl lg:text-7xl font-serif leading-[1.1] mb-6"
             >
               {categoryData.title}
-              <span className="text-gray-300 block text-3xl md:text-4xl mt-2">Investment Hub</span>
+              <span className="text-gray-300 block text-3xl md:text-4xl mt-2">{t.investmentHub}</span>
             </motion.h1>
             
             <motion.p 
@@ -395,28 +670,28 @@ const LivestockCategoryPage = () => {
                 <div className="p-2 bg-white/10 rounded-lg">
                   <TrendingUp size={18} />
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-wide text-white/50">Market Status</span>
+                <span className="text-[10px] font-bold uppercase tracking-wide text-white/50">{t.marketStatus}</span>
               </div>
               
               <p className="text-3xl font-bold mb-1">{categoryData.marketDemand}</p>
-              <p className="text-xs text-white/40 mb-6">Year-over-Year growth</p>
+              <p className="text-xs text-white/40 mb-6">{t.yearOverYear}</p>
               
               <div className="grid grid-cols-2 gap-4 mb-6 pt-4 border-t border-white/10">
                 <div>
-                  <p className="text-[10px] uppercase text-white/40">Available Assets</p>
+                  <p className="text-[10px] uppercase text-white/40">{t.availableAssets}</p>
                   <p className="text-2xl font-bold">{filteredAndSortedLivestock.length}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase text-white/40">Avg ROI</p>
+                  <p className="text-[10px] uppercase text-white/40">{t.avgRoi}</p>
                   <p className="text-2xl font-bold text-amber-400">+{avgRoi}%</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase text-white/40">Total Value</p>
+                  <p className="text-[10px] uppercase text-white/40">{t.totalValue}</p>
                   <p className="text-sm font-bold">{(totalValue / 1000000).toFixed(0)}M FCFA</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase text-white/40">Min Investment</p>
-                  <p className="text-sm font-bold">{categoryData.investData?.minInvestment || 'Contact us'}</p>
+                  <p className="text-[10px] uppercase text-white/40">{t.minInvestment}</p>
+                  <p className="text-sm font-bold">{categoryData.investData?.minInvestment || t.contactUs}</p>
                 </div>
               </div>
 
@@ -425,7 +700,7 @@ const LivestockCategoryPage = () => {
                 className={`w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all bg-white/10 hover:bg-white/20`}
               >
                 <Calculator size={16} />
-                Calculate my ROI
+                {t.calculateMyRoi}
               </button>
             </div>
             
@@ -449,7 +724,7 @@ const LivestockCategoryPage = () => {
                   <Zap size={20} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900 mb-1">Why invest?</h3>
+                  <h3 className="font-bold text-gray-900 mb-1">{t.whyInvest}</h3>
                   <p className="text-sm text-gray-500 leading-relaxed">{categoryData.investData.why}</p>
                 </div>
               </div>
@@ -459,7 +734,7 @@ const LivestockCategoryPage = () => {
                   <BarChart3 size={20} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900 mb-1">ROI explanation</h3>
+                  <h3 className="font-bold text-gray-900 mb-1">{t.roiExplanation}</h3>
                   <p className="text-sm text-gray-500 leading-relaxed">{categoryData.investData.roiExplanation}</p>
                 </div>
               </div>
@@ -469,7 +744,7 @@ const LivestockCategoryPage = () => {
                   <ShieldCheck size={20} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900 mb-1">Tax advantage</h3>
+                  <h3 className="font-bold text-gray-900 mb-1">{t.taxAdvantage}</h3>
                   <p className="text-sm text-gray-500 leading-relaxed">{categoryData.investData.taxAdvantage}</p>
                 </div>
               </div>
@@ -479,7 +754,7 @@ const LivestockCategoryPage = () => {
                   <TrendingDown size={20} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900 mb-1">Key risks</h3>
+                  <h3 className="font-bold text-gray-900 mb-1">{t.keyRisks}</h3>
                   <p className="text-sm text-gray-500 leading-relaxed">{categoryData.investData.risks}</p>
                 </div>
               </div>
@@ -489,7 +764,7 @@ const LivestockCategoryPage = () => {
             <div className="mt-6 pt-6 border-t border-gray-100 flex flex-wrap gap-4 items-center justify-between">
               <div className="flex items-center gap-3">
                 <Activity size={16} className="text-gray-400" />
-                <span className="text-xs font-bold uppercase text-gray-400">Market Drivers</span>
+                <span className="text-xs font-bold uppercase text-gray-400">{t.marketDrivers}</span>
                 {categoryData.investData.marketDrivers?.map((driver, idx) => (
                   <span key={idx} className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
                     {driver}
@@ -498,7 +773,7 @@ const LivestockCategoryPage = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Target size={14} className="text-amber-500" />
-                <span className="text-xs font-bold">ROI Range: {categoryData.investData.roiRange}</span>
+                <span className="text-xs font-bold">{t.roiRange}: {categoryData.investData.roiRange}</span>
               </div>
             </div>
           </motion.section>
@@ -512,20 +787,20 @@ const LivestockCategoryPage = () => {
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 rounded-2xl px-6 py-3 shadow-2xl flex items-center gap-6"
           >
             <span className="text-white text-sm">
-              {selectedAssets.length} asset{selectedAssets.length > 1 ? 's' : ''} selected
+              {selectedAssets.length} {selectedAssets.length > 1 ? t.assetsSelected : t.assetSelected}
             </span>
             <button
               onClick={() => setSelectedAssets([])}
               className="text-gray-400 hover:text-white text-sm"
             >
-              Clear all
+              {t.clearAll}
             </button>
             {selectedAssets.length >= 2 && (
               <button
                 onClick={handleCompare}
                 className={`px-4 py-1.5 rounded-full text-sm font-bold text-white ${categoryData.buttonColor}`}
               >
-                Compare ({selectedAssets.length})
+                {t.compare} ({selectedAssets.length})
               </button>
             )}
           </motion.div>
@@ -540,9 +815,9 @@ const LivestockCategoryPage = () => {
         >
           <div className="flex gap-2 flex-wrap">
             {[
-              { id: 'roi', label: 'Highest ROI', icon: <TrendingUp size={12} /> },
-              { id: 'price', label: 'Highest Value', icon: <DollarSign size={12} /> },
-              { id: 'capacity', label: 'Largest Capacity', icon: <Users size={12} /> }
+              { id: 'roi', label: t.sortByRoi, icon: <TrendingUp size={12} /> },
+              { id: 'price', label: t.sortByPrice, icon: <DollarSign size={12} /> },
+              { id: 'capacity', label: t.sortByCapacity, icon: <Users size={12} /> }
             ].map(opt => (
               <button 
                 key={opt.id}
@@ -580,10 +855,10 @@ const LivestockCategoryPage = () => {
               onChange={(e) => setFilterRoi(e.target.value)} 
               className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-700 cursor-pointer"
             >
-              <option value="all">All ROI levels</option>
-              <option value="0-15">Low (0% - 15%)</option>
-              <option value="15-25">Medium (15% - 25%)</option>
-              <option value="25-100">High (25%+)</option>
+              <option value="all">{t.allRoiLevels}</option>
+              <option value="0-15">{t.low}</option>
+              <option value="15-25">{t.medium}</option>
+              <option value="25-100">{t.high}</option>
             </select>
           </div>
         </motion.div>
@@ -668,19 +943,19 @@ const LivestockCategoryPage = () => {
                   {/* Stats Grid */}
                   <div className="grid grid-cols-3 gap-4 mb-5 pt-4 border-t border-gray-100">
                     <div>
-                      <p className="text-[8px] font-bold uppercase text-gray-400 tracking-wider">Unit Value</p>
+                      <p className="text-[8px] font-bold uppercase text-gray-400 tracking-wider">{t.unitValue}</p>
                       <p className="text-base font-bold text-gray-900">
                         {(asset.price?.amount / 1000000).toFixed(1)}M <span className="text-[8px] text-gray-400">FCFA</span>
                       </p>
                     </div>
                     <div>
-                      <p className="text-[8px] font-bold uppercase text-gray-400 tracking-wider">Capacity</p>
+                      <p className="text-[8px] font-bold uppercase text-gray-400 tracking-wider">{t.capacity}</p>
                       <p className="text-base font-bold text-gray-900">
                         {asset.capacity?.value || 0} <span className="text-[8px] text-gray-400">{asset.capacity?.unit || 'heads'}</span>
                       </p>
                     </div>
                     <div>
-                      <p className="text-[8px] font-bold uppercase text-gray-400 tracking-wider">Cycle</p>
+                      <p className="text-[8px] font-bold uppercase text-gray-400 tracking-wider">{t.cycle}</p>
                       <div className="flex items-center gap-1">
                         <Calendar size={10} className="text-gray-400" />
                         <p className="text-xs font-bold text-gray-900">{asset.cycleDuration || '12 months'}</p>
@@ -692,22 +967,22 @@ const LivestockCategoryPage = () => {
                   <div className="flex flex-wrap gap-2 mb-5">
                     {asset.features?.hasWaterSupply && (
                       <div className="flex items-center gap-1 text-[9px] text-gray-500 bg-gray-50 px-2 py-1 rounded-full">
-                        <Droplets size={8} /> Water
+                        <Droplets size={8} /> {t.water}
                       </div>
                     )}
                     {asset.features?.hasElectricity && (
                       <div className="flex items-center gap-1 text-[9px] text-gray-500 bg-gray-50 px-2 py-1 rounded-full">
-                        <Zap size={8} /> Power
+                        <Zap size={8} /> {t.power}
                       </div>
                     )}
                     {asset.features?.hasVeterinaryAccess && (
                       <div className="flex items-center gap-1 text-[9px] text-gray-500 bg-gray-50 px-2 py-1 rounded-full">
-                        <ShieldCheck size={8} /> Vet
+                        <ShieldCheck size={8} /> {t.vet}
                       </div>
                     )}
                     {asset.features?.hasFeedStorage && (
                       <div className="flex items-center gap-1 text-[9px] text-gray-500 bg-gray-50 px-2 py-1 rounded-full">
-                        <Database size={8} /> Feed storage
+                        <Database size={8} /> {t.feedStorage}
                       </div>
                     )}
                   </div>
@@ -729,7 +1004,7 @@ const LivestockCategoryPage = () => {
                         navigate(`/agriculture/livestock/${category}/${asset.id}`);
                       }}
                     >
-                      View details <ChevronRight size={12} />
+                      {t.viewDetails} <ChevronRight size={12} />
                     </button>
                   </div>
                 </div>
@@ -743,7 +1018,7 @@ const LivestockCategoryPage = () => {
                       exit={{ opacity: 0, y: 10 }}
                       className={`absolute bottom-20 right-6 ${categoryData.badgeColor} px-3 py-1.5 rounded-lg shadow-lg text-xs font-bold`}
                     >
-                      Projected: +{((asset.roi || 0) * 1.15).toFixed(0)}% with reinvestment
+                      {t.projectedWithReinvestment}: +{((asset.roi || 0) * 1.15).toFixed(0)}%
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -759,10 +1034,10 @@ const LivestockCategoryPage = () => {
               <Info className="text-gray-400" size={40} />
             </div>
             <p className="text-2xl font-serif text-gray-400 italic mb-4">
-              No investment assets available in this sector.
+              {t.noAssetsAvailable}
             </p>
             <Link to="/agriculture/livestock" className="text-emerald-600 text-sm font-bold underline hover:text-emerald-800">
-              Explore other sectors →
+              {t.exploreOtherSectors} →
             </Link>
           </motion.div>
         )}
@@ -786,7 +1061,7 @@ const LivestockCategoryPage = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex justify-between items-center">
-                <h2 className="text-2xl font-serif">Compare Assets</h2>
+                <h2 className="text-2xl font-serif">{t.compareAssets}</h2>
                 <button onClick={() => setShowCompare(false)} className="p-2 hover:bg-gray-100 rounded-full">
                   <X size={20} />
                 </button>
@@ -808,19 +1083,19 @@ const LivestockCategoryPage = () => {
                           <span className="font-bold text-emerald-600">+{asset.roi}%</span>
                         </div>
                         <div className="flex justify-between py-2 border-b border-gray-100">
-                          <span className="text-gray-500">Price</span>
+                          <span className="text-gray-500">{t.unitValue}</span>
                           <span className="font-bold">{(asset.price?.amount / 1000000).toFixed(1)}M FCFA</span>
                         </div>
                         <div className="flex justify-between py-2 border-b border-gray-100">
-                          <span className="text-gray-500">Capacity</span>
+                          <span className="text-gray-500">{t.capacity}</span>
                           <span className="font-bold">{asset.capacity?.value} {asset.capacity?.unit}</span>
                         </div>
                         <div className="flex justify-between py-2 border-b border-gray-100">
-                          <span className="text-gray-500">Cycle</span>
+                          <span className="text-gray-500">{t.cycle}</span>
                           <span className="font-bold">{asset.cycleDuration}</span>
                         </div>
                         <div className="flex justify-between py-2">
-                          <span className="text-gray-500">Location</span>
+                          <span className="text-gray-500">{t.location}</span>
                           <span className="font-bold text-sm">{asset.location}</span>
                         </div>
                       </div>
@@ -852,7 +1127,7 @@ const LivestockCategoryPage = () => {
             >
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-serif">ROI Calculator</h2>
+                  <h2 className="text-2xl font-serif">{t.roiCalculator}</h2>
                   <button onClick={() => setShowCalculator(false)} className="p-2 hover:bg-gray-100 rounded-full">
                     <X size={20} />
                   </button>
@@ -860,7 +1135,7 @@ const LivestockCategoryPage = () => {
 
                 <div className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Investment Amount (FCFA)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t.investmentAmount}</label>
                     <input
                       type="number"
                       value={calculatorInput.amount}
@@ -871,7 +1146,7 @@ const LivestockCategoryPage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Investment Period (months)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t.investmentPeriod}</label>
                     <input
                       type="range"
                       min="1"
@@ -888,20 +1163,20 @@ const LivestockCategoryPage = () => {
                   </div>
 
                   <div className={`p-5 rounded-2xl ${categoryData.light} ${categoryData.color} text-center`}>
-                    <p className="text-sm font-medium opacity-80 mb-2">Projected Return</p>
+                    <p className="text-sm font-medium opacity-80 mb-2">{t.projectedReturn}</p>
                     <p className="text-3xl font-bold">
                       {(() => {
-                                        const avgReturn = calculateROI(calculatorInput.amount, calculatorInput.months, parseFloat(avgRoi));
+                        const avgReturn = calculateROI(calculatorInput.amount, calculatorInput.months, parseFloat(avgRoi));
                         return `${(avgReturn / 1000000).toFixed(2)}M FCFA`;
                       })()}
                     </p>
                     <p className="text-xs mt-2 opacity-70">
-                      Based on {avgRoi}% average ROI for this sector
+                      {t.basedOnAvgRoi}
                     </p>
                   </div>
 
                   <p className="text-[10px] text-gray-400 text-center">
-                    *Past performance does not guarantee future returns. This is an estimate.
+                    {t.disclaimer}
                   </p>
                 </div>
               </div>

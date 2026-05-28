@@ -1,5 +1,5 @@
 // frontend/src/pages/Register.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   Loader2, CheckCircle2, Building2, TrendingUp, Home, 
@@ -10,19 +10,37 @@ import api from '../services/api';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
-// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES - optionnel mais cohérent)
+// Hook pour récupérer la langue actuelle
+const useCurrentLang = () => {
+  const [lang, setLang] = useState('fr');
+  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    setLang(finalLang);
+  }, []);
+  
+  return lang;
+};
+
+// 🔥 Détection automatique de l'environnement
 const isDevelopment = typeof window !== 'undefined' && 
                       (window.location.hostname === 'localhost' || 
                        window.location.hostname === '127.0.0.1' ||
                        window.location.hostname === '');
 
-// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+// URLs en dur selon l'environnement
 const BACKEND_URL = isDevelopment 
   ? 'http://localhost:5000'           // URL locale
   : 'https://property-cameroon-backend.vercel.app';  // URL de production
 
 const Register = () => {
   const navigate = useNavigate();
+  const currentLang = useCurrentLang();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -38,20 +56,162 @@ const Register = () => {
     roles: []
   });
 
+  // ========== TRADUCTIONS ==========
+  const t = {
+    fr: {
+      // Header
+      createAccount: "Créer un compte",
+      joinEcosystem: "Rejoignez l'écosystème d'investissement Property Cameroon",
+      
+      // Success page
+      registrationSubmitted: "Inscription soumise !",
+      successMessage: "Votre demande de compte a été envoyée à l'administration pour examen. Vous recevrez un email de confirmation une fois votre compte approuvé.",
+      goToLogin: "Aller à la connexion",
+      
+      // Form labels
+      fullName: "Nom complet *",
+      phoneNumber: "Numéro de téléphone",
+      emailAddress: "Adresse email *",
+      password: "Mot de passe *",
+      confirmPassword: "Confirmer le mot de passe *",
+      selectProfileType: "Sélectionnez votre(s) type(s) de profil * (Plusieurs choix possibles)",
+      identityDocument: "Document d'identité (Carte d'identité ou Passeport) *",
+      clickToUpload: "Cliquez pour télécharger votre document d'identité",
+      uploadHint: "PDF, JPG, PNG (Max. 10MB)",
+      requiredForVerification: "Requis pour la vérification du compte",
+      
+      // Buttons
+      registerSubmit: "S'inscrire & Soumettre pour approbation",
+      signIn: "Se connecter",
+      alreadyHaveAccount: "Vous avez déjà un compte ?",
+      
+      // Role options
+      investor: "Investisseur",
+      investorDesc: "Accédez aux portefeuilles financiers, suivi du ROI et opportunités d'investissement.",
+      propertyOwner: "Propriétaire",
+      propertyOwnerDesc: "Listez des propriétés, gérez les titres fonciers et les actifs immobiliers.",
+      buyer: "Acheteur",
+      buyerDesc: "Parcourez et achetez des propriétés à travers le Cameroun.",
+      agricultureOwner: "Propriétaire Agricole",
+      agricultureOwnerDesc: "Gérez les terres agricoles et les opérations agricoles.",
+      livestockOwner: "Propriétaire d'Élevage",
+      livestockOwnerDesc: "Gérez les unités de production animale.",
+      
+      // Errors
+      passwordsDoNotMatch: "Les mots de passe ne correspondent pas",
+      passwordMinLength: "Le mot de passe doit contenir au moins 6 caractères",
+      selectAtLeastOneRole: "Veuillez sélectionner au moins un rôle",
+      uploadIdDocument: "Veuillez télécharger un document d'identité pour vous inscrire",
+      fileTooLarge: "La taille du fichier doit être inférieure à 10 Mo",
+      registrationFailed: "L'inscription a échoué. Veuillez réessayer.",
+      
+      // File upload
+      fileSize: "Mo"
+    },
+    en: {
+      // Header
+      createAccount: "Create an Account",
+      joinEcosystem: "Join Property Cameroon's investment ecosystem",
+      
+      // Success page
+      registrationSubmitted: "Registration Submitted!",
+      successMessage: "Your account request has been sent to the administration for review. You will receive a confirmation email once your account is approved.",
+      goToLogin: "Go to Login",
+      
+      // Form labels
+      fullName: "Full Name *",
+      phoneNumber: "Phone Number",
+      emailAddress: "Email Address *",
+      password: "Password *",
+      confirmPassword: "Confirm Password *",
+      selectProfileType: "Select your profile type(s) * (You can select multiple)",
+      identityDocument: "Identity Document (ID Card or Passport) *",
+      clickToUpload: "Click to upload your ID document",
+      uploadHint: "PDF, JPG, PNG (Max. 10MB)",
+      requiredForVerification: "Required for account verification",
+      
+      // Buttons
+      registerSubmit: "Register & Submit for Approval",
+      signIn: "Sign In",
+      alreadyHaveAccount: "Already have an account?",
+      
+      // Role options
+      investor: "Investor",
+      investorDesc: "Access financial portfolios, ROI tracking, and investment opportunities.",
+      propertyOwner: "Property Owner",
+      propertyOwnerDesc: "List properties, manage land titles, and handle real estate assets.",
+      buyer: "Buyer",
+      buyerDesc: "Browse and purchase properties across Cameroon.",
+      agricultureOwner: "Agriculture Owner",
+      agricultureOwnerDesc: "Manage agricultural lands and farming operations.",
+      livestockOwner: "Livestock Owner",
+      livestockOwnerDesc: "Manage livestock production units.",
+      
+      // Errors
+      passwordsDoNotMatch: "Passwords do not match",
+      passwordMinLength: "Password must be at least 6 characters",
+      selectAtLeastOneRole: "Please select at least one role",
+      uploadIdDocument: "Please upload an identity document to register",
+      fileTooLarge: "File size must be less than 10MB",
+      registrationFailed: "Registration failed. Please try again.",
+      
+      // File upload
+      fileSize: "MB"
+    }
+  }[currentLang] || {
+    // Fallback français
+    createAccount: "Créer un compte",
+    joinEcosystem: "Rejoignez l'écosystème d'investissement Property Cameroon",
+    registrationSubmitted: "Inscription soumise !",
+    successMessage: "Votre demande de compte a été envoyée à l'administration pour examen.",
+    goToLogin: "Aller à la connexion",
+    fullName: "Nom complet *",
+    phoneNumber: "Numéro de téléphone",
+    emailAddress: "Adresse email *",
+    password: "Mot de passe *",
+    confirmPassword: "Confirmer le mot de passe *",
+    selectProfileType: "Sélectionnez votre(s) type(s) de profil *",
+    identityDocument: "Document d'identité *",
+    clickToUpload: "Cliquez pour télécharger",
+    uploadHint: "PDF, JPG, PNG (Max. 10MB)",
+    requiredForVerification: "Requis pour la vérification",
+    registerSubmit: "S'inscrire",
+    signIn: "Se connecter",
+    alreadyHaveAccount: "Vous avez déjà un compte ?",
+    investor: "Investisseur",
+    investorDesc: "Accédez aux portefeuilles financiers.",
+    propertyOwner: "Propriétaire",
+    propertyOwnerDesc: "Gérez vos propriétés.",
+    buyer: "Acheteur",
+    buyerDesc: "Achetez des propriétés.",
+    agricultureOwner: "Propriétaire Agricole",
+    agricultureOwnerDesc: "Gérez les terres agricoles.",
+    livestockOwner: "Propriétaire d'Élevage",
+    livestockOwnerDesc: "Gérez les unités d'élevage.",
+    passwordsDoNotMatch: "Les mots de passe ne correspondent pas",
+    passwordMinLength: "6 caractères minimum",
+    selectAtLeastOneRole: "Sélectionnez au moins un rôle",
+    uploadIdDocument: "Téléchargez un document d'identité",
+    fileTooLarge: "Fichier trop volumineux (max 10Mo)",
+    registrationFailed: "Échec de l'inscription",
+    fileSize: "Mo"
+  };
+
+  // ✅ IDs des rôles cohérents avec le backend (traduits)
+  const roleOptions = [
+    { id: 'INVESTOR', label: t.investor, icon: <TrendingUp size={18} />, description: t.investorDesc },
+    { id: 'OWNER', label: t.propertyOwner, icon: <Home size={18} />, description: t.propertyOwnerDesc },
+    { id: 'BUYER', label: t.buyer, icon: <Building2 size={18} />, description: t.buyerDesc },
+    { id: 'AGRICULTURE_OWNER', label: t.agricultureOwner, icon: <Sprout size={18} />, description: t.agricultureOwnerDesc },
+    { id: 'LIVESTOCK_OWNER', label: t.livestockOwner, icon: <Beef size={18} />, description: t.livestockOwnerDesc }
+  ];
+
   // 🔥 Console.log pour debug (optionnel)
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     console.log(`🌍 Register page - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
     console.log(`🔗 Register page - Backend URL: ${BACKEND_URL}`);
+    console.log(`🌐 Current language: ${currentLang}`);
   }
-
-  // ✅ CORRECTION: IDs des rôles cohérents avec le backend
-  const roleOptions = [
-    { id: 'INVESTOR', label: 'Investor', icon: <TrendingUp size={18} />, description: 'Access financial portfolios, ROI tracking, and investment opportunities.' },
-    { id: 'OWNER', label: 'Property Owner', icon: <Home size={18} />, description: 'List properties, manage land titles, and handle real estate assets.' },
-    { id: 'BUYER', label: 'Buyer', icon: <Building2 size={18} />, description: 'Browse and purchase properties across Cameroon.' },
-    { id: 'AGRICULTURE_OWNER', label: 'Agriculture Owner', icon: <Sprout size={18} />, description: 'Manage agricultural lands and farming operations.' },
-    { id: 'LIVESTOCK_OWNER', label: 'Livestock Owner', icon: <Beef size={18} />, description: 'Manage livestock production units.' }
-  ];
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -69,9 +229,8 @@ const Register = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Vérifier la taille du fichier (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
-        setError('File size must be less than 10MB');
+        setError(t.fileTooLarge);
         return;
       }
       setKycDocument(file);
@@ -92,22 +251,22 @@ const Register = () => {
     setError('');
     
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError(t.passwordsDoNotMatch);
       return;
     }
     
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError(t.passwordMinLength);
       return;
     }
     
     if (formData.roles.length === 0) {
-      setError('Please select at least one role');
+      setError(t.selectAtLeastOneRole);
       return;
     }
     
     if (!kycDocument) {
-      setError('Please upload an identity document to register');
+      setError(t.uploadIdDocument);
       return;
     }
     
@@ -128,7 +287,7 @@ const Register = () => {
       setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
       console.error('Registration error:', err);
-      setError(err.message || 'Registration failed. Please try again.');
+      setError(err.message || t.registrationFailed);
     } finally {
       setLoading(false);
     }
@@ -143,16 +302,15 @@ const Register = () => {
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle2 size={40} className="text-green-600" />
             </div>
-            <h2 className="text-2xl font-serif text-emerald-900 mb-3">Registration Submitted!</h2>
+            <h2 className="text-2xl font-serif text-emerald-900 mb-3">{t.registrationSubmitted}</h2>
             <p className="text-emerald-600 text-sm mb-6">
-              Your account request has been sent to the administration for review.
-              You will receive a confirmation email once your account is approved.
+              {t.successMessage}
             </p>
             <Link 
               to="/login" 
               className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-800 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-emerald-900 transition-all"
             >
-              Go to Login <ArrowRight size={14} />
+              {t.goToLogin} <ArrowRight size={14} />
             </Link>
           </div>
         </div>
@@ -174,8 +332,8 @@ const Register = () => {
               <div className="inline-flex items-center justify-center w-14 h-14 bg-amber-400 rounded-2xl mb-3">
                 <Building2 size={28} className="text-emerald-900" />
               </div>
-              <h1 className="text-2xl font-serif text-white">Create an Account</h1>
-              <p className="text-emerald-300 text-sm">Join Property Cameroon's investment ecosystem</p>
+              <h1 className="text-2xl font-serif text-white">{t.createAccount}</h1>
+              <p className="text-emerald-300 text-sm">{t.joinEcosystem}</p>
             </div>
 
             <div className="p-8">
@@ -188,7 +346,7 @@ const Register = () => {
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">Full Name *</label>
+                    <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">{t.fullName}</label>
                     <div className="relative">
                       <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" />
                       <input
@@ -203,7 +361,7 @@ const Register = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">Phone Number</label>
+                    <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">{t.phoneNumber}</label>
                     <div className="relative">
                       <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" />
                       <input
@@ -218,7 +376,7 @@ const Register = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">Email Address *</label>
+                  <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">{t.emailAddress}</label>
                   <div className="relative">
                     <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" />
                     <input
@@ -234,7 +392,7 @@ const Register = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">Password *</label>
+                    <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">{t.password}</label>
                     <div className="relative">
                       <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" />
                       <input
@@ -249,7 +407,7 @@ const Register = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">Confirm Password *</label>
+                    <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">{t.confirmPassword}</label>
                     <div className="relative">
                       <ShieldCheck size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" />
                       <input
@@ -267,7 +425,7 @@ const Register = () => {
                 {/* Roles Selection */}
                 <div>
                   <label className="block text-[10px] font-black uppercase text-emerald-600 mb-3">
-                    Select your profile type(s) * (You can select multiple)
+                    {t.selectProfileType}
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {roleOptions.map((role) => (
@@ -302,7 +460,7 @@ const Register = () => {
                 {/* KYC Document Upload */}
                 <div className="space-y-3">
                   <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">
-                    Identity Document (ID Card or Passport) *
+                    {t.identityDocument}
                   </label>
                   {!kycDocument ? (
                     <div className="border-2 border-dashed border-emerald-200 rounded-xl p-6 text-center hover:border-emerald-400 transition-colors">
@@ -315,8 +473,8 @@ const Register = () => {
                       />
                       <label htmlFor="kyc-document" className="cursor-pointer">
                         <Upload size={32} className="mx-auto text-emerald-400 mb-2" />
-                        <p className="text-xs text-emerald-600">Click to upload your ID document</p>
-                        <p className="text-[9px] text-emerald-400 mt-1">PDF, JPG, PNG (Max. 10MB)</p>
+                        <p className="text-xs text-emerald-600">{t.clickToUpload}</p>
+                        <p className="text-[9px] text-emerald-400 mt-1">{t.uploadHint}</p>
                       </label>
                     </div>
                   ) : (
@@ -325,7 +483,7 @@ const Register = () => {
                         <FileText size={24} className="text-emerald-600" />
                         <div>
                           <p className="text-sm font-medium text-emerald-900">{kycDocument.name}</p>
-                          <p className="text-[9px] text-emerald-500">{(kycDocument.size / 1024 / 1024).toFixed(2)} MB</p>
+                          <p className="text-[9px] text-emerald-500">{(kycDocument.size / 1024 / 1024).toFixed(2)} {t.fileSize}</p>
                         </div>
                       </div>
                       <button
@@ -338,7 +496,7 @@ const Register = () => {
                     </div>
                   )}
                   <p className="text-[9px] text-amber-600 flex items-center gap-1">
-                    <ShieldCheck size={12} /> Required for account verification
+                    <ShieldCheck size={12} /> {t.requiredForVerification}
                   </p>
                 </div>
 
@@ -351,7 +509,7 @@ const Register = () => {
                     <Loader2 className="animate-spin" size={20} />
                   ) : (
                     <>
-                      Register & Submit for Approval
+                      {t.registerSubmit}
                       <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
@@ -360,9 +518,9 @@ const Register = () => {
 
               <div className="mt-6 pt-4 border-t border-emerald-100 text-center">
                 <p className="text-[10px] text-emerald-500">
-                  Already have an account?{' '}
+                  {t.alreadyHaveAccount}{' '}
                   <Link to="/login" className="font-bold text-emerald-700 hover:text-emerald-900 underline">
-                    Sign In
+                    {t.signIn}
                   </Link>
                 </p>
               </div>

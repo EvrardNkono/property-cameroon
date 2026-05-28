@@ -10,13 +10,30 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
 
-// 🔥 Détection automatique de l'environnement (AJOUTE CES 7 LIGNES)
+// Hook pour récupérer la langue actuelle
+const useCurrentLang = () => {
+  const [lang, setLang] = useState('fr');
+  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    setLang(finalLang);
+  }, []);
+  
+  return lang;
+};
+
+// 🔥 Détection automatique de l'environnement
 const isDevelopment = typeof window !== 'undefined' && 
                       (window.location.hostname === 'localhost' || 
                        window.location.hostname === '127.0.0.1' ||
                        window.location.hostname === '');
 
-// URLs en dur selon l'environnement (AJOUTE CES 3 LIGNES)
+// URLs en dur selon l'environnement
 const BACKEND_URL = isDevelopment 
   ? 'http://localhost:5000'           // URL locale
   : 'https://property-cameroon-backend.vercel.app';  // URL de production
@@ -24,10 +41,147 @@ const BACKEND_URL = isDevelopment
 const ProjectDetailsPage = () => {
   const { category, id } = useParams();
   const navigate = useNavigate();
+  const currentLang = useCurrentLang();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [categoryData, setCategoryData] = useState(null);
+
+  // ========== TRADUCTIONS ==========
+  const t = {
+    fr: {
+      // Navigation
+      backToCategory: "Retour à la catégorie",
+      assetId: "ID d'actif",
+      
+      // Hero
+      projectOverview: "Aperçu du projet",
+      
+      // Core Advantages
+      bioSecurity: "Bio-Sécurité",
+      bioSecurityDesc: "Confinement et surveillance sanitaire de pointe avec surveillance vétérinaire 24h/24 et 7j/7.",
+      strategicZone: "Zone Stratégique",
+      strategicZoneDesc: "Situé à {location}, Cameroun avec un climat idéal et un accès à la distribution.",
+      
+      // Technical Matrix
+      technicalMatrix: "Matrice Technique",
+      estCycle: "Cycle estimé",
+      capacity: "Capacité",
+      grade: "Qualité",
+      status: "Statut",
+      premiumGrade: "Premium A+",
+      available: "Disponible",
+      
+      // Investment Widget
+      investmentCapitalRequired: "Capital d'investissement requis",
+      netReturns: "Rendements nets",
+      cycleTime: "Durée du cycle",
+      connectWithAdvisor: "Contacter un conseiller",
+      downloadProspectus: "Télécharger la brochure",
+      riskDisclaimer: "Prix hors TVA. Tous les investissements agricoles comportent des risques. Veuillez consulter notre ",
+      riskAgreement: "accord de divulgation des risques",
+      beforeProceeding: " avant de procéder.",
+      signatureVerifiedAsset: "Actif à signature vérifiée",
+      
+      // Errors
+      loadingError: "Erreur de chargement",
+      projectNotFound: "Projet non trouvé",
+      backToSectors: "Retour aux secteurs",
+      loadingProject: "Chargement des détails du projet...",
+      
+      // Placeholders
+      unknown: "Inconnu",
+      months: "mois",
+      
+      // Features fallback
+      sustainablyManaged: "Géré durablement",
+      bioCertified: "Bio-Certifié",
+      exportReady: "Prêt à l'export"
+    },
+    en: {
+      // Navigation
+      backToCategory: "Back to Category",
+      assetId: "Asset ID",
+      
+      // Hero
+      projectOverview: "Project Overview",
+      
+      // Core Advantages
+      bioSecurity: "Bio-Security",
+      bioSecurityDesc: "State-of-the-art containment and health monitoring with 24/7 veterinary surveillance.",
+      strategicZone: "Strategic Zone",
+      strategicZoneDesc: "Located in {location}, Cameroon with ideal climate and distribution access.",
+      
+      // Technical Matrix
+      technicalMatrix: "Technical Matrix",
+      estCycle: "Est. Cycle",
+      capacity: "Capacity",
+      grade: "Grade",
+      status: "Status",
+      premiumGrade: "Premium A+",
+      available: "Available",
+      
+      // Investment Widget
+      investmentCapitalRequired: "Investment Capital Required",
+      netReturns: "Net Returns",
+      cycleTime: "Cycle Time",
+      connectWithAdvisor: "Connect with Advisor",
+      downloadProspectus: "Download Prospectus",
+      riskDisclaimer: "Pricing excludes VAT. All agricultural investments involve risks. Please consult our ",
+      riskAgreement: "risk disclosure agreement",
+      beforeProceeding: " before proceeding.",
+      signatureVerifiedAsset: "Signature Verified Asset",
+      
+      // Errors
+      loadingError: "Loading Error",
+      projectNotFound: "Project not found",
+      backToSectors: "Back to sectors",
+      loadingProject: "Loading project details...",
+      
+      // Placeholders
+      unknown: "Unknown",
+      months: "months",
+      
+      // Features fallback
+      sustainablyManaged: "Sustainably Managed",
+      bioCertified: "Bio-Certified",
+      exportReady: "Export Ready"
+    }
+  }[currentLang] || {
+    // Fallback français
+    backToCategory: "Retour à la catégorie",
+    assetId: "ID d'actif",
+    projectOverview: "Aperçu du projet",
+    bioSecurity: "Bio-Sécurité",
+    bioSecurityDesc: "Confinement et surveillance sanitaire de pointe.",
+    strategicZone: "Zone Stratégique",
+    strategicZoneDesc: "Situé à {location}, Cameroun.",
+    technicalMatrix: "Matrice Technique",
+    estCycle: "Cycle estimé",
+    capacity: "Capacité",
+    grade: "Qualité",
+    status: "Statut",
+    premiumGrade: "Premium A+",
+    available: "Disponible",
+    investmentCapitalRequired: "Capital d'investissement requis",
+    netReturns: "Rendements nets",
+    cycleTime: "Durée du cycle",
+    connectWithAdvisor: "Contacter un conseiller",
+    downloadProspectus: "Télécharger la brochure",
+    riskDisclaimer: "Prix hors TVA. Tous les investissements agricoles comportent des risques.",
+    riskAgreement: "accord de divulgation des risques",
+    beforeProceeding: " avant de procéder.",
+    signatureVerifiedAsset: "Actif à signature vérifiée",
+    loadingError: "Erreur de chargement",
+    projectNotFound: "Projet non trouvé",
+    backToSectors: "Retour aux secteurs",
+    loadingProject: "Chargement...",
+    unknown: "Inconnu",
+    months: "mois",
+    sustainablyManaged: "Géré durablement",
+    bioCertified: "Bio-Certifié",
+    exportReady: "Prêt à l'export"
+  };
 
   // 🔥 Fonction getImageUrl mise à jour avec BACKEND_URL dynamique
   const getImageUrl = (image) => {
@@ -46,13 +200,14 @@ const ProjectDetailsPage = () => {
         // 🔥 Console.log pour debug (optionnel)
         console.log(`🌍 ProjectDetailsPage - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
         console.log(`🔗 ProjectDetailsPage - Backend URL: ${BACKEND_URL}`);
+        console.log(`🌐 Current language: ${currentLang}`);
         
-        // Get livestock details
-        const livestockRes = await api.getLivestockById(id);
+        // Get livestock details with language parameter
+        const livestockRes = await api.getLivestockById(id, { lang: currentLang });
         const livestock = livestockRes.livestock;
         
         // Get category info for styling
-        const catRes = await api.getLivestockCategoryBySlug(category);
+        const catRes = await api.getLivestockCategoryBySlug(category, { lang: currentLang });
         const cat = catRes.category;
         
         // Format images
@@ -67,7 +222,7 @@ const ProjectDetailsPage = () => {
         } else if (typeof livestock.features === 'string') {
           featuresArray = livestock.features.split(',').map(f => f.trim());
         } else {
-          featuresArray = ['Sustainably Managed', 'Bio-Certified', 'Export Ready'];
+          featuresArray = [t.sustainablyManaged, t.bioCertified, t.exportReady];
         }
         
         setProject({
@@ -97,7 +252,7 @@ const ProjectDetailsPage = () => {
         
       } catch (err) {
         console.error('Error fetching project:', err);
-        setError(err.message || 'Failed to load project');
+        setError(err.message || t.loadingError);
       } finally {
         setLoading(false);
       }
@@ -105,7 +260,7 @@ const ProjectDetailsPage = () => {
     
     window.scrollTo(0, 0);
     fetchData();
-  }, [id, category]);
+  }, [id, category, currentLang]);
 
   const fadeUp = {
     hidden: { opacity: 0, y: 20 },
@@ -118,7 +273,7 @@ const ProjectDetailsPage = () => {
         <Navbar />
         <div className="flex flex-col items-center justify-center h-[calc(100vh-80px)]">
           <Loader2 size={48} className="text-emerald-600 animate-spin mb-4" />
-          <p className="text-gray-500 text-sm">Loading project details...</p>
+          <p className="text-gray-500 text-sm">{t.loadingProject}</p>
         </div>
         <Footer />
       </div>
@@ -132,10 +287,10 @@ const ProjectDetailsPage = () => {
         <div className="flex flex-col items-center justify-center h-[calc(100vh-80px)] px-4">
           <div className="bg-red-50 text-red-600 p-6 rounded-2xl text-center max-w-md">
             <AlertCircle size={40} className="mx-auto mb-3 text-red-500" />
-            <p className="font-bold">Loading Error</p>
-            <p className="text-sm mt-1">{error || "Project not found"}</p>
+            <p className="font-bold">{t.loadingError}</p>
+            <p className="text-sm mt-1">{error || t.projectNotFound}</p>
             <Link to="/agriculture/livestock" className="mt-4 inline-block text-emerald-600 underline text-sm">
-              Back to sectors
+              {t.backToSectors}
             </Link>
           </div>
         </div>
@@ -143,6 +298,19 @@ const ProjectDetailsPage = () => {
       </div>
     );
   }
+
+  // Format cycle duration with translation
+  const formattedCycleDuration = project.cycleDuration?.includes('month') 
+    ? project.cycleDuration.replace('months', t.months).replace('month', t.months.slice(0, -1))
+    : project.cycleDuration;
+
+  // Technical specs data with translations
+  const technicalSpecs = [
+    { label: t.estCycle, value: formattedCycleDuration, icon: <Clock size={16}/> },
+    { label: t.capacity, value: `${project.capacity} ${project.capacityUnit}`, icon: <Activity size={16}/> },
+    { label: t.grade, value: t.premiumGrade, icon: <Award size={16}/> },
+    { label: t.status, value: project.status === 'Available' ? t.available : project.status, icon: <FileText size={16}/> },
+  ];
 
   return (
     <div className="min-h-screen bg-[#FCFBF7] text-gray-900">
@@ -181,7 +349,7 @@ const ProjectDetailsPage = () => {
                 className="group inline-flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-gray-900 bg-white/90 backdrop-blur-xl px-6 py-4 rounded-full mb-10 hover:bg-gray-900 hover:text-white transition-all shadow-2xl"
               >
                 <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> 
-                Back to Category
+                {t.backToCategory}
               </button>
             </motion.div>
 
@@ -191,7 +359,7 @@ const ProjectDetailsPage = () => {
               transition={{ delay: 0.7, duration: 0.8 }}
             >
               <span className="inline-block px-4 py-1 rounded-full bg-amber-400 text-gray-900 text-[10px] font-bold uppercase tracking-wide mb-4">
-                Asset ID: #{project.id?.slice(-8) || 'Unknown'}
+                {t.assetId}: #{project.id?.slice(-8) || t.unknown}
               </span>
               <h1 className="text-5xl md:text-9xl font-serif leading-[0.85] tracking-tight">
                 {project.title}
@@ -213,14 +381,13 @@ const ProjectDetailsPage = () => {
               <div className="flex items-center gap-4 mb-8">
                 <div className="h-px w-12 bg-amber-500/30" />
                 <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-amber-600">
-                  Project Overview
+                  {t.projectOverview}
                 </h2>
               </div>
               <p className="text-3xl md:text-4xl font-light text-gray-900 leading-[1.4] mb-10">
                 {project.description}
               </p>
               <div className="flex flex-wrap gap-4">
-                {/* ✅ Safe array mapping with check */}
                 {Array.isArray(project.features) && project.features.length > 0 ? (
                   project.features.map((tag, i) => (
                     <span key={i} className="px-5 py-2 rounded-full border border-gray-200 text-[10px] font-bold uppercase tracking-wide text-gray-500">
@@ -230,13 +397,13 @@ const ProjectDetailsPage = () => {
                 ) : (
                   <>
                     <span className="px-5 py-2 rounded-full border border-gray-200 text-[10px] font-bold uppercase tracking-wide text-gray-500">
-                      Sustainably Managed
+                      {t.sustainablyManaged}
                     </span>
                     <span className="px-5 py-2 rounded-full border border-gray-200 text-[10px] font-bold uppercase tracking-wide text-gray-500">
-                      Bio-Certified
+                      {t.bioCertified}
                     </span>
                     <span className="px-5 py-2 rounded-full border border-gray-200 text-[10px] font-bold uppercase tracking-wide text-gray-500">
-                      Export Ready
+                      {t.exportReady}
                     </span>
                   </>
                 )}
@@ -252,9 +419,9 @@ const ProjectDetailsPage = () => {
                 <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 mb-6">
                   <ShieldCheck size={28} />
                 </div>
-                <h3 className="font-serif text-2xl mb-4">Bio-Security</h3>
+                <h3 className="font-serif text-2xl mb-4">{t.bioSecurity}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed font-medium">
-                  State-of-the-art containment and health monitoring with 24/7 veterinary surveillance.
+                  {t.bioSecurityDesc}
                 </p>
               </motion.div>
 
@@ -265,9 +432,9 @@ const ProjectDetailsPage = () => {
                 <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 mb-6">
                   <MapPin size={28} />
                 </div>
-                <h3 className="font-serif text-2xl mb-4">Strategic Zone</h3>
+                <h3 className="font-serif text-2xl mb-4">{t.strategicZone}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed font-medium">
-                  Located in {project.location}, Cameroon with ideal climate and distribution access.
+                  {t.strategicZoneDesc.replace('{location}', project.location)}
                 </p>
               </motion.div>
             </section>
@@ -280,15 +447,10 @@ const ProjectDetailsPage = () => {
               className="bg-gray-900 rounded-[3.5rem] p-10 md:p-16 text-white relative overflow-hidden"
             >
               <div className="relative z-10">
-                <h2 className="text-3xl font-serif mb-12">Technical Matrix</h2>
+                <h2 className="text-3xl font-serif mb-12">{t.technicalMatrix}</h2>
                 
                 <div className="grid sm:grid-cols-2 gap-x-16 gap-y-2">
-                  {[
-                    { label: "Est. Cycle", value: project.cycleDuration, icon: <Clock size={16}/> },
-                    { label: "Capacity", value: `${project.capacity} ${project.capacityUnit}`, icon: <Activity size={16}/> },
-                    { label: "Grade", value: "Premium A+", icon: <Award size={16}/> },
-                    { label: "Status", value: project.status || "Available", icon: <FileText size={16}/> },
-                  ].map((item, i) => (
+                  {technicalSpecs.map((item, i) => (
                     <div key={i} className="flex items-center justify-between py-6 border-b border-white/10 group">
                       <div className="flex items-center gap-3 text-white/40 text-[10px] font-black uppercase tracking-[0.2em] group-hover:text-amber-400 transition-colors">
                         {item.icon} {item.label}
@@ -313,7 +475,7 @@ const ProjectDetailsPage = () => {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#E2725B]/5 rounded-bl-[100px]" />
 
                 <div className="mb-10">
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 block mb-4">Investment Capital Required</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 block mb-4">{t.investmentCapitalRequired}</span>
                   <div className="flex items-baseline gap-3">
                     <span className="text-6xl font-bold tracking-tighter">
                       {(project.price / 1000000).toFixed(1)}M
@@ -324,26 +486,26 @@ const ProjectDetailsPage = () => {
 
                 <div className="grid grid-cols-2 gap-4 mb-10">
                   <div className="bg-emerald-50/50 p-6 rounded-3xl border border-gray-100">
-                    <span className="text-[9px] font-black uppercase tracking-wide text-gray-400 block mb-2">Net Returns</span>
+                    <span className="text-[9px] font-black uppercase tracking-wide text-gray-400 block mb-2">{t.netReturns}</span>
                     <div className="text-2xl font-bold text-emerald-600 flex items-center gap-2">
                       <TrendingUp size={20} /> +{project.roi}%
                     </div>
                   </div>
                   <div className="bg-amber-50/50 p-6 rounded-3xl border border-gray-100">
-                    <span className="text-[9px] font-black uppercase tracking-wide text-gray-400 block mb-2">Cycle Time</span>
+                    <span className="text-[9px] font-black uppercase tracking-wide text-gray-400 block mb-2">{t.cycleTime}</span>
                     <div className="text-2xl font-bold text-amber-600 flex items-center gap-2">
-                      <Calendar size={20} /> {project.cycleDuration}
+                      <Calendar size={20} /> {formattedCycleDuration}
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <button className="w-full bg-gray-900 text-amber-300 py-7 rounded-2xl font-black uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 hover:bg-gray-800 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-gray-900/20">
-                    <MessageCircle size={20} /> Connect with Advisor
+                    <MessageCircle size={20} /> {t.connectWithAdvisor}
                   </button>
                   
                   <button className="w-full bg-[#FCFBF7] text-gray-900 py-7 rounded-2xl font-black uppercase tracking-[0.2em] text-xs border border-gray-200 flex items-center justify-center gap-3 hover:bg-white hover:border-gray-900 transition-all">
-                    <Download size={20} /> Download Prospectus
+                    <Download size={20} /> {t.downloadProspectus}
                   </button>
                 </div>
 
@@ -352,7 +514,7 @@ const ProjectDetailsPage = () => {
                     <Info size={16} />
                   </div>
                   <p className="text-[10px] text-gray-400 leading-relaxed uppercase font-bold">
-                    Pricing excludes VAT. All agricultural investments involve risks. Please consult our <span className="text-gray-900 underline cursor-pointer">risk disclosure agreement</span> before proceeding.
+                    {t.riskDisclaimer}<span className="text-gray-900 underline cursor-pointer">{t.riskAgreement}</span>{t.beforeProceeding}
                   </p>
                 </div>
               </motion.div>
@@ -360,7 +522,7 @@ const ProjectDetailsPage = () => {
               {/* Trust Badge */}
               <div className="mt-8 flex items-center justify-center gap-4 text-gray-400">
                 <ShieldCheck size={20} />
-                <span className="text-[10px] font-black uppercase tracking-[0.3em]">Signature Verified Asset</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.3em]">{t.signatureVerifiedAsset}</span>
               </div>
             </div>
           </div>

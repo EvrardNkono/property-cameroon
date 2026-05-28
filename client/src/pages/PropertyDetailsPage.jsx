@@ -12,6 +12,23 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
 
+// Hook pour récupérer la langue actuelle
+const useCurrentLang = () => {
+  const [lang, setLang] = useState('fr');
+  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    setLang(finalLang);
+  }, []);
+  
+  return lang;
+};
+
 // 🔥 Détection automatique de l'environnement
 const isDevelopment = typeof window !== 'undefined' && 
                       (window.location.hostname === 'localhost' || 
@@ -25,6 +42,7 @@ const BACKEND_URL = isDevelopment
 
 const PropertyDetailsPage = () => {
   const { id } = useParams();
+  const currentLang = useCurrentLang();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,6 +56,180 @@ const PropertyDetailsPage = () => {
   });
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [formStatus, setFormStatus] = useState(null);
+
+  // ========== TRADUCTIONS ==========
+  const t = {
+    fr: {
+      // Navigation
+      backToCatalog: "Retour au catalogue",
+      
+      // Status
+      forSale: "À VENDRE",
+      forRent: "À LOUER",
+      ref: "Réf",
+      inquiryPrice: "Prix sur demande",
+      perMonth: "par mois",
+      includingFees: "frais inclus",
+      certifiedLegalTitle: "Titre foncier certifié",
+      
+      // Specs
+      totalArea: "Superficie totale",
+      bedrooms: "Chambres",
+      bathrooms: "Salles de bain",
+      totalSurface: "Surface totale",
+      parking: "Stationnement",
+      available: "Disponible",
+      nA: "N/A",
+      
+      // Sections
+      propertyNarrative: "Description du bien",
+      strategicProximity: "Proximité stratégique",
+      education: "Éducation",
+      markets: "Commerces",
+      energyFuel: "Énergie/Carburant",
+      gastronomy: "Gastronomie",
+      
+      // Sidebar
+      secureThisAsset: "Sécurisez ce bien",
+      fullName: "Nom complet",
+      professionalEmail: "Email professionnel",
+      specificRequirements: "Besoins spécifiques...",
+      requestPrivateViewing: "Demander une visite privée",
+      sending: "Envoi en cours...",
+      requestSent: "Demande envoyée avec succès !",
+      errorSending: "Erreur, veuillez réessayer.",
+      
+      // Furnishing
+      furnishingStatus: "État d'ameublement",
+      fullyFurnished: "🛋️ Entièrement meublé",
+      unfurnished: "📦 Non meublé",
+      
+      // Amenities
+      placesFound: "Lieux trouvés",
+      noDataAvailable: "Aucune donnée disponible pour cette zone",
+      ownerInfo: "Info propriétaire",
+      
+      // Errors
+      propertyNotFound: "Bien non trouvé",
+      loadingProperty: "Chargement des détails du bien...",
+      assetNotFound: "Actif non trouvé",
+      propertyDoesNotExist: "Ce bien n'existe pas",
+      returnToCatalog: "Retour au catalogue",
+      
+      // Gallery
+      viewLabel: "Vue",
+      
+      // Copy link
+      linkCopied: "Lien copié dans le presse-papier !"
+    },
+    en: {
+      // Navigation
+      backToCatalog: "Back to Catalog",
+      
+      // Status
+      forSale: "FOR SALE",
+      forRent: "FOR RENT",
+      ref: "Ref",
+      inquiryPrice: "Inquiry Price",
+      perMonth: "per month",
+      includingFees: "including fees",
+      certifiedLegalTitle: "Certified Legal Title",
+      
+      // Specs
+      totalArea: "Total Area",
+      bedrooms: "Bedrooms",
+      bathrooms: "Bathrooms",
+      totalSurface: "Total Surface",
+      parking: "Parking",
+      available: "Available",
+      nA: "N/A",
+      
+      // Sections
+      propertyNarrative: "Property Narrative",
+      strategicProximity: "Strategic Proximity",
+      education: "Education",
+      markets: "Markets",
+      energyFuel: "Energy/Fuel",
+      gastronomy: "Gastronomy",
+      
+      // Sidebar
+      secureThisAsset: "Secure this Asset",
+      fullName: "Full Name",
+      professionalEmail: "Professional Email",
+      specificRequirements: "Specific Requirements...",
+      requestPrivateViewing: "Request Private Viewing",
+      sending: "Sending...",
+      requestSent: "Request sent successfully!",
+      errorSending: "Error, please try again.",
+      
+      // Furnishing
+      furnishingStatus: "Furnishing Status",
+      fullyFurnished: "🛋️ Fully Furnished",
+      unfurnished: "📦 Unfurnished",
+      
+      // Amenities
+      placesFound: "Places Found",
+      noDataAvailable: "No data available for this area",
+      ownerInfo: "Owner info",
+      
+      // Errors
+      propertyNotFound: "Property not found",
+      loadingProperty: "Loading property details...",
+      assetNotFound: "Asset Not Found",
+      propertyDoesNotExist: "Property does not exist",
+      returnToCatalog: "Return to Catalog",
+      
+      // Gallery
+      viewLabel: "View",
+      
+      // Copy link
+      linkCopied: "Link copied to clipboard!"
+    }
+  }[currentLang] || {
+    // Fallback français
+    backToCatalog: "Retour au catalogue",
+    forSale: "À VENDRE",
+    forRent: "À LOUER",
+    ref: "Réf",
+    inquiryPrice: "Prix sur demande",
+    perMonth: "par mois",
+    includingFees: "frais inclus",
+    certifiedLegalTitle: "Titre foncier certifié",
+    totalArea: "Superficie totale",
+    bedrooms: "Chambres",
+    bathrooms: "Salles de bain",
+    totalSurface: "Surface totale",
+    parking: "Stationnement",
+    available: "Disponible",
+    nA: "N/A",
+    propertyNarrative: "Description du bien",
+    strategicProximity: "Proximité stratégique",
+    education: "Éducation",
+    markets: "Commerces",
+    energyFuel: "Énergie/Carburant",
+    gastronomy: "Gastronomie",
+    secureThisAsset: "Sécurisez ce bien",
+    fullName: "Nom complet",
+    professionalEmail: "Email professionnel",
+    specificRequirements: "Besoins spécifiques...",
+    requestPrivateViewing: "Demander une visite privée",
+    sending: "Envoi en cours...",
+    requestSent: "Demande envoyée avec succès !",
+    errorSending: "Erreur, veuillez réessayer.",
+    furnishingStatus: "État d'ameublement",
+    fullyFurnished: "🛋️ Entièrement meublé",
+    unfurnished: "📦 Non meublé",
+    placesFound: "Lieux trouvés",
+    noDataAvailable: "Aucune donnée disponible pour cette zone",
+    ownerInfo: "Info propriétaire",
+    propertyNotFound: "Bien non trouvé",
+    loadingProperty: "Chargement des détails du bien...",
+    assetNotFound: "Actif non trouvé",
+    propertyDoesNotExist: "Ce bien n'existe pas",
+    returnToCatalog: "Retour au catalogue",
+    viewLabel: "Vue",
+    linkCopied: "Lien copié dans le presse-papier !"
+  };
 
   // 🔥 Fonction pour obtenir l'URL complète de l'image
   const getImageUrl = (image) => {
@@ -56,8 +248,10 @@ const PropertyDetailsPage = () => {
 
       console.log(`🌍 Environment: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
       console.log(`🔍 Loading property ID: ${id}`);
+      console.log(`🌐 Current language: ${currentLang}`);
 
-      const response = await api.getPropertyById(id);
+      // Ajouter la langue à la requête
+      const response = await api.getPropertyById(id, { lang: currentLang });
       console.log(`📦 Raw API response:`, response);
 
       // Extraire la propriété selon la structure de la réponse
@@ -65,7 +259,7 @@ const PropertyDetailsPage = () => {
       if (response?.property) prop = response.property;
       if (response?.data?.property) prop = response.data.property;
 
-      if (!prop) throw new Error('Property not found');
+      if (!prop) throw new Error(t.propertyNotFound);
 
       console.log(`✅ Property loaded: ${prop.title}`);
 
@@ -115,11 +309,11 @@ const PropertyDetailsPage = () => {
 
     } catch (err) {
       console.error('❌ Error fetching property details:', err);
-      setError(err.response?.data?.message || err.message || 'Property not found');
+      setError(err.response?.data?.message || err.message || t.propertyNotFound);
     } finally {
       setLoading(false);
     }
-  }, [id]); // ✅ SEULEMENT id — plus location.pathname qui causait la boucle
+  }, [id, currentLang, t.propertyNotFound]);
 
   // ✅ UN SEUL useEffect propre — réinitialise et recharge quand l'id change
   useEffect(() => {
@@ -129,7 +323,7 @@ const PropertyDetailsPage = () => {
     setLightboxOpen(false);
     window.scrollTo(0, 0);
     fetchPropertyDetails();
-  }, [id]); // ✅ seulement id, pas fetchPropertyDetails
+  }, [id, fetchPropertyDetails]);
 
   // Navigation des images
   const nextImage = () => {
@@ -159,7 +353,8 @@ const PropertyDetailsPage = () => {
         propertyTitle: property.title,
         name:          formData.name,
         email:         formData.email,
-        message:       formData.message
+        message:       formData.message,
+        lang:          currentLang
       });
       setFormStatus('success');
       setFormData({ name: '', email: '', message: '' });
@@ -180,7 +375,7 @@ const PropertyDetailsPage = () => {
       navigator.share({ title: property?.title, text: property?.description, url: window.location.href });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert('Link copied to clipboard!');
+      alert(t.linkCopied);
     }
   };
 
@@ -194,7 +389,7 @@ const PropertyDetailsPage = () => {
         <Navbar />
         <div className="flex justify-center items-center h-96">
           <Loader2 size={48} className="text-pc-gold animate-spin mb-4" />
-          <p className="text-slate-500 text-sm ml-3">Loading property details...</p>
+          <p className="text-slate-500 text-sm ml-3">{t.loadingProperty}</p>
         </div>
         <Footer />
       </div>
@@ -207,10 +402,10 @@ const PropertyDetailsPage = () => {
         <Navbar />
         <div className="flex-1 flex items-center justify-center font-serif">
           <div className="text-center">
-            <h2 className="text-2xl mb-4">Asset Not Found</h2>
-            <p className="text-slate-500 mb-6">{error || 'Property does not exist'}</p>
+            <h2 className="text-2xl mb-4">{t.assetNotFound}</h2>
+            <p className="text-slate-500 mb-6">{error || t.propertyDoesNotExist}</p>
             <Link to="/real-estate" className="text-pc-gold uppercase text-[10px] font-black tracking-widest">
-              Return to Catalog
+              {t.returnToCatalog}
             </Link>
           </div>
         </div>
@@ -270,7 +465,7 @@ const PropertyDetailsPage = () => {
             className="flex items-center text-slate-900 text-[10px] font-black uppercase tracking-[0.2em] group"
           >
             <ArrowLeft size={14} className="mr-2 group-hover:-translate-x-1 transition-transform" />
-            Back to Catalog
+            {t.backToCatalog}
           </Link>
           <div className="flex gap-6 text-slate-400">
             <button onClick={handleShare}  className="hover:text-pc-gold transition-colors"><Share2  size={16} /></button>
@@ -286,10 +481,10 @@ const PropertyDetailsPage = () => {
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-4">
               <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white ${property.status === 'sale' ? 'bg-pc-gold' : 'bg-slate-900'}`}>
-                {property.status === 'sale' ? 'For Sale' : 'For Rent'}
+                {property.status === 'sale' ? t.forSale : t.forRent}
               </span>
               <span className="text-slate-400 text-[9px] font-black uppercase tracking-widest">
-                Ref: #PC-{property.id?.slice(-6) || property.id?.substring(0, 6)}
+                {t.ref}: #PC-{property.id?.slice(-6) || property.id?.substring(0, 6)}
               </span>
             </div>
             <h1 className="text-4xl md:text-6xl font-serif text-slate-900 leading-[1.1] uppercase tracking-tighter mb-4">
@@ -302,19 +497,19 @@ const PropertyDetailsPage = () => {
 
           <div className="bg-slate-900 p-8 text-white min-w-[320px] rounded-sm shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-24 h-24 bg-pc-gold/10 rounded-full -translate-y-12 translate-x-12"></div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 mb-2 font-bold">Inquiry Price</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 mb-2 font-bold">{t.inquiryPrice}</p>
             <div className="text-4xl font-bold text-pc-gold">
               {property.price} <span className="text-xs font-light text-white/50 ml-1 uppercase">XAF</span>
             </div>
             {!isLand && property.status === 'rent' && (
-              <p className="text-[9px] text-white/30 uppercase mt-2 italic font-medium tracking-tighter">per month</p>
+              <p className="text-[9px] text-white/30 uppercase mt-2 italic font-medium tracking-tighter">{t.perMonth}</p>
             )}
             {!isLand && property.status === 'sale' && (
-              <p className="text-[9px] text-white/30 uppercase mt-2 italic font-medium tracking-tighter">including fees</p>
+              <p className="text-[9px] text-white/30 uppercase mt-2 italic font-medium tracking-tighter">{t.includingFees}</p>
             )}
             <div className="flex items-center gap-2 mt-6 py-3 border-t border-white/10">
               <div className="w-2 h-2 bg-pc-green rounded-full animate-pulse"></div>
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-pc-green">Certified Legal Title</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-pc-green">{t.certifiedLegalTitle}</span>
             </div>
           </div>
         </div>
@@ -366,7 +561,7 @@ const PropertyDetailsPage = () => {
                 >
                   <img
                     src={img}
-                    alt={`View ${idx + 1}`}
+                    alt={`${t.viewLabel} ${idx + 1}`}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       e.target.src = 'https://images.unsplash.com/photo-1594759714300-8456f9f68800?q=80&w=2070&auto=format&fit=crop';
@@ -385,13 +580,13 @@ const PropertyDetailsPage = () => {
             {/* Specs */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-12 py-10 border-y border-slate-100">
               {isLand ? (
-                <SpecItem icon={<Maximize size={20}/>} label="Total Area" value={`${property.size} m²`} />
+                <SpecItem icon={<Maximize size={20}/>} label={t.totalArea} value={`${property.size} m²`} t={t} />
               ) : (
                 <>
-                  {property.beds  > 0 && <SpecItem icon={<Bed      size={20}/>} label="Bedrooms"      value={property.beds} />}
-                  {property.baths > 0 && <SpecItem icon={<Bath     size={20}/>} label="Bathrooms"     value={property.baths} />}
-                  <SpecItem icon={<Maximize size={20}/>} label="Total Surface" value={property.surface} />
-                  <SpecItem icon={<Car      size={20}/>} label="Parking"       value={property.hasParking ? 'Available' : 'N/A'} />
+                  {property.beds  > 0 && <SpecItem icon={<Bed      size={20}/>} label={t.bedrooms}      value={property.beds} t={t} />}
+                  {property.baths > 0 && <SpecItem icon={<Bath     size={20}/>} label={t.bathrooms}     value={property.baths} t={t} />}
+                  <SpecItem icon={<Maximize size={20}/>} label={t.totalSurface} value={property.surface} t={t} />
+                  <SpecItem icon={<Car      size={20}/>} label={t.parking}       value={property.hasParking ? t.available : t.nA} t={t} />
                 </>
               )}
             </div>
@@ -399,7 +594,7 @@ const PropertyDetailsPage = () => {
             {/* Description */}
             <section>
               <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-900 mb-8 border-l-4 border-pc-gold pl-5">
-                Property Narrative
+                {t.propertyNarrative}
               </h2>
               <div className="text-slate-600 text-lg leading-relaxed font-light first-letter:text-5xl first-letter:font-serif first-letter:text-slate-900 first-letter:mr-3 first-letter:float-left">
                 {property.description}
@@ -409,14 +604,14 @@ const PropertyDetailsPage = () => {
             {/* Amenities */}
             <section className="bg-slate-50 p-10 md:p-16 rounded-sm">
               <div className="text-center mb-16">
-                <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-900 mb-3">Strategic Proximity</h2>
+                <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-900 mb-3">{t.strategicProximity}</h2>
                 <div className="w-12 h-1 bg-pc-gold mx-auto"></div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">
-                <AmenityBox icon={<School          />} title="Education"  data={autoAmenities.schools}  hasOwnerData={autoAmenities.schools?.hasOwnerData}  />
-                <AmenityBox icon={<ShoppingBasket  />} title="Markets"    data={autoAmenities.markets}  hasOwnerData={autoAmenities.markets?.hasOwnerData}  />
-                <AmenityBox icon={<Fuel            />} title="Energy/Fuel" data={autoAmenities.stations} hasOwnerData={autoAmenities.stations?.hasOwnerData} />
-                <AmenityBox icon={<Coffee          />} title="Gastronomy" data={autoAmenities.bakeries} hasOwnerData={autoAmenities.bakeries?.hasOwnerData} />
+                <AmenityBox icon={<School          />} title={t.education}  data={autoAmenities.schools}  hasOwnerData={autoAmenities.schools?.hasOwnerData} t={t} />
+                <AmenityBox icon={<ShoppingBasket  />} title={t.markets}    data={autoAmenities.markets}  hasOwnerData={autoAmenities.markets?.hasOwnerData} t={t} />
+                <AmenityBox icon={<Fuel            />} title={t.energyFuel} data={autoAmenities.stations} hasOwnerData={autoAmenities.stations?.hasOwnerData} t={t} />
+                <AmenityBox icon={<Coffee          />} title={t.gastronomy} data={autoAmenities.bakeries} hasOwnerData={autoAmenities.bakeries?.hasOwnerData} t={t} />
               </div>
             </section>
           </div>
@@ -425,20 +620,20 @@ const PropertyDetailsPage = () => {
           <div className="lg:col-span-1">
             <div className="sticky top-32 space-y-6">
               <div className="bg-white border border-slate-200 p-8 shadow-2xl shadow-slate-200/50">
-                <h3 className="text-xl font-serif text-slate-900 mb-6 italic">Secure this Asset</h3>
+                <h3 className="text-xl font-serif text-slate-900 mb-6 italic">{t.secureThisAsset}</h3>
                 <form className="space-y-4" onSubmit={handleContactSubmit}>
                   <input
-                    type="text" name="name" placeholder="Full Name"
+                    type="text" name="name" placeholder={t.fullName}
                     value={formData.name} onChange={handleInputChange} required
                     className="w-full p-4 bg-slate-50 border-none text-[12px] focus:ring-1 focus:ring-pc-gold outline-none transition-all"
                   />
                   <input
-                    type="email" name="email" placeholder="Professional Email"
+                    type="email" name="email" placeholder={t.professionalEmail}
                     value={formData.email} onChange={handleInputChange} required
                     className="w-full p-4 bg-slate-50 border-none text-[12px] focus:ring-1 focus:ring-pc-gold outline-none transition-all"
                   />
                   <textarea
-                    name="message" placeholder="Specific Requirements..." rows="4"
+                    name="message" placeholder={t.specificRequirements} rows="4"
                     value={formData.message} onChange={handleInputChange}
                     className="w-full p-4 bg-slate-50 border-none text-[12px] focus:ring-1 focus:ring-pc-gold outline-none transition-all"
                   />
@@ -446,18 +641,18 @@ const PropertyDetailsPage = () => {
                     type="submit" disabled={formStatus === 'loading'}
                     className="w-full bg-slate-900 text-white py-4 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-pc-gold transition-all duration-500 disabled:opacity-50"
                   >
-                    {formStatus === 'loading' ? 'Sending...' : 'Request Private Viewing'}
+                    {formStatus === 'loading' ? t.sending : t.requestPrivateViewing}
                   </button>
-                  {formStatus === 'success' && <p className="text-green-600 text-[10px] text-center">Request sent successfully!</p>}
-                  {formStatus === 'error'   && <p className="text-red-600   text-[10px] text-center">Error, please try again.</p>}
+                  {formStatus === 'success' && <p className="text-green-600 text-[10px] text-center">{t.requestSent}</p>}
+                  {formStatus === 'error'   && <p className="text-red-600   text-[10px] text-center">{t.errorSending}</p>}
                 </form>
               </div>
 
               {property.isFurnished !== undefined && (
                 <div className="p-8 border border-slate-100 bg-slate-50/30 text-center">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Furnishing Status</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">{t.furnishingStatus}</p>
                   <p className="text-lg font-serif text-slate-900">
-                    {property.isFurnished ? '🛋️ Fully Furnished' : '📦 Unfurnished'}
+                    {property.isFurnished ? t.fullyFurnished : t.unfurnished}
                   </p>
                 </div>
               )}
@@ -471,7 +666,7 @@ const PropertyDetailsPage = () => {
 };
 
 /* --- MINI COMPOSANTS --- */
-const SpecItem = ({ icon, label, value }) => (
+const SpecItem = ({ icon, label, value, t }) => (
   <div className="flex flex-col items-center text-center group">
     <div className="text-pc-gold mb-3 opacity-60 group-hover:opacity-100 transition-opacity">{icon}</div>
     <span className="text-[8px] text-slate-400 uppercase font-black tracking-widest mb-1">{label}</span>
@@ -479,7 +674,7 @@ const SpecItem = ({ icon, label, value }) => (
   </div>
 );
 
-const AmenityBox = ({ icon, title, data, hasOwnerData }) => (
+const AmenityBox = ({ icon, title, data, hasOwnerData, t }) => (
   <div className="flex gap-5">
     <div className="shrink-0 w-12 h-12 bg-white flex items-center justify-center text-pc-gold shadow-sm border border-slate-100">
       {React.cloneElement(icon, { size: 20 })}
@@ -488,10 +683,10 @@ const AmenityBox = ({ icon, title, data, hasOwnerData }) => (
       <div className="flex items-center gap-2 mb-1">
         <h4 className="text-[10px] font-black uppercase text-slate-900 tracking-widest">{title}</h4>
         {hasOwnerData && (
-          <span className="text-[7px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full">Owner info</span>
+          <span className="text-[7px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full">{t.ownerInfo}</span>
         )}
       </div>
-      <p className="text-pc-gold text-[10px] font-bold mb-3">{data?.count || 0} Places Found</p>
+      <p className="text-pc-gold text-[10px] font-bold mb-3">{data?.count || 0} {t.placesFound}</p>
       <ul className="space-y-2">
         {data?.names?.slice(0, 5).map((name, i) => (
           <li key={i} className="flex items-center text-[11px] text-slate-500 font-medium">
@@ -499,7 +694,7 @@ const AmenityBox = ({ icon, title, data, hasOwnerData }) => (
           </li>
         ))}
         {(!data?.count || data.count === 0) && (
-          <li className="text-[10px] text-slate-400 italic font-light">No data available for this area</li>
+          <li className="text-[10px] text-slate-400 italic font-light">{t.noDataAvailable}</li>
         )}
       </ul>
     </div>

@@ -1,10 +1,10 @@
-// frontend/src/components/Navbar.jsx
+// frontend/src/components/Navbar.jsx - VERSION CORRIGÉE
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate , useLocation } from 'react-router-dom';
 import { Shield, ChevronDown, X, ArrowRight, Menu, User, LogIn, LogOut, UserCircle, Globe } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-// LanguageSwitcher avec son propre chargement du script
+// LanguageSwitcher simplifié et fiable
 const LanguageSwitcher = () => {
   const [currentLang, setCurrentLang] = useState(() => {
     const saved = localStorage.getItem('preferredLanguage');
@@ -13,85 +13,18 @@ const LanguageSwitcher = () => {
     return browserLang === 'en' ? 'en' : 'fr';
   });
   const [isOpen, setIsOpen] = useState(false);
-  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
-
-  // Charge Google Translate
-  useEffect(() => {
-    if (document.getElementById('google-translate-script')) {
-      setIsScriptLoaded(true);
-      return;
-    }
-
-    window.googleTranslateElementInit = () => {
-      if (window.google && window.google.translate) {
-        new window.google.translate.TranslateElement({
-          pageLanguage: 'fr',
-          includedLanguages: 'fr,en',
-          layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
-          autoDisplay: false
-        }, 'google_translate_element_hidden');
-        
-        setIsScriptLoaded(true);
-        
-        const savedLang = localStorage.getItem('preferredLanguage');
-        if (savedLang === 'en') {
-          setTimeout(() => {
-            const select = document.querySelector('.goog-te-combo');
-            if (select) {
-              select.value = 'en';
-              select.dispatchEvent(new Event('change'));
-            }
-          }, 500);
-        }
-      }
-    };
-
-    const script = document.createElement('script');
-    script.id = 'google-translate-script';
-    script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-    script.async = true;
-    document.body.appendChild(script);
-  }, []);
 
   const changeLanguage = (lang) => {
     setCurrentLang(lang);
     localStorage.setItem('preferredLanguage', lang);
     
-    if (isScriptLoaded) {
-      const select = document.querySelector('.goog-te-combo');
-      if (select) {
-        select.value = lang;
-        select.dispatchEvent(new Event('change'));
-      }
-    }
+    // 🔥 CORRECTION IMPORTANTE : Recharger la page avec le paramètre de langue
+    const url = new URL(window.location.href);
+    url.searchParams.set('lang', lang);
+    window.location.href = url.toString();
     
     setIsOpen(false);
   };
-
-  // Ajouter les styles globaux pour Google Translate
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      .goog-te-banner-frame.skiptranslate, .goog-te-gadget, iframe.skiptranslate {
-        display: none !important;
-      }
-      body { top: 0px !important; }
-      .goog-te-combo { display: none !important; }
-      
-      @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      .animate-fadeInUp { animation: fadeInUp 0.2s ease-out; }
-      
-      .shadow-glow { box-shadow: 0 0 6px currentColor; }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      if (style.parentNode) style.parentNode.removeChild(style);
-    };
-  }, []);
 
   return (
     <div className="relative">
@@ -109,7 +42,7 @@ const LanguageSwitcher = () => {
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 mt-3 w-48 rounded-2xl overflow-hidden z-50 bg-white shadow-2xl border border-slate-100 animate-fadeInUp">
+          <div className="absolute right-0 mt-3 w-48 rounded-2xl overflow-hidden z-50 bg-white shadow-2xl border border-slate-100">
             <button
               onClick={() => changeLanguage('fr')}
               className={`w-full px-4 py-3 flex items-center gap-3 transition-all duration-200 ${
@@ -152,22 +85,83 @@ const LanguageSwitcher = () => {
           </div>
         </>
       )}
-      
-      {/* Element caché pour Google Translate */}
-      <div id="google_translate_element_hidden" style={{ display: 'none' }} />
     </div>
   );
 };
 
-// Reste de votre Navbar inchangé...
+// Reste de la Navbar avec les liens traduits dynamiquement
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [currentLang, setCurrentLang] = useState('fr');
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const gold = '#c8a84b';
+
+  // Récupérer la langue actuelle depuis l'URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const lang = params.get('lang') || localStorage.getItem('preferredLanguage') || 'fr';
+    setCurrentLang(lang === 'en' ? 'en' : 'fr');
+  }, [location.search]);
+
+  // Textes traduits de la navbar
+  const t = {
+    fr: {
+      realEstate: "Immobilier",
+      sourcing: "Approvisionnement",
+      journal: "Journal",
+      agriculture: "Agriculture",
+      overview: "Aperçu",
+      livestock: "Élevage",
+      agriculturalProducts: "Produits Agricoles",
+      marketplace: "Marché",
+      account: "Compte",
+      dashboard: "Tableau de bord",
+      signOut: "Déconnexion",
+      signIn: "Connexion",
+      createAccount: "Créer un compte",
+      contactExpert: "Contacter un Expert",
+      officialPartner: "Partenaire Officiel",
+      capefCertified: "CAPEF Certifié"
+    },
+    en: {
+      realEstate: "Real Estate",
+      sourcing: "Sourcing",
+      journal: "Journal",
+      agriculture: "Agriculture",
+      overview: "Overview",
+      livestock: "Livestock",
+      agriculturalProducts: "Agricultural Products",
+      marketplace: "Marketplace",
+      account: "Account",
+      dashboard: "Dashboard",
+      signOut: "Sign Out",
+      signIn: "Sign In",
+      createAccount: "Create Account",
+      contactExpert: "Contact Expert",
+      officialPartner: "Official Partner",
+      capefCertified: "CAPEF Certified"
+    }
+  };
+
+  const texts = t[currentLang] || t.fr;
+
+  const navLinks = [
+    { name: texts.realEstate, path: `/real-estate${currentLang === 'en' ? '?lang=en' : ''}` },
+    { name: texts.sourcing, path: `/global-sourcing${currentLang === 'en' ? '?lang=en' : ''}` },
+    { name: texts.journal, path: `/blog${currentLang === 'en' ? '?lang=en' : ''}` },
+  ];
+
+  const agriLinks = [
+    { name: texts.overview, path: `/agriculture${currentLang === 'en' ? '?lang=en' : ''}` },
+    { name: texts.livestock, path: `/agriculture/livestock${currentLang === 'en' ? '?lang=en' : ''}` },
+    { name: texts.agriculturalProducts, path: `/agriculture/products${currentLang === 'en' ? '?lang=en' : ''}` },
+    { name: texts.marketplace, path: `/agriculture/marketplace${currentLang === 'en' ? '?lang=en' : ''}` },
+  ];
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -203,32 +197,19 @@ const Navbar = () => {
   };
 
   const handleLogin = () => {
-    navigate('/login');
+    navigate(`/login${currentLang === 'en' ? '?lang=en' : ''}`);
     setIsProfileOpen(false);
   };
 
   const handleRegister = () => {
-    navigate('/register');
+    navigate(`/register${currentLang === 'en' ? '?lang=en' : ''}`);
     setIsProfileOpen(false);
   };
 
   const handleDashboard = () => {
-    navigate('/dashboard');
+    navigate(`/dashboard${currentLang === 'en' ? '?lang=en' : ''}`);
     setIsProfileOpen(false);
   };
-
-  const navLinks = [
-    { name: 'Real Estate', path: '/real-estate' },
-    { name: 'Sourcing', path: '/global-sourcing' },
-    { name: 'Journal', path: '/blog' },
-  ];
-
-  const agriLinks = [
-    { name: 'Overview', path: '/agriculture' },
-    { name: 'Livestock', path: '/agriculture/livestock' },
-    { name: 'Agricultural Products', path: '/agriculture/products' },
-    { name: 'Marketplace', path: '/agriculture/marketplace' },
-  ];
 
   const getUserInitials = () => {
     if (!user?.name) return 'U';
@@ -236,7 +217,7 @@ const Navbar = () => {
   };
 
   const getDisplayName = () => {
-    if (!user?.name) return 'Account';
+    if (!user?.name) return texts.account;
     if (user.name.length > 15) return user.name.substring(0, 15) + '...';
     return user.name;
   };
@@ -260,8 +241,8 @@ const Navbar = () => {
                    style={{ background: `linear-gradient(90deg, transparent, ${gold}, transparent)` }} />
             )}
             
-            {/* LOGO */}
-            <Link to="/" className="relative z-10 flex items-center gap-2 md:gap-3 group">
+            {/* LOGO - le lien garde la langue */}
+            <Link to={`/${currentLang === 'en' ? '?lang=en' : ''}`} className="relative z-10 flex items-center gap-2 md:gap-3 group">
               <div className="relative w-8 h-8 md:w-10 md:h-10 overflow-hidden rounded-xl bg-slate-900 flex items-center justify-center transition-transform group-hover:rotate-6">
                 <img src="/images/logo.png" alt="Logo" className="w-5 h-5 md:w-7 md:h-7 object-contain" />
               </div>
@@ -287,7 +268,7 @@ const Navbar = () => {
               {/* DROPDOWN AGRICULTURE */}
               <div className="relative group/dropdown">
                 <button className="text-[10px] uppercase tracking-[0.3em] font-bold text-slate-500 flex items-center gap-1 group-hover/dropdown:text-slate-950 transition-colors">
-                  Agriculture 
+                  {texts.agriculture}
                   <ChevronDown size={10} className="transition-transform duration-300 group-hover/dropdown:rotate-180" />
                 </button>
                 <div className="absolute top-full left-1/2 -translate-x-1/2 pt-6 opacity-0 invisible pointer-events-none group-hover/dropdown:opacity-100 group-hover/dropdown:visible group-hover/dropdown:pointer-events-auto transition-all duration-300">
@@ -330,7 +311,7 @@ const Navbar = () => {
                   ) : (
                     <>
                       <UserCircle size={20} className="text-slate-600" />
-                      <span className="text-[10px] font-bold text-slate-700 hidden md:block">Account</span>
+                      <span className="text-[10px] font-bold text-slate-700 hidden md:block">{texts.account}</span>
                     </>
                   )}
                   <ChevronDown size={12} className={`text-slate-500 transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
@@ -362,7 +343,7 @@ const Navbar = () => {
                         className="w-full flex items-center gap-3 px-4 py-3 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
                       >
                         <User size={14} />
-                        Dashboard
+                        {texts.dashboard}
                       </button>
                       
                       <div className="h-px bg-slate-100" />
@@ -372,7 +353,7 @@ const Navbar = () => {
                         className="w-full flex items-center gap-3 px-4 py-3 text-left text-xs font-bold text-red-600 hover:bg-red-50 transition-colors"
                       >
                         <LogOut size={14} />
-                        Sign Out
+                        {texts.signOut}
                       </button>
                     </>
                   ) : (
@@ -382,7 +363,7 @@ const Navbar = () => {
                         className="w-full flex items-center gap-3 px-4 py-3 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
                       >
                         <LogIn size={14} />
-                        Sign In
+                        {texts.signIn}
                       </button>
                       
                       <button
@@ -390,15 +371,15 @@ const Navbar = () => {
                         className="w-full flex items-center gap-3 px-4 py-3 text-left text-xs font-bold text-emerald-700 hover:bg-emerald-50 transition-colors"
                       >
                         <User size={14} />
-                        Create Account
+                        {texts.createAccount}
                       </button>
                     </>
                   )}
                 </div>
               </div>
 
-              <Link to="/experts" className="px-6 py-3 bg-slate-950 text-white rounded-full text-[9px] font-black uppercase tracking-[0.2em] hover:bg-slate-800 transition-all shadow-lg shadow-slate-950/20">
-                Contact Expert
+              <Link to={`/experts${currentLang === 'en' ? '?lang=en' : ''}`} className="px-6 py-3 bg-slate-950 text-white rounded-full text-[9px] font-black uppercase tracking-[0.2em] hover:bg-slate-800 transition-all shadow-lg shadow-slate-950/20">
+                {texts.contactExpert}
               </Link>
             </div>
 
@@ -459,24 +440,24 @@ const Navbar = () => {
                 </div>
               </div>
               <button onClick={handleLogout} className="text-red-600 text-[10px] font-bold">
-                Sign Out
+                {texts.signOut}
               </button>
             </div>
           ) : (
             <div className="flex gap-3">
               <Link 
-                to="/login" 
+                to={`/login${currentLang === 'en' ? '?lang=en' : ''}`} 
                 onClick={() => setIsOpen(false)}
                 className="flex-1 text-center py-2.5 bg-slate-900 text-white rounded-xl text-[11px] font-bold"
               >
-                Sign In
+                {texts.signIn}
               </Link>
               <Link 
-                to="/register" 
+                to={`/register${currentLang === 'en' ? '?lang=en' : ''}`} 
                 onClick={() => setIsOpen(false)}
                 className="flex-1 text-center py-2.5 border border-emerald-600 text-emerald-700 rounded-xl text-[11px] font-bold"
               >
-                Create Account
+                {texts.createAccount}
               </Link>
             </div>
           )}
@@ -495,7 +476,7 @@ const Navbar = () => {
           ))}
 
           <div className="flex flex-col gap-3 pt-2">
-            <span className="text-[10px] font-black tracking-widest uppercase" style={{ color: gold }}>Agriculture</span>
+            <span className="text-[10px] font-black tracking-widest uppercase" style={{ color: gold }}>{texts.agriculture}</span>
             <div className="flex flex-col gap-3 pl-4 border-l-2 border-slate-100">
               {agriLinks.map((sub) => (
                 <Link 
@@ -512,19 +493,19 @@ const Navbar = () => {
 
           <div className="pt-4 border-t border-slate-100">
             <Link 
-              to="/experts" 
+              to={`/experts${currentLang === 'en' ? '?lang=en' : ''}`} 
               onClick={() => setIsOpen(false)}
               className="block w-full text-center py-3 bg-slate-950 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-colors"
             >
-              Contact Expert
+              {texts.contactExpert}
             </Link>
           </div>
         </nav>
 
         <div className="mt-auto pt-8 border-t border-slate-100">
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-3">Official Partner</p>
+          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-3">{texts.officialPartner}</p>
           <div className="flex items-center gap-2 text-slate-900 font-serif italic">
-            <Shield style={{ color: gold }} size={16} /> CAPEF Certified
+            <Shield style={{ color: gold }} size={16} /> {texts.capefCertified}
           </div>
         </div>
       </div>
