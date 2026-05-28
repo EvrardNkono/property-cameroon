@@ -1,5 +1,3 @@
-// LivestockIntroduction.jsx - VERSION MULTILINGUE
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
@@ -24,181 +22,7 @@ const BACKEND_URL = isDevelopment
   ? 'http://localhost:5000'
   : 'https://property-cameroon-backend.vercel.app';
 
-// ✅ NOUVEAU: Hook pour la langue
-const useCurrentLang = () => {
-  const [lang, setLang] = useState('fr');
-  
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const urlLang = params.get('lang');
-    const storedLang = localStorage.getItem('preferredLanguage');
-    const browserLang = navigator.language.split('-')[0];
-    
-    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
-    setLang(finalLang);
-    
-    // Sauvegarder la préférence
-    if (!storedLang && finalLang !== 'fr') {
-      localStorage.setItem('preferredLanguage', finalLang);
-    }
-  }, []);
-  
-  return lang;
-};
-
-// ✅ NOUVEAU: Textes traduits
-const useTranslations = () => {
-  const lang = useCurrentLang();
-  
-  const texts = {
-    fr: {
-      // Hero
-      heroBadge: "CAPEF Certified • Cameroun",
-      heroTitle: "Investissement",
-      heroTitleHighlight: "Élevage",
-      heroSubtitle: "Investissez dans des actifs d'élevage certifiés à haut rendement au Cameroun.",
-      heroSubtitleHighlight: "Cycles courts | Retours sécurisés | Transparence totale",
-      heroBtnExplore: "Explorer les secteurs",
-      heroBtnGuide: "Recevoir un guide gratuit",
-      
-      // Stats
-      statActiveAssets: "Actifs Actifs",
-      statAvailableForInvestment: "Disponibles pour investissement",
-      statAvgROI: "ROI Moyen",
-      statProjectedReturn: "Retour annuel projeté",
-      statPortfolioValue: "Valeur du Portefeuille",
-      statTotalAssets: "Actifs sous gestion",
-      statActiveInvestors: "Investisseurs Actifs",
-      statTrustingPlatform: "Font confiance à notre plateforme",
-      
-      // Categories
-      categoriesBadge: "Secteurs d'Investissement",
-      categoriesTitle: "Choisissez Votre",
-      categoriesTitleHighlight: "Secteur",
-      categoriesSubtitle: "Balayez ou faites défiler pour explorer les secteurs de production certifiés",
-      
-      // Featured
-      featuredBadge: "Opportunités Vedettes",
-      featuredTitle: "Actifs d'Élevage",
-      featuredTitleHighlight: "À la Une",
-      featuredSubtitle: "Unités de production à haut rendement sélectionnées, prêtes pour investissement immédiat",
-      
-      // Advantages
-      advantagesBadge: "Pourquoi Nous Choisir",
-      advantagesTitle: "Avantages",
-      advantagesTitleHighlight: "d'Investissement",
-      
-      // How it works
-      howItWorksBadge: "Processus Simple",
-      howItWorksTitle: "Comment ça",
-      howItWorksTitleHighlight: "Marche",
-      step1Title: "Choisir Secteur",
-      step1Desc: "Sélectionnez parmi les secteurs certifiés",
-      step2Title: "Sélectionner Actif",
-      step2Desc: "Choisissez les unités adaptées à vos objectifs",
-      step3Title: "Investir",
-      step3Desc: "Paiement sécurisé par mobile money ou banque",
-      step4Title: "Recevoir Retours",
-      step4Desc: "Recevez les bénéfices en fin de cycle",
-      
-      // Testimonials
-      testimonialsBadge: "Histoires de Succès",
-      testimonialsTitle: "Ce que disent nos",
-      testimonialsTitleHighlight: "Investisseurs",
-      
-      // FAQ
-      faqBadge: "Questions ?",
-      faqTitle: "Foire Aux",
-      faqTitleHighlight: "Questions",
-      
-      // CTA
-      ctaTitle: "Prêt à Constituer Votre Portefeuille ?",
-      ctaSubtitle: "Rejoignez 1 000+ investisseurs qui gagnent déjà des revenus passifs",
-      ctaBtnRegister: "Créer un compte gratuit",
-      ctaBtnCall: "Appeler un conseiller",
-      
-      // Loading/Error
-      loading: "Chargement des opportunités d'investissement...",
-      error: "Erreur de chargement",
-      tryAgain: "Réessayer"
-    },
-    en: {
-      // Hero
-      heroBadge: "CAPEF Certified • Cameroon",
-      heroTitle: "Livestock",
-      heroTitleHighlight: "Investment",
-      heroSubtitle: "Invest in certified, high-yield livestock assets across Cameroon.",
-      heroSubtitleHighlight: "Short cycles | Secure returns | Full transparency",
-      heroBtnExplore: "Explore sectors",
-      heroBtnGuide: "Get free guide",
-      
-      // Stats
-      statActiveAssets: "Active Assets",
-      statAvailableForInvestment: "Available for immediate investment",
-      statAvgROI: "Average ROI",
-      statProjectedReturn: "Projected annual return",
-      statPortfolioValue: "Portfolio Value",
-      statTotalAssets: "Total assets under management",
-      statActiveInvestors: "Active Investors",
-      statTrustingPlatform: "Trusting our platform",
-      
-      // Categories
-      categoriesBadge: "Investment Sectors",
-      categoriesTitle: "Choose Your",
-      categoriesTitleHighlight: "Sector",
-      categoriesSubtitle: "Swipe or scroll to explore certified livestock production sectors",
-      
-      // Featured
-      featuredBadge: "Top Opportunities",
-      featuredTitle: "Featured",
-      featuredTitleHighlight: "Livestock Assets",
-      featuredSubtitle: "Hand-picked high-yield production units ready for immediate investment",
-      
-      // Advantages
-      advantagesBadge: "Why Choose Us",
-      advantagesTitle: "Investment",
-      advantagesTitleHighlight: "Advantages",
-      
-      // How it works
-      howItWorksBadge: "Simple Process",
-      howItWorksTitle: "How It",
-      howItWorksTitleHighlight: "Works",
-      step1Title: "Choose Sector",
-      step1Desc: "Select from certified livestock sectors",
-      step2Title: "Select Asset",
-      step2Desc: "Pick production units matching your goals",
-      step3Title: "Invest",
-      step3Desc: "Secure payment via mobile money or bank",
-      step4Title: "Earn Returns",
-      step4Desc: "Receive profits at cycle completion",
-      
-      // Testimonials
-      testimonialsBadge: "Success Stories",
-      testimonialsTitle: "What",
-      testimonialsTitleHighlight: "Investors Say",
-      
-      // FAQ
-      faqBadge: "Questions?",
-      faqTitle: "Frequently Asked",
-      faqTitleHighlight: "Questions",
-      
-      // CTA
-      ctaTitle: "Ready to Build Your Portfolio?",
-      ctaSubtitle: "Join 1,000+ investors already earning passive income",
-      ctaBtnRegister: "Create free account",
-      ctaBtnCall: "Call advisor",
-      
-      // Loading/Error
-      loading: "Loading investment opportunities...",
-      error: "Loading error",
-      tryAgain: "Try again"
-    }
-  };
-  
-  return { t: texts[lang], lang };
-};
-
-// Icon mapping (inchangé)
+// Icon mapping
 const iconMap = {
   Fish: <Fish size={32} />,
   Bird: <Bird size={32} />,
@@ -210,7 +34,7 @@ const iconMap = {
   sheep: <Database size={32} />
 };
 
-// Premium color schemes (inchangé)
+// Premium color schemes per category (for category cards)
 const categoryCardColors = {
   aquaculture: { gradient: "from-cyan-600 to-teal-600", badge: "bg-cyan-500/20 text-cyan-300", iconBg: "bg-cyan-500/20" },
   poultry: { gradient: "from-emerald-600 to-teal-600", badge: "bg-emerald-500/20 text-emerald-300", iconBg: "bg-emerald-500/20" },
@@ -221,99 +45,89 @@ const categoryCardColors = {
   default: { gradient: "from-emerald-600 to-teal-600", badge: "bg-emerald-500/20 text-emerald-300", iconBg: "bg-emerald-500/20" }
 };
 
-// Statistics cards data (maintenant dynamique)
-const getStatCards = (t) => [
+// Statistics cards data
+const statCards = [
   { 
     icon: <Warehouse size={24} />, 
-    label: t.statActiveAssets, 
+    label: "Active Assets", 
     key: "totalAssets",
     gradient: "from-emerald-500 to-teal-500",
-    description: t.statAvailableForInvestment
+    description: "Available for immediate investment"
   },
   { 
     icon: <TrendingUp size={24} />, 
-    label: t.statAvgROI, 
+    label: "Average ROI", 
     key: "avgROI",
     suffix: "%",
     gradient: "from-amber-500 to-orange-500",
-    description: t.statProjectedReturn
+    description: "Projected annual return"
   },
   { 
     icon: <DollarSign size={24} />, 
-    label: t.statPortfolioValue, 
+    label: "Portfolio Value", 
     key: "totalValue",
     prefix: "FCFA ",
     formatter: (val) => `${(val / 1000000).toFixed(1)}M`,
     gradient: "from-emerald-600 to-teal-600",
-    description: t.statTotalAssets
+    description: "Total assets under management"
   },
   { 
     icon: <Users size={24} />, 
-    label: t.statActiveInvestors, 
+    label: "Active Investors", 
     key: "investors",
     value: 1247,
     gradient: "from-purple-500 to-pink-500",
-    description: t.statTrustingPlatform
+    description: "Trusting our platform"
   }
 ];
 
-// Investment opportunities data (inchangé mais les textes sont en FR/EN via le composant)
+// Investment opportunities data
 const investmentHighlights = [
-  { icon: <Zap size={20} />, key: "shortCycles", color: "text-amber-500" },
-  { icon: <ShieldCheck size={20} />, key: "certifiedAssets", color: "text-emerald-500" },
-  { icon: <BarChart3 size={20} />, key: "highRoi", color: "text-purple-500" },
-  { icon: <Globe size={20} />, key: "exportReady", color: "text-cyan-500" },
-  { icon: <Clock size={20} />, key: "passiveIncome", color: "text-orange-500" },
-  { icon: <Building2 size={20} />, key: "taxBenefits", color: "text-indigo-500" }
+  { icon: <Zap size={20} />, title: "Short Cycles", description: "2-18 months", color: "text-amber-500" },
+  { icon: <ShieldCheck size={20} />, title: "Certified Assets", description: "100% verified", color: "text-emerald-500" },
+  { icon: <BarChart3 size={20} />, title: "High ROI", description: "Up to 40%", color: "text-purple-500" },
+  { icon: <Globe size={20} />, title: "Export Ready", description: "International markets", color: "text-cyan-500" },
+  { icon: <Clock size={20} />, title: "Passive Income", description: "Monthly payouts", color: "text-orange-500" },
+  { icon: <Building2 size={20} />, title: "Tax Benefits", description: "Legal advantages", color: "text-indigo-500" }
 ];
 
-const getInvestmentTexts = (t) => ({
-  shortCycles: { title: "Cycles Courts", description: "2-18 mois" },
-  certifiedAssets: { title: "Actifs Certifiés", description: "100% vérifiés" },
-  highRoi: { title: "ROI Élevé", description: "Jusqu'à 40%" },
-  exportReady: { title: "Prêt à l'Export", description: "Marchés internationaux" },
-  passiveIncome: { title: "Revenus Passifs", description: "Paiements mensuels" },
-  taxBenefits: { title: "Avantages Fiscaux", description: "Avantages légaux" }
-});
-
-// Testimonials (inchangé car les noms restent)
+// Testimonials data
 const testimonials = [
   {
     name: "Jean-Paul N.",
-    role: "Investisseur depuis 2024",
-    content: "J'ai investi 15M FCFA dans l'aviculture. J'ai reçu 22% de ROI en 8 mois. La plateforme est transparente et fiable.",
+    role: "Investor since 2024",
+    content: "Invested 15M FCFA in poultry farming. Received 22% ROI in 8 months. Platform is transparent and reliable.",
     rating: 5,
     avatar: "https://randomuser.me/api/portraits/men/32.jpg"
   },
   {
     name: "Marie-Claire K.",
-    role: "Entrepreneuse agricole",
-    content: "Le projet d'aquaculture a doublé mon investissement en 10 mois. L'équipe de soutien est très réactive.",
+    role: "Agriculture entrepreneur",
+    content: "The aquaculture project doubled my investment in 10 months. Support team is very responsive.",
     rating: 5,
     avatar: "https://randomuser.me/api/portraits/women/44.jpg"
   },
   {
     name: "David E.",
-    role: "Investisseur de la diaspora",
-    content: "J'investis depuis la France en toute confiance. Rapports mensuels et projections de ROI claires.",
+    role: "Diaspora investor",
+    content: "I invest from France with confidence. Monthly reports and clear ROI projections.",
     rating: 4,
     avatar: "https://randomuser.me/api/portraits/men/67.jpg"
   }
 ];
 
-// FAQ Data (traduite)
-const getFaqs = (t) => [
-  { q: "Comment fonctionne l'investissement en élevage ?", a: "Vous achetez des parts dans des unités de production certifiées. La ferme gère les opérations, et vous recevez des retours basés sur le cycle d'investissement." },
-  { q: "Quel est l'investissement minimum ?", a: "L'investissement minimum commence à 500 000 FCFA pour certains actifs, avec une moyenne de 2 500 000 FCFA pour la plupart des catégories." },
-  { q: "Mes actifs sont-ils assurés ?", a: "Oui, tous les actifs sont couverts par une assurance bétail et des protocoles de biosécurité." },
-  { q: "Comment reçois-je les retours ?", a: "Les retours sont payés via mobile money (MTN/Orange Money) ou virement bancaire à la fin du cycle." },
-  { q: "Puis-je visiter la ferme ?", a: "Absolument ! Nous organisons des visites trimestrielles des fermes pour les investisseurs." }
+// FAQ Data
+const faqs = [
+  { q: "How does livestock investment work?", a: "You purchase shares in certified production units. The farm manages operations, and you receive returns based on the investment cycle." },
+  { q: "What is the minimum investment?", a: "Minimum investment starts at 500,000 FCFA for some assets, with an average of 2,500,000 FCFA for most categories." },
+  { q: "Are my assets insured?", a: "Yes, all assets are covered by livestock insurance and biosecurity protocols." },
+  { q: "How do I receive returns?", a: "Returns are paid via mobile money (MTN/Orange Money) or bank transfer at cycle completion." },
+  { q: "Can I visit the farm?", a: "Absolutely! We organize quarterly farm visits for investors." }
 ];
 
 const LivestockIntroduction = () => {
   const navigate = useNavigate();
   const scrollContainerRef = useRef(null);
-  const { t, lang } = useTranslations(); // ✅ Récupérer les traductions
   const [categories, setCategories] = useState([]);
   const [featuredLivestock, setFeaturedLivestock] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -335,10 +149,6 @@ const LivestockIntroduction = () => {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.3]);
   const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
 
-  const statCards = getStatCards(t);
-  const investmentTexts = getInvestmentTexts(t);
-  const faqs = getFaqs(t);
-
   const getFullImageUrl = (imagePath) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
@@ -346,6 +156,7 @@ const LivestockIntroduction = () => {
     return `${BACKEND_URL}/uploads/${imagePath}`;
   };
 
+  // Check scroll position for carousel
   const checkScrollButtons = () => {
     if (scrollContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
@@ -370,16 +181,15 @@ const LivestockIntroduction = () => {
     }
   }, [categories]);
 
-  // ✅ MODIFICATION: Ajouter le paramètre lang aux appels API
   const fetchCategories = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const categoriesRes = await api.getAllLivestockCategories({ isActive: true, lang }); // ✅ Ajout lang
+      const categoriesRes = await api.getAllLivestockCategories({ isActive: true });
       const dbCategories = categoriesRes.categories || categoriesRes || [];
       
-      const livestockRes = await api.getAllLivestock({ status: 'AVAILABLE', lang }); // ✅ Ajout lang
+      const livestockRes = await api.getAllLivestock({ status: 'AVAILABLE' });
       const livestock = livestockRes.livestock || livestockRes || [];
       
       const totalValue = livestock.reduce((sum, item) => sum + (item.price?.amount || 0), 0);
@@ -417,9 +227,9 @@ const LivestockIntroduction = () => {
         return {
           id: cat._id,
           slug: cat.slug,
-          title: cat.title, // ✅ Déjà traduit par le backend
+          title: cat.title,
           subtitle: cat.subtitle || cat.title,
-          description: cat.description, // ✅ Déjà traduit par le backend
+          description: cat.description,
           icon: iconMap[cat.iconName] || <Leaf size={32} />,
           count: categoryAssets.length,
           totalValue: categoryAssets.reduce((sum, item) => sum + (item.price?.amount || 0), 0),
@@ -436,17 +246,16 @@ const LivestockIntroduction = () => {
       
     } catch (err) {
       console.error('Error fetching categories:', err);
-      setError(err.response?.data?.message || err.message || t.error);
+      setError(err.response?.data?.message || err.message || 'Error loading categories');
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ MODIFICATION: Ajouter le paramètre lang aux appels API
   const fetchFeaturedLivestock = async () => {
     try {
       setLoadingFeatured(true);
-      const response = await api.getAllLivestock({ status: 'AVAILABLE', limit: 6, lang }); // ✅ Ajout lang
+      const response = await api.getAllLivestock({ status: 'AVAILABLE', limit: 6 });
       const items = response.livestock || response || [];
       
       const formattedItems = items.slice(0, 6).map(item => ({
@@ -465,13 +274,9 @@ const LivestockIntroduction = () => {
     }
   };
 
-  // ✅ Re-fetch quand la langue change
   useEffect(() => {
     fetchCategories();
     fetchFeaturedLivestock();
-  }, [lang]);
-
-  useEffect(() => {
     const timer = setTimeout(() => {
       if (!localStorage.getItem('newsletterShown')) {
         setShowNewsletter(true);
@@ -501,7 +306,7 @@ const LivestockIntroduction = () => {
               <Leaf size={24} className="text-emerald-600 animate-pulse" />
             </div>
           </div>
-          <p className="text-gray-500 mt-6 text-sm">{t.loading}</p>
+          <p className="text-gray-500 mt-6 text-sm">Loading investment opportunities...</p>
         </div>
         <Footer />
       </div>
@@ -515,13 +320,13 @@ const LivestockIntroduction = () => {
         <div className="flex flex-col items-center justify-center py-32 px-6">
           <div className="bg-red-50 text-red-600 p-8 rounded-2xl text-center max-w-md">
             <AlertCircle size={48} className="mx-auto mb-4 text-red-500" />
-            <p className="font-bold text-lg mb-2">{t.error}</p>
+            <p className="font-bold text-lg mb-2">Loading Error</p>
             <p className="text-sm">{error}</p>
             <button 
               onClick={fetchCategories}
               className="mt-6 px-6 py-3 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-colors"
             >
-              {t.tryAgain}
+              Try Again
             </button>
           </div>
         </div>
@@ -534,15 +339,32 @@ const LivestockIntroduction = () => {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Navbar />
 
-      {/* ========== HERO SECTION - AVEC TRADUCTIONS ========== */}
+      {/* ========== HERO SECTION ========== */}
       <motion.section 
         style={{ opacity: heroOpacity, scale: heroScale }}
         className="relative bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 text-white overflow-hidden"
       >
-        {/* ... background particles (inchangé) ... */}
         <div className="absolute inset-0 overflow-hidden">
           {[...Array(20)].map((_, i) => (
-            <motion.div key={i} className="absolute bg-white/5 rounded-full" /* ... */ />
+            <motion.div
+              key={i}
+              className="absolute bg-white/5 rounded-full"
+              style={{
+                width: Math.random() * 100 + 50,
+                height: Math.random() * 100 + 50,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -30, 0],
+                opacity: [0.3, 0.6, 0.3],
+              }}
+              transition={{
+                duration: Math.random() * 10 + 10,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            />
           ))}
         </div>
 
@@ -553,7 +375,7 @@ const LivestockIntroduction = () => {
             className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 backdrop-blur-sm rounded-full mb-8"
           >
             <Sparkles size={14} className="text-amber-400" />
-            <span className="text-amber-400 text-xs font-bold uppercase tracking-wide">{t.heroBadge}</span>
+            <span className="text-amber-400 text-xs font-bold uppercase tracking-wide">CAPEF Certified • Cameroon</span>
           </motion.div>
           
           <motion.h1 
@@ -561,8 +383,8 @@ const LivestockIntroduction = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold mb-6 leading-[1.1]"
           >
-            {t.heroTitle} <br />
-            <span className="bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">{t.heroTitleHighlight}</span>
+            Livestock <br />
+            <span className="bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">Investment</span>
           </motion.h1>
           
           <motion.p 
@@ -571,9 +393,9 @@ const LivestockIntroduction = () => {
             transition={{ delay: 0.1 }}
             className="text-emerald-100 max-w-2xl mx-auto text-lg md:text-xl font-light"
           >
-            {t.heroSubtitle}
+            Invest in certified, high-yield livestock assets across Cameroon.
             <br />
-            <span className="text-emerald-300">{t.heroSubtitleHighlight}</span>
+            <span className="text-emerald-300">Short cycles | Secure returns | Full transparency</span>
           </motion.p>
 
           <motion.div
@@ -586,19 +408,33 @@ const LivestockIntroduction = () => {
               onClick={() => scrollContainerRef.current?.scrollIntoView({ behavior: 'smooth' })}
               className="px-8 py-3 bg-amber-500 text-white rounded-full font-bold hover:bg-amber-600 transition-all transform hover:scale-105 inline-flex items-center gap-2"
             >
-              {t.heroBtnExplore} <ChevronRight size={18} />
+              Explore sectors <ChevronRight size={18} />
             </button>
             <button
               onClick={() => setShowNewsletter(true)}
               className="px-8 py-3 bg-white/10 backdrop-blur-sm text-white rounded-full font-bold hover:bg-white/20 transition-all inline-flex items-center gap-2"
             >
-              {t.heroBtnGuide} <ArrowRight size={18} />
+              Get free guide <ArrowRight size={18} />
             </button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="flex flex-wrap justify-center gap-6 mt-12 pt-8 border-t border-white/10"
+          >
+            {['100+ Active Investors', '2B+ FCFA Managed', '99% Client Satisfaction', '24/7 Support'].map((badge, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs text-emerald-200">
+                <CheckCircle size={12} className="text-amber-400" />
+                {badge}
+              </div>
+            ))}
           </motion.div>
         </div>
       </motion.section>
 
-      {/* ========== STATS SECTION - DYNAMIQUE ========== */}
+      {/* ========== STATS SECTION ========== */}
       <section className="py-16 px-6 relative -mt-10 z-20">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -630,7 +466,7 @@ const LivestockIntroduction = () => {
         </div>
       </section>
 
-      {/* ========== CATEGORIES SECTION - AVEC TRADUCTIONS ========== */}
+      {/* ========== CATEGORIES SECTION (CARROUSEL SLIDES) ========== */}
       <section ref={scrollContainerRef} id="categories" className="py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -641,22 +477,125 @@ const LivestockIntroduction = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 rounded-full mb-4">
               <Layers size={14} className="text-amber-600" />
-              <span className="text-amber-700 text-xs font-bold uppercase tracking-wide">{t.categoriesBadge}</span>
+              <span className="text-amber-700 text-xs font-bold uppercase tracking-wide">Investment Sectors</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900">
-              {t.categoriesTitle} <span className="text-emerald-600">{t.categoriesTitleHighlight}</span>
+              Choose Your <span className="text-emerald-600">Sector</span>
             </h2>
             <p className="text-gray-500 mt-3 max-w-2xl mx-auto">
-              {t.categoriesSubtitle}
+              Swipe or scroll to explore certified livestock production sectors
             </p>
           </motion.div>
 
-          {/* Carousel (contenu inchangé, les catégories sont déjà traduites par le backend) */}
-          {/* ... reste du carousel identique ... */}
+          {/* Carousel with navigation */}
+          <div className="relative">
+            {/* Left navigation button */}
+            {canScrollLeft && (
+              <button
+                onClick={() => scroll('left')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur rounded-full p-3 shadow-lg hover:bg-white transition-all -ml-4"
+              >
+                <ChevronLeft size={24} className="text-gray-700" />
+              </button>
+            )}
+
+            {/* Scrollable container */}
+            <div
+              ref={scrollContainerRef}
+              className="flex overflow-x-auto gap-6 pb-8 scroll-smooth hide-scrollbar"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {categories.map((cat, index) => (
+                <motion.div
+                  key={cat.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ y: -8 }}
+                  className="group flex-shrink-0 w-[350px] md:w-[400px]"
+                >
+                  <Link to={`/agriculture/livestock/${cat.slug}`} className="block">
+                    <div className="relative h-80 rounded-2xl overflow-hidden shadow-lg">
+                      <img 
+                        src={cat.image} 
+                        alt={cat.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        onError={(e) => {
+                          e.target.src = 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000';
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                      
+                      <div className="absolute top-4 left-4 flex gap-2">
+                        <div className={`px-3 py-1 rounded-full ${cat.colors.badge} backdrop-blur-sm`}>
+                          <span className="text-[10px] font-bold uppercase">{cat.marketDemand}</span>
+                        </div>
+                        <div className="px-3 py-1 rounded-full bg-amber-500/30 backdrop-blur-sm">
+                          <span className="text-[10px] font-bold text-amber-300">+{cat.avgRoi.toFixed(0)}% ROI</span>
+                        </div>
+                      </div>
+                      
+                      <div className="absolute bottom-0 left-0 right-0 p-5">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className={`w-10 h-10 rounded-xl ${cat.colors.iconBg} backdrop-blur-sm flex items-center justify-center text-white`}>
+                            {cat.icon}
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-white">{cat.title}</h3>
+                            <p className="text-amber-400 text-[10px] font-bold uppercase tracking-wide">{cat.subtitle}</p>
+                          </div>
+                        </div>
+                        
+                        <p className="text-white/70 text-xs line-clamp-2 mb-3">
+                          {cat.description.substring(0, 100)}...
+                        </p>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex gap-3">
+                            <div>
+                              <p className="text-[8px] font-bold uppercase text-white/50">Assets</p>
+                              <p className="text-base font-bold text-white">{cat.count}</p>
+                            </div>
+                            <div>
+                              <p className="text-[8px] font-bold uppercase text-white/50">Value</p>
+                              <p className="text-base font-bold text-amber-400">
+                                {(cat.totalValue / 1000000).toFixed(0)}M FCFA
+                              </p>
+                            </div>
+                          </div>
+                          <ArrowRight size={18} className="text-white/50 group-hover:text-amber-400 transition-colors" />
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Right navigation button */}
+            {canScrollRight && categories.length > 2 && (
+              <button
+                onClick={() => scroll('right')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur rounded-full p-3 shadow-lg hover:bg-white transition-all -mr-4"
+              >
+                <ChevronRight size={24} className="text-gray-700" />
+              </button>
+            )}
+          </div>
+
+          {/* Scroll indicator dots */}
+          {categories.length > 2 && (
+            <div className="flex justify-center gap-2 mt-6">
+              <div className="w-2 h-2 rounded-full bg-gray-300" />
+              <div className="w-2 h-2 rounded-full bg-gray-300" />
+              <div className="w-2 h-2 rounded-full bg-gray-300" />
+              <div className="w-4 h-2 rounded-full bg-amber-500" />
+            </div>
+          )}
         </div>
       </section>
 
-      {/* ========== FEATURED SECTION - AVEC TRADUCTIONS ========== */}
+      {/* ========== FEATURED LIVESTOCK ASSETS ========== */}
       <section className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -667,22 +606,91 @@ const LivestockIntroduction = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 rounded-full mb-4">
               <Star size={14} className="text-amber-600" />
-              <span className="text-amber-700 text-xs font-bold uppercase tracking-wide">{t.featuredBadge}</span>
+              <span className="text-amber-700 text-xs font-bold uppercase tracking-wide">Top Opportunities</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900">
-              {t.featuredTitle} <span className="text-emerald-600">{t.featuredTitleHighlight}</span>
+              Featured <span className="text-emerald-600">Livestock Assets</span>
             </h2>
             <p className="text-gray-500 mt-3 max-w-2xl mx-auto">
-              {t.featuredSubtitle}
+              Hand-picked high-yield production units ready for immediate investment
             </p>
           </motion.div>
 
-          {/* Featured livestock grid (contenu inchangé, les données sont déjà traduites) */}
-          {/* ... */}
+          {loadingFeatured ? (
+            <div className="flex justify-center py-12">
+              <Loader2 size={32} className="text-emerald-600 animate-spin" />
+            </div>
+          ) : featuredLivestock.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-400">No featured assets available at the moment.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredLivestock.map((asset, index) => (
+                <motion.div
+                  key={asset.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ y: -5 }}
+                  className="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100 group cursor-pointer"
+                  onClick={() => navigate(`/agriculture/livestock/${asset.categorySlug}/${asset.id}`)}
+                >
+                  <div className="relative h-56 overflow-hidden">
+                    <img 
+                      src={asset.image || 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000'} 
+                      alt={asset.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000';
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <div className="absolute top-3 right-3 bg-amber-500 text-white px-2 py-1 rounded-full text-[9px] font-bold">
+                      +{asset.roi || 0}% ROI
+                    </div>
+                    <div className="absolute bottom-3 left-3 flex items-center gap-1 text-white text-[9px] font-bold">
+                      <MapPin size={10} className="text-amber-400" />
+                      {asset.location}
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{asset.title}</h3>
+                    <p className="text-xs text-gray-500 mb-3 line-clamp-2">{asset.description?.substring(0, 80)}...</p>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-xs text-gray-400">Investment</p>
+                        <p className="text-lg font-bold text-emerald-700">
+                          {(asset.price?.amount / 1000000).toFixed(1)}M FCFA
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 text-emerald-600 text-xs font-bold group-hover:gap-2 transition-all">
+                        View details <ArrowRight size={12} />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center mt-10"
+          >
+            <Link
+              to="/agriculture/livestock"
+              className="inline-flex items-center gap-2 text-emerald-600 text-sm font-bold hover:text-emerald-700 transition-colors"
+            >
+              View all livestock opportunities <ArrowRight size={14} />
+            </Link>
+          </motion.div>
         </div>
       </section>
 
-      {/* ========== INVESTMENT HIGHLIGHTS - AVEC TRADUCTIONS ========== */}
+      {/* ========== INVESTMENT HIGHLIGHTS ========== */}
       <section className="py-16 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -693,39 +701,36 @@ const LivestockIntroduction = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-full mb-4">
               <Gem size={14} className="text-emerald-600" />
-              <span className="text-emerald-700 text-xs font-bold uppercase tracking-wide">{t.advantagesBadge}</span>
+              <span className="text-emerald-700 text-xs font-bold uppercase tracking-wide">Why Choose Us</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900 mb-3">
-              {t.advantagesTitle} <span className="text-emerald-600">{t.advantagesTitleHighlight}</span>
+              Investment <span className="text-emerald-600">Advantages</span>
             </h2>
             <div className="w-20 h-1 bg-amber-500 mx-auto" />
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {investmentHighlights.map((item, i) => {
-              const texts = investmentTexts[item.key];
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
-                  className="text-center p-4 rounded-xl bg-gray-50 hover:bg-emerald-50 transition-colors group cursor-pointer"
-                >
-                  <div className={`w-12 h-12 rounded-full ${item.color.replace('text', 'bg')}/10 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform`}>
-                    <div className={item.color}>{item.icon}</div>
-                  </div>
-                  <h3 className="font-bold text-gray-800 text-sm">{texts.title}</h3>
-                  <p className="text-xs text-gray-500 mt-1">{texts.description}</p>
-                </motion.div>
-              );
-            })}
+            {investmentHighlights.map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="text-center p-4 rounded-xl bg-gray-50 hover:bg-emerald-50 transition-colors group cursor-pointer"
+              >
+                <div className={`w-12 h-12 rounded-full ${item.color.replace('text', 'bg')}/10 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform`}>
+                  <div className={item.color}>{item.icon}</div>
+                </div>
+                <h3 className="font-bold text-gray-800 text-sm">{item.title}</h3>
+                <p className="text-xs text-gray-500 mt-1">{item.description}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ========== HOW IT WORKS - AVEC TRADUCTIONS ========== */}
+      {/* ========== HOW IT WORKS ========== */}
       <section className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -736,19 +741,19 @@ const LivestockIntroduction = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 rounded-full mb-4">
               <Rocket size={14} className="text-purple-600" />
-              <span className="text-purple-700 text-xs font-bold uppercase tracking-wide">{t.howItWorksBadge}</span>
+              <span className="text-purple-700 text-xs font-bold uppercase tracking-wide">Simple Process</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900">
-              {t.howItWorksTitle} <span className="text-purple-600">{t.howItWorksTitleHighlight}</span>
+              How It <span className="text-purple-600">Works</span>
             </h2>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {[
-              { step: "01", title: t.step1Title, desc: t.step1Desc, icon: <Globe size={24} /> },
-              { step: "02", title: t.step2Title, desc: t.step2Desc, icon: <Database size={24} /> },
-              { step: "03", title: t.step3Title, desc: t.step3Desc, icon: <DollarSign size={24} /> },
-              { step: "04", title: t.step4Title, desc: t.step4Desc, icon: <TrendingUp size={24} /> }
+              { step: "01", title: "Choose Sector", desc: "Select from certified livestock sectors", icon: <Globe size={24} /> },
+              { step: "02", title: "Select Asset", desc: "Pick production units matching your goals", icon: <Database size={24} /> },
+              { step: "03", title: "Invest", desc: "Secure payment via mobile money or bank", icon: <DollarSign size={24} /> },
+              { step: "04", title: "Earn Returns", desc: "Receive profits at cycle completion", icon: <TrendingUp size={24} /> }
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -767,10 +772,24 @@ const LivestockIntroduction = () => {
               </motion.div>
             ))}
           </div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center mt-12"
+          >
+            <Link
+              to="/register"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full font-bold hover:shadow-xl transition-all"
+            >
+              Start investing today <ArrowRight size={18} />
+            </Link>
+          </motion.div>
         </div>
       </section>
 
-      {/* ========== TESTIMONIALS - AVEC TRADUCTIONS ========== */}
+      {/* ========== TESTIMONIALS ========== */}
       <section className="py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -781,10 +800,10 @@ const LivestockIntroduction = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 rounded-full mb-4">
               <Star size={14} className="text-amber-600" />
-              <span className="text-amber-700 text-xs font-bold uppercase tracking-wide">{t.testimonialsBadge}</span>
+              <span className="text-amber-700 text-xs font-bold uppercase tracking-wide">Success Stories</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900">
-              {t.testimonialsTitle} <span className="text-amber-600">{t.testimonialsTitleHighlight}</span>
+              What <span className="text-amber-600">Investors Say</span>
             </h2>
           </motion.div>
 
@@ -822,7 +841,7 @@ const LivestockIntroduction = () => {
         </div>
       </section>
 
-      {/* ========== FAQ SECTION - AVEC TRADUCTIONS ========== */}
+      {/* ========== FAQ SECTION ========== */}
       <section className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-3xl mx-auto">
           <motion.div
@@ -833,10 +852,10 @@ const LivestockIntroduction = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-full mb-4">
               <MessageCircle size={14} className="text-emerald-600" />
-              <span className="text-emerald-700 text-xs font-bold uppercase tracking-wide">{t.faqBadge}</span>
+              <span className="text-emerald-700 text-xs font-bold uppercase tracking-wide">Questions?</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900">
-              {t.faqTitle} <span className="text-emerald-600">{t.faqTitleHighlight}</span>
+              Frequently Asked <span className="text-emerald-600">Questions</span>
             </h2>
           </motion.div>
 
@@ -878,7 +897,7 @@ const LivestockIntroduction = () => {
         </div>
       </section>
 
-      {/* ========== CTA SECTION - AVEC TRADUCTIONS ========== */}
+      {/* ========== CTA SECTION ========== */}
       <section className="py-20 px-6">
         <div className="max-w-5xl mx-auto">
           <motion.div
@@ -887,35 +906,50 @@ const LivestockIntroduction = () => {
             viewport={{ once: true }}
             className="bg-gradient-to-br from-emerald-700 to-teal-800 rounded-3xl p-12 text-center shadow-2xl relative overflow-hidden"
           >
+            <div className="absolute inset-0 overflow-hidden">
+              {[...Array(15)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute bg-white/5 rounded-full"
+                  style={{
+                    width: Math.random() * 100 + 20,
+                    height: Math.random() * 100 + 20,
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                  }}
+                />
+              ))}
+            </div>
+            
             <div className="relative z-10">
               <BadgeCheck size={56} className="text-white/80 mx-auto mb-4" />
               <h3 className="text-3xl md:text-4xl font-serif font-bold text-white mb-3">
-                {t.ctaTitle}
+                Ready to Build Your Portfolio?
               </h3>
               <p className="text-emerald-100 mb-8 max-w-md mx-auto">
-                {t.ctaSubtitle}
+                Join 1,000+ investors already earning passive income from livestock assets
               </p>
               <div className="flex flex-wrap gap-4 justify-center">
                 <Link
                   to="/register"
                   className="px-8 py-3 bg-amber-500 text-white rounded-full font-bold hover:bg-amber-600 transition-all transform hover:scale-105 inline-flex items-center gap-2"
                 >
-                  {t.ctaBtnRegister} <ArrowRight size={18} />
+                  Create free account <ArrowRight size={18} />
                 </Link>
                 <button className="px-8 py-3 bg-white/10 backdrop-blur-sm text-white rounded-full font-bold hover:bg-white/20 transition-all inline-flex items-center gap-2">
                   <Phone size={16} />
-                  {t.ctaBtnCall}
+                  Call advisor
                 </button>
               </div>
               <p className="text-emerald-200/60 text-xs mt-6">
-                *Sans engagement. Consultation gratuite avec notre équipe d'investissement.
+                *No commitment. Free consultation with our investment team.
               </p>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Newsletter Modal (inchangé) */}
+      {/* ========== NEWSLETTER MODAL ========== */}
       <AnimatePresence>
         {showNewsletter && (
           <motion.div
@@ -939,18 +973,16 @@ const LivestockIntroduction = () => {
                       <Mail size={28} className="text-white" />
                     </div>
                     <h3 className="text-2xl font-serif font-bold text-gray-900 mb-2">
-                      {lang === 'fr' ? "Guide d'Investissement Gratuit" : "Free Investment Guide"}
+                      Free Investment Guide
                     </h3>
                     <p className="text-gray-500 text-sm">
-                      {lang === 'fr' 
-                        ? "Recevez notre guide 2025 + conseils mensuels" 
-                        : "Get our 2025 Investment Guide + monthly insights"}
+                      Get our 2025 Livestock Investment Guide + monthly insights
                     </p>
                   </div>
                   <form onSubmit={handleNewsletterSubmit} className="space-y-4">
                     <input
                       type="email"
-                      placeholder={lang === 'fr' ? "Votre email" : "Your email address"}
+                      placeholder="Your email address"
                       required
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                     />
@@ -958,7 +990,7 @@ const LivestockIntroduction = () => {
                       type="submit"
                       className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold hover:shadow-lg transition-all"
                     >
-                      {lang === 'fr' ? "Recevoir le guide" : "Send me the guide"}
+                      Send me the guide
                     </button>
                   </form>
                   <button
@@ -971,14 +1003,8 @@ const LivestockIntroduction = () => {
               ) : (
                 <div className="text-center py-8">
                   <CheckCircle size={48} className="text-emerald-500 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    {lang === 'fr' ? "Merci !" : "Thanks!"}
-                  </h3>
-                  <p className="text-gray-500 text-sm">
-                    {lang === 'fr' 
-                      ? "Vérifiez votre boîte de réception." 
-                      : "Check your inbox for the guide."}
-                  </p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Thanks for subscribing!</h3>
+                  <p className="text-gray-500 text-sm">Check your inbox for the guide.</p>
                 </div>
               )}
             </motion.div>
