@@ -1,6 +1,6 @@
 // frontend/src/components/LanguageSwitcher.jsx
 import React, { useState, useEffect } from 'react';
-import { Globe, ChevronDown } from 'lucide-react';
+import { Globe, ChevronDown, Check } from 'lucide-react';
 
 const LanguageSwitcher = () => {
   const [currentLang, setCurrentLang] = useState(() => {
@@ -10,15 +10,12 @@ const LanguageSwitcher = () => {
     return browserLang === 'en' ? 'en' : 'fr';
   });
   const [isOpen, setIsOpen] = useState(false);
-  const [isReady, setIsReady] = useState(false);
 
-  // Alternative plus fiable : utiliser une URL de redirection ou i18n
-  // Solution 1: Redirection vers les versions traduites (si disponibles)
   const changeLanguage = (lang) => {
     setCurrentLang(lang);
     localStorage.setItem('preferredLanguage', lang);
     
-    // Option 1: Recharger la page avec le paramètre de langue
+    // Recharger la page avec le paramètre de langue pour que le backend traduise
     const url = new URL(window.location.href);
     url.searchParams.set('lang', lang);
     window.location.href = url.toString();
@@ -42,45 +39,26 @@ const LanguageSwitcher = () => {
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 mt-3 w-48 rounded-2xl overflow-hidden z-50 bg-white shadow-2xl border border-slate-100 animate-fadeInUp">
+          <div className="absolute right-0 mt-3 w-48 rounded-2xl overflow-hidden z-50 bg-white shadow-2xl border border-slate-100">
             <button
               onClick={() => changeLanguage('fr')}
-              className={`w-full px-4 py-3 flex items-center gap-3 transition-all duration-200 ${
-                currentLang === 'fr' 
-                  ? 'bg-gradient-to-r from-emerald-50 to-transparent' 
-                  : 'hover:bg-gray-50'
+              className={`w-full px-4 py-3 flex items-center gap-3 transition-all ${
+                currentLang === 'fr' ? 'bg-emerald-50' : 'hover:bg-gray-50'
               }`}
             >
               <span className="text-xl">🇫🇷</span>
-              <div className="flex-1 text-left">
-                <div className={`text-xs font-semibold ${currentLang === 'fr' ? 'text-emerald-700' : 'text-gray-700'}`}>
-                  Français
-                </div>
-              </div>
-              {currentLang === 'fr' && (
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              )}
+              <span className="text-xs font-semibold">Français</span>
+              {currentLang === 'fr' && <Check size={14} className="text-emerald-500 ml-auto" />}
             </button>
-            
-            <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
-            
             <button
               onClick={() => changeLanguage('en')}
-              className={`w-full px-4 py-3 flex items-center gap-3 transition-all duration-200 ${
-                currentLang === 'en' 
-                  ? 'bg-gradient-to-r from-amber-50 to-transparent' 
-                  : 'hover:bg-gray-50'
+              className={`w-full px-4 py-3 flex items-center gap-3 transition-all ${
+                currentLang === 'en' ? 'bg-amber-50' : 'hover:bg-gray-50'
               }`}
             >
               <span className="text-xl">🇬🇧</span>
-              <div className="flex-1 text-left">
-                <div className={`text-xs font-semibold ${currentLang === 'en' ? 'text-amber-600' : 'text-gray-700'}`}>
-                  English
-                </div>
-              </div>
-              {currentLang === 'en' && (
-                <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              )}
+              <span className="text-xs font-semibold">English</span>
+              {currentLang === 'en' && <Check size={14} className="text-amber-500 ml-auto" />}
             </button>
           </div>
         </>

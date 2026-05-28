@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, ShieldCheck, Thermometer, Activity, ArrowRight, X } from 'lucide-react';
 // import api from '../services/api'; // À décommenter quand backend sera prêt
@@ -14,8 +14,26 @@ const BACKEND_URL = isDevelopment
   ? 'http://localhost:5000'           // Local URL
   : 'https://property-cameroon-backend.vercel.app';  // Production URL
 
+// Hook pour récupérer la langue actuelle
+const useCurrentLang = () => {
+  const [lang, setLang] = useState('fr');
+  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    setLang(finalLang);
+  }, []);
+  
+  return lang;
+};
+
 const LivestockDetailCard = ({ data }) => {
   const [activeTab, setActiveTab] = useState('conditions');
+  const currentLang = useCurrentLang();
 
   // Utility function to ensure image has correct URL
   const getImageUrl = (image) => {
@@ -29,30 +47,33 @@ const LivestockDetailCard = ({ data }) => {
   if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     console.log(`🌍 LivestockDetailCard - Environment: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
     console.log(`🔗 LivestockDetailCard - Backend URL: ${BACKEND_URL}`);
+    console.log(`🌐 Current language: ${currentLang}`);
   }
 
   if (!data) return null;
 
   // ==================== MAPPING DONNÉES BACKEND ====================
-  // Supporte à la fois les données du backend et les mock data
+  // Le backend a déjà traduit les données si ?lang=en est présent
+  // Donc on utilise directement les champs traduits
+  
   const backendData = {
     // Identifiants
     id: data._id || data.id,
     
-    // Informations de base
+    // Informations de base (déjà traduites par le backend)
     name: data.title || data.name,
     owner: data.owner?.name || data.owner || "CAPEF Certified Farm",
     category: data.category,
     type: data.category,
     
-    // Description et conditions
+    // Description et conditions (déjà traduites par le backend)
     conditionsDesc: data.description || "Modern livestock facility with complete infrastructure. Includes training and technical support.",
     temp: data.features?.hasElectricity ? "Climate Controlled" : "Natural Ventilation",
     
-    // Localisation
+    // Localisation (déjà traduite par le backend)
     location: data.location?.city || data.location || "Cameroon",
     zone: data.location?.district || data.location?.city || "Cameroon",
-    locationDesc: `Located in ${data.location?.city || "Cameroon"}, ${data.location?.region || ""}. Easy access to main roads and markets.`,
+    locationDesc: data.location?.description || `Located in ${data.location?.city || "Cameroon"}, ${data.location?.region || ""}. Easy access to main roads and markets.`,
     
     // Performance
     cycle: data.cycleDuration || "6-12 months",
@@ -76,12 +97,53 @@ const LivestockDetailCard = ({ data }) => {
     backendData.image = getImageUrl(backendData.image);
   }
 
+  // Textes traduits pour l'interface (toujours en français car l'utilisateur a choisi sa langue)
+  const getLocalizedText = () => {
+    const texts = {
+      fr: {
+        certified: "Certifié",
+        owner: "Propriétaire",
+        conditions: "CONDITIONS",
+        location: "LOCALISATION",
+        performance: "PERFORMANCE",
+        cycle: "CYCLE",
+        targetWeight: "POIDS CIBLE",
+        projectCost: "COÛT DU PROJET",
+        reserve: "Réserver cette unité",
+        contact: "Contactez-nous",
+        climateControlled: "Climatisé",
+        naturalVentilation: "Ventilation naturelle",
+        certifiedOperation: "Opération Certifiée"
+      },
+      en: {
+        certified: "Certified",
+        owner: "Owner",
+        conditions: "CONDITIONS",
+        location: "LOCATION",
+        performance: "PERFORMANCE",
+        cycle: "CYCLE",
+        targetWeight: "TARGET WEIGHT",
+        projectCost: "PROJECT COST",
+        reserve: "Reserve this unit",
+        contact: "Contact us",
+        climateControlled: "Climate Controlled",
+        naturalVentilation: "Natural Ventilation",
+        certifiedOperation: "Certified Operation"
+      }
+    };
+    
+    return texts[currentLang] || texts.fr;
+  };
+
+  const t = getLocalizedText();
+
   // Fonction pour gérer la réservation
   const handleReserve = async () => {
-    // TODO: Implémenter la logique de réservation
     console.log('Reserving livestock unit:', backendData.id);
-    // await api.reserveLivestock(backendData.id);
-    alert(`Reservation request sent for ${backendData.name}. A representative will contact you shortly.`);
+    const reserveMessage = currentLang === 'fr' 
+      ? `Demande de réservation envoyée pour ${backendData.name}. Un représentant vous contactera sous peu.`
+      : `Reservation request sent for ${backendData.name}. A representative will contact you shortly.`;
+    alert(reserveMessage);
   };
 
   return (
@@ -115,20 +177,20 @@ const LivestockDetailCard = ({ data }) => {
           <div className="mb-6">
             <div className="flex items-center gap-2 text-emerald-900/40 text-[10px] font-bold uppercase tracking-widest mb-3">
               <Activity size={14} className="text-amber-600" />
-              Certified Operation
+              {t.certifiedOperation}
             </div>
             <h2 className="text-3xl lg:text-4xl font-serif text-emerald-950 mb-2">{backendData.name}</h2>
             <p className="text-emerald-900/60 font-light italic text-sm">
-              Owner: <span className="text-emerald-950 font-medium not-italic">{backendData.owner}</span>
+              {t.owner}: <span className="text-emerald-950 font-medium not-italic">{backendData.owner}</span>
             </p>
           </div>
 
           {/* --- TABS --- */}
           <div className="flex gap-6 border-b border-emerald-900/10 mb-6">
             {[
-              { id: 'conditions', label: 'CONDITIONS' },
-              { id: 'localisation', label: 'LOCATION' },
-              { id: 'rendement', label: 'PERFORMANCE' }
+              { id: 'conditions', label: t.conditions },
+              { id: 'localisation', label: t.location },
+              { id: 'rendement', label: t.performance }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -161,7 +223,11 @@ const LivestockDetailCard = ({ data }) => {
                     <div className="flex gap-4 mt-4">
                       <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1 rounded-full">
                         <Thermometer size={14} className="text-amber-600" />
-                        <span className="text-[9px] font-bold uppercase text-emerald-900">{backendData.temp}</span>
+                        <span className="text-[9px] font-bold uppercase text-emerald-900">
+                          {backendData.temp === "Climate Controlled" 
+                            ? (currentLang === 'fr' ? "Climatisé" : "Climate Controlled")
+                            : (currentLang === 'fr' ? "Ventilation naturelle" : "Natural Ventilation")}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -180,11 +246,11 @@ const LivestockDetailCard = ({ data }) => {
                 {activeTab === 'rendement' && (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-white p-4 rounded-xl border border-emerald-50">
-                      <span className="block text-[7px] font-black text-emerald-900/30 uppercase mb-1">CYCLE</span>
+                      <span className="block text-[7px] font-black text-emerald-900/30 uppercase mb-1">{t.cycle}</span>
                       <span className="text-lg font-serif text-emerald-950">{backendData.cycle}</span>
                     </div>
                     <div className="bg-white p-4 rounded-xl border border-emerald-50">
-                      <span className="block text-[7px] font-black text-emerald-900/30 uppercase mb-1">TARGET WEIGHT</span>
+                      <span className="block text-[7px] font-black text-emerald-900/30 uppercase mb-1">{t.targetWeight}</span>
                       <span className="text-lg font-serif text-emerald-950">{backendData.maturite}</span>
                     </div>
                   </div>
@@ -196,14 +262,14 @@ const LivestockDetailCard = ({ data }) => {
           {/* --- CTA --- */}
           <div className="mt-10 pt-8 border-t border-emerald-900/5 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <span className="block text-[8px] font-black text-emerald-900/30 uppercase">PROJECT COST</span>
+              <span className="block text-[8px] font-black text-emerald-900/30 uppercase">{t.projectCost}</span>
               <span className="text-2xl font-serif text-amber-600">{backendData.price} <span className="text-[10px] text-emerald-900/40">XAF</span></span>
             </div>
             <button 
               onClick={handleReserve}
               className="bg-emerald-950 text-white px-8 py-4 rounded-full text-[9px] font-black uppercase tracking-widest hover:bg-amber-600 transition-all flex items-center gap-2"
             >
-              Reserve this unit <ArrowRight size={14} />
+              {t.reserve} <ArrowRight size={14} />
             </button>
           </div>
         </div>
