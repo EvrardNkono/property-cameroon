@@ -19,7 +19,7 @@ const agriculturalProducts = [
   { 
     id: 'coffee', 
     name: 'Coffee', 
-    icon: '/images/propertyananas.jfif', 
+    icon: '/images/propertyananas.jpg', 
     description: 'High altitude volcanic', 
     marketPrice: '$4,200/Ton',
     globalDemand: '+8% YoY',
@@ -39,7 +39,7 @@ const agriculturalProducts = [
   { 
     id: 'banana', 
     name: 'Banana', 
-    icon: '/images/propertybananes.jfif', 
+    icon: '/images/propertybananes.jpg', 
     description: 'Organic farming', 
     marketPrice: '$650/Ton',
     globalDemand: '+6% YoY',
@@ -229,7 +229,7 @@ const landOpportunities = [
     soilQuality: 94,
     waterAccess: true,
     primaryCrop: 'coffee',
-    image: "/images/propertyananas.jfif",
+    image: "/images/propertyananas.jpg",
     description: "Rich volcanic soil for Arabica coffee. Bio certification in progress",
     returnRate: "15-18%",
     minInvestment: "$10,000"
@@ -259,7 +259,7 @@ const landOpportunities = [
     soilQuality: 88,
     waterAccess: true,
     primaryCrop: 'banana',
-    image: "/images/propertybananes.jfif",
+    image: "/images/propertybananes.jpg",
     description: "Organic banana plantation. Year-round harvest. Fair Trade label",
     returnRate: "16-20%",
     minInvestment: "$8,000"

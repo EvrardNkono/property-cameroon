@@ -25,7 +25,7 @@ const getImageUrl = (image) => {
 
 const PRODUCTS = [
   { id: 1, name: "Premium Cocoa Beans", price: "2,800", unit: "Kg", img: "/images/propertycacao.jfif" },
-  { id: 2, name: "Sweet Cayenne Pineapple", price: "1,500", unit: "Unit", img: "/images/propertyananas.jfif" },
+  { id: 2, name: "Sweet Cayenne Pineapple", price: "1,500", unit: "Unit", img: "/images/propertyananas.jpg" },
   { id: 3, name: "Yellow Corn (Grade A)", price: "22,000", unit: "100kg Bag", img: "/images/propertymais.jfif" },
   { id: 4, name: "Red Onions", price: "12,500", unit: "50kg Bag", img: "/images/propertyoignons.jfif" }
 ];

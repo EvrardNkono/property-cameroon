@@ -16,7 +16,7 @@ const INVESTMENTS = [
     location: "Central Region",
     yield: "+18%",
     term: "18 Months",
-    image: "/images/propertyananas.jfif",
+    image: "/images/propertyananas.jpg",
     imageWebp: "/images/propertyananas.webp",
   },
   {
