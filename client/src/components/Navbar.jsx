@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Shield, ChevronDown, X, ArrowRight, Menu, User, LogIn, LogOut, UserCircle, Globe } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-// Composant LanguageSwitcher intégré directement dans Navbar
+// LanguageSwitcher avec son propre chargement du script
 const LanguageSwitcher = () => {
   const [currentLang, setCurrentLang] = useState(() => {
     const saved = localStorage.getItem('preferredLanguage');
@@ -13,9 +13,14 @@ const LanguageSwitcher = () => {
     return browserLang === 'en' ? 'en' : 'fr';
   });
   const [isOpen, setIsOpen] = useState(false);
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
+  // Charge Google Translate
   useEffect(() => {
-    if (document.getElementById('google-translate-script')) return;
+    if (document.getElementById('google-translate-script')) {
+      setIsScriptLoaded(true);
+      return;
+    }
 
     window.googleTranslateElementInit = () => {
       if (window.google && window.google.translate) {
@@ -25,6 +30,8 @@ const LanguageSwitcher = () => {
           layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
           autoDisplay: false
         }, 'google_translate_element_hidden');
+        
+        setIsScriptLoaded(true);
         
         const savedLang = localStorage.getItem('preferredLanguage');
         if (savedLang === 'en') {
@@ -50,14 +57,41 @@ const LanguageSwitcher = () => {
     setCurrentLang(lang);
     localStorage.setItem('preferredLanguage', lang);
     
-    const select = document.querySelector('.goog-te-combo');
-    if (select) {
-      select.value = lang;
-      select.dispatchEvent(new Event('change'));
+    if (isScriptLoaded) {
+      const select = document.querySelector('.goog-te-combo');
+      if (select) {
+        select.value = lang;
+        select.dispatchEvent(new Event('change'));
+      }
     }
     
     setIsOpen(false);
   };
+
+  // Ajouter les styles globaux pour Google Translate
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .goog-te-banner-frame.skiptranslate, .goog-te-gadget, iframe.skiptranslate {
+        display: none !important;
+      }
+      body { top: 0px !important; }
+      .goog-te-combo { display: none !important; }
+      
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fadeInUp { animation: fadeInUp 0.2s ease-out; }
+      
+      .shadow-glow { box-shadow: 0 0 6px currentColor; }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      if (style.parentNode) style.parentNode.removeChild(style);
+    };
+  }, []);
 
   return (
     <div className="relative">
@@ -118,10 +152,14 @@ const LanguageSwitcher = () => {
           </div>
         </>
       )}
+      
+      {/* Element caché pour Google Translate */}
+      <div id="google_translate_element_hidden" style={{ display: 'none' }} />
     </div>
   );
 };
 
+// Reste de votre Navbar inchangé...
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -271,12 +309,10 @@ const Navbar = () => {
               </div>
             </nav>
 
-            {/* RIGHT ACTIONS - Desktop - avec LanguageSwitcher intégré */}
+            {/* RIGHT ACTIONS - Desktop */}
             <div className="hidden lg:flex relative z-10 items-center gap-3">
-              {/* LANGUAGE SWITCHER */}
               <LanguageSwitcher />
 
-              {/* ACCOUNT BUTTON */}
               <div className="relative profile-dropdown">
                 <button 
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -361,17 +397,14 @@ const Navbar = () => {
                 </div>
               </div>
 
-              {/* Contact Expert Button */}
               <Link to="/experts" className="px-6 py-3 bg-slate-950 text-white rounded-full text-[9px] font-black uppercase tracking-[0.2em] hover:bg-slate-800 transition-all shadow-lg shadow-slate-950/20">
                 Contact Expert
               </Link>
             </div>
 
-            {/* RIGHT ACTIONS - Mobile - avec LanguageSwitcher */}
+            {/* MOBILE ACTIONS */}
             <div className="flex lg:hidden items-center gap-2">
-              {/* Language Switcher mobile (version compacte) */}
               <LanguageSwitcher />
-              
               <button 
                 onClick={() => setIsOpen(true)} 
                 className="p-2 text-slate-950 hover:bg-slate-100 rounded-full transition-colors"
@@ -413,7 +446,6 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* SECTION COMPTE DANS LE MENU MOBILE */}
         <div className="mb-6 p-4 bg-gradient-to-r from-slate-50 to-white rounded-2xl border border-slate-100">
           {isAuthenticated ? (
             <div className="flex items-center justify-between">
@@ -496,17 +528,6 @@ const Navbar = () => {
           </div>
         </div>
       </div>
-
-      {/* Styles d'animation */}
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeInUp {
-          animation: fadeInUp 0.2s ease-out;
-        }
-      `}</style>
     </>
   );
 };
