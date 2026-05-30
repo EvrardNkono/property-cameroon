@@ -729,34 +729,44 @@ const MarketplacePage = () => {
 
   // Charger les données depuis l'API
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // Produits agricoles — skip si 401, utiliser mock directement
+      let agriData = getMockAgriculturalProducts(null);
       try {
-        // Tenter de charger les produits agricoles depuis l'API avec la langue
-        // ✅ CE QUE TU DOIS METTRE
-const agriRes = await api.get(`/agriculture/products?lang=${currentLang}`).catch(() => ({ products: [] }));
-        const rawAgri = agriRes.products?.length > 0 ? agriRes.products : getMockAgriculturalProducts(t);
-        setAgriculturalProducts(normalizeAgriculturalData(rawAgri, currentLang));
-        
-        // Tenter de charger les livestock depuis l'API avec la langue
-        const liveRes = await api.get(`/livestock?status=AVAILABLE&lang=${currentLang}`).catch(() => ({ livestock: [] }));
-        const rawLive = liveRes.livestock?.length > 0 ? liveRes.livestock : getMockLivestock(t);
-        const normalizedLive = normalizeLivestockData(rawLive, currentLang);
-        setLivestockAssets(normalizedLive);
-        
-        console.log(`📦 Marketplace loaded - Lang: ${currentLang}`);
-        console.log('Livestock loaded:', normalizedLive.length);
-        
-      } catch (err) {
-        console.error('Error fetching marketplace data:', err);
-        setAgriculturalProducts(normalizeAgriculturalData(getMockAgriculturalProducts(t), currentLang));
-        setLivestockAssets(normalizeLivestockData(getMockLivestock(t), currentLang));
-      } finally {
-        setLoading(false);
+        const agriRes = await api.get(`/agriculture/products?lang=${currentLang}`);
+        if (agriRes.products?.length > 0) {
+          agriData = agriRes.products;
+        }
+      } catch (agriErr) {
+        // 401 ou autre erreur → mock déjà assigné, on continue
       }
-    };
-    fetchData();
-  }, [currentLang, t]);
+      setAgriculturalProducts(normalizeAgriculturalData(agriData, currentLang));
+
+      // Livestock
+      let liveData = getMockLivestock(null);
+      try {
+        const liveRes = await api.get(`/livestock?status=AVAILABLE&lang=${currentLang}`);
+        if (liveRes.livestock?.length > 0) {
+          liveData = liveRes.livestock;
+        }
+      } catch (liveErr) {
+        // 401 ou autre erreur → mock déjà assigné
+      }
+      const normalizedLive = normalizeLivestockData(liveData, currentLang);
+      setLivestockAssets(normalizedLive);
+
+      console.log(`📦 Marketplace loaded - Lang: ${currentLang}`);
+      console.log('Livestock loaded:', normalizedLive.length);
+
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, [currentLang]); // ← UNIQUEMENT currentLang, jamais t
 
   const getDisplayedItems = () => {
     switch (activeCategory) {
