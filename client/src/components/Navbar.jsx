@@ -1,4 +1,4 @@
-// frontend/src/components/Navbar.jsx - VERSION CORRIGÉE
+// frontend/src/components/Navbar.jsx - VERSION CORRIGÉE (sans Agricultural Products)
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate , useLocation } from 'react-router-dom';
 import { Shield, ChevronDown, X, ArrowRight, Menu, User, LogIn, LogOut, UserCircle, Globe } from 'lucide-react';
@@ -117,7 +117,6 @@ const Navbar = () => {
       agriculture: "Agriculture",
       overview: "Aperçu",
       livestock: "Élevage",
-      agriculturalProducts: "Produits Agricoles",
       marketplace: "Marché",
       account: "Compte",
       dashboard: "Tableau de bord",
@@ -135,7 +134,6 @@ const Navbar = () => {
       agriculture: "Agriculture",
       overview: "Overview",
       livestock: "Livestock",
-      agriculturalProducts: "Agricultural Products",
       marketplace: "Marketplace",
       account: "Account",
       dashboard: "Dashboard",
@@ -156,10 +154,10 @@ const Navbar = () => {
     { name: texts.journal, path: `/blog${currentLang === 'en' ? '?lang=en' : ''}` },
   ];
 
+  // 🔥 SUPPRESSION DE "agriculturalProducts" de la liste
   const agriLinks = [
     { name: texts.overview, path: `/agriculture${currentLang === 'en' ? '?lang=en' : ''}` },
     { name: texts.livestock, path: `/agriculture/livestock${currentLang === 'en' ? '?lang=en' : ''}` },
-    { name: texts.agriculturalProducts, path: `/agriculture/products${currentLang === 'en' ? '?lang=en' : ''}` },
     { name: texts.marketplace, path: `/agriculture/marketplace${currentLang === 'en' ? '?lang=en' : ''}` },
   ];
 
