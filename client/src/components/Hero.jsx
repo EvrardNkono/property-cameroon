@@ -1,19 +1,127 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, ShieldCheck, Landmark } from 'lucide-react';
 
+// Hook pour récupérer la langue actuelle
+const useCurrentLang = () => {
+  const [lang, setLang] = useState('fr');
+  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    setLang(finalLang);
+  }, []);
+  
+  return lang;
+};
+
 const Hero = () => {
+  const currentLang = useCurrentLang();
   const gold = '#c8a84b';
   const green = '#1a4731';
 
-  // Images disponibles initiales avec liens
-  const initialImages = [
-    { id: 'img0', src: '/images/heroimo.webp', label: 'Real Estate', alt: 'Real Estate', link: '/real-estate' },
-    { id: 'img1', src: '/images/heroagri.webp', label: 'Agriculture', alt: 'Agriculture', link: '/agriculture' },
-    { id: 'img2', src: '/images/lifstock.jfif', label: 'Livestock', alt: 'Livestock', link: '/agriculture/livestock' }
+  // ========== TRADUCTIONS ==========
+  const t = {
+    fr: {
+      // Badge
+      badge: "Première Plateforme d'Investissement",
+      
+      // Titre
+      titleStart: "Sécurisez votre",
+      titleEnd: "Richesse Future.",
+      
+      // Description
+      description: "Accès exclusif aux secteurs certifiés de l'",
+      realEstate: "Immobilier",
+      agriculture: "Agriculture",
+      livestock: "Élevage",
+      descriptionEnd: "au Cameroun.",
+      
+      // Boutons
+      exploreAssets: "Explorer les Actifs",
+      ourLegacy: "Notre Héritage",
+      
+      // Stats
+      securedTitles: "Titres Sécurisés",
+      hectares: "Hectares",
+      liveDashboard: "Tableau de Bord",
+      
+      // Labels images
+      realEstateLabel: "Immobilier",
+      agricultureLabel: "Agriculture",
+      livestockLabel: "Élevage",
+      
+      // CAPEF Badge
+      officialPartner: "Partenaire Officiel",
+      capefCertified: "Certifié CAPEF"
+    },
+    en: {
+      // Badge
+      badge: "Premier Investment Gateway",
+      
+      // Titre
+      titleStart: "Secure Your",
+      titleEnd: "Future Wealth.",
+      
+      // Description
+      description: "Exclusive access to certified",
+      realEstate: "Real Estate",
+      agriculture: "Agriculture",
+      livestock: "Livestock",
+      descriptionEnd: "sectors in Cameroon.",
+      
+      // Boutons
+      exploreAssets: "Explore Assets",
+      ourLegacy: "Our Legacy",
+      
+      // Stats
+      securedTitles: "Secured Titles",
+      hectares: "Hectares",
+      liveDashboard: "Live Dashboard",
+      
+      // Labels images
+      realEstateLabel: "Real Estate",
+      agricultureLabel: "Agriculture",
+      livestockLabel: "Livestock",
+      
+      // CAPEF Badge
+      officialPartner: "Official Partner",
+      capefCertified: "CAPEF Certified"
+    }
+  }[currentLang] || {
+    // Fallback français
+    badge: "Première Plateforme d'Investissement",
+    titleStart: "Sécurisez votre",
+    titleEnd: "Richesse Future.",
+    description: "Accès exclusif aux secteurs certifiés de l'",
+    realEstate: "Immobilier",
+    agriculture: "Agriculture",
+    livestock: "Élevage",
+    descriptionEnd: "au Cameroun.",
+    exploreAssets: "Explorer les Actifs",
+    ourLegacy: "Notre Héritage",
+    securedTitles: "Titres Sécurisés",
+    hectares: "Hectares",
+    liveDashboard: "Tableau de Bord",
+    realEstateLabel: "Immobilier",
+    agricultureLabel: "Agriculture",
+    livestockLabel: "Élevage",
+    officialPartner: "Partenaire Officiel",
+    capefCertified: "Certifié CAPEF"
+  };
+
+  // Images disponibles initiales avec liens et labels traduits dynamiquement
+  const getInitialImages = () => [
+    { id: 'img0', src: '/images/heroimo.webp', label: t.realEstateLabel, alt: t.realEstateLabel, link: '/real-estate' },
+    { id: 'img1', src: '/images/heroagri.webp', label: t.agricultureLabel, alt: t.agricultureLabel, link: '/agriculture' },
+    { id: 'img2', src: '/images/lifstock.jfif', label: t.livestockLabel, alt: t.livestockLabel, link: '/agriculture/livestock' }
   ];
 
-  const [displayImages, setDisplayImages] = useState(initialImages);
+  const [displayImages, setDisplayImages] = useState(getInitialImages());
   const [isVisible, setIsVisible] = useState({
     badge: false,
     title: false,
@@ -23,6 +131,11 @@ const Hero = () => {
   });
   const [isAnimating, setIsAnimating] = useState(false);
   const [swapDirection, setSwapDirection] = useState(null);
+
+  // Mettre à jour les labels des images quand la langue change
+  useEffect(() => {
+    setDisplayImages(getInitialImages());
+  }, [currentLang, t]);
 
   // Observer pour les animations au scroll
   useEffect(() => {
@@ -88,7 +201,7 @@ const Hero = () => {
           }`}
         >
           <span className="flex h-2 w-2 rounded-full animate-pulse" style={{ backgroundColor: gold }} />
-          <span className="text-[9px] lg:text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Premier Investment Gateway</span>
+          <span className="text-[9px] lg:text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">{t.badge}</span>
         </div>
 
         {/* Titre avec animation CSS */}
@@ -97,9 +210,9 @@ const Hero = () => {
             isVisible.title ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
           }`}
         >
-          Secure Your{' '}
+          {t.titleStart}{' '}
           <span className="italic font-light relative inline-block" style={{ color: gold }}>
-            Future Wealth.
+            {t.titleEnd}
             <svg className="absolute -bottom-2 left-0 w-full" height="4" viewBox="0 0 200 4" xmlns="http://www.w3.org/2000/svg">
               <path d="M0 2 L200 2" stroke={gold} strokeWidth="2" strokeDasharray="6 4" />
             </svg>
@@ -112,9 +225,9 @@ const Hero = () => {
             isVisible.description ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}
         >
-          Exclusive access to certified <span className="text-slate-900 font-semibold">Real Estate</span>, 
-          prosperous <span className="text-slate-900 font-semibold">Agriculture</span>, and 
-          <span className="text-slate-900 font-semibold"> Livestock</span> sectors in Cameroon.
+          {t.description} <span className="text-slate-900 font-semibold">{t.realEstate}</span>, 
+          <span className="text-slate-900 font-semibold"> {t.agriculture}</span> et 
+          <span className="text-slate-900 font-semibold"> {t.livestock}</span> {t.descriptionEnd}
         </p>
 
         {/* Boutons avec animation CSS */}
@@ -128,7 +241,7 @@ const Hero = () => {
             className="w-full sm:w-auto group relative px-8 py-4 bg-slate-900 text-white overflow-hidden shadow-xl rounded-full text-center transition-all hover:scale-105 active:scale-95"
           >
             <span className="relative z-10 font-bold uppercase text-[10px] tracking-widest flex items-center justify-center gap-3">
-              Explore Assets <ArrowUpRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              {t.exploreAssets} <ArrowUpRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
           </Link>
@@ -138,7 +251,7 @@ const Hero = () => {
             className="flex items-center gap-3 py-3 px-5 font-bold uppercase text-[10px] tracking-widest text-slate-700 hover:text-slate-900 transition-colors group"
           >
             <Landmark size={16} className="group-hover:rotate-12 transition-transform" /> 
-            Our Legacy
+            {t.ourLegacy}
           </Link>
         </div>
 
@@ -150,15 +263,15 @@ const Hero = () => {
         >
           <div className="text-center lg:text-left">
             <p className="text-2xl font-bold text-slate-900">100%</p>
-            <p className="text-[9px] font-medium uppercase tracking-wider text-slate-500">Secured Titles</p>
+            <p className="text-[9px] font-medium uppercase tracking-wider text-slate-500">{t.securedTitles}</p>
           </div>
           <div className="text-center lg:text-left">
             <p className="text-2xl font-bold text-slate-900">500+</p>
-            <p className="text-[9px] font-medium uppercase tracking-wider text-slate-500">Hectares</p>
+            <p className="text-[9px] font-medium uppercase tracking-wider text-slate-500">{t.hectares}</p>
           </div>
           <div className="text-center lg:text-left">
             <p className="text-2xl font-bold text-slate-900">24/7</p>
-            <p className="text-[9px] font-medium uppercase tracking-wider text-slate-500">Live Dashboard</p>
+            <p className="text-[9px] font-medium uppercase tracking-wider text-slate-500">{t.liveDashboard}</p>
           </div>
         </div>
       </div>
@@ -241,11 +354,11 @@ const Hero = () => {
               </div>
               <div className="pr-2">
                 <p className="text-[7px] md:text-[8px] font-black text-slate-400 uppercase tracking-tighter">
-                  Official Partner
+                  {t.officialPartner}
                 </p>
                 <div className="flex items-center gap-1">
                   <p className="text-[10px] md:text-xs font-serif font-bold text-slate-800 italic">
-                    CAPEF Certified
+                    {t.capefCertified}
                   </p>
                   <ArrowUpRight size={10} className="text-[#c8a84b] opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
                 </div>
