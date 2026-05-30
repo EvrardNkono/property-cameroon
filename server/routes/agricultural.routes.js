@@ -28,7 +28,7 @@ router.get('/stats/regions', getRegionStats);
 
 // ========== PRODUCT ROUTES ==========
 // ✅ AJOUTER protect sur les routes GET pour avoir req.user
-router.get('/products', protect, getAllProducts);                    // ← Ajouter protect
+router.get('/products', getAllProducts);                    // ← Ajouter protect
 router.get('/products/category/:category', protect, getProductsByCategory);  // ← Ajouter protect
 router.get('/products/:id', protect, getProductById);                // ← Ajouter protect
 
