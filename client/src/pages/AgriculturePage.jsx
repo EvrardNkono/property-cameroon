@@ -7,7 +7,8 @@ import {
   Loader2, TrendingUp, Shield, Globe, Zap, Leaf, DollarSign, 
   MapPin, ArrowRight, Factory, Droplets, Sprout, Tractor, 
   Package, Truck, Users, Award, Clock, Star, ChevronRight, Flame,
-  CheckCircle, Building2, Heart, Target, BarChart3, Phone, FileText
+  CheckCircle, Building2, Heart, Target, BarChart3, Phone, FileText,
+  Coffee, Sun, CloudRain, Wheat
 } from 'lucide-react';
 
 // Hook pour récupérer la langue actuelle
@@ -37,7 +38,8 @@ const getAgriculturalProducts = (t) => [
     marketPrice: '$2,850/Ton',
     globalDemand: '+12% YoY',
     return: '18-22%',
-    color: '#8B4513'
+    color: '#8B4513',
+    bgGradient: 'from-amber-600 to-amber-700'
   },
   { 
     id: 'coffee', 
@@ -47,7 +49,8 @@ const getAgriculturalProducts = (t) => [
     marketPrice: '$4,200/Ton',
     globalDemand: '+8% YoY',
     return: '15-18%', 
-    color: '#6F4E37'
+    color: '#6F4E37',
+    bgGradient: 'from-emerald-600 to-emerald-700'
   },
   { 
     id: 'palm', 
@@ -57,7 +60,8 @@ const getAgriculturalProducts = (t) => [
     marketPrice: '$1,150/Ton',
     globalDemand: '+15% YoY',
     return: '20-25%', 
-    color: '#DAA520'
+    color: '#DAA520',
+    bgGradient: 'from-amber-500 to-orange-600'
   },
   { 
     id: 'banana', 
@@ -67,7 +71,8 @@ const getAgriculturalProducts = (t) => [
     marketPrice: '$650/Ton',
     globalDemand: '+6% YoY',
     return: '16-20%', 
-    color: '#FFD700'
+    color: '#FFD700',
+    bgGradient: 'from-yellow-500 to-yellow-600'
   }
 ];
 
@@ -323,18 +328,20 @@ const AgriculturePage = () => {
       expectedROI: "ROI Attendu",
       minTicket: "Ticket Min.",
       jobsCreated: "Emplois Créés",
-      viewDetails: "Voir les Détails du Projet",
+      viewDetails: "Voir les Détails",
       match: "Correspondance",
       
       // Land Cards
       viewLand: "Voir le Terrain",
       minInvestment: "investissement min.",
+      soilQuality: "Qualité sol",
+      waterAccess: "Accès eau",
       
       // CTA
       ctaTitle: "Prêt à Construire Votre",
       ctaTitleSpan: "Portefeuille Agricole",
       ctaSubtitle: "Rejoignez 150+ investisseurs internationaux qui génèrent déjà 20%+ de rendement moyen dans l'agriculture camerounaise.",
-      scheduleCall: "Planifier un Appel Investisseur",
+      scheduleCall: "Planifier un Appel",
       downloadProspectus: "Télécharger la Brochure",
       
       // Loading
@@ -377,18 +384,20 @@ const AgriculturePage = () => {
       expectedROI: "Expected ROI",
       minTicket: "Min. Ticket",
       jobsCreated: "Jobs Created",
-      viewDetails: "View Project Details",
+      viewDetails: "View Details",
       match: "Match",
       
       // Land Cards
       viewLand: "View Land",
       minInvestment: "min investment",
+      soilQuality: "Soil Quality",
+      waterAccess: "Water Access",
       
       // CTA
       ctaTitle: "Ready to Build Your",
       ctaTitleSpan: "Agricultural Portfolio",
       ctaSubtitle: "Join 150+ international investors already generating 20%+ average returns in Cameroonian agriculture.",
-      scheduleCall: "Schedule Investor Call",
+      scheduleCall: "Schedule Call",
       downloadProspectus: "Download Prospectus",
       
       // Loading
@@ -425,14 +434,16 @@ const AgriculturePage = () => {
     expectedROI: "ROI Attendu",
     minTicket: "Ticket Min.",
     jobsCreated: "Emplois Créés",
-    viewDetails: "Voir les Détails du Projet",
+    viewDetails: "Voir les Détails",
     match: "Correspondance",
     viewLand: "Voir le Terrain",
     minInvestment: "investissement min.",
+    soilQuality: "Qualité sol",
+    waterAccess: "Accès eau",
     ctaTitle: "Prêt à Construire Votre",
     ctaTitleSpan: "Portefeuille Agricole",
     ctaSubtitle: "Rejoignez 150+ investisseurs internationaux qui génèrent déjà 20%+ de rendement moyen dans l'agriculture camerounaise.",
-    scheduleCall: "Planifier un Appel Investisseur",
+    scheduleCall: "Planifier un Appel",
     downloadProspectus: "Télécharger la Brochure",
     matching: "Recherche d'opportunités...",
     loadingLand: "Chargement des opportunités foncières...",
@@ -491,74 +502,73 @@ const AgriculturePage = () => {
   const getStatusStyle = (status) => {
     const statusKey = status?.fr || status;
     if (statusKey === 'Funding Round A' || statusKey === 'Levée de fonds') 
-      return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+      return 'bg-amber-100 text-amber-700 border-amber-200';
     if (statusKey === 'Pre-Construction' || statusKey === 'Pré-construction') 
-      return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      return 'bg-blue-100 text-blue-700 border-blue-200';
     if (statusKey === 'Early Stage' || statusKey === 'Phase initiale') 
-      return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+      return 'bg-emerald-100 text-emerald-700 border-emerald-200';
     if (statusKey === 'Due Diligence') 
-      return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+      return 'bg-purple-100 text-purple-700 border-purple-200';
     if (statusKey === 'Funding Ready' || statusKey === 'Prêt à Financer') 
-      return 'bg-teal-500/20 text-teal-400 border-teal-500/30';
-    return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+      return 'bg-teal-100 text-teal-700 border-teal-200';
+    return 'bg-gray-100 text-gray-600 border-gray-200';
   };
 
   return (
-    <div className="bg-black min-h-screen font-sans selection:bg-emerald-500 selection:text-black">
+    <div className="min-h-screen bg-gradient-to-b from-white via-gray-50 to-white">
       <Navbar />
 
-      {/* 🔥 EPIC HERO SECTION */}
-      <section className="relative pt-48 pb-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/40 via-black to-black z-0"></div>
-        <div className="absolute inset-0 bg-[url('/images/heroagri.webp')] bg-cover bg-center opacity-20 z-0"></div>
-        <div className="absolute top-20 right-0 w-96 h-96 bg-emerald-500 rounded-full blur-[150px] opacity-20"></div>
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-teal-500 rounded-full blur-[120px] opacity-10"></div>
+      {/* 🌾 EPIC HERO SECTION - LIGHT VERSION */}
+      <section className="relative pt-40 pb-24 overflow-hidden">
+        {/* Background avec formes organiques */}
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 via-white to-amber-50/30 z-0"></div>
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-emerald-100/30 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-amber-100/20 rounded-full blur-[100px]"></div>
         
         <div className="max-w-7xl mx-auto px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 bg-emerald-500/10 backdrop-blur rounded-full px-4 py-2 mb-6 border border-emerald-500/20">
-                <Flame className="w-4 h-4 text-emerald-400" />
-                <span className="text-emerald-400 text-xs font-bold uppercase tracking-wider">{t.badge}</span>
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500/10 to-amber-500/10 rounded-full px-4 py-2 mb-6 border border-emerald-200">
+                <Flame className="w-4 h-4 text-emerald-600" />
+                <span className="text-emerald-700 text-xs font-bold uppercase tracking-wider">{t.badge}</span>
               </div>
-              <h1 className="text-7xl md:text-8xl font-black text-white leading-[0.9] tracking-tighter mb-6">
+              <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-gray-900 leading-[1.1] tracking-tight mb-6">
                 {t.title}<br />
-                <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">{t.titleSpan}</span>
+                <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{t.titleSpan}</span>
               </h1>
-              <p className="text-gray-400 text-lg font-light leading-relaxed max-w-lg mb-8">
+              <p className="text-gray-500 text-lg leading-relaxed max-w-lg mb-10">
                 {t.subtitle}
               </p>
               <div className="flex flex-wrap gap-4">
-                <div className="bg-white/5 backdrop-blur rounded-2xl px-6 py-3 border border-white/10 hover:border-emerald-500/30 transition-all">
-                  <p className="text-emerald-400 text-sm font-bold">{t.availableCapital}</p>
-                  <p className="text-2xl font-black text-white">$24.8M+</p>
+                <div className="bg-white rounded-2xl px-6 py-4 shadow-sm border border-gray-100 hover:shadow-md transition">
+                  <p className="text-emerald-600 text-sm font-bold">{t.availableCapital}</p>
+                  <p className="text-3xl font-black text-gray-900">$24.8M+</p>
                 </div>
-                <div className="bg-white/5 backdrop-blur rounded-2xl px-6 py-3 border border-white/10 hover:border-emerald-500/30 transition-all">
-                  <p className="text-emerald-400 text-sm font-bold">{t.activeProjects}</p>
-                  <p className="text-2xl font-black text-white">{investmentProjects.length}</p>
+                <div className="bg-white rounded-2xl px-6 py-4 shadow-sm border border-gray-100 hover:shadow-md transition">
+                  <p className="text-emerald-600 text-sm font-bold">{t.activeProjects}</p>
+                  <p className="text-3xl font-black text-gray-900">{investmentProjects.length}</p>
                 </div>
-                <div className="bg-white/5 backdrop-blur rounded-2xl px-6 py-3 border border-white/10 hover:border-emerald-500/30 transition-all">
-                  <p className="text-emerald-400 text-sm font-bold">{t.avgRoi}</p>
-                  <p className="text-2xl font-black text-white">27.5%</p>
+                <div className="bg-white rounded-2xl px-6 py-4 shadow-sm border border-gray-100 hover:shadow-md transition">
+                  <p className="text-emerald-600 text-sm font-bold">{t.avgRoi}</p>
+                  <p className="text-3xl font-black text-gray-900">27.5%</p>
                 </div>
               </div>
             </div>
+            
+            {/* Right side - Crop Price Cards */}
             <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-3xl blur-2xl opacity-30"></div>
-              <div className="relative bg-gradient-to-br from-emerald-900/30 to-black border border-emerald-500/20 rounded-3xl p-6 backdrop-blur">
-                <p className="text-emerald-400 text-xs font-bold uppercase tracking-wider mb-4">{t.featuredPrices}</p>
+              <div className="grid grid-cols-2 gap-4">
                 {agriculturalProducts.slice(0,4).map((product, i) => (
-                  <div key={i} className="flex justify-between items-center py-3 border-b border-white/10 last:border-0 group hover:bg-white/5 px-3 -mx-3 rounded-xl transition-all">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center group-hover:bg-emerald-500/30 transition">
-                        <Leaf className="w-4 h-4 text-emerald-400" />
+                  <div key={i} className={`bg-gradient-to-br ${product.bgGradient} rounded-2xl p-5 text-white shadow-lg hover:shadow-xl transition-all hover:-translate-y-1`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur">
+                        <Leaf className="w-5 h-5" />
                       </div>
-                      <span className="text-white font-medium">{getTranslatedValue(product.name, currentLang)}</span>
+                      <span className="text-white/80 text-xs font-bold">{product.globalDemand}</span>
                     </div>
-                    <div className="text-right">
-                      <p className="text-white font-bold">{product.marketPrice}</p>
-                      <p className="text-emerald-400 text-xs">{product.globalDemand}</p>
-                    </div>
+                    <p className="text-2xl font-bold">{getTranslatedValue(product.name, currentLang)}</p>
+                    <p className="text-white/80 text-sm mb-2">{getTranslatedValue(product.description, currentLang)}</p>
+                    <p className="text-xl font-black">{product.marketPrice}</p>
                   </div>
                 ))}
               </div>
@@ -568,12 +578,12 @@ const AgriculturePage = () => {
       </section>
 
       {/* 📊 MARKET INTELLIGENCE SECTION */}
-      <section className="max-w-7xl mx-auto px-8 -mt-16 relative z-20">
-        <div className="bg-gradient-to-r from-emerald-900/20 to-black border border-emerald-500/20 rounded-3xl p-8 backdrop-blur hover:border-emerald-500/40 transition-all">
+      <section className="max-w-7xl mx-auto px-8 -mt-8 relative z-20">
+        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
             <div>
-              <h3 className="text-2xl font-bold text-white mb-2">{t.aiTitle}</h3>
-              <p className="text-gray-400">{t.aiSubtitle}</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t.aiTitle}</h3>
+              <p className="text-gray-500">{t.aiSubtitle}</p>
             </div>
             <div className="flex flex-wrap gap-3">
               {agriculturalProducts.map((crop) => (
@@ -582,8 +592,8 @@ const AgriculturePage = () => {
                   onClick={() => handleMatchFound(crop)}
                   className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${
                     activeCrop?.id === crop.id
-                      ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/25'
-                      : 'bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 hover:border-emerald-500/50'
+                      ? `bg-gradient-to-r ${crop.bgGradient} text-white shadow-md`
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
                   {getTranslatedValue(crop.name, currentLang)}
@@ -592,7 +602,7 @@ const AgriculturePage = () => {
               {activeCrop && (
                 <button
                   onClick={handleResetFilters}
-                  className="px-5 py-2.5 rounded-xl font-bold text-sm bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 hover:border-red-500/50 transition-all"
+                  className="px-5 py-2.5 rounded-xl font-bold text-sm bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-all"
                 >
                   {t.reset}
                 </button>
@@ -604,38 +614,32 @@ const AgriculturePage = () => {
 
       {/* 🔥 INVESTMENT TABS: PROJECTS vs LAND */}
       <section className="max-w-7xl mx-auto px-8 py-16">
-        <div className="flex gap-4 mb-10 border-b border-white/10">
+        <div className="flex gap-2 mb-8 bg-gray-100 rounded-2xl p-1 w-fit">
           <button
             onClick={() => setActiveTab('projects')}
-            className={`pb-4 px-6 font-bold text-lg transition-all relative ${
+            className={`px-6 py-3 rounded-xl font-bold text-sm transition-all ${
               activeTab === 'projects'
-                ? 'text-emerald-400'
-                : 'text-gray-500 hover:text-gray-300'
+                ? 'bg-white text-emerald-600 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             <div className="flex items-center gap-2">
-              <Factory className="w-5 h-5" />
+              <Factory className="w-4 h-4" />
               {t.investmentProjects}
             </div>
-            {activeTab === 'projects' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full"></div>
-            )}
           </button>
           <button
             onClick={() => setActiveTab('land')}
-            className={`pb-4 px-6 font-bold text-lg transition-all relative ${
+            className={`px-6 py-3 rounded-xl font-bold text-sm transition-all ${
               activeTab === 'land'
-                ? 'text-emerald-400'
-                : 'text-gray-500 hover:text-gray-300'
+                ? 'bg-white text-emerald-600 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             <div className="flex items-center gap-2">
-              <MapPin className="w-5 h-5" />
+              <MapPin className="w-4 h-4" />
               {t.landOpportunities}
             </div>
-            {activeTab === 'land' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full"></div>
-            )}
           </button>
         </div>
 
@@ -644,80 +648,62 @@ const AgriculturePage = () => {
           <>
             {loading ? (
               <div className="flex flex-col items-center justify-center py-32">
-                <Loader2 className="w-12 h-12 text-emerald-400 animate-spin mb-4" />
+                <Loader2 className="w-10 h-10 text-emerald-500 animate-spin mb-4" />
                 <p className="text-gray-400">{t.matching}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {filteredProjects.map((project, idx) => (
-                  <div key={project.id} className="group relative animate-fadeIn" style={{ animationDelay: `${idx * 100}ms` }}>
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
-                    <div className="relative bg-black border border-white/10 rounded-2xl overflow-hidden hover:border-emerald-500/50 transition-all">
-                      <div className="relative h-56 overflow-hidden">
-                        <img 
-                          src={project.image} 
-                          alt={getTranslatedValue(project.title, currentLang)}
-                          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                        />
-                        <div className="absolute top-4 right-4 bg-emerald-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                          {project.matchScore}% {t.match}
+                  <div key={project.id} className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 animate-fadeIn" style={{ animationDelay: `${idx * 100}ms` }}>
+                    <div className="relative h-52 overflow-hidden">
+                      <img 
+                        src={project.image} 
+                        alt={getTranslatedValue(project.title, currentLang)}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                      />
+                      <div className="absolute top-4 right-4 bg-white/95 backdrop-blur px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                        <span className="text-emerald-600">{project.matchScore}%</span> <span className="text-gray-500">{t.match}</span>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                        <span className="inline-block bg-white/20 backdrop-blur text-white text-xs font-bold px-2 py-1 rounded">
+                          {getTranslatedValue(project.category, currentLang)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition">
+                        {getTranslatedValue(project.title, currentLang)}
+                      </h3>
+                      <p className="text-gray-500 text-sm mb-4">{getTranslatedValue(project.shortDesc, currentLang)}</p>
+                      <div className="grid grid-cols-2 gap-3 mb-5">
+                        <div className="bg-gray-50 rounded-xl p-3">
+                          <p className="text-emerald-600 text-xs font-bold">{t.investment}</p>
+                          <p className="text-gray-900 font-bold">{project.investment}</p>
                         </div>
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
-                          <span className="inline-block bg-emerald-500/20 backdrop-blur text-emerald-400 text-xs font-bold px-2 py-1 rounded">
-                            {getTranslatedValue(project.category, currentLang)}
-                          </span>
+                        <div className="bg-gray-50 rounded-xl p-3">
+                          <p className="text-emerald-600 text-xs font-bold">{t.expectedROI}</p>
+                          <p className="text-gray-900 font-bold">{project.expectedROI}</p>
                         </div>
                       </div>
-                      <div className="p-6">
-                        <h3 className="text-xl font-bold text-white mb-2 group-hover:text-emerald-400 transition">
-                          {getTranslatedValue(project.title, currentLang)}
-                        </h3>
-                        <p className="text-gray-400 text-sm mb-4">{getTranslatedValue(project.shortDesc, currentLang)}</p>
-                        <div className="grid grid-cols-2 gap-3 mb-6">
-                          <div className="bg-white/5 rounded-xl p-3 hover:bg-white/10 transition">
-                            <p className="text-emerald-400 text-xs font-bold">{t.investment}</p>
-                            <p className="text-white font-bold text-lg">{project.investment}</p>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <div className={`px-2 py-1 rounded-full text-[10px] font-bold ${getStatusStyle(project.status)} border`}>
+                            {getTranslatedValue(project.status, currentLang)}
                           </div>
-                          <div className="bg-white/5 rounded-xl p-3 hover:bg-white/10 transition">
-                            <p className="text-emerald-400 text-xs font-bold">{t.expectedROI}</p>
-                            <p className="text-white font-bold text-lg">{project.expectedROI}</p>
-                          </div>
-                          <div className="bg-white/5 rounded-xl p-3 hover:bg-white/10 transition">
-                            <p className="text-emerald-400 text-xs font-bold">{t.minTicket}</p>
-                            <p className="text-white text-sm">{project.minTicket}</p>
-                          </div>
-                          <div className="bg-white/5 rounded-xl p-3 hover:bg-white/10 transition">
-                            <p className="text-emerald-400 text-xs font-bold">{t.jobsCreated}</p>
-                            <p className="text-white text-sm">{project.jobsCreated}</p>
+                          <div className="flex items-center gap-1 text-gray-400 text-xs">
+                            <MapPin className="w-3 h-3" />
+                            {getTranslatedValue(project.location, currentLang)}
                           </div>
                         </div>
-                        <div className="flex flex-wrap gap-2 mb-6">
-                          {project.benefits.slice(0,3).map((benefit, i) => (
-                            <span key={i} className="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-full flex items-center gap-1">
-                              <CheckCircle className="w-3 h-3" /> {getTranslatedValue(benefit, currentLang)}
-                            </span>
-                          ))}
+                        <div className="text-emerald-600 text-xs font-bold">
+                          {project.impact === 'Very High' ? t.veryHighImpact : t.highImpact}
                         </div>
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-2">
-                            <div className={`px-2 py-1 rounded-full text-[9px] font-bold ${getStatusStyle(project.status)} border`}>
-                              {getTranslatedValue(project.status, currentLang)}
-                            </div>
-                            <div className="flex items-center gap-1 text-gray-500 text-xs">
-                              <MapPin className="w-3 h-3" />
-                              {getTranslatedValue(project.location, currentLang)}
-                            </div>
-                          </div>
-                          <div className="text-emerald-400 text-xs font-bold">
-                            {project.impact === 'Very High' ? t.veryHighImpact : t.highImpact}
-                          </div>
-                        </div>
-                        <Link to={`/agriculture/projects/${project.id}?lang=${currentLang}`}>
-                          <button className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-bold flex items-center justify-center gap-2 group-hover:gap-3 transition-all">
-                            {t.viewDetails} <ArrowRight className="w-4 h-4" />
-                          </button>
-                        </Link>
                       </div>
+                      <Link to={`/agriculture/projects/${project.id}?lang=${currentLang}`}>
+                        <button className="w-full py-3 rounded-xl bg-emerald-50 text-emerald-700 font-bold hover:bg-emerald-100 transition-all flex items-center justify-center gap-2 group">
+                          {t.viewDetails} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
+                        </button>
+                      </Link>
                     </div>
                   </div>
                 ))}
@@ -731,63 +717,55 @@ const AgriculturePage = () => {
           <>
             {loading ? (
               <div className="flex flex-col items-center justify-center py-32">
-                <Loader2 className="w-12 h-12 text-emerald-400 animate-spin mb-4" />
+                <Loader2 className="w-10 h-10 text-emerald-500 animate-spin mb-4" />
                 <p className="text-gray-400">{t.loadingLand}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {filteredLands.map((land, idx) => (
-                  <div key={land.id} className="group relative animate-fadeIn" style={{ animationDelay: `${idx * 100}ms` }}>
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
-                    <div className="relative bg-black border border-white/10 rounded-2xl overflow-hidden">
-                      <div className="relative h-48 overflow-hidden">
-                        <img src={land.image} alt={getTranslatedValue(land.title, currentLang)} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-                        <div className="absolute top-4 right-4 bg-emerald-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-                          {land.matchScore}% {t.match}
+                  <div key={land.id} className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 animate-fadeIn" style={{ animationDelay: `${idx * 100}ms` }}>
+                    <div className="relative h-48 overflow-hidden">
+                      <img src={land.image} alt={getTranslatedValue(land.title, currentLang)} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                      <div className="absolute top-4 right-4 bg-white/95 backdrop-blur px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                        <span className="text-emerald-600">{land.matchScore}%</span> <span className="text-gray-500">{t.match}</span>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-emerald-600 transition">
+                        {getTranslatedValue(land.title, currentLang)}
+                      </h3>
+                      <p className="text-gray-500 text-sm mb-2 flex items-center gap-1">
+                        <MapPin className="w-3 h-3" /> {getTranslatedValue(land.location, currentLang)} • {land.size}
+                      </p>
+                      <p className="text-gray-500 text-sm mb-4">{getTranslatedValue(land.description, currentLang)}</p>
+                      <div className="flex gap-3 mb-5">
+                        <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-lg">
+                          <Sprout className="w-3.5 h-3.5 text-emerald-500" />
+                          <span className="text-gray-600 text-xs">{t.soilQuality}: {land.soilQuality}%</span>
                         </div>
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
-                          <div className="flex gap-2">
-                            <span className="text-white text-sm font-bold">{land.size}</span>
+                        {land.waterAccess && (
+                          <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-lg">
+                            <Droplets className="w-3.5 h-3.5 text-emerald-500" />
+                            <span className="text-gray-600 text-xs">{t.waterAccess}</span>
                           </div>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                        <div>
+                          <p className="text-emerald-600 text-xs font-bold">{t.investment}</p>
+                          <p className="text-gray-900 font-bold text-xl">{land.price}</p>
+                          <p className="text-gray-400 text-xs">{t.minInvestment}: {land.minInvestment}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-emerald-600 text-xs font-bold">{t.expectedROI}</p>
+                          <p className="text-gray-900 font-bold text-xl">{land.returnRate}</p>
                         </div>
                       </div>
-                      <div className="p-6">
-                        <h3 className="text-xl font-bold text-white mb-1 group-hover:text-emerald-400 transition">
-                          {getTranslatedValue(land.title, currentLang)}
-                        </h3>
-                        <p className="text-gray-400 text-sm mb-3 flex items-center gap-1">
-                          <MapPin className="w-3 h-3" /> {getTranslatedValue(land.location, currentLang)}
-                        </p>
-                        <p className="text-gray-400 text-sm mb-4">{getTranslatedValue(land.description, currentLang)}</p>
-                        <div className="flex gap-2 mb-4">
-                          <div className="flex items-center gap-1 bg-white/5 px-2 py-1 rounded-lg">
-                            <Sprout className="w-3 h-3 text-emerald-400" />
-                            <span className="text-white text-xs">Qualité sol: {land.soilQuality}%</span>
-                          </div>
-                          {land.waterAccess && (
-                            <div className="flex items-center gap-1 bg-white/5 px-2 py-1 rounded-lg">
-                              <Droplets className="w-3 h-3 text-emerald-400" />
-                              <span className="text-white text-xs">Accès eau</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex justify-between items-center pt-4 border-t border-white/10">
-                          <div>
-                            <p className="text-emerald-400 text-xs font-bold">{t.investment}</p>
-                            <p className="text-white font-bold text-xl">{land.price}</p>
-                            <p className="text-gray-500 text-xs">{t.minInvestment}: {land.minInvestment}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-emerald-400 text-xs font-bold">{t.expectedROI}</p>
-                            <p className="text-white font-bold text-xl">{land.returnRate}</p>
-                          </div>
-                        </div>
-                        <Link to={`/agriculture/land/${land.id}?lang=${currentLang}`}>
-                          <button className="w-full mt-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-emerald-500 hover:text-black transition-all group">
-                            {t.viewLand} <ArrowRight className="w-4 h-4 inline ml-1 group-hover:translate-x-1 transition" />
-                          </button>
-                        </Link>
-                      </div>
+                      <Link to={`/agriculture/land/${land.id}?lang=${currentLang}`}>
+                        <button className="w-full mt-5 py-3 rounded-xl bg-gray-100 text-gray-700 font-bold hover:bg-emerald-100 hover:text-emerald-700 transition-all flex items-center justify-center gap-2 group">
+                          {t.viewLand} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
+                        </button>
+                      </Link>
                     </div>
                   </div>
                 ))}
@@ -798,23 +776,25 @@ const AgriculturePage = () => {
       </section>
 
       {/* ⚡ CTA SECTION */}
-      <section className="py-24 bg-gradient-to-r from-emerald-900/20 to-black border-t border-b border-emerald-500/20">
+      <section className="py-20 bg-gradient-to-r from-emerald-50 to-amber-50">
         <div className="max-w-4xl mx-auto px-8 text-center">
-          <Shield className="w-12 h-12 text-emerald-400 mx-auto mb-6" />
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            {t.ctaTitle} <span className="text-emerald-400">{t.ctaTitleSpan}</span>?
+          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+            <Shield className="w-8 h-8 text-emerald-600" />
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            {t.ctaTitle} <span className="text-emerald-600">{t.ctaTitleSpan}</span>?
           </h2>
-          <p className="text-gray-400 text-lg mb-8">
+          <p className="text-gray-500 text-lg mb-8 max-w-2xl mx-auto">
             {t.ctaSubtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to={`/book-appointment?lang=${currentLang}`}>
-              <button className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-bold rounded-xl hover:scale-105 transition-all flex items-center justify-center gap-2 group">
+              <button className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2 group">
                 <Phone className="w-4 h-4" /> {t.scheduleCall} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
               </button>
             </Link>
             <Link to={`/agriculture/prospectus?lang=${currentLang}`}>
-              <button className="px-8 py-4 bg-white/5 border border-white/20 text-white font-bold rounded-xl hover:bg-white/10 hover:border-emerald-500/50 transition-all flex items-center justify-center gap-2">
+              <button className="px-8 py-4 bg-white text-gray-700 font-bold rounded-xl border border-gray-200 hover:border-emerald-300 hover:shadow-md transition-all flex items-center justify-center gap-2">
                 <FileText className="w-4 h-4" /> {t.downloadProspectus}
               </button>
             </Link>
