@@ -733,12 +733,13 @@ const MarketplacePage = () => {
       setLoading(true);
       try {
         // Tenter de charger les produits agricoles depuis l'API avec la langue
-        const agriRes = await api.get('/agriculture/products', { params: { lang: currentLang } }).catch(() => ({ products: [] }));
+        // ✅ CE QUE TU DOIS METTRE
+const agriRes = await api.get(`/agriculture/products?lang=${currentLang}`).catch(() => ({ products: [] }));
         const rawAgri = agriRes.products?.length > 0 ? agriRes.products : getMockAgriculturalProducts(t);
         setAgriculturalProducts(normalizeAgriculturalData(rawAgri, currentLang));
         
         // Tenter de charger les livestock depuis l'API avec la langue
-        const liveRes = await api.getAllLivestock({ status: 'AVAILABLE', lang: currentLang }).catch(() => ({ livestock: [] }));
+        const liveRes = await api.get(`/livestock?status=AVAILABLE&lang=${currentLang}`).catch(() => ({ livestock: [] }));
         const rawLive = liveRes.livestock?.length > 0 ? liveRes.livestock : getMockLivestock(t);
         const normalizedLive = normalizeLivestockData(rawLive, currentLang);
         setLivestockAssets(normalizedLive);
