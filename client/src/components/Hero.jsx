@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import RefreshLink from '../components/RefreshLink'; // ← Import du composant
 import { ArrowUpRight, ShieldCheck, Landmark } from 'lucide-react';
 
 // Hook pour récupérer la langue actuelle
@@ -17,6 +16,23 @@ const useCurrentLang = () => {
   }, []);
   
   return lang;
+};
+
+// Composant RefreshLink intégré
+const RefreshLink = ({ to, children, className, onClick }) => {
+  const handleClick = (e) => {
+    e.preventDefault();
+    if (onClick) onClick(e);
+    if (window.location.pathname !== to && !to.startsWith('#')) {
+      window.location.href = to;
+    }
+  };
+
+  return (
+    <a href={to} onClick={handleClick} className={className}>
+      {children}
+    </a>
+  );
 };
 
 const Hero = () => {
@@ -113,7 +129,7 @@ const Hero = () => {
   // Mettre à jour les labels des images quand la langue change
   useEffect(() => {
     setDisplayImages(getInitialImages());
-  }, [currentLang, t]);
+  }, [currentLang]);
 
   // Observer pour les animations au scroll
   useEffect(() => {
@@ -208,7 +224,7 @@ const Hero = () => {
           <span className="text-slate-900 font-semibold"> {t.livestock}</span> {t.descriptionEnd}
         </p>
 
-        {/* Boutons avec animation CSS - RefreshLink à la place de Link */}
+        {/* Boutons avec animation CSS - RefreshLink intégré */}
         <div 
           className={`flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 lg:gap-6 transition-all duration-700 delay-300 ${
             isVisible.buttons ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
@@ -258,9 +274,8 @@ const Hero = () => {
       <div className="flex-1 relative w-full flex items-center justify-center lg:justify-end">
         <div className="relative w-full max-w-[450px] md:max-w-[550px] aspect-[4/3]">
           
-          {/* --- 1. IMAGE PRINCIPALE (Centre) - RefreshLink --- */}
-          <RefreshLink 
-            to={displayImages[0].link}
+          {/* --- 1. IMAGE PRINCIPALE (Centre) --- */}
+          <div 
             className={`absolute inset-0 z-10 rounded-2xl overflow-hidden shadow-2xl cursor-pointer group transition-all duration-300 ${
               swapDirection === 'right' ? 'animate-slide-out-left' : 
               swapDirection === 'left' ? 'animate-slide-out-right' : 'animate-slide-in'
@@ -269,7 +284,6 @@ const Hero = () => {
               e.stopPropagation();
               handleSwap(0);
             }}
-            style={{ transition: 'transform 0.3s ease-out' }}
           >
             <img 
               src={displayImages[0].src} 
@@ -278,17 +292,22 @@ const Hero = () => {
             />
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
             
-            {/* Badge centré */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-black/75 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-white/10 transition-all duration-300 group-hover:scale-105">
-                <p className="text-white text-[11px] font-bold uppercase tracking-widest">{displayImages[0].label}</p>
+            {/* Badge centré - CLICKABLE pour navigation */}
+            <RefreshLink 
+              to={displayImages[0].link}
+              className="absolute inset-0 flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-black/75 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-white/10 transition-all duration-300 hover:scale-105 hover:bg-pc-gold hover:text-slate-900">
+                <p className="text-white text-[11px] font-bold uppercase tracking-widest hover:text-slate-900 transition-colors">
+                  {displayImages[0].label}
+                </p>
               </div>
-            </div>
-          </RefreshLink>
+            </RefreshLink>
+          </div>
 
-          {/* --- 2. IMAGE SECONDAIRE (Haut Droite) - RefreshLink --- */}
-          <RefreshLink 
-            to={displayImages[1].link}
+          {/* --- 2. IMAGE SECONDAIRE (Haut Droite) --- */}
+          <div 
             className="absolute z-20 -top-6 -right-4 md:-top-10 md:-right-8 w-32 md:w-44 rounded-xl overflow-hidden shadow-xl aspect-square cursor-pointer group animate-float-slow"
             onClick={(e) => {
               e.stopPropagation();
@@ -297,14 +316,21 @@ const Hero = () => {
           >
             <img src={displayImages[1].src} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt={displayImages[1].alt} />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent group-hover:bg-black/20 transition-colors" />
-            <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md transition-all duration-300 group-hover:bg-amber-500/80">
-              <p className="text-white text-[8px] font-bold uppercase tracking-wider">{displayImages[1].label}</p>
-            </div>
-          </RefreshLink>
+            
+            {/* Badge cliquable pour navigation */}
+            <RefreshLink 
+              to={displayImages[1].link}
+              className="absolute bottom-2 left-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md transition-all duration-300 hover:bg-amber-500/80">
+                <p className="text-white text-[8px] font-bold uppercase tracking-wider">{displayImages[1].label}</p>
+              </div>
+            </RefreshLink>
+          </div>
 
-          {/* --- 3. IMAGE TERTIAIRE (Bas Gauche) - RefreshLink --- */}
-          <RefreshLink 
-            to={displayImages[2].link}
+          {/* --- 3. IMAGE TERTIAIRE (Bas Gauche) --- */}
+          <div 
             className="absolute z-20 -bottom-6 -left-4 md:-bottom-10 md:-left-8 w-28 md:w-36 rounded-xl overflow-hidden shadow-xl aspect-square cursor-pointer group animate-float-medium"
             onClick={(e) => {
               e.stopPropagation();
@@ -313,12 +339,20 @@ const Hero = () => {
           >
             <img src={displayImages[2].src} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt={displayImages[2].alt} />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent group-hover:bg-black/20 transition-colors" />
-            <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md transition-all duration-300 group-hover:bg-amber-500/80">
-              <p className="text-white text-[8px] font-bold uppercase tracking-wider">{displayImages[2].label}</p>
-            </div>
-          </RefreshLink>
+            
+            {/* Badge cliquable pour navigation */}
+            <RefreshLink 
+              to={displayImages[2].link}
+              className="absolute bottom-2 left-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md transition-all duration-300 hover:bg-amber-500/80">
+                <p className="text-white text-[8px] font-bold uppercase tracking-wider">{displayImages[2].label}</p>
+              </div>
+            </RefreshLink>
+          </div>
 
-          {/* --- CAPEF BADGE - CENTRAL (entre les 3 images) - RefreshLink --- */}
+          {/* --- CAPEF BADGE - CENTRAL --- */}
           <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-30">
             <RefreshLink 
               to={getPathWithLang('/agriculture/institutional-framework')} 
