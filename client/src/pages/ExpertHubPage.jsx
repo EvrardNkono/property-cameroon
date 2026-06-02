@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// frontend/src/pages/ExpertHubPage.jsx
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -13,6 +14,9 @@ import {
 const ExpertHubPage = () => {
   const [selectedExpert, setSelectedExpert] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentLang, setCurrentLang] = useState('fr');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -21,89 +25,231 @@ const ExpertHubPage = () => {
     motivation: '',
     expertType: ''
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
 
+  // Récupérer la langue depuis l'URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const lang = params.get('lang') || localStorage.getItem('preferredLanguage') || 'fr';
+    setCurrentLang(lang === 'en' ? 'en' : 'fr');
+  }, []);
+
+  // ========== TRADUCTIONS ==========
+  const t = {
+    fr: {
+      // Hero section
+      heroBadge: "Hub d'Experts Certifiés",
+      heroTitle: "Assistance & Expertise",
+      heroDesc: "Un écosystème certifié de professionnels pour sécuriser vos acquisitions foncières et maximiser la rentabilité de vos projets agro-industriels au Cameroun.",
+      
+      // Stats
+      statsCertified: "Experts Certifiés",
+      statsFraudFree: "Transactions Sans Fraude",
+      statsSupport: "Support Client",
+      statsSatisfaction: "Satisfaction Client",
+      
+      // Compliance banner
+      complianceText: "Zéro compromis sur la sécurité : Tous les experts listés sur notre plateforme sont inscrits auprès de leurs ordres professionnels respectifs au Cameroun et soumis à notre strict code d'éthique.",
+      
+      // Section titles
+      ourNetwork: "Notre Réseau",
+      certifiedProfessionals: "Professionnels Certifiés",
+      
+      // Trust badges
+      trustedBy: "Approuvé par les investisseurs leaders",
+      joinClients: "Rejoignez plus de 500+ clients satisfaits dans le monde",
+      
+      // Support banner
+      needSupport: "Besoin d'un accompagnement personnalisé ?",
+      supportDesc: "Nos chargés de comptes dédiés vous mettront en relation avec le pool d'experts adapté à l'échelle et aux exigences de votre projet.",
+      bookConsultation: "Réserver une Consultation",
+      
+      // Modal
+      requestSent: "Demande Envoyée !",
+      modalDesc: "Votre demande de consultation a été soumise. Un expert vous contactera dans les 24 heures.",
+      fullName: "Nom Complet *",
+      email: "Email *",
+      phone: "Téléphone *",
+      productLink: "Lien du Produit/Bien",
+      expertType: "Type d'Expert",
+      motivation: "Motivation / Détails du Projet *",
+      sendRequest: "Envoyer la Demande de Consultation",
+      sending: "Envoi en cours...",
+      
+      // Modal placeholders
+      namePlaceholder: "Jean Dupont",
+      emailPlaceholder: "jean@example.com",
+      phonePlaceholder: "+237 6XX XXX XXX",
+      linkPlaceholder: "https://...",
+      motivationPlaceholder: "Parlez-nous de votre projet, de l'aide dont vous avez besoin, et de vos exigences spécifiques..."
+    },
+    en: {
+      // Hero section
+      heroBadge: "Verified Expert Hub",
+      heroTitle: "Assistance & Expertise",
+      heroDesc: "A certified ecosystem of professionals to secure your land acquisitions and maximize the profitability of your agro-industrial projects in Cameroon.",
+      
+      // Stats
+      statsCertified: "Certified Experts",
+      statsFraudFree: "Fraud-Free Transactions",
+      statsSupport: "Client Support",
+      statsSatisfaction: "Client Satisfaction",
+      
+      // Compliance banner
+      complianceText: "Zero compromise on security: All experts listed on our platform are registered with their respective professional orders in Cameroon and subject to our strict code of ethics.",
+      
+      // Section titles
+      ourNetwork: "Our Network",
+      certifiedProfessionals: "Certified Professionals",
+      
+      // Trust badges
+      trustedBy: "Trusted by leading investors",
+      joinClients: "Join over 500+ satisfied clients worldwide",
+      
+      // Support banner
+      needSupport: "Need personalized support?",
+      supportDesc: "Our dedicated account managers will connect you with the right expert pool for your project's scale and requirements.",
+      bookConsultation: "Book a Consultation",
+      
+      // Modal
+      requestSent: "Request Sent!",
+      modalDesc: "Your consultation request has been submitted. An expert will contact you within 24 hours.",
+      fullName: "Full Name *",
+      email: "Email *",
+      phone: "Phone Number *",
+      productLink: "Product/Property Link",
+      expertType: "Expert Type",
+      motivation: "Motivation / Project Details *",
+      sendRequest: "Send Consultation Request",
+      sending: "Sending...",
+      
+      // Modal placeholders
+      namePlaceholder: "John Doe",
+      emailPlaceholder: "john@example.com",
+      phonePlaceholder: "+237 6XX XXX XXX",
+      linkPlaceholder: "https://...",
+      motivationPlaceholder: "Tell us about your project, what you need help with, and any specific requirements..."
+    }
+  };
+
+  const texts = t[currentLang] || t.fr;
+
+  // Experts data with translations
   const experts = [
     {
       id: "mindcaf",
       icon: <Landmark className="text-pc-gold" size={36} />,
-      badge: "Land Security",
-      title: "MINDCAF Verification Services",
-      subtitle: "Land title & deed authentication",
-      desc: "Direct access to the Ministry of Domains, Cadastre and Land Affairs to verify land authenticity. A major asset for absolute fraud prevention.",
-      cta: "Request Verification",
-      features: ["Title verification", "Fraud prevention", "Official certification"],
-      longDesc: "Our MINDCAF-certified experts provide comprehensive land title verification services, ensuring your property documents are authentic and legally binding.",
+      badge: currentLang === 'fr' ? "Sécurité Foncière" : "Land Security",
+      title: currentLang === 'fr' ? "Services de Vérification MINDCAF" : "MINDCAF Verification Services",
+      subtitle: currentLang === 'fr' ? "Authentification des titres fonciers" : "Land title & deed authentication",
+      desc: currentLang === 'fr' 
+        ? "Accès direct au Ministère des Domaines, du Cadastre et des Affaires Foncières pour vérifier l'authenticité des terrains. Un atout majeur pour une prévention absolue de la fraude."
+        : "Direct access to the Ministry of Domains, Cadastre and Land Affairs to verify land authenticity. A major asset for absolute fraud prevention.",
+      cta: currentLang === 'fr' ? "Demander une Vérification" : "Request Verification",
+      features: currentLang === 'fr' 
+        ? ["Vérification titres", "Prévention fraude", "Certification officielle"]
+        : ["Title verification", "Fraud prevention", "Official certification"],
+      longDesc: currentLang === 'fr'
+        ? "Nos experts certifiés MINDCAF fournissent des services complets de vérification des titres fonciers, garantissant que vos documents fonciers sont authentiques et juridiquement valides."
+        : "Our MINDCAF-certified experts provide comprehensive land title verification services, ensuring your property documents are authentic and legally binding.",
       bgGradient: "from-amber-900/20 to-transparent"
     },
     {
       id: "legal",
       icon: <Gavel className="text-pc-gold" size={36} />,
-      badge: "Real Estate Law",
-      title: "Legal Counsel & Transactions",
-      subtitle: "Real estate law specialist",
-      desc: "Secure sales contract drafting, escrow account management, and customized support through Cameroon's complex legal framework.",
-      cta: "Request Legal Help",
-      features: ["Contract drafting", "Escrow services", "Legal compliance"],
-      longDesc: "Our legal experts specialize in Cameroon's real estate regulations, ensuring your transactions are fully compliant and legally protected.",
+      badge: currentLang === 'fr' ? "Droit Immobilier" : "Real Estate Law",
+      title: currentLang === 'fr' ? "Conseil Juridique & Transactions" : "Legal Counsel & Transactions",
+      subtitle: currentLang === 'fr' ? "Spécialiste en droit immobilier" : "Real estate law specialist",
+      desc: currentLang === 'fr'
+        ? "Rédaction sécurisée de contrats de vente, gestion de comptes séquestres et accompagnement personnalisé à travers le cadre juridique complexe du Cameroun."
+        : "Secure sales contract drafting, escrow account management, and customized support through Cameroon's complex legal framework.",
+      cta: currentLang === 'fr' ? "Demander une Aide Juridique" : "Request Legal Help",
+      features: currentLang === 'fr'
+        ? ["Rédaction contrats", "Services séquestres", "Conformité légale"]
+        : ["Contract drafting", "Escrow services", "Legal compliance"],
+      longDesc: currentLang === 'fr'
+        ? "Nos experts juridiques se spécialisent dans les réglementations immobilières du Cameroun, garantissant que vos transactions sont entièrement conformes et légalement protégées."
+        : "Our legal experts specialize in Cameroon's real estate regulations, ensuring your transactions are fully compliant and legally protected.",
       bgGradient: "from-blue-900/20 to-transparent"
     },
     {
       id: "surveyors",
       icon: <Compass className="text-pc-gold" size={36} />,
-      badge: "Surveying",
-      title: "Certified Land Surveyors",
-      subtitle: "Boundary marking & technical delimitation",
-      desc: "Precise boundary operations, detailed topographic mapping, and rigorous verification of land-to-document consistency.",
-      cta: "Hire a Surveyor",
-      features: ["Boundary marking", "Topographic mapping", "Site verification"],
-      longDesc: "Certified geometers provide accurate land surveys, boundary markings, and topographic maps essential for property transactions.",
+      badge: currentLang === 'fr' ? "Géomètres" : "Surveying",
+      title: currentLang === 'fr' ? "Géomètres Experts Certifiés" : "Certified Land Surveyors",
+      subtitle: currentLang === 'fr' ? "Bornage & délimitation technique" : "Boundary marking & technical delimitation",
+      desc: currentLang === 'fr'
+        ? "Opérations précises de bornage, cartographie topographique détaillée et vérification rigoureuse de la conformité terrain-document."
+        : "Precise boundary operations, detailed topographic mapping, and rigorous verification of land-to-document consistency.",
+      cta: currentLang === 'fr' ? "Engager un Géomètre" : "Hire a Surveyor",
+      features: currentLang === 'fr'
+        ? ["Bornage", "Cartographie topographique", "Vérification site"]
+        : ["Boundary marking", "Topographic mapping", "Site verification"],
+      longDesc: currentLang === 'fr'
+        ? "Les géomètres certifiés fournissent des relevés fonciers précis, des bornages et des cartes topographiques essentiels pour les transactions immobilières."
+        : "Certified geometers provide accurate land surveys, boundary markings, and topographic maps essential for property transactions.",
       bgGradient: "from-emerald-900/20 to-transparent"
     },
     {
       id: "agribusiness",
       icon: <Leaf className="text-pc-gold" size={36} />,
-      badge: "Agronomy",
-      title: "Agro-industry & Pedology Engineers",
-      subtitle: "Soil analysis & viability assessment",
-      desc: "Essential for agricultural investors. In-depth soil quality evaluation, crop viability analysis, and comprehensive project feasibility studies.",
-      cta: "Consult an Engineer",
-      features: ["Soil analysis", "Crop viability", "Feasibility studies"],
-      longDesc: "Our agronomy experts evaluate soil quality, recommend optimal crops, and provide detailed feasibility studies for agricultural projects.",
+      badge: currentLang === 'fr' ? "Agronomie" : "Agronomy",
+      title: currentLang === 'fr' ? "Ingénieurs Agro-industrie & Pédologie" : "Agro-industry & Pedology Engineers",
+      subtitle: currentLang === 'fr' ? "Analyse des sols & évaluation viabilité" : "Soil analysis & viability assessment",
+      desc: currentLang === 'fr'
+        ? "Essentiel pour les investisseurs agricoles. Évaluation approfondie de la qualité des sols, analyse de viabilité des cultures et études de faisabilité complètes."
+        : "Essential for agricultural investors. In-depth soil quality evaluation, crop viability analysis, and comprehensive project feasibility studies.",
+      cta: currentLang === 'fr' ? "Consulter un Ingénieur" : "Consult an Engineer",
+      features: currentLang === 'fr'
+        ? ["Analyse sols", "Viabilité cultures", "Études faisabilité"]
+        : ["Soil analysis", "Crop viability", "Feasibility studies"],
+      longDesc: currentLang === 'fr'
+        ? "Nos experts en agronomie évaluent la qualité des sols, recommandent les cultures optimales et fournissent des études de faisabilité détaillées pour les projets agricoles."
+        : "Our agronomy experts evaluate soil quality, recommend optimal crops, and provide detailed feasibility studies for agricultural projects.",
       bgGradient: "from-green-900/20 to-transparent"
     },
     {
       id: "analysts",
       icon: <TrendingUp className="text-pc-gold" size={36} />,
-      badge: "Finance",
-      title: "Financial Analysts & Economists",
-      subtitle: "Investment profitability assessment",
-      desc: "Support for investors to calculate ROI, analyze market demand, and optimize capital allocation across investment opportunities.",
-      cta: "Talk to an Analyst",
-      features: ["ROI calculation", "Market analysis", "Capital optimization"],
-      longDesc: "Financial experts help you maximize returns with detailed ROI calculations, market trend analysis, and investment strategies.",
+      badge: currentLang === 'fr' ? "Finance" : "Finance",
+      title: currentLang === 'fr' ? "Analystes Financiers & Économistes" : "Financial Analysts & Economists",
+      subtitle: currentLang === 'fr' ? "Évaluation rentabilité investissement" : "Investment profitability assessment",
+      desc: currentLang === 'fr'
+        ? "Accompagnement des investisseurs pour calculer le ROI, analyser la demande du marché et optimiser l'allocation du capital."
+        : "Support for investors to calculate ROI, analyze market demand, and optimize capital allocation across investment opportunities.",
+      cta: currentLang === 'fr' ? "Parler à un Analyste" : "Talk to an Analyst",
+      features: currentLang === 'fr'
+        ? ["Calcul ROI", "Analyse marché", "Optimisation capital"]
+        : ["ROI calculation", "Market analysis", "Capital optimization"],
+      longDesc: currentLang === 'fr'
+        ? "Les experts financiers vous aident à maximiser les rendements avec des calculs de ROI détaillés, une analyse des tendances du marché et des stratégies d'investissement."
+        : "Financial experts help you maximize returns with detailed ROI calculations, market trend analysis, and investment strategies.",
       bgGradient: "from-purple-900/20 to-transparent"
     },
     {
       id: "china-sourcing",
       icon: <Package className="text-pc-gold" size={36} />,
-      badge: "International Logistics",
-      title: "Supply Chain & China Sourcing",
-      subtitle: "Infrastructure & industrial operations",
-      desc: "Management of high-quality input supply, machinery, and packaging directly from partner factories in China (seeds, fertilizers, post-harvest equipment).",
-      cta: "Find a Specialist",
-      features: ["Supply chain", "Factory sourcing", "Equipment procurement"],
-      longDesc: "Our sourcing specialists connect you with trusted suppliers in China for agricultural inputs, machinery, and packaging solutions.",
+      badge: currentLang === 'fr' ? "Logistique Internationale" : "International Logistics",
+      title: currentLang === 'fr' ? "Chaîne d'Approvisionnement & Sourcing Chine" : "Supply Chain & China Sourcing",
+      subtitle: currentLang === 'fr' ? "Infrastructure & opérations industrielles" : "Infrastructure & industrial operations",
+      desc: currentLang === 'fr'
+        ? "Gestion de l'approvisionnement en intrants de haute qualité, machines et emballages directement depuis des usines partenaires en Chine."
+        : "Management of high-quality input supply, machinery, and packaging directly from partner factories in China.",
+      cta: currentLang === 'fr' ? "Trouver un Spécialiste" : "Find a Specialist",
+      features: currentLang === 'fr'
+        ? ["Chaîne approvisionnement", "Sourcing usine", "Achat équipement"]
+        : ["Supply chain", "Factory sourcing", "Equipment procurement"],
+      longDesc: currentLang === 'fr'
+        ? "Nos spécialistes en approvisionnement vous connectent avec des fournisseurs de confiance en Chine pour les intrants agricoles, les machines et les solutions d'emballage."
+        : "Our sourcing specialists connect you with trusted suppliers in China for agricultural inputs, machinery, and packaging solutions.",
       bgGradient: "from-cyan-900/20 to-transparent"
     }
   ];
 
   const stats = [
-    { value: "50+", label: "Certified Experts", icon: <Users size={20} /> },
-    { value: "100%", label: "Fraud-Free Transactions", icon: <Shield size={20} /> },
-    { value: "24/7", label: "Client Support", icon: <Globe size={20} /> },
-    { value: "98%", label: "Client Satisfaction", icon: <Star size={20} /> }
+    { value: "50+", label: texts.statsCertified, icon: <Users size={20} /> },
+    { value: "100%", label: texts.statsFraudFree, icon: <Shield size={20} /> },
+    { value: "24/7", label: texts.statsSupport, icon: <Globe size={20} /> },
+    { value: "98%", label: texts.statsSatisfaction, icon: <Star size={20} /> }
   ];
 
   const openModal = (expert) => {
@@ -170,14 +316,14 @@ const ExpertHubPage = () => {
           <div className="max-w-4xl">
             <div className="flex items-center gap-4 mb-8 animate-in fade-in slide-in-from-left-4 duration-700">
               <span className="h-[1px] w-12 bg-pc-gold"></span>
-              <span className="text-pc-gold font-black text-xs uppercase tracking-[0.4em]">Verified Expert Hub</span>
+              <span className="text-pc-gold font-black text-xs uppercase tracking-[0.4em]">{texts.heroBadge}</span>
             </div>
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif text-white tracking-tighter mb-10 leading-[0.9] animate-in fade-in slide-in-from-left-8 duration-1000">
               Professional <br /> 
-              <span className="italic font-light bg-gradient-to-r from-pc-gold to-pc-green bg-clip-text text-transparent">Assistance & Expertise</span>
+              <span className="italic font-light bg-gradient-to-r from-pc-gold to-pc-green bg-clip-text text-transparent">{texts.heroTitle}</span>
             </h1>
             <p className="text-slate-300 text-xl font-light leading-relaxed max-w-2xl border-l-4 border-pc-gold pl-8 animate-in fade-in slide-in-from-left-12 duration-1000">
-              A certified ecosystem of professionals to secure your land acquisitions and maximize the profitability of your agro-industrial projects in Cameroon.
+              {texts.heroDesc}
             </p>
           </div>
         </div>
@@ -207,7 +353,7 @@ const ExpertHubPage = () => {
         <div className="max-w-7xl mx-auto px-8 flex flex-col sm:flex-row items-center justify-center gap-4 text-amber-900">
           <ShieldAlert className="text-amber-600 shrink-0" size={24} />
           <p className="text-sm font-light text-center">
-            <strong>Zero compromise on security:</strong> All experts listed on our platform are registered with their respective professional orders in Cameroon and subject to our strict code of ethics.
+            <strong>{currentLang === 'fr' ? "Zéro compromis sur la sécurité :" : "Zero compromise on security:"}</strong> {texts.complianceText}
           </p>
         </div>
       </section>
@@ -216,8 +362,8 @@ const ExpertHubPage = () => {
       <section className="py-24 bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-7xl mx-auto px-8">
           <div className="text-center mb-16">
-            <span className="text-pc-gold text-[10px] font-black uppercase tracking-[0.4em]">Our Network</span>
-            <h2 className="text-4xl md:text-5xl font-serif text-slate-900 mt-3">Certified <span className="text-pc-green italic">Professionals</span></h2>
+            <span className="text-pc-gold text-[10px] font-black uppercase tracking-[0.4em]">{texts.ourNetwork}</span>
+            <h2 className="text-4xl md:text-5xl font-serif text-slate-900 mt-3">{texts.certifiedProfessionals}</h2>
             <div className="w-24 h-1 bg-gradient-to-r from-pc-gold to-pc-green mx-auto mt-6 rounded-full"></div>
           </div>
 
@@ -286,8 +432,8 @@ const ExpertHubPage = () => {
                   <Award size={40} className="text-pc-gold" />
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold text-slate-900">Trusted by leading investors</h4>
-                  <p className="text-sm text-slate-500">Join over 500+ satisfied clients worldwide</p>
+                  <h4 className="text-xl font-bold text-slate-900">{texts.trustedBy}</h4>
+                  <p className="text-sm text-slate-500">{texts.joinClients}</p>
                 </div>
               </div>
               <div className="flex gap-3">
@@ -306,13 +452,13 @@ const ExpertHubPage = () => {
       <section className="bg-gradient-to-r from-pc-green to-emerald-800 py-20">
         <div className="max-w-7xl mx-auto px-8 flex flex-col lg:flex-row justify-between items-center gap-10">
           <div className="text-white max-w-2xl text-center lg:text-left">
-            <h4 className="text-3xl md:text-4xl font-serif uppercase italic mb-3">Need personalized support?</h4>
+            <h4 className="text-3xl md:text-4xl font-serif uppercase italic mb-3">{texts.needSupport}</h4>
             <p className="font-light opacity-90 text-sm uppercase tracking-widest leading-relaxed">
-              Our dedicated account managers will connect you with the right expert pool for your project's scale and requirements.
+              {texts.supportDesc}
             </p>
           </div>
           <button className="bg-white text-pc-green hover:bg-pc-gold hover:text-white px-10 py-4 rounded-full font-black uppercase tracking-[0.2em] shadow-2xl transition-all duration-300 hover:scale-105">
-            Book a Consultation
+            {texts.bookConsultation}
           </button>
         </div>
       </section>
@@ -346,8 +492,8 @@ const ExpertHubPage = () => {
                   <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <CheckCircle2 size={40} className="text-green-600" />
                   </div>
-                  <h4 className="text-2xl font-serif text-slate-900 mb-2">Request Sent!</h4>
-                  <p className="text-slate-500">Your consultation request has been submitted. An expert will contact you within 24 hours.</p>
+                  <h4 className="text-2xl font-serif text-slate-900 mb-2">{texts.requestSent}</h4>
+                  <p className="text-slate-500">{texts.modalDesc}</p>
                 </div>
               ) : (
                 <>
@@ -358,7 +504,7 @@ const ExpertHubPage = () => {
                   <form onSubmit={handleSubmit} className="space-y-5">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div>
-                        <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Full Name *</label>
+                        <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{texts.fullName}</label>
                         <div className="relative">
                           <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                           <input
@@ -368,12 +514,12 @@ const ExpertHubPage = () => {
                             onChange={handleInputChange}
                             required
                             className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-pc-gold transition-all"
-                            placeholder="John Doe"
+                            placeholder={texts.namePlaceholder}
                           />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Email *</label>
+                        <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{texts.email}</label>
                         <div className="relative">
                           <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                           <input
@@ -383,7 +529,7 @@ const ExpertHubPage = () => {
                             onChange={handleInputChange}
                             required
                             className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-pc-gold transition-all"
-                            placeholder="john@example.com"
+                            placeholder={texts.emailPlaceholder}
                           />
                         </div>
                       </div>
@@ -391,7 +537,7 @@ const ExpertHubPage = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div>
-                        <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Phone Number *</label>
+                        <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{texts.phone}</label>
                         <div className="relative">
                           <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                           <input
@@ -401,12 +547,12 @@ const ExpertHubPage = () => {
                             onChange={handleInputChange}
                             required
                             className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-pc-gold transition-all"
-                            placeholder="+237 6XX XXX XXX"
+                            placeholder={texts.phonePlaceholder}
                           />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Product/Property Link</label>
+                        <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{texts.productLink}</label>
                         <div className="relative">
                           <Link2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                           <input
@@ -415,14 +561,14 @@ const ExpertHubPage = () => {
                             value={formData.productLink}
                             onChange={handleInputChange}
                             className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-pc-gold transition-all"
-                            placeholder="https://..."
+                            placeholder={texts.linkPlaceholder}
                           />
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Expert Type</label>
+                      <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{texts.expertType}</label>
                       <div className="relative">
                         <Briefcase size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input
@@ -437,7 +583,7 @@ const ExpertHubPage = () => {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Motivation / Project Details *</label>
+                      <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{texts.motivation}</label>
                       <div className="relative">
                         <MessageSquare size={16} className="absolute left-3 top-4 text-slate-400" />
                         <textarea
@@ -447,7 +593,7 @@ const ExpertHubPage = () => {
                           required
                           rows="4"
                           className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-pc-gold transition-all resize-none"
-                          placeholder="Tell us about your project, what you need help with, and any specific requirements..."
+                          placeholder={texts.motivationPlaceholder}
                         />
                       </div>
                     </div>
@@ -462,7 +608,7 @@ const ExpertHubPage = () => {
                       ) : (
                         <>
                           <Send size={16} />
-                          Send Consultation Request
+                          {texts.sendRequest}
                         </>
                       )}
                     </button>
