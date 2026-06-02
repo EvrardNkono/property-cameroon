@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import RefreshLink from '../components/RefreshLink'; // ← Import du composant
 import { ArrowUpRight, ShieldCheck, Landmark } from 'lucide-react';
 
 // Hook pour récupérer la langue actuelle
@@ -27,73 +27,46 @@ const Hero = () => {
   // ========== TRADUCTIONS ==========
   const t = {
     fr: {
-      // Badge
       badge: "Première Plateforme d'Investissement",
-      
-      // Titre
       titleStart: "Sécurisez votre",
       titleEnd: "Richesse Future.",
-      
-      // Description
       description: "Accès exclusif aux secteurs certifiés de l'",
       realEstate: "Immobilier",
       agriculture: "Agriculture",
       livestock: "Élevage",
       descriptionEnd: "au Cameroun.",
-      
-      // Boutons
       exploreAssets: "Explorer les Actifs",
       ourLegacy: "Notre Héritage",
-      
-      // Stats
       securedTitles: "Titres Sécurisés",
       hectares: "Hectares",
       liveDashboard: "Tableau de Bord",
-      
-      // Labels images
       realEstateLabel: "Immobilier",
       agricultureLabel: "Agriculture",
       livestockLabel: "Élevage",
-      
-      // CAPEF Badge
       officialPartner: "Partenaire Officiel",
       capefCertified: "Certifié CAPEF"
     },
     en: {
-      // Badge
       badge: "Premier Investment Gateway",
-      
-      // Titre
       titleStart: "Secure Your",
       titleEnd: "Future Wealth.",
-      
-      // Description
       description: "Exclusive access to certified",
       realEstate: "Real Estate",
       agriculture: "Agriculture",
       livestock: "Livestock",
       descriptionEnd: "sectors in Cameroon.",
-      
-      // Boutons
       exploreAssets: "Explore Assets",
       ourLegacy: "Our Legacy",
-      
-      // Stats
       securedTitles: "Secured Titles",
       hectares: "Hectares",
       liveDashboard: "Live Dashboard",
-      
-      // Labels images
       realEstateLabel: "Real Estate",
       agricultureLabel: "Agriculture",
       livestockLabel: "Livestock",
-      
-      // CAPEF Badge
       officialPartner: "Official Partner",
       capefCertified: "CAPEF Certified"
     }
   }[currentLang] || {
-    // Fallback français
     badge: "Première Plateforme d'Investissement",
     titleStart: "Sécurisez votre",
     titleEnd: "Richesse Future.",
@@ -114,11 +87,16 @@ const Hero = () => {
     capefCertified: "Certifié CAPEF"
   };
 
+  // Fonction pour ajouter le paramètre langue aux chemins
+  const getPathWithLang = (path) => {
+    return `${path}${currentLang === 'en' ? '?lang=en' : ''}`;
+  };
+
   // Images disponibles initiales avec liens et labels traduits dynamiquement
   const getInitialImages = () => [
-    { id: 'img0', src: '/images/heroimo.webp', label: t.realEstateLabel, alt: t.realEstateLabel, link: '/real-estate' },
-    { id: 'img1', src: '/images/heroagri.webp', label: t.agricultureLabel, alt: t.agricultureLabel, link: '/agriculture' },
-    { id: 'img2', src: '/images/lifstock.jfif', label: t.livestockLabel, alt: t.livestockLabel, link: '/agriculture/livestock' }
+    { id: 'img0', src: '/images/heroimo.webp', label: t.realEstateLabel, alt: t.realEstateLabel, link: getPathWithLang('/real-estate') },
+    { id: 'img1', src: '/images/heroagri.webp', label: t.agricultureLabel, alt: t.agricultureLabel, link: getPathWithLang('/agriculture') },
+    { id: 'img2', src: '/images/lifstock.jfif', label: t.livestockLabel, alt: t.livestockLabel, link: getPathWithLang('/agriculture/livestock') }
   ];
 
   const [displayImages, setDisplayImages] = useState(getInitialImages());
@@ -230,29 +208,29 @@ const Hero = () => {
           <span className="text-slate-900 font-semibold"> {t.livestock}</span> {t.descriptionEnd}
         </p>
 
-        {/* Boutons avec animation CSS */}
+        {/* Boutons avec animation CSS - RefreshLink à la place de Link */}
         <div 
           className={`flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 lg:gap-6 transition-all duration-700 delay-300 ${
             isVisible.buttons ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}
         >
-          <Link 
-            to="/real-estate" 
+          <RefreshLink 
+            to={getPathWithLang('/real-estate')} 
             className="w-full sm:w-auto group relative px-8 py-4 bg-slate-900 text-white overflow-hidden shadow-xl rounded-full text-center transition-all hover:scale-105 active:scale-95"
           >
             <span className="relative z-10 font-bold uppercase text-[10px] tracking-widest flex items-center justify-center gap-3">
               {t.exploreAssets} <ArrowUpRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-          </Link>
+          </RefreshLink>
           
-          <Link 
-            to="/agriculture" 
+          <RefreshLink 
+            to={getPathWithLang('/agriculture')} 
             className="flex items-center gap-3 py-3 px-5 font-bold uppercase text-[10px] tracking-widest text-slate-700 hover:text-slate-900 transition-colors group"
           >
             <Landmark size={16} className="group-hover:rotate-12 transition-transform" /> 
             {t.ourLegacy}
-          </Link>
+          </RefreshLink>
         </div>
 
         {/* Stats avec animation CSS */}
@@ -280,8 +258,8 @@ const Hero = () => {
       <div className="flex-1 relative w-full flex items-center justify-center lg:justify-end">
         <div className="relative w-full max-w-[450px] md:max-w-[550px] aspect-[4/3]">
           
-          {/* --- 1. IMAGE PRINCIPALE (Centre) - CLICKABLE --- */}
-          <Link 
+          {/* --- 1. IMAGE PRINCIPALE (Centre) - RefreshLink --- */}
+          <RefreshLink 
             to={displayImages[0].link}
             className={`absolute inset-0 z-10 rounded-2xl overflow-hidden shadow-2xl cursor-pointer group transition-all duration-300 ${
               swapDirection === 'right' ? 'animate-slide-out-left' : 
@@ -306,10 +284,10 @@ const Hero = () => {
                 <p className="text-white text-[11px] font-bold uppercase tracking-widest">{displayImages[0].label}</p>
               </div>
             </div>
-          </Link>
+          </RefreshLink>
 
-          {/* --- 2. IMAGE SECONDAIRE (Haut Droite) - CLICKABLE --- */}
-          <Link 
+          {/* --- 2. IMAGE SECONDAIRE (Haut Droite) - RefreshLink --- */}
+          <RefreshLink 
             to={displayImages[1].link}
             className="absolute z-20 -top-6 -right-4 md:-top-10 md:-right-8 w-32 md:w-44 rounded-xl overflow-hidden shadow-xl aspect-square cursor-pointer group animate-float-slow"
             onClick={(e) => {
@@ -322,10 +300,10 @@ const Hero = () => {
             <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md transition-all duration-300 group-hover:bg-amber-500/80">
               <p className="text-white text-[8px] font-bold uppercase tracking-wider">{displayImages[1].label}</p>
             </div>
-          </Link>
+          </RefreshLink>
 
-          {/* --- 3. IMAGE TERTIAIRE (Bas Gauche) - CLICKABLE --- */}
-          <Link 
+          {/* --- 3. IMAGE TERTIAIRE (Bas Gauche) - RefreshLink --- */}
+          <RefreshLink 
             to={displayImages[2].link}
             className="absolute z-20 -bottom-6 -left-4 md:-bottom-10 md:-left-8 w-28 md:w-36 rounded-xl overflow-hidden shadow-xl aspect-square cursor-pointer group animate-float-medium"
             onClick={(e) => {
@@ -338,12 +316,12 @@ const Hero = () => {
             <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md transition-all duration-300 group-hover:bg-amber-500/80">
               <p className="text-white text-[8px] font-bold uppercase tracking-wider">{displayImages[2].label}</p>
             </div>
-          </Link>
+          </RefreshLink>
 
-          {/* --- CAPEF BADGE - CENTRAL (entre les 3 images) --- */}
+          {/* --- CAPEF BADGE - CENTRAL (entre les 3 images) - RefreshLink --- */}
           <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-30">
-            <Link 
-              to="/agriculture/institutional-framework" 
+            <RefreshLink 
+              to={getPathWithLang('/agriculture/institutional-framework')} 
               className="group flex items-center gap-3 bg-white/95 backdrop-blur-md p-3 md:p-4 rounded-2xl shadow-2xl border border-slate-100 transition-all duration-300 hover:shadow-xl hover:border-[#c8a84b]/40 hover:scale-105"
             >
               <div 
@@ -363,7 +341,7 @@ const Hero = () => {
                   <ArrowUpRight size={10} className="text-[#c8a84b] opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
                 </div>
               </div>
-            </Link>
+            </RefreshLink>
           </div>
 
         </div>
