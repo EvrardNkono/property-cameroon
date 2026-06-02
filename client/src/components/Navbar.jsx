@@ -1,10 +1,26 @@
-// frontend/src/components/Navbar.jsx - VERSION CORRIGÉE (sans Agricultural Products)
+// frontend/src/components/Navbar.jsx - VERSION AVEC REFRAÎCHISSEMENT FORCÉ
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate , useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Shield, ChevronDown, X, ArrowRight, Menu, User, LogIn, LogOut, UserCircle, Globe } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-// LanguageSwitcher simplifié et fiable
+// Composant pour forcer le rafraîchissement
+const RefreshLink = ({ to, children, className, onClick }) => {
+  const handleClick = (e) => {
+    if (onClick) onClick(e);
+    if (window.location.pathname !== to && !to.startsWith('#')) {
+      window.location.href = to;
+    }
+  };
+
+  return (
+    <a href={to} onClick={handleClick} className={className}>
+      {children}
+    </a>
+  );
+};
+
+// LanguageSwitcher avec rafraîchissement forcé
 const LanguageSwitcher = () => {
   const [currentLang, setCurrentLang] = useState(() => {
     const saved = localStorage.getItem('preferredLanguage');
@@ -18,7 +34,7 @@ const LanguageSwitcher = () => {
     setCurrentLang(lang);
     localStorage.setItem('preferredLanguage', lang);
     
-    // 🔥 CORRECTION IMPORTANTE : Recharger la page avec le paramètre de langue
+    // Force le rafraîchissement avec la nouvelle langue
     const url = new URL(window.location.href);
     url.searchParams.set('lang', lang);
     window.location.href = url.toString();
@@ -89,14 +105,12 @@ const LanguageSwitcher = () => {
   );
 };
 
-// Reste de la Navbar avec les liens traduits dynamiquement
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState('fr');
   const { user, logout, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   
   const gold = '#c8a84b';
@@ -148,17 +162,21 @@ const Navbar = () => {
 
   const texts = t[currentLang] || t.fr;
 
+  // Construction des chemins avec paramètre de langue
+  const getPathWithLang = (path) => {
+    return `${path}${currentLang === 'en' ? '?lang=en' : ''}`;
+  };
+
   const navLinks = [
-    { name: texts.realEstate, path: `/real-estate${currentLang === 'en' ? '?lang=en' : ''}` },
-    { name: texts.sourcing, path: `/global-sourcing${currentLang === 'en' ? '?lang=en' : ''}` },
-    { name: texts.journal, path: `/blog${currentLang === 'en' ? '?lang=en' : ''}` },
+    { name: texts.realEstate, path: getPathWithLang('/real-estate') },
+    { name: texts.sourcing, path: getPathWithLang('/global-sourcing') },
+    { name: texts.journal, path: getPathWithLang('/blog') },
   ];
 
-  // 🔥 SUPPRESSION DE "agriculturalProducts" de la liste
   const agriLinks = [
-    { name: texts.overview, path: `/agriculture${currentLang === 'en' ? '?lang=en' : ''}` },
-    { name: texts.livestock, path: `/agriculture/livestock${currentLang === 'en' ? '?lang=en' : ''}` },
-    { name: texts.marketplace, path: `/agriculture/marketplace${currentLang === 'en' ? '?lang=en' : ''}` },
+    { name: texts.overview, path: getPathWithLang('/agriculture') },
+    { name: texts.livestock, path: getPathWithLang('/agriculture/livestock') },
+    { name: texts.marketplace, path: getPathWithLang('/agriculture/marketplace') },
   ];
 
   useEffect(() => {
@@ -188,25 +206,28 @@ const Navbar = () => {
     };
   }, [isOpen]);
 
+  // Fonctions de navigation avec rafraîchissement forcé
+  const navigateWithRefresh = (path) => {
+    if (window.location.pathname !== path) {
+      window.location.href = path;
+    }
+  };
+
   const handleLogout = async () => {
     await logout();
-    setIsProfileOpen(false);
-    navigate('/');
+    window.location.href = getPathWithLang('/');
   };
 
   const handleLogin = () => {
-    navigate(`/login${currentLang === 'en' ? '?lang=en' : ''}`);
-    setIsProfileOpen(false);
+    window.location.href = getPathWithLang('/login');
   };
 
   const handleRegister = () => {
-    navigate(`/register${currentLang === 'en' ? '?lang=en' : ''}`);
-    setIsProfileOpen(false);
+    window.location.href = getPathWithLang('/register');
   };
 
   const handleDashboard = () => {
-    navigate(`/dashboard${currentLang === 'en' ? '?lang=en' : ''}`);
-    setIsProfileOpen(false);
+    window.location.href = getPathWithLang('/dashboard');
   };
 
   const getUserInitials = () => {
@@ -239,8 +260,8 @@ const Navbar = () => {
                    style={{ background: `linear-gradient(90deg, transparent, ${gold}, transparent)` }} />
             )}
             
-            {/* LOGO - le lien garde la langue */}
-            <Link to={`/${currentLang === 'en' ? '?lang=en' : ''}`} className="relative z-10 flex items-center gap-2 md:gap-3 group">
+            {/* LOGO - RefreshLink pour le rafraîchissement */}
+            <RefreshLink to={getPathWithLang('/')} className="relative z-10 flex items-center gap-2 md:gap-3 group">
               <div className="relative w-8 h-8 md:w-10 md:h-10 overflow-hidden rounded-xl bg-slate-900 flex items-center justify-center transition-transform group-hover:rotate-6">
                 <img src="/images/logo.png" alt="Logo" className="w-5 h-5 md:w-7 md:h-7 object-contain" />
               </div>
@@ -248,19 +269,19 @@ const Navbar = () => {
                 <span className="text-[10px] md:text-sm font-black tracking-[0.2em] text-slate-950 uppercase leading-none">Property</span>
                 <span className="text-[8px] md:text-[10px] font-serif italic" style={{ color: gold }}>Cameroon</span>
               </div>
-            </Link>
+            </RefreshLink>
             
-            {/* DESKTOP NAV */}
+            {/* DESKTOP NAV - Utilise RefreshLink */}
             <nav className="hidden lg:flex items-center space-x-12 relative z-10">
               {navLinks.map((link) => (
-                <Link 
+                <RefreshLink 
                   key={link.name}
                   to={link.path} 
                   className="relative text-[10px] uppercase tracking-[0.3em] font-bold text-slate-500 hover:text-slate-950 transition-colors group"
                 >
                   {link.name}
                   <span className="absolute -bottom-1 left-0 w-0 h-[1px] transition-all duration-300 group-hover:w-full" style={{ backgroundColor: gold }} />
-                </Link>
+                </RefreshLink>
               ))}
 
               {/* DROPDOWN AGRICULTURE */}
@@ -273,14 +294,14 @@ const Navbar = () => {
                   <div className="bg-white/95 backdrop-blur-xl border border-slate-100 shadow-2xl rounded-[2rem] p-6 w-64">
                     <div className="flex flex-col gap-2">
                       {agriLinks.map((item) => (
-                        <Link 
+                        <RefreshLink 
                           key={item.name}
                           to={item.path} 
                           className="flex justify-between items-center p-3 rounded-2xl hover:bg-slate-50 text-slate-500 hover:text-slate-950 transition-all text-[11px] font-bold uppercase tracking-widest group/link"
                         >
                           {item.name} 
                           <ArrowRight size={12} className="opacity-0 group-hover/link:opacity-100 transition-opacity" />
-                        </Link>
+                        </RefreshLink>
                       ))}
                     </div>
                   </div>
@@ -376,9 +397,12 @@ const Navbar = () => {
                 </div>
               </div>
 
-              <Link to={`/experts${currentLang === 'en' ? '?lang=en' : ''}`} className="px-6 py-3 bg-slate-950 text-white rounded-full text-[9px] font-black uppercase tracking-[0.2em] hover:bg-slate-800 transition-all shadow-lg shadow-slate-950/20">
+              <RefreshLink 
+                to={getPathWithLang('/experts')} 
+                className="px-6 py-3 bg-slate-950 text-white rounded-full text-[9px] font-black uppercase tracking-[0.2em] hover:bg-slate-800 transition-all shadow-lg shadow-slate-950/20"
+              >
                 {texts.contactExpert}
-              </Link>
+              </RefreshLink>
             </div>
 
             {/* MOBILE ACTIONS */}
@@ -396,7 +420,7 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* MOBILE MENU */}
+      {/* MOBILE MENU - Utilise RefreshLink */}
       <div 
         className={`fixed inset-0 bg-black/50 z-[200] transition-all duration-300 ${
           isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
@@ -443,60 +467,60 @@ const Navbar = () => {
             </div>
           ) : (
             <div className="flex gap-3">
-              <Link 
-                to={`/login${currentLang === 'en' ? '?lang=en' : ''}`} 
+              <RefreshLink 
+                to={getPathWithLang('/login')} 
                 onClick={() => setIsOpen(false)}
                 className="flex-1 text-center py-2.5 bg-slate-900 text-white rounded-xl text-[11px] font-bold"
               >
                 {texts.signIn}
-              </Link>
-              <Link 
-                to={`/register${currentLang === 'en' ? '?lang=en' : ''}`} 
+              </RefreshLink>
+              <RefreshLink 
+                to={getPathWithLang('/register')} 
                 onClick={() => setIsOpen(false)}
                 className="flex-1 text-center py-2.5 border border-emerald-600 text-emerald-700 rounded-xl text-[11px] font-bold"
               >
                 {texts.createAccount}
-              </Link>
+              </RefreshLink>
             </div>
           )}
         </div>
         
         <nav className="flex flex-col gap-6">
           {navLinks.map((link) => (
-            <Link 
+            <RefreshLink 
               key={link.name} 
               to={link.path} 
               onClick={() => setIsOpen(false)}
               className="text-2xl font-serif italic text-slate-800 hover:text-slate-950 transition-colors"
             >
               {link.name}
-            </Link>
+            </RefreshLink>
           ))}
 
           <div className="flex flex-col gap-3 pt-2">
             <span className="text-[10px] font-black tracking-widest uppercase" style={{ color: gold }}>{texts.agriculture}</span>
             <div className="flex flex-col gap-3 pl-4 border-l-2 border-slate-100">
               {agriLinks.map((sub) => (
-                <Link 
+                <RefreshLink 
                   key={sub.name} 
                   to={sub.path} 
                   onClick={() => setIsOpen(false)}
                   className="text-lg font-serif text-slate-500 hover:text-slate-800 transition-colors"
                 >
                   {sub.name}
-                </Link>
+                </RefreshLink>
               ))}
             </div>
           </div>
 
           <div className="pt-4 border-t border-slate-100">
-            <Link 
-              to={`/experts${currentLang === 'en' ? '?lang=en' : ''}`} 
+            <RefreshLink 
+              to={getPathWithLang('/experts')} 
               onClick={() => setIsOpen(false)}
               className="block w-full text-center py-3 bg-slate-950 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-colors"
             >
               {texts.contactExpert}
-            </Link>
+            </RefreshLink>
           </div>
         </nav>
 
