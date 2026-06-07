@@ -323,7 +323,7 @@ const PropertyDetailsPage = () => {
     setLightboxOpen(false);
     window.scrollTo(0, 0);
     fetchPropertyDetails();
-  }, [id, fetchPropertyDetails]);
+  }, [id, currentLang, fetchPropertyDetails]);
 
   // Navigation des images
   const nextImage = () => {
