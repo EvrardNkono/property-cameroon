@@ -199,6 +199,12 @@ export const getLivestockByCategory = async (req, res) => {
 };
 
 export const getLivestockById = async (req, res) => {
+  // 🔥 SOLUTION TEMPORAIRE : Si l'ID est "force-translation", rediriger
+  if (req.params.id === 'force-translation') {
+    console.log('🔄 Redirection vers forceTranslation');
+    return forceTranslation(req, res);
+  }
+  
   try {
     const { lang } = req.query;
     const targetLang = lang || 'en';
