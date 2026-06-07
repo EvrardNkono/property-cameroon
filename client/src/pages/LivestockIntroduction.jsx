@@ -254,7 +254,7 @@ const LivestockIntroduction = () => {
       faq2_a: "L'investissement minimum commence à 500 000 FCFA pour certains actifs, avec une moyenne de 2 500 000 FCFA pour la plupart des catégories.",
       faq3_q: "Mes actifs sont-ils assurés ?",
       faq3_a: "Oui, tous les actifs sont couverts par une assurance bétail et des protocoles de biosécurité.",
-      faq4_q: "Comment reçois-je les rendements ?",
+      faq4_q: "Comment je reçois les rendements ?",
       faq4_a: "Les rendements sont payés via mobile money (MTN/Orange Money) ou virement bancaire à la fin du cycle.",
       faq5_q: "Puis-je visiter la ferme ?",
       faq5_a: "Absolument ! Nous organisons des visites de ferme trimestrielles pour les investisseurs.",
@@ -425,7 +425,9 @@ const LivestockIntroduction = () => {
     }
   }[currentLang] || {
     // Fallback français
-    ...{} // Même structure que fr
+    heroTitle: "Investissement",
+    heroHighlight: "Élevage",
+    // ... autres fallbacks
   };
 
   // Mettre à jour les données traduites
@@ -479,17 +481,42 @@ const LivestockIntroduction = () => {
     }
   }, [categories]);
 
+  // 🔧 FONCTION POUR EXTRAIRE LES DONNÉES - COMME DANS RealEstate.jsx
+  const extractData = (response, key) => {
+    if (!response) return [];
+    if (response[key]) return response[key];
+    if (response.data && response.data[key]) return response.data[key];
+    if (Array.isArray(response)) return response;
+    if (response.data && Array.isArray(response.data)) return response.data;
+    return [];
+  };
+
   const fetchCategories = async () => {
     try {
       setLoading(true);
       setError(null);
       
+      // Récupération des catégories - gestion multi-formats
       const categoriesRes = await api.getAllLivestockCategories({ isActive: true, lang: currentLang });
-      const dbCategories = categoriesRes.categories || categoriesRes || [];
+      console.log('Categories response:', categoriesRes);
       
+      // ✅ Extraction flexible comme dans RealEstate
+      let dbCategories = extractData(categoriesRes, 'categories');
+      if (dbCategories.length === 0 && categoriesRes.categories) dbCategories = categoriesRes.categories;
+      if (dbCategories.length === 0 && Array.isArray(categoriesRes)) dbCategories = categoriesRes;
+      if (dbCategories.length === 0 && categoriesRes.data && Array.isArray(categoriesRes.data)) dbCategories = categoriesRes.data;
+      
+      // Récupération des animaux - gestion multi-formats
       const livestockRes = await api.getAllLivestock({ status: 'AVAILABLE', lang: currentLang });
-      const livestock = livestockRes.livestock || livestockRes || [];
+      console.log('Livestock response:', livestockRes);
       
+      // ✅ Extraction flexible comme dans RealEstate
+      let livestock = extractData(livestockRes, 'livestock');
+      if (livestock.length === 0 && livestockRes.livestock) livestock = livestockRes.livestock;
+      if (livestock.length === 0 && Array.isArray(livestockRes)) livestock = livestockRes;
+      if (livestock.length === 0 && livestockRes.data && Array.isArray(livestockRes.data)) livestock = livestockRes.data;
+      
+      // Calcul des statistiques
       const totalValue = livestock.reduce((sum, item) => sum + (item.price?.amount || 0), 0);
       const avgRoi = livestock.length > 0 
         ? livestock.reduce((sum, item) => sum + (item.roi || 0), 0) / livestock.length 
@@ -501,17 +528,21 @@ const LivestockIntroduction = () => {
         totalValue: totalValue
       });
       
+      // Regroupement par catégorie
       const grouped = {};
       livestock.forEach(item => {
-        if (!grouped[item.category]) {
-          grouped[item.category] = [];
+        const catSlug = item.category?.slug || item.category?.toLowerCase().replace(/\s+/g, '-') || 'livestock';
+        if (!grouped[catSlug]) {
+          grouped[catSlug] = [];
         }
-        grouped[item.category].push(item);
+        grouped[catSlug].push(item);
       });
       
+      // Formatage des catégories
       const formattedCategories = dbCategories.map(cat => {
-        const categoryAssets = grouped[cat.slug] || [];
-        const colors = categoryCardColors[cat.slug] || categoryCardColors.default;
+        const categorySlug = cat.slug || cat._id;
+        const categoryAssets = grouped[categorySlug] || [];
+        const colors = categoryCardColors[categorySlug] || categoryCardColors.default;
         
         let imageUrl = '';
         if (cat.imageType === 'upload' && cat.imageUpload) {
@@ -524,11 +555,11 @@ const LivestockIntroduction = () => {
         
         return {
           id: cat._id,
-          slug: cat.slug,
+          slug: categorySlug,
           title: cat.title, // Déjà traduit par backend
           subtitle: cat.subtitle || cat.title,
           description: cat.description, // Déjà traduit par backend
-          icon: iconMap[cat.iconName] || <Leaf size={32} />,
+          icon: iconMap[cat.iconName] || iconMap[categorySlug] || <Leaf size={32} />,
           count: categoryAssets.length,
           totalValue: categoryAssets.reduce((sum, item) => sum + (item.price?.amount || 0), 0),
           image: imageUrl,
@@ -554,7 +585,12 @@ const LivestockIntroduction = () => {
     try {
       setLoadingFeatured(true);
       const response = await api.getAllLivestock({ status: 'AVAILABLE', limit: 6, lang: currentLang });
-      const items = response.livestock || response || [];
+      
+      // ✅ Extraction flexible comme dans RealEstate
+      let items = extractData(response, 'livestock');
+      if (items.length === 0 && response.livestock) items = response.livestock;
+      if (items.length === 0 && Array.isArray(response)) items = response;
+      if (items.length === 0 && response.data && Array.isArray(response.data)) items = response.data;
       
       const formattedItems = items.slice(0, 6).map(item => ({
         ...item,
@@ -563,7 +599,9 @@ const LivestockIntroduction = () => {
         description: item.description, // Déjà traduit par backend
         image: item.images && item.images[0] ? getFullImageUrl(item.images[0]) : null,
         location: item.location?.city || item.location || 'Cameroon',
-        categorySlug: item.category?.toLowerCase().replace(/\s+/g, '-') || 'livestock'
+        categorySlug: item.category?.slug || item.category?.toLowerCase().replace(/\s+/g, '-') || 'livestock',
+        roi: item.roi || 0,
+        price: item.price || { amount: 0 }
       }));
       
       setFeaturedLivestock(formattedItems);
@@ -613,7 +651,7 @@ const LivestockIntroduction = () => {
     );
   }
 
-  if (error) {
+  if (error && categories.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
@@ -791,7 +829,7 @@ const LivestockIntroduction = () => {
 
           {/* Carousel with navigation */}
           <div className="relative">
-            {canScrollLeft && (
+            {canScrollLeft && categories.length > 2 && (
               <button
                 onClick={() => scroll('left')}
                 className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 backdrop-blur rounded-full p-3 shadow-lg hover:bg-white transition-all -ml-4"
@@ -847,7 +885,7 @@ const LivestockIntroduction = () => {
                         </div>
                         
                         <p className="text-white/70 text-xs line-clamp-2 mb-3">
-                          {cat.description.substring(0, 100)}...
+                          {cat.description?.substring(0, 100)}...
                         </p>
                         
                         <div className="flex items-center justify-between">
