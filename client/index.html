@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -18,11 +18,23 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://propertycameroon.com/" />
     <meta property="og:image" content="https://propertycameroon.com/og-image.jpg" />
+    <meta property="og:site_name" content="Property Cameroon" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale:alternate" content="en_US" />
     
     <!-- 🔥 Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Property Cameroon" />
+    <meta name="twitter:title" content="Property Cameroon | Investment Gateway" />
     <meta name="twitter:description" content="Invest in Cameroon's premier real estate and agricultural assets." />
+    <meta name="twitter:image" content="https://propertycameroon.com/og-image.jpg" />
+    
+    <!-- 🔥 Canonical URL (évite le contenu dupliqué) -->
+    <link rel="canonical" href="https://propertycameroon.com/" />
+    
+    <!-- 🔥 Alternates pour les langues -->
+    <link rel="alternate" href="https://propertycameroon.com/?lang=fr" hreflang="fr" />
+    <link rel="alternate" href="https://propertycameroon.com/?lang=en" hreflang="en" />
+    <link rel="alternate" href="https://propertycameroon.com/" hreflang="x-default" />
     
     <!-- 🔥 Preconnect aux domaines critiques (optimisation chargement) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -33,13 +45,18 @@
     <!-- 🔥 DNS Prefetch pour domaines secondaires -->
     <link rel="dns-prefetch" href="https://unpkg.com" />
     <link rel="dns-prefetch" href="https://randomuser.me" />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     
     <!-- 🔥 Preload des fonts critiques (améliore FCP) -->
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" />
+    <link 
+      rel="preload" 
+      as="style" 
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" 
+    />
     
     <!-- 🔥 Fonts avec display swap (évite FOIT) -->
     <link 
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,900;1,400&display=swap" 
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700&display=swap" 
       rel="stylesheet" 
     />
     
@@ -64,11 +81,49 @@
     <!-- 🔥 Theme color pour mobile -->
     <meta name="theme-color" content="#1a4731" />
     <meta name="color-scheme" content="light" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Property Cameroon" />
     
-    <!-- 🔥 Manifest pour PWA (optionnel) -->
+    <!-- 🔥 Manifest pour PWA -->
     <link rel="manifest" href="/manifest.json" />
     
-    <title>Property Cameroon | Real Estate, Agriculture & Livestock Investment</title>
+    <!-- 🔥 Favicon pour toutes les plateformes -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    
+    <!-- 🔥 Script de détection de langue (exécuté immédiatement) -->
+    <script>
+      (function() {
+        // Détection de la langue depuis l'URL, localStorage ou navigateur
+        const urlParams = new URLSearchParams(window.location.search);
+        let lang = urlParams.get('lang');
+        
+        if (!lang) {
+          lang = localStorage.getItem('preferredLanguage');
+        }
+        
+        if (!lang) {
+          const browserLang = navigator.language.split('-')[0];
+          lang = browserLang === 'fr' ? 'fr' : 'en';
+        }
+        
+        if (!['fr', 'en'].includes(lang)) {
+          lang = 'en';
+        }
+        
+        // Stocker la langue
+        localStorage.setItem('preferredLanguage', lang);
+        
+        // Si pas de paramètre lang dans l'URL, ajouter une redirection silencieuse
+        if (!urlParams.has('lang') && window.location.pathname === '/') {
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.set('lang', lang);
+          window.history.replaceState({}, '', newUrl);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
