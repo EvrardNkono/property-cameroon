@@ -2,9 +2,9 @@
 
 const propertySchema = new mongoose.Schema({
   title: { type: String, required: true },
-  
-  category: { 
-    type: String, 
+
+  category: {
+    type: String,
     enum: [
       'House',
       'Villa',
@@ -20,98 +20,91 @@ const propertySchema = new mongoose.Schema({
       'Shop',
       'Industrial Space',
       'Parking'
-    ], 
-    required: true 
+    ],
+    required: true
   },
-  
-  // ✅ NOUVEAU CHAMP - Type de transaction (Vente ou Location)
-  listingType: { 
-    type: String, 
-    enum: ['sale', 'rent'], 
+
+  listingType: {
+    type: String,
+    enum: ['sale', 'rent'],
     default: 'sale',
     required: true
   },
-  
+
   location: {
     city: String,
     district: String,
     region: String,
     coordinates: { lat: Number, lng: Number }
   },
-  
-  surface: { 
-    value: Number, 
-    unit: { type: String, default: 'm²' } 
+
+  surface: {
+    value: Number,
+    unit: { type: String, default: 'm²' }
   },
-  
-  price: { 
-    amount: Number, 
-    currency: { type: String, default: 'FCFA' } 
+
+  price: {
+    amount: Number,
+    currency: { type: String, default: 'FCFA' }
   },
-  
-  status: { 
-    type: String, 
-    enum: ['PENDING', 'PUBLISHED', 'SOLD', 'RESERVED'], 
-    default: 'PENDING' 
+
+  status: {
+    type: String,
+    enum: ['PENDING', 'PUBLISHED', 'SOLD', 'RESERVED'],
+    default: 'PENDING'
   },
-  
-  owner: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true 
+
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
-  
+
   description: String,
   images: [String],
   documents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Document' }],
-  
+
   features: {
     hasElectricity: Boolean,
     hasWater: Boolean,
     hasRoad: Boolean,
     isFenced: Boolean,
-    bedrooms: { type: Number, default: 0 },
-    bathrooms: { type: Number, default: 0 },
-    // Pour appartements
-    floor: { type: Number, default: null },
+    bedrooms:    { type: Number,  default: 0 },
+    bathrooms:   { type: Number,  default: 0 },
+    floor:       { type: Number,  default: null },
     hasElevator: { type: Boolean, default: false },
-    hasBalcony: { type: Boolean, default: false },
-    // Pour meublé/non meublé (chambres, appartements, maisons)
+    hasBalcony:  { type: Boolean, default: false },
     isFurnished: { type: Boolean, default: false },
-    // Pour commerces
-    showWindow: { type: Boolean, default: false },
-    zone: { type: String, default: '' },
-    // Pour maisons
-    hasParking: { type: Boolean, default: false },
-    hasGarden: { type: Boolean, default: false },
-    // Pour terrains
-    landType: { type: String, default: '' }
+    showWindow:  { type: Boolean, default: false },
+    zone:        { type: String,  default: '' },
+    hasParking:  { type: Boolean, default: false },
+    hasGarden:   { type: Boolean, default: false },
+    landType:    { type: String,  default: '' }
   },
-  
-  // Amenities renseignées par le propriétaire (optionnel)
+
   amenities: {
-    schools: {
-      count: { type: Number, default: 0 },
-      names: [{ type: String }]
-    },
-    markets: {
-      count: { type: Number, default: 0 },
-      names: [{ type: String }]
-    },
-    stations: {
-      count: { type: Number, default: 0 },
-      names: [{ type: String }]
-    },
-    bakeries: {
-      count: { type: Number, default: 0 },
-      names: [{ type: String }]
-    }
+    schools:  { count: { type: Number, default: 0 }, names: [{ type: String }] },
+    markets:  { count: { type: Number, default: 0 }, names: [{ type: String }] },
+    stations: { count: { type: Number, default: 0 }, names: [{ type: String }] },
+    bakeries: { count: { type: Number, default: 0 }, names: [{ type: String }] }
   },
-  
-  views: { type: Number, default: 0 },
+
+  // ✅ Cache des traductions persisté en base MongoDB
+  // Tes données source sont en anglais (EN).
+  // Ce champ stocke les traductions déjà effectuées pour éviter de rappeler Google Translate.
+  // Structure : { "fr": { title, description, location: { city, region, district } }, "de": {...} }
+  // Peuplé automatiquement par le controller à la première requête dans chaque langue.
+  // Invalidé automatiquement si title/description/location sont modifiés (voir updateProperty).
+  translations: {
+    type: Map,
+    of: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
+
+  views:  { type: Number, default: 0 },
   soldAt: Date,
   soldTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
-  
+
 }, { timestamps: true });
 
 export default mongoose.model('Property', propertySchema);
