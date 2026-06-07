@@ -76,7 +76,7 @@ const RealEstateCarousel = () => {
       images: ['/images/a (2).jpg', '/images/a (3).jpg', '/images/a (1).jpg'],
       title_fr: "Appartement de Luxe",
       title_en: "Luxury Apartment",
-      location_fr: "Bonapriso, Douala",
+      location_fr: " Bonapriso, Douala",
       location_en: "Bonapriso, Douala",
       price: "35 000 000",
       specs: { beds: 3, baths: 2, area: 180 },
