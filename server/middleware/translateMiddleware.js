@@ -1,12 +1,14 @@
 // backend/middleware/translateMiddleware.js
-import translate from 'google-translate-api-x'; // ✅ import ESM
+import translate from 'google-translate-api-x';
 
 const translationCache = new Map();
 
 async function translateText(text, targetLang) {
-  if (!text || targetLang === 'fr') return text;
+  if (!text || typeof text !== 'string' || text.trim().length === 0) return text;
+  
   const cacheKey = `${text}_${targetLang}`;
   if (translationCache.has(cacheKey)) return translationCache.get(cacheKey);
+  
   try {
     const result = await translate(text, { to: targetLang });
     translationCache.set(cacheKey, result.text);
@@ -23,10 +25,11 @@ async function translateObject(obj, targetLang) {
   if (obj && typeof obj === 'object') {
     const translated = {};
     for (const [key, value] of Object.entries(obj)) {
-      const skip = ['_id','id','createdAt','updatedAt'].includes(key)
+      const skip = ['_id','id','createdAt','updatedAt','status','listingType','category','currency','unit','email','sourceUrl'].includes(key)
         || typeof value === 'number'
         || typeof value === 'boolean'
-        || value === null;
+        || value === null
+        || value === undefined;
       if (skip) {
         translated[key] = value;
       } else if (typeof value === 'string' && value.length > 0) {
@@ -42,29 +45,28 @@ async function translateObject(obj, targetLang) {
   return obj;
 }
 
-// ✅ Middleware corrigé — wrapper async propre
 function autoTranslate(req, res, next) {
+  // Détecter la langue demandée
   const lang = req.query.lang
     || req.headers['accept-language']?.split(',')[0]?.split('-')[0]
-    || 'fr';
-  req.targetLang = lang === 'en' ? 'en' : 'fr';
+    || 'en';
 
-  if (req.targetLang === 'fr') return next(); // ✅ Pas de traduction si français
+  req.targetLang = lang;
+
+  // ✅ Vos données sont en anglais → ne traduire QUE si la langue demandée N'EST PAS l'anglais
+  if (req.targetLang === 'en') return next();
 
   const originalJson = res.json.bind(res);
 
-  // ✅ Remplacement synchrone, exécution async interne
   res.json = function (data) {
-    res.json = originalJson; // ✅ Évite toute récursion
-    if (!data || typeof data !== 'object') {
-      return originalJson(data);
-    }
+    res.json = originalJson;
+    if (!data || typeof data !== 'object') return originalJson(data);
     translateObject(data, req.targetLang)
       .then(translated => originalJson(translated))
-      .catch(() => originalJson(data)); // ✅ Fallback propre
+      .catch(() => originalJson(data));
   };
 
   next();
 }
 
-export default autoTranslate; // ✅ export ESM
+export default autoTranslate;
