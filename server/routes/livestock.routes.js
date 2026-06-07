@@ -7,7 +7,8 @@ import {
   getLivestockByOwner,
   createLivestock,
   updateLivestock,
-  deleteLivestock
+  deleteLivestock,
+  forceTranslation  // ✅ Ajout de l'import
 } from '../controllers/livestock.controller.js';
 import { protect, authorize } from '../middleware/auth.middleware.js';
 
@@ -18,8 +19,9 @@ router.get('/', getAllLivestock);
 router.get('/category/:category', getLivestockByCategory);
 router.get('/owner/:ownerId', getLivestockByOwner);
 router.get('/:id', getLivestockById);
+router.get('/force-translation', forceTranslation);  // ✅ AJOUT DE LA ROUTE DE TEST
 
-// Routes protégées - ✅ CORRECTION DES RÔLES
+// Routes protégées
 router.use(protect);
 router.post('/', authorize('ADMIN', 'LIVESTOCK_OWNER'), createLivestock);
 router.put('/:id', authorize('ADMIN', 'LIVESTOCK_OWNER'), updateLivestock);

@@ -32,20 +32,17 @@ async function applyTranslation(livestock, targetLang) {
   console.log(`🔍 [applyTranslation] ID: ${doc._id}`);
   console.log(`🔍 [applyTranslation] Titre original: ${doc.title?.substring(0, 50)}...`);
 
-  // Si langue = anglais ou pas de langue, retourner les données brutes
   if (!targetLang || targetLang === 'en') {
     console.log(`📝 [applyTranslation] Retour original (anglais)`);
     return doc;
   }
 
-  // Vérifier le cache MongoDB
   const translationsMap = doc.translations instanceof Map
     ? Object.fromEntries(doc.translations)
     : (doc.translations || {});
 
   let cached = translationsMap[targetLang];
 
-  // Cache trouvé
   if (cached && cached.title) {
     console.log(`✅ [applyTranslation] Cache trouvé: "${cached.title?.substring(0, 50)}..."`);
     return {
@@ -55,7 +52,6 @@ async function applyTranslation(livestock, targetLang) {
     };
   }
 
-  // Pas de cache -> traduire immédiatement
   console.log(`🔄 [applyTranslation] Pas de cache, traduction en cours...`);
   
   try {
@@ -70,7 +66,6 @@ async function applyTranslation(livestock, targetLang) {
 
     const cacheEntry = { title, description };
 
-    // Sauvegarde en cache (attendre la fin)
     await Livestock.findByIdAndUpdate(
       doc._id,
       { $set: { [`translations.${targetLang}`]: cacheEntry } }
@@ -89,6 +84,51 @@ async function applyTranslation(livestock, targetLang) {
   }
 }
 // ========== FIN DES FONCTIONS DE TRADUCTION ==========
+
+// ========== ENDPOINT DE TEST POUR FORCER LA TRADUCTION ==========
+export const forceTranslation = async (req, res) => {
+  try {
+    const { id, lang = 'fr' } = req.query;
+    
+    if (!id) {
+      return res.status(400).json({ error: 'Missing id parameter' });
+    }
+    
+    console.log(`🔄 [forceTranslation] Forcing translation for ${id} to ${lang}`);
+    
+    const livestock = await Livestock.findById(id);
+    if (!livestock) {
+      return res.status(404).json({ error: 'Livestock not found' });
+    }
+    
+    console.log(`📝 [forceTranslation] Original title: ${livestock.title}`);
+    
+    const translatedTitle = await translateText(livestock.title, lang);
+    const translatedDescription = await translateText(livestock.description, lang);
+    
+    console.log(`✅ [forceTranslation] Translated title: ${translatedTitle}`);
+    
+    await Livestock.findByIdAndUpdate(id, {
+      $set: { [`translations.${lang}`]: { 
+        title: translatedTitle, 
+        description: translatedDescription 
+      } }
+    });
+    
+    const updated = await Livestock.findById(id);
+    
+    res.json({
+      success: true,
+      original: livestock.title,
+      translated: translatedTitle,
+      translations: updated.translations
+    });
+  } catch (error) {
+    console.error('❌ Force translation error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+// ========== FIN ENDPOINT DE TEST ==========
 
 export const getAllLivestock = async (req, res) => {
   try {
@@ -110,7 +150,6 @@ export const getAllLivestock = async (req, res) => {
     
     console.log(`📋 [getAllLivestock] ${livestock.length} actifs trouvés`);
     
-    // Appliquer la traduction
     const translatedLivestock = await Promise.all(
       livestock.map(item => applyTranslation(item, targetLang))
     );
@@ -148,7 +187,6 @@ export const getLivestockByCategory = async (req, res) => {
     const livestock = await Livestock.find({ category, status: 'AVAILABLE' })
       .populate('owner', 'name');
     
-    // Appliquer la traduction
     const translatedLivestock = await Promise.all(
       livestock.map(item => applyTranslation(item, targetLang))
     );
@@ -179,7 +217,6 @@ export const getLivestockById = async (req, res) => {
     
     console.log(`📦 [getLivestockById] Titre original: ${livestock.title?.substring(0, 50)}...`);
     
-    // Appliquer la traduction
     const translated = await applyTranslation(livestock, targetLang);
     
     console.log(`✅ [getLivestockById] Titre final: ${translated.title?.substring(0, 50)}...`);
@@ -206,7 +243,6 @@ export const getLivestockByOwner = async (req, res) => {
       .populate('owner', 'name email')
       .sort('-createdAt');
     
-    // Appliquer la traduction
     const translatedLivestock = await Promise.all(
       livestock.map(item => applyTranslation(item, targetLang))
     );
@@ -264,7 +300,6 @@ export const updateLivestock = async (req, res) => {
       }
     }
     
-    // Invalider le cache de traduction si le titre ou la description change
     const updateData = { ...req.body };
     if (req.body.title || req.body.description) {
       updateData.translations = {};
