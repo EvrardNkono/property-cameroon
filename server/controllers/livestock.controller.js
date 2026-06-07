@@ -4,7 +4,7 @@ import LivestockCategory from '../models/LivestockCategory.model.js';
 import mongoose from 'mongoose';
 import translate from 'google-translate-api-x';
 
-// ========== FONCTIONS DE TRADUCTION (copiées de property.controller.js) ==========
+// ========== FONCTIONS DE TRADUCTION ==========
 const memCache = new Map();
 
 async function translateText(text, targetLang) {
@@ -17,8 +17,10 @@ async function translateText(text, targetLang) {
   try {
     const result = await translate(text, { to: targetLang });
     memCache.set(key, result.text);
+    console.log(`📝 [translateText] "${text.substring(0, 30)}..." -> "${result.text.substring(0, 30)}..."`);
     return result.text;
-  } catch {
+  } catch (error) {
+    console.error(`❌ [translateText] Erreur:`, error.message);
     return text;
   }
 }
@@ -26,17 +28,26 @@ async function translateText(text, targetLang) {
 async function applyTranslation(livestock, targetLang) {
   const doc = livestock.toObject ? livestock.toObject() : { ...livestock };
 
+  console.log(`🔍 [applyTranslation] Langue cible: ${targetLang}`);
+  console.log(`🔍 [applyTranslation] ID: ${doc._id}`);
+  console.log(`🔍 [applyTranslation] Titre original: ${doc.title?.substring(0, 50)}...`);
+
+  // Si langue = anglais ou pas de langue, retourner les données brutes
   if (!targetLang || targetLang === 'en') {
+    console.log(`📝 [applyTranslation] Retour original (anglais)`);
     return doc;
   }
 
+  // Vérifier le cache MongoDB
   const translationsMap = doc.translations instanceof Map
     ? Object.fromEntries(doc.translations)
     : (doc.translations || {});
 
-  const cached = translationsMap[targetLang];
+  let cached = translationsMap[targetLang];
 
+  // Cache trouvé
   if (cached && cached.title) {
+    console.log(`✅ [applyTranslation] Cache trouvé: "${cached.title?.substring(0, 50)}..."`);
     return {
       ...doc,
       title: cached.title,
@@ -44,20 +55,28 @@ async function applyTranslation(livestock, targetLang) {
     };
   }
 
+  // Pas de cache -> traduire immédiatement
+  console.log(`🔄 [applyTranslation] Pas de cache, traduction en cours...`);
+  
   try {
     const [title, description] = await Promise.all([
       translateText(doc.title, targetLang),
       translateText(doc.description, targetLang)
     ]);
 
+    console.log(`✅ [applyTranslation] Traduction obtenue:`);
+    console.log(`   Titre: "${title?.substring(0, 50)}..."`);
+    console.log(`   Description: "${description?.substring(0, 50)}..."`);
+
     const cacheEntry = { title, description };
 
-    // Sauvegarde en cache asynchrone
-    Livestock.findByIdAndUpdate(
+    // Sauvegarde en cache (attendre la fin)
+    await Livestock.findByIdAndUpdate(
       doc._id,
-      { $set: { [`translations.${targetLang}`]: cacheEntry } },
-      { new: false }
-    ).catch(err => console.error(`[livestock] Cache write failed:`, err.message));
+      { $set: { [`translations.${targetLang}`]: cacheEntry } }
+    );
+    
+    console.log(`💾 [applyTranslation] Cache sauvegardé pour ${doc._id}`);
 
     return {
       ...doc,
@@ -65,7 +84,7 @@ async function applyTranslation(livestock, targetLang) {
       description
     };
   } catch (err) {
-    console.error(`[livestock] Translation failed:`, err.message);
+    console.error(`❌ [applyTranslation] Échec:`, err.message);
     return doc;
   }
 }
@@ -75,6 +94,8 @@ export const getAllLivestock = async (req, res) => {
   try {
     const { category, status, search, lang } = req.query;
     const targetLang = lang || 'en';
+    
+    console.log(`📋 [getAllLivestock] Langue: ${targetLang}`);
     
     let filter = {};
     if (category) filter.category = category;
@@ -87,7 +108,9 @@ export const getAllLivestock = async (req, res) => {
       .populate('owner', 'name email')
       .sort('-createdAt');
     
-    // ✅ Appliquer la traduction
+    console.log(`📋 [getAllLivestock] ${livestock.length} actifs trouvés`);
+    
+    // Appliquer la traduction
     const translatedLivestock = await Promise.all(
       livestock.map(item => applyTranslation(item, targetLang))
     );
@@ -101,7 +124,7 @@ export const getAllLivestock = async (req, res) => {
       livestock: translatedLivestock
     });
   } catch (error) {
-    console.error('Error in getAllLivestock:', error);
+    console.error('❌ Error in getAllLivestock:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -111,6 +134,8 @@ export const getLivestockByCategory = async (req, res) => {
     const { category } = req.params;
     const { lang } = req.query;
     const targetLang = lang || 'en';
+    
+    console.log(`📋 [getLivestockByCategory] Catégorie: ${category}, Langue: ${targetLang}`);
     
     const categoryExists = await LivestockCategory.findOne({ slug: category });
     if (!categoryExists) {
@@ -123,14 +148,14 @@ export const getLivestockByCategory = async (req, res) => {
     const livestock = await Livestock.find({ category, status: 'AVAILABLE' })
       .populate('owner', 'name');
     
-    // ✅ Appliquer la traduction
+    // Appliquer la traduction
     const translatedLivestock = await Promise.all(
       livestock.map(item => applyTranslation(item, targetLang))
     );
       
     res.json({ success: true, count: translatedLivestock.length, livestock: translatedLivestock });
   } catch (error) {
-    console.error('Error in getLivestockByCategory:', error);
+    console.error('❌ Error in getLivestockByCategory:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -140,16 +165,29 @@ export const getLivestockById = async (req, res) => {
     const { lang } = req.query;
     const targetLang = lang || 'en';
     
+    console.log(`========================================`);
+    console.log(`🔍 [getLivestockById] ID: ${req.params.id}`);
+    console.log(`🌐 [getLivestockById] Langue demandée: ${targetLang}`);
+    
     const livestock = await Livestock.findById(req.params.id)
       .populate('owner', 'name email phone');
     
-    if (!livestock) return res.status(404).json({ success: false, message: 'Not found' });
+    if (!livestock) {
+      console.log(`❌ [getLivestockById] Actif non trouvé: ${req.params.id}`);
+      return res.status(404).json({ success: false, message: 'Not found' });
+    }
     
-    // ✅ Appliquer la traduction
+    console.log(`📦 [getLivestockById] Titre original: ${livestock.title?.substring(0, 50)}...`);
+    
+    // Appliquer la traduction
     const translated = await applyTranslation(livestock, targetLang);
+    
+    console.log(`✅ [getLivestockById] Titre final: ${translated.title?.substring(0, 50)}...`);
+    console.log(`========================================`);
+    
     res.json({ success: true, livestock: translated });
   } catch (error) {
-    console.error('Error in getLivestockById:', error);
+    console.error('❌ Error in getLivestockById:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -168,14 +206,14 @@ export const getLivestockByOwner = async (req, res) => {
       .populate('owner', 'name email')
       .sort('-createdAt');
     
-    // ✅ Appliquer la traduction
+    // Appliquer la traduction
     const translatedLivestock = await Promise.all(
       livestock.map(item => applyTranslation(item, targetLang))
     );
       
     res.json({ success: true, count: translatedLivestock.length, livestock: translatedLivestock });
   } catch (error) {
-    console.error('Error in getLivestockByOwner:', error);
+    console.error('❌ Error in getLivestockByOwner:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -199,9 +237,10 @@ export const createLivestock = async (req, res) => {
     
     await updateCategoryStats(category);
     
+    console.log(`✅ [createLivestock] Nouvel actif créé: ${livestock._id}`);
     res.status(201).json({ success: true, livestock });
   } catch (error) {
-    console.error('Create livestock error:', error);
+    console.error('❌ Create livestock error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -225,10 +264,11 @@ export const updateLivestock = async (req, res) => {
       }
     }
     
-    // ✅ Invalider le cache de traduction si le titre ou la description change
+    // Invalider le cache de traduction si le titre ou la description change
     const updateData = { ...req.body };
     if (req.body.title || req.body.description) {
       updateData.translations = {};
+      console.log(`🔄 [updateLivestock] Cache de traduction invalidé`);
     }
     
     const livestock = await Livestock.findByIdAndUpdate(
@@ -244,9 +284,10 @@ export const updateLivestock = async (req, res) => {
       await updateCategoryStats(category);
     }
     
+    console.log(`✅ [updateLivestock] Actif mis à jour: ${livestock._id}`);
     res.json({ success: true, livestock });
   } catch (error) {
-    console.error('Update livestock error:', error);
+    console.error('❌ Update livestock error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -261,9 +302,10 @@ export const deleteLivestock = async (req, res) => {
     
     await updateCategoryStats(category);
     
+    console.log(`✅ [deleteLivestock] Actif supprimé: ${req.params.id}`);
     res.json({ success: true, message: 'Deleted successfully' });
   } catch (error) {
-    console.error('Delete livestock error:', error);
+    console.error('❌ Delete livestock error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -289,9 +331,9 @@ const updateCategoryStats = async (categorySlug) => {
     category.stats = { totalAssets, totalValue, avgRoi };
     await category.save();
     
-    console.log(`✅ Stats updated for ${categorySlug}: ${totalAssets} assets`);
+    console.log(`✅ [updateCategoryStats] Stats mises à jour pour ${categorySlug}: ${totalAssets} actifs`);
   } catch (error) {
-    console.error('Error updating category stats:', error);
+    console.error('❌ Error updating category stats:', error);
   }
 };
 
@@ -306,7 +348,7 @@ export const getPresentationCategories = async (req, res) => {
     const refreshedCategories = await LivestockCategory.find({ isActive: true }).sort('order');
     res.json({ success: true, categories: refreshedCategories });
   } catch (error) {
-    console.error('Error in getPresentationCategories:', error);
+    console.error('❌ Error in getPresentationCategories:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -323,7 +365,7 @@ export const getAvailableCategoryOptions = async (req, res) => {
     
     res.json({ success: true, categories: options });
   } catch (error) {
-    console.error('Error in getAvailableCategoryOptions:', error);
+    console.error('❌ Error in getAvailableCategoryOptions:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
