@@ -75,7 +75,6 @@ async function applyTranslation(category, targetLang) {
 }
 // ========== FIN DES FONCTIONS DE TRADUCTION ==========
 
-// Obtenir toutes les catégories
 export const getAllCategories = async (req, res) => {
   try {
     const { isActive, lang } = req.query;
@@ -86,7 +85,7 @@ export const getAllCategories = async (req, res) => {
     
     const categories = await LivestockCategory.find(filter).sort('order');
     
-    // Appliquer la traduction
+    // ✅ Appliquer la traduction
     const translatedCategories = await Promise.all(
       categories.map(cat => applyTranslation(cat, targetLang))
     );
@@ -98,7 +97,6 @@ export const getAllCategories = async (req, res) => {
   }
 };
 
-// Obtenir une catégorie par slug
 export const getCategoryBySlug = async (req, res) => {
   try {
     const { lang } = req.query;
@@ -109,6 +107,7 @@ export const getCategoryBySlug = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Category not found' });
     }
     
+    // ✅ Appliquer la traduction
     const translated = await applyTranslation(category, targetLang);
     res.json({ success: true, category: translated });
   } catch (error) {
@@ -117,7 +116,6 @@ export const getCategoryBySlug = async (req, res) => {
   }
 };
 
-// Obtenir une catégorie par ID
 export const getCategoryById = async (req, res) => {
   try {
     const { lang } = req.query;
@@ -128,6 +126,7 @@ export const getCategoryById = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Category not found' });
     }
     
+    // ✅ Appliquer la traduction
     const translated = await applyTranslation(category, targetLang);
     res.json({ success: true, category: translated });
   } catch (error) {
@@ -136,17 +135,12 @@ export const getCategoryById = async (req, res) => {
   }
 };
 
-// Créer une catégorie
 export const createCategory = async (req, res) => {
   try {
     console.log('📝 Creating category...');
-    console.log('Body:', req.body);
-    console.log('File:', req.file);
     
-    // Extraire les données du formulaire
     const { slug, title, subtitle, description, iconName, marketDemand, features, order, isActive, imageType, imageUrl } = req.body;
     
-    // Parser features si c'est une string JSON
     let parsedFeatures = features;
     if (typeof features === 'string') {
       try {
@@ -169,10 +163,9 @@ export const createCategory = async (req, res) => {
       imageType: imageType || 'url',
       imageUrl: imageUrl || '',
       imageUpload: '',
-      translations: new Map() // Initialiser le cache de traductions
+      translations: new Map() // ✅ Initialiser le cache de traductions
     };
     
-    // Gérer l'upload d'image
     if (req.file) {
       categoryData.imageType = 'upload';
       categoryData.imageUpload = `/uploads/categories/${req.file.filename}`;
@@ -189,7 +182,6 @@ export const createCategory = async (req, res) => {
   }
 };
 
-// Mettre à jour une catégorie
 export const updateCategory = async (req, res) => {
   try {
     const category = await LivestockCategory.findById(req.params.id);
@@ -199,7 +191,6 @@ export const updateCategory = async (req, res) => {
     
     const { slug, title, subtitle, description, iconName, marketDemand, features, order, isActive, imageType, imageUrl } = req.body;
     
-    // Parser features
     let parsedFeatures = features;
     if (typeof features === 'string') {
       try {
@@ -223,14 +214,12 @@ export const updateCategory = async (req, res) => {
       imageUrl: imageUrl || category.imageUrl
     };
     
-    // Invalider le cache de traduction si le titre, sous-titre ou description change
+    // ✅ Invalider le cache de traduction si le titre, sous-titre ou description change
     if (title || subtitle || description) {
       updateData.translations = {};
     }
     
-    // Gérer l'upload d'image
     if (req.file) {
-      // Supprimer l'ancienne image si elle existe
       if (category.imageUpload && category.imageType === 'upload') {
         const oldImagePath = path.join(process.cwd(), category.imageUpload);
         if (fs.existsSync(oldImagePath)) {
@@ -256,7 +245,6 @@ export const updateCategory = async (req, res) => {
   }
 };
 
-// Supprimer une catégorie
 export const deleteCategory = async (req, res) => {
   try {
     const category = await LivestockCategory.findById(req.params.id);
@@ -264,7 +252,6 @@ export const deleteCategory = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Category not found' });
     }
     
-    // Supprimer l'image uploadée
     if (category.imageUpload && category.imageType === 'upload') {
       const imagePath = path.join(process.cwd(), category.imageUpload);
       if (fs.existsSync(imagePath)) {
@@ -281,7 +268,6 @@ export const deleteCategory = async (req, res) => {
   }
 };
 
-// Mettre à jour les statistiques d'une catégorie (calculées automatiquement)
 export const updateCategoryStats = async (req, res) => {
   try {
     const categories = await LivestockCategory.find({});

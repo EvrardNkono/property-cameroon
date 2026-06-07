@@ -87,12 +87,19 @@ export const getAllLivestock = async (req, res) => {
       .populate('owner', 'name email')
       .sort('-createdAt');
     
-    // Appliquer la traduction
+    // ✅ Appliquer la traduction
     const translatedLivestock = await Promise.all(
       livestock.map(item => applyTranslation(item, targetLang))
     );
     
-    res.json({ success: true, count: translatedLivestock.length, livestock: translatedLivestock });
+    const totalValue = translatedLivestock.reduce((sum, item) => sum + (item.price?.amount || 0), 0);
+    
+    res.json({
+      success: true,
+      count: translatedLivestock.length,
+      totalValue,
+      livestock: translatedLivestock
+    });
   } catch (error) {
     console.error('Error in getAllLivestock:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -105,7 +112,6 @@ export const getLivestockByCategory = async (req, res) => {
     const { lang } = req.query;
     const targetLang = lang || 'en';
     
-    // Vérifier que la catégorie existe dans LivestockCategory
     const categoryExists = await LivestockCategory.findOne({ slug: category });
     if (!categoryExists) {
       return res.status(404).json({ 
@@ -117,7 +123,7 @@ export const getLivestockByCategory = async (req, res) => {
     const livestock = await Livestock.find({ category, status: 'AVAILABLE' })
       .populate('owner', 'name');
     
-    // Appliquer la traduction
+    // ✅ Appliquer la traduction
     const translatedLivestock = await Promise.all(
       livestock.map(item => applyTranslation(item, targetLang))
     );
@@ -139,6 +145,7 @@ export const getLivestockById = async (req, res) => {
     
     if (!livestock) return res.status(404).json({ success: false, message: 'Not found' });
     
+    // ✅ Appliquer la traduction
     const translated = await applyTranslation(livestock, targetLang);
     res.json({ success: true, livestock: translated });
   } catch (error) {
@@ -161,7 +168,7 @@ export const getLivestockByOwner = async (req, res) => {
       .populate('owner', 'name email')
       .sort('-createdAt');
     
-    // Appliquer la traduction
+    // ✅ Appliquer la traduction
     const translatedLivestock = await Promise.all(
       livestock.map(item => applyTranslation(item, targetLang))
     );
@@ -177,12 +184,11 @@ export const createLivestock = async (req, res) => {
   try {
     const { category } = req.body;
     
-    // Vérifier que la catégorie existe dans LivestockCategory
     const categoryExists = await LivestockCategory.findOne({ slug: category });
     if (!categoryExists) {
       return res.status(400).json({ 
         success: false, 
-        message: `Category "${category}" does not exist. Please ask the administrator to create it first.`
+        message: `Category "${category}" does not exist.`
       });
     }
     
@@ -191,7 +197,6 @@ export const createLivestock = async (req, res) => {
       owner: req.user._id 
     });
     
-    // Mettre à jour les statistiques de la catégorie
     await updateCategoryStats(category);
     
     res.status(201).json({ success: true, livestock });
@@ -210,7 +215,6 @@ export const updateLivestock = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Livestock not found' });
     }
     
-    // Si la catégorie change, vérifier que la nouvelle existe
     if (category && category !== oldLivestock.category) {
       const categoryExists = await LivestockCategory.findOne({ slug: category });
       if (!categoryExists) {
@@ -221,7 +225,7 @@ export const updateLivestock = async (req, res) => {
       }
     }
     
-    // Invalider le cache de traduction si le titre ou la description change
+    // ✅ Invalider le cache de traduction si le titre ou la description change
     const updateData = { ...req.body };
     if (req.body.title || req.body.description) {
       updateData.translations = {};
@@ -233,7 +237,6 @@ export const updateLivestock = async (req, res) => {
       { new: true, runValidators: true }
     );
     
-    // Mettre à jour les statistiques
     if (category && category !== oldLivestock.category) {
       await updateCategoryStats(oldLivestock.category);
       await updateCategoryStats(category);
@@ -286,7 +289,7 @@ const updateCategoryStats = async (categorySlug) => {
     category.stats = { totalAssets, totalValue, avgRoi };
     await category.save();
     
-    console.log(`✅ Stats updated for ${categorySlug}: ${totalAssets} assets, ${totalValue.toLocaleString()} FCFA`);
+    console.log(`✅ Stats updated for ${categorySlug}: ${totalAssets} assets`);
   } catch (error) {
     console.error('Error updating category stats:', error);
   }
@@ -294,9 +297,6 @@ const updateCategoryStats = async (categorySlug) => {
 
 export const getPresentationCategories = async (req, res) => {
   try {
-    const { lang } = req.query;
-    const targetLang = lang || 'en';
-    
     const categories = await LivestockCategory.find({ isActive: true }).sort('order');
     
     for (const category of categories) {
@@ -304,13 +304,7 @@ export const getPresentationCategories = async (req, res) => {
     }
     
     const refreshedCategories = await LivestockCategory.find({ isActive: true }).sort('order');
-    
-    // Appliquer la traduction aux catégories
-    const translatedCategories = await Promise.all(
-      refreshedCategories.map(cat => applyCategoryTranslation(cat, targetLang))
-    );
-    
-    res.json({ success: true, categories: translatedCategories });
+    res.json({ success: true, categories: refreshedCategories });
   } catch (error) {
     console.error('Error in getPresentationCategories:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -333,56 +327,6 @@ export const getAvailableCategoryOptions = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
-// Fonction de traduction pour les catégories
-async function applyCategoryTranslation(category, targetLang) {
-  const doc = category.toObject ? category.toObject() : { ...category };
-
-  if (!targetLang || targetLang === 'en') {
-    return doc;
-  }
-
-  const translationsMap = doc.translations instanceof Map
-    ? Object.fromEntries(doc.translations)
-    : (doc.translations || {});
-
-  const cached = translationsMap[targetLang];
-
-  if (cached && cached.title) {
-    return {
-      ...doc,
-      title: cached.title,
-      subtitle: cached.subtitle ?? doc.subtitle,
-      description: cached.description ?? doc.description
-    };
-  }
-
-  try {
-    const [title, subtitle, description] = await Promise.all([
-      translateText(doc.title, targetLang),
-      translateText(doc.subtitle, targetLang),
-      translateText(doc.description, targetLang)
-    ]);
-
-    const cacheEntry = { title, subtitle, description };
-
-    LivestockCategory.findByIdAndUpdate(
-      doc._id,
-      { $set: { [`translations.${targetLang}`]: cacheEntry } },
-      { new: false }
-    ).catch(err => console.error(`[category] Cache write failed:`, err.message));
-
-    return {
-      ...doc,
-      title,
-      subtitle,
-      description
-    };
-  } catch (err) {
-    console.error(`[category] Translation failed:`, err.message);
-    return doc;
-  }
-}
 
 const getIconForCategory = (slug) => {
   const iconMap = {
