@@ -217,66 +217,76 @@ const ProjectDetailsPage = () => {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        console.log(`🌐 ProjectDetailsPage - Langue demandée: ${currentLang}`);
-        console.log(`🔍 Fetching livestock with id: ${id}, lang: ${currentLang}`);
-        
-        const livestockRes = await api.getLivestockById(id, { lang: currentLang });
-        console.log('📦 API Response complete:', livestockRes);
-        
-        const livestock = extractData(livestockRes, 'livestock');
-        console.log('📝 Extracted livestock data:', livestock);
-        console.log('📝 Title received from backend:', livestock?.title);
-        console.log('📝 Description received from backend:', livestock?.description);
-        
-        if (!livestock || !livestock._id) {
-          throw new Error('No livestock data found');
-        }
-        
-        const mainImage = livestock.images && livestock.images[0] 
-          ? getImageUrl(livestock.images[0]) 
-          : 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000';
-        
-        let featuresArray = [];
-        if (Array.isArray(livestock.features)) {
-          featuresArray = livestock.features;
-        } else if (typeof livestock.features === 'string') {
-          featuresArray = livestock.features.split(',').map(f => f.trim());
-        } else {
-          featuresArray = [t.sustainablyManaged, t.bioCertified, t.exportReady];
-        }
-        
-        setProject({
-          id: livestock._id,
-          title: livestock.title,
-          description: livestock.description,
-          price: livestock.price?.amount || 0,
-          roi: livestock.roi || 0,
-          location: livestock.location?.city || livestock.location || 'Cameroon',
-          region: livestock.location?.region || '',
-          cycleDuration: livestock.cycleDuration || '12 months',
-          capacity: livestock.capacity?.value || 0,
-          capacityUnit: livestock.capacity?.unit || 'units',
-          image: mainImage,
-          status: livestock.status || 'Available',
-          features: featuresArray
-        });
-        
-      } catch (err) {
-        console.error('❌ Error fetching project:', err);
-        setError(err.message || t.loadingError);
-      } finally {
-        setLoading(false);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log(`🌐 ProjectDetailsPage - Langue demandée: ${currentLang}`);
+      console.log(`🔍 Fetching livestock with id: ${id}, lang: ${currentLang}`);
+      
+      const livestockRes = await api.getLivestockById(id, { lang: currentLang });
+      console.log('📦 API Response:', livestockRes);
+      
+      // Extraction correcte des données
+      let livestock = null;
+      if (livestockRes.livestock) {
+        livestock = livestockRes.livestock;
+      } else if (livestockRes.data) {
+        livestock = livestockRes.data;
+      } else {
+        livestock = livestockRes;
       }
-    };
-    
-    window.scrollTo(0, 0);
-    fetchData();
-  }, [id, category, currentLang, t]);
+      
+      console.log('📝 Livestock extrait:', livestock);
+      console.log('📝 Titre reçu:', livestock?.title);
+      console.log('📝 Description reçue:', livestock?.description?.substring(0, 100));
+      
+      if (!livestock || !livestock._id) {
+        throw new Error('No livestock data found');
+      }
+      
+      const mainImage = livestock.images && livestock.images[0] 
+        ? getImageUrl(livestock.images[0]) 
+        : 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000';
+      
+      let featuresArray = [];
+      if (Array.isArray(livestock.features)) {
+        featuresArray = livestock.features;
+      } else if (typeof livestock.features === 'string') {
+        featuresArray = livestock.features.split(',').map(f => f.trim());
+      } else {
+        featuresArray = [t.sustainablyManaged, t.bioCertified, t.exportReady];
+      }
+      
+      // Mettre à jour le state avec les nouvelles données
+      setProject({
+        id: livestock._id,
+        title: livestock.title,
+        description: livestock.description,
+        price: livestock.price?.amount || 0,
+        roi: livestock.roi || 0,
+        location: livestock.location?.city || livestock.location || 'Cameroon',
+        region: livestock.location?.region || '',
+        cycleDuration: livestock.cycleDuration || '12 months',
+        capacity: livestock.capacity?.value || 0,
+        capacityUnit: livestock.capacity?.unit || 'units',
+        image: mainImage,
+        status: livestock.status || 'Available',
+        features: featuresArray
+      });
+      
+    } catch (err) {
+      console.error('❌ Error fetching project:', err);
+      setError(err.message || t.loadingError);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  window.scrollTo(0, 0);
+  fetchData();
+}, [id, category, currentLang]); // ✅ currentLang est déjà dans les dépendances
 
   const formattedCycleDuration = project?.cycleDuration?.includes('month') 
     ? project.cycleDuration.replace('months', t.months).replace('month', t.months.slice(0, -1))
