@@ -307,7 +307,7 @@ const RealEstateCarousel = () => {
                       <div>
                         <p className="text-[9px] uppercase tracking-wider text-white/50">{t.from}</p>
                         <p className="text-2xl md:text-3xl font-bold text-amber-400">
-                          {currentProperty.price} <span className="text-sm text-white/50">FCFA</span>
+                          {currentProperty.price} <span className="text-sm text-white/50"></span>
                         </p>
                       </div>
                       <button className="group px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full text-[10px] font-bold uppercase tracking-wider text-white hover:bg-amber-500 hover:text-white transition-all duration-300">
