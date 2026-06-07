@@ -1,4 +1,3 @@
-// backend/models/LivestockCategory.model.js
 import mongoose from 'mongoose';
 
 const livestockCategorySchema = new mongoose.Schema({
@@ -64,14 +63,20 @@ const livestockCategorySchema = new mongoose.Schema({
     totalAssets: { type: Number, default: 0 },
     totalValue: { type: Number, default: 0 },
     avgRoi: { type: Number, default: 0 }
+  },
+  
+  // ✅ AJOUTER LE CACHE DE TRADUCTIONS
+  translations: {
+    type: Map,
+    of: mongoose.Schema.Types.Mixed,
+    default: {}
   }
+  
 }, {
   timestamps: true
 });
 
-// ✅ CORRECTION: pre-save hook sans next()
 livestockCategorySchema.pre('save', function() {
-  // Si aucune image n'est définie, mettre une image par défaut
   if (!this.imageUpload && !this.imageUrl) {
     this.imageType = 'url';
     this.imageUrl = 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000';

@@ -1,9 +1,7 @@
-// backend/models/Livestock.model.js
 import mongoose from 'mongoose';
 
 const livestockSchema = new mongoose.Schema({
   title: { type: String, required: true },
-  // ✅ Plus d'enum ! La catégorie peut être n'importe quelle string
   category: { 
     type: String, 
     required: true,
@@ -38,7 +36,15 @@ const livestockSchema = new mongoose.Schema({
     hasFeedStorage: Boolean
   },
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  certifications: [String]
+  certifications: [String],
+  
+  // ✅ AJOUTER LE CACHE DE TRADUCTIONS (comme dans Property)
+  translations: {
+    type: Map,
+    of: mongoose.Schema.Types.Mixed,
+    default: {}
+  }
+  
 }, { timestamps: true });
 
 export default mongoose.model('Livestock', livestockSchema);
