@@ -2,9 +2,9 @@
 
 const propertySchema = new mongoose.Schema({
   title: { type: String, required: true },
-
-  category: {
-    type: String,
+  
+  category: { 
+    type: String, 
     enum: [
       'House',
       'Villa',
@@ -20,68 +20,51 @@ const propertySchema = new mongoose.Schema({
       'Shop',
       'Industrial Space',
       'Parking'
-    ],
-    required: true
+    ], 
+    required: true 
   },
-
-  listingType: {
-    type: String,
-    enum: ['sale', 'rent'],
+  
+  // ✅ NOUVEAU CHAMP - Type de transaction (Vente ou Location)
+  listingType: { 
+    type: String, 
+    enum: ['sale', 'rent'], 
     default: 'sale',
     required: true
   },
-
-  // ✅ NOUVEAU : langue dans laquelle le propriétaire a saisi les données
-  // Mettre 'en' si les données existantes en base sont en anglais
-  // Mettre 'fr' si les données existantes en base sont en français
-  sourceLang: {
-    type: String,
-    enum: ['fr', 'en'],
-    default: 'fr'
-  },
-
-  // ✅ NOUVEAU : cache des traductions par langue
-  // Structure stockée : { "en": { title, description, location }, "fr": { title, description, location } }
-  // Peuplé automatiquement lors de la première requête dans chaque langue
-  translations: {
-    type: Map,
-    of: mongoose.Schema.Types.Mixed,
-    default: {}
-  },
-
+  
   location: {
     city: String,
     district: String,
     region: String,
     coordinates: { lat: Number, lng: Number }
   },
-
-  surface: {
-    value: Number,
-    unit: { type: String, default: 'm²' }
+  
+  surface: { 
+    value: Number, 
+    unit: { type: String, default: 'm²' } 
   },
-
-  price: {
-    amount: Number,
-    currency: { type: String, default: 'FCFA' }
+  
+  price: { 
+    amount: Number, 
+    currency: { type: String, default: 'FCFA' } 
   },
-
-  status: {
-    type: String,
-    enum: ['PENDING', 'PUBLISHED', 'SOLD', 'RESERVED'],
-    default: 'PENDING'
+  
+  status: { 
+    type: String, 
+    enum: ['PENDING', 'PUBLISHED', 'SOLD', 'RESERVED'], 
+    default: 'PENDING' 
   },
-
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+  
+  owner: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User', 
+    required: true 
   },
-
+  
   description: String,
   images: [String],
   documents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Document' }],
-
+  
   features: {
     hasElectricity: Boolean,
     hasWater: Boolean,
@@ -89,17 +72,23 @@ const propertySchema = new mongoose.Schema({
     isFenced: Boolean,
     bedrooms: { type: Number, default: 0 },
     bathrooms: { type: Number, default: 0 },
+    // Pour appartements
     floor: { type: Number, default: null },
     hasElevator: { type: Boolean, default: false },
     hasBalcony: { type: Boolean, default: false },
+    // Pour meublé/non meublé (chambres, appartements, maisons)
     isFurnished: { type: Boolean, default: false },
+    // Pour commerces
     showWindow: { type: Boolean, default: false },
     zone: { type: String, default: '' },
+    // Pour maisons
     hasParking: { type: Boolean, default: false },
     hasGarden: { type: Boolean, default: false },
+    // Pour terrains
     landType: { type: String, default: '' }
   },
-
+  
+  // Amenities renseignées par le propriétaire (optionnel)
   amenities: {
     schools: {
       count: { type: Number, default: 0 },
@@ -118,11 +107,11 @@ const propertySchema = new mongoose.Schema({
       names: [{ type: String }]
     }
   },
-
+  
   views: { type: Number, default: 0 },
   soldAt: Date,
   soldTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
-
+  
 }, { timestamps: true });
 
 export default mongoose.model('Property', propertySchema);
