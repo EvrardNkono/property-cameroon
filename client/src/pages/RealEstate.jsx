@@ -11,7 +11,7 @@ import {
   Hotel, BedDouble, DoorOpen, Trees, Store,
   Briefcase, Warehouse, ShoppingBasket, Factory,
   ParkingCircle, Sofa,
-  Euro, ChevronDown, SlidersHorizontal
+  ChevronDown, SlidersHorizontal
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────
@@ -426,25 +426,24 @@ const RealEstate = () => {
               <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
             </div>
 
-            {/* Price Range */}
             <div className="flex items-center gap-2 bg-gray-100 rounded-2xl px-3 py-1">
-              <Euro size={14} className="text-gray-500" />
-              <input
-                type="number"
-                placeholder={t.min}
-                value={filters.minPrice}
-                onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
-                className="w-20 py-2 bg-transparent outline-none text-sm placeholder:text-gray-400"
-              />
-              <span className="text-gray-400">—</span>
-              <input
-                type="number"
-                placeholder={t.max}
-                value={filters.maxPrice}
-                onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
-                className="w-20 py-2 bg-transparent outline-none text-sm placeholder:text-gray-400"
-              />
-            </div>
+  <span className="text-gray-500 text-xs font-bold">FCFA</span>
+  <input
+    type="number"
+    placeholder={t.min}
+    value={filters.minPrice}
+    onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
+    className="w-20 py-2 bg-transparent outline-none text-sm placeholder:text-gray-400"
+  />
+  <span className="text-gray-400">—</span>
+  <input
+    type="number"
+    placeholder={t.max}
+    value={filters.maxPrice}
+    onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
+    className="w-20 py-2 bg-transparent outline-none text-sm placeholder:text-gray-400"
+  />
+</div>
 
             {/* Advanced Toggle */}
             <button
