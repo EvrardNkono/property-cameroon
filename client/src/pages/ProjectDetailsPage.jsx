@@ -5,7 +5,7 @@ import {
   ArrowLeft, MapPin, Calendar, ShieldCheck, 
   TrendingUp, Activity, Download, MessageCircle,
   Clock, Award, ChevronRight, FileText, Info, Loader2, AlertCircle,
-  Phone, Mail, Building2, Sparkles, Star, ChevronLeft
+  Phone, Mail, Building2, Sparkles, Star, ChevronLeft, X
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -62,7 +62,7 @@ const ProjectDetailsPage = () => {
   const [error, setError] = useState(null);
   const [showContactModal, setShowContactModal] = useState(false);
 
-  // ========== TRADUCTIONS ==========
+  // ========== TRADUCTIONS UI ==========
   const t = {
     fr: {
       backToCategory: "Retour à la catégorie",
@@ -108,7 +108,9 @@ const ProjectDetailsPage = () => {
       investmentOpportunity: "Opportunité d'investissement",
       requestInfo: "Demander les informations",
       roiProjection: "Projection de rendement",
-      perYear: "par an"
+      perYear: "par an",
+      netReturns: "Rendements nets",
+      cycleTime: "Durée du cycle"
     },
     en: {
       backToCategory: "Back to Category",
@@ -154,7 +156,9 @@ const ProjectDetailsPage = () => {
       investmentOpportunity: "Investment Opportunity",
       requestInfo: "Request information",
       roiProjection: "Return projection",
-      perYear: "per year"
+      perYear: "per year",
+      netReturns: "Net Returns",
+      cycleTime: "Cycle Time"
     }
   }[currentLang] || {
     backToCategory: "Back to Category",
@@ -200,7 +204,9 @@ const ProjectDetailsPage = () => {
     investmentOpportunity: "Investment Opportunity",
     requestInfo: "Request information",
     roiProjection: "Return projection",
-    perYear: "per year"
+    perYear: "per year",
+    netReturns: "Net Returns",
+    cycleTime: "Cycle Time"
   };
 
   const getImageUrl = (image) => {
@@ -216,8 +222,16 @@ const ProjectDetailsPage = () => {
         setLoading(true);
         setError(null);
         
+        console.log(`🌐 ProjectDetailsPage - Langue demandée: ${currentLang}`);
+        console.log(`🔍 Fetching livestock with id: ${id}, lang: ${currentLang}`);
+        
         const livestockRes = await api.getLivestockById(id, { lang: currentLang });
+        console.log('📦 API Response complete:', livestockRes);
+        
         const livestock = extractData(livestockRes, 'livestock');
+        console.log('📝 Extracted livestock data:', livestock);
+        console.log('📝 Title received from backend:', livestock?.title);
+        console.log('📝 Description received from backend:', livestock?.description);
         
         if (!livestock || !livestock._id) {
           throw new Error('No livestock data found');
@@ -253,7 +267,7 @@ const ProjectDetailsPage = () => {
         });
         
       } catch (err) {
-        console.error('Error fetching project:', err);
+        console.error('❌ Error fetching project:', err);
         setError(err.message || t.loadingError);
       } finally {
         setLoading(false);
@@ -262,7 +276,7 @@ const ProjectDetailsPage = () => {
     
     window.scrollTo(0, 0);
     fetchData();
-  }, [id, category, currentLang]);
+  }, [id, category, currentLang, t]);
 
   const formattedCycleDuration = project?.cycleDuration?.includes('month') 
     ? project.cycleDuration.replace('months', t.months).replace('month', t.months.slice(0, -1))
@@ -314,7 +328,7 @@ const ProjectDetailsPage = () => {
     <div className="min-h-screen bg-gradient-to-b from-[#FCFBF7] to-white">
       <Navbar />
 
-      {/* Hero Section - Améliorée */}
+      {/* Hero Section */}
       <section className="relative h-[70vh] md:h-[85vh] lg:h-[90vh] overflow-hidden">
         <motion.div 
           initial={{ scale: 1.1 }}
@@ -408,7 +422,7 @@ const ProjectDetailsPage = () => {
               </div>
             </motion.section>
 
-            {/* Core Advantages - Responsive Grid */}
+            {/* Core Advantages */}
             <section className="grid sm:grid-cols-2 gap-5 md:gap-6">
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
@@ -445,7 +459,7 @@ const ProjectDetailsPage = () => {
               </motion.div>
             </section>
 
-            {/* Technical Specs - Responsive */}
+            {/* Technical Specs */}
             <motion.section 
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
@@ -470,7 +484,7 @@ const ProjectDetailsPage = () => {
               <div className="absolute -top-20 -right-20 w-64 h-64 md:w-96 md:h-96 bg-amber-500/10 blur-[100px] rounded-full" />
             </motion.section>
 
-            {/* Why Invest Section - Nouvelle section */}
+            {/* Why Invest Section */}
             <motion.section
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -499,7 +513,7 @@ const ProjectDetailsPage = () => {
             </motion.section>
           </div>
 
-          {/* Right Column - Investment Widget (Sans prix) */}
+          {/* Right Column - Investment Widget */}
           <div className="lg:col-span-5">
             <div className="sticky top-24 md:top-32">
               <motion.div 
@@ -510,13 +524,11 @@ const ProjectDetailsPage = () => {
               >
                 <div className="absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-amber-500/5 rounded-bl-full" />
                 
-                {/* Badge */}
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 rounded-full mb-6">
                   <Sparkles size={12} className="text-amber-600" />
                   <span className="text-[9px] font-bold uppercase text-amber-700">{t.investmentOpportunity}</span>
                 </div>
 
-                {/* ROI et Cycle - Sans prix */}
                 <div className="grid grid-cols-2 gap-3 md:gap-4 mb-6 md:mb-8">
                   <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-4 md:p-5 rounded-xl md:rounded-2xl">
                     <span className="text-[8px] md:text-[9px] font-black uppercase tracking-wide text-gray-500 block mb-1">{t.netReturns}</span>
@@ -532,7 +544,6 @@ const ProjectDetailsPage = () => {
                   </div>
                 </div>
 
-                {/* Boutons - Sans prix */}
                 <div className="space-y-3 md:space-y-4">
                   <button 
                     onClick={() => setShowContactModal(true)}
@@ -546,7 +557,6 @@ const ProjectDetailsPage = () => {
                   </button>
                 </div>
 
-                {/* Disclaimer */}
                 <div className="mt-6 md:mt-8 pt-4 md:pt-6 border-t border-gray-100 flex items-start gap-2 md:gap-3">
                   <Info size={14} className="text-gray-400 flex-shrink-0 mt-0.5" />
                   <p className="text-[8px] md:text-[9px] text-gray-400 leading-relaxed">
@@ -555,7 +565,6 @@ const ProjectDetailsPage = () => {
                 </div>
               </motion.div>
 
-              {/* Trust Badge */}
               <div className="mt-6 md:mt-8 flex items-center justify-center gap-3 text-gray-400">
                 <ShieldCheck size={16} className="md:w-5 md:h-5" />
                 <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em]">{t.certifiedAsset}</span>
