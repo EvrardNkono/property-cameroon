@@ -1,5 +1,4 @@
 ﻿// backend/index.js
-
 import dns from 'dns';
 dns.setDefaultResultOrder('ipv4first'); // Force IPv4
 
@@ -7,7 +6,7 @@ dns.setDefaultResultOrder('ipv4first'); // Force IPv4
 import dotenv from 'dotenv';
 dotenv.config();
 
-// VÉRIFIER LES VARIABES D'ENVIRONNEMENT AVANT TOUT
+// VÉRIFIER LES VARIABLES D'ENVIRONNEMENT AVANT TOUT
 console.log('=== CONFIGURATION ===');
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
@@ -23,6 +22,9 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import multer from 'multer';
 
+// IMPORT DU MIDDLEWARE DE TRADUCTION
+import autoTranslate from './middleware/translateMiddleware.js';
+
 // Import des routes
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
@@ -37,7 +39,8 @@ import amenityRoutes from './routes/amenity.routes.js';
 import livestockRoutes from './routes/livestock.routes.js';
 import livestockCategoryRoutes from './routes/livestockCategory.routes.js';
 import sitemapRoutes from './routes/sitemap.js';
-// Import des controllers upload
+
+// ✅ Import complet des controllers upload (restauré)
 import { 
   uploadPropertyImages, 
   handlePropertyImages,
@@ -93,7 +96,7 @@ if (process.env.NODE_ENV !== 'production') {
   app.use('/uploads', express.static('uploads'));
 }
 
-// ========== ROUTE DEBUG MONGO (PLACÉE AVANT LE MIDDLEWARE) ==========
+// ========== ROUTE DEBUG MONGO (PLACÉE AVANT LES MIDDLEWARES) ==========
 app.get('/api/debug-mongo', async (req, res) => {
   const { MongoClient } = await import('mongodb');
   const uri = process.env.MONGODB_URI;
@@ -169,7 +172,7 @@ app.get('/api/debug-mongo', async (req, res) => {
   res.end();
 });
 
-// ========== ROUTE TEST REAL DATA (PLACÉE AVANT LE MIDDLEWARE) ==========
+// ========== ROUTE TEST REAL DATA (PLACÉE AVANT LES MIDDLEWARES) ==========
 app.get('/api/test-real-data', async (req, res) => {
   const { MongoClient } = await import('mongodb');
   const uri = process.env.MONGODB_URI;
@@ -279,7 +282,6 @@ const connectMongoDB = async () => {
   try {
     console.log(`🔄 Connection attempt ${connectionRetryCount + 1}/${maxRetries}`);
     
-    // IMPORTANT: Activer bufferCommands pour permettre la mise en file d'attente
     mongoose.set('bufferCommands', true);
     mongoose.set('bufferTimeoutMS', 10000);
     mongoose.set('autoIndex', false);
@@ -309,7 +311,6 @@ const connectMongoDB = async () => {
     await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
     console.log('✅ Mongoose connected successfully');
     
-    // Gestion des événements de connexion
     mongoose.connection.on('error', (err) => {
       console.error('Mongoose connection error:', err.message);
     });
@@ -342,14 +343,13 @@ const connectMongoDB = async () => {
   }
 };
 
-// Middleware pour garantir la connexion avant chaque requête API
+// ========== MIDDLEWARE 1 : CONNEXION MONGODB ==========
+// ✅ Exclusions des routes debug restaurées
 app.use('/api', async (req, res, next) => {
-  // Exclure les routes de debug
   if (req.url.includes('/debug-mongo') || req.url.includes('/test-real-data') || req.url.includes('/health') || req.url.includes('/diagnostic')) {
     return next();
   }
   
-  // Si MongoDB n'est pas connecté, tenter une reconnexion
   if (mongoose.connection.readyState !== 1) {
     console.log(`🔄 Ensuring connection for ${req.method} ${req.url}...`);
     await connectMongoDB();
@@ -358,21 +358,19 @@ app.use('/api', async (req, res, next) => {
   next();
 });
 
-// ========== MIDDLEWARE DE FALLBACK (MODE DÉGRADÉ) ==========
+// ========== MIDDLEWARE 2 : MODE DÉGRADÉ ==========
+// ✅ Exclusions des routes debug restaurées
 app.use('/api', (req, res, next) => {
-  // Exclure les routes de debug
   if (req.url.includes('/debug-mongo') || req.url.includes('/test-real-data') || req.url.includes('/health') || req.url.includes('/diagnostic')) {
     return next();
   }
   
-  // Si MongoDB est connecté, on laisse passer
   if (mongoose.connection.readyState === 1) {
     return next();
   }
   
   console.log(`📦 Mock mode: ${req.method} ${req.url}`);
   
-  // Pour les requêtes GET, on retourne des données mock
   if (req.method === 'GET') {
     if (req.url.includes('/properties')) {
       return res.json({
@@ -402,7 +400,6 @@ app.use('/api', (req, res, next) => {
     }
   }
   
-  // Pour les requêtes POST/PUT/DELETE en mode dégradé
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
     return res.status(503).json({
       success: false,
@@ -412,6 +409,16 @@ app.use('/api', (req, res, next) => {
   }
   
   next();
+});
+
+// ========== MIDDLEWARE 3 : TRADUCTION (EN DERNIER) ==========
+// ✅ Exclusions des routes debug restaurées
+app.use('/api', (req, res, next) => {
+  const excludedPaths = ['/debug-mongo', '/test-real-data', '/health', '/diagnostic'];
+  if (excludedPaths.some(path => req.url.includes(path))) {
+    return next();
+  }
+  autoTranslate(req, res, next);
 });
 
 // ========== ROUTES API ==========
@@ -428,6 +435,7 @@ app.use('/api/amenities', amenityRoutes);
 app.use('/api/livestock', livestockRoutes);
 app.use('/api/livestock-categories', livestockCategoryRoutes);
 app.use('/', sitemapRoutes);
+
 // ========== ROUTES D'UPLOAD ==========
 app.post('/api/upload/property-images', propertyUpload.array('images', 10), handlePropertyImages);
 app.post('/api/upload/livestock-images', livestockUpload.array('images', 10), handleLivestockImages);
@@ -450,7 +458,8 @@ app.get('/api/health', (req, res) => {
     database: dbStatusText,
     mongodb_uri_exists: !!process.env.MONGODB_URI,
     vercel_env: process.env.VERCEL === '1' ? true : false,
-    mock_mode: mongoose.connection.readyState !== 1
+    mock_mode: mongoose.connection.readyState !== 1,
+    translation_active: true
   });
 });
 
@@ -469,7 +478,8 @@ app.get('/api/diagnostic', async (req, res) => {
     }[mongoose.connection.readyState] || 'unknown',
     node_version: process.version,
     mongoose_version: mongoose.version,
-    mock_mode_active: mongoose.connection.readyState !== 1
+    mock_mode_active: mongoose.connection.readyState !== 1,
+    translation_middleware: 'active'
   };
   
   res.json(diagnostics);
@@ -510,8 +520,8 @@ app.use((err, req, res, next) => {
 // ========== DÉMARRAGE DU SERVEUR POUR VERCEL ==========
 const startServer = async () => {
   console.log('🚀 Starting server...');
+  console.log('🌐 Translation middleware enabled - Auto-translates API responses');
   
-  // Attendre 2 secondes avant la première tentative
   await new Promise(resolve => setTimeout(resolve, 2000));
   
   const connected = await connectMongoDB();

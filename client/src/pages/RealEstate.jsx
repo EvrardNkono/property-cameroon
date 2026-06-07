@@ -304,8 +304,8 @@ const RealEstate = () => {
   ];
 
   useEffect(() => {
-    fetchProperties();
-  }, []);
+  fetchProperties();
+}, [currentLang]);
 
   useEffect(() => {
     applyFilters();

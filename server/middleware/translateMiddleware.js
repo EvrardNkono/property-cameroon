@@ -1,24 +1,17 @@
 // backend/middleware/translateMiddleware.js
-const translate = require('google-translate-api-x');
+import translate from 'google-translate-api-x'; // ✅ import ESM
 
-// Cache pour éviter de retraduire les mêmes phrases
 const translationCache = new Map();
 
 async function translateText(text, targetLang) {
-  if (!text) return text;
-  if (targetLang === 'fr') return text;
-  
+  if (!text || targetLang === 'fr') return text;
   const cacheKey = `${text}_${targetLang}`;
-  if (translationCache.has(cacheKey)) {
-    return translationCache.get(cacheKey);
-  }
-  
+  if (translationCache.has(cacheKey)) return translationCache.get(cacheKey);
   try {
     const result = await translate(text, { to: targetLang });
     translationCache.set(cacheKey, result.text);
     return result.text;
-  } catch (error) {
-    console.error('Translation error:', error);
+  } catch {
     return text;
   }
 }
@@ -27,77 +20,51 @@ async function translateObject(obj, targetLang) {
   if (Array.isArray(obj)) {
     return Promise.all(obj.map(item => translateObject(item, targetLang)));
   }
-  
   if (obj && typeof obj === 'object') {
     const translated = {};
     for (const [key, value] of Object.entries(obj)) {
-      if (key === '_id' || key === 'id' || key === 'createdAt' || key === 'updatedAt' || 
-          typeof value === 'number' || typeof value === 'boolean' || value === null) {
+      const skip = ['_id','id','createdAt','updatedAt'].includes(key)
+        || typeof value === 'number'
+        || typeof value === 'boolean'
+        || value === null;
+      if (skip) {
         translated[key] = value;
-      } 
-      else if (typeof value === 'string' && value.length > 0) {
+      } else if (typeof value === 'string' && value.length > 0) {
         translated[key] = await translateText(value, targetLang);
-      }
-      else if (typeof value === 'object') {
+      } else if (typeof value === 'object') {
         translated[key] = await translateObject(value, targetLang);
-      }
-      else {
+      } else {
         translated[key] = value;
       }
     }
     return translated;
   }
-  
   return obj;
 }
 
-// Middleware CORRIGÉ pour préserver les headers CORS
+// ✅ Middleware corrigé — wrapper async propre
 function autoTranslate(req, res, next) {
-  const lang = req.query.lang || req.headers['accept-language']?.split(',')[0] || 'fr';
+  const lang = req.query.lang
+    || req.headers['accept-language']?.split(',')[0]?.split('-')[0]
+    || 'fr';
   req.targetLang = lang === 'en' ? 'en' : 'fr';
-  
-  // Sauvegarder les headers CORS existants
-  const originalJson = res.json;
-  const originalSetHeader = res.setHeader;
-  
-  // Capturer les headers CORS avant modification
-  let corsHeaders = {};
-  
-  // Intercepter setHeader pour capturer les headers CORS
-  res.setHeader = function(name, value) {
-    if (name.toLowerCase().startsWith('access-control-allow-')) {
-      corsHeaders[name] = value;
+
+  if (req.targetLang === 'fr') return next(); // ✅ Pas de traduction si français
+
+  const originalJson = res.json.bind(res);
+
+  // ✅ Remplacement synchrone, exécution async interne
+  res.json = function (data) {
+    res.json = originalJson; // ✅ Évite toute récursion
+    if (!data || typeof data !== 'object') {
+      return originalJson(data);
     }
-    return originalSetHeader.call(this, name, value);
+    translateObject(data, req.targetLang)
+      .then(translated => originalJson(translated))
+      .catch(() => originalJson(data)); // ✅ Fallback propre
   };
-  
-  res.json = function(data) {
-    // Restaurer les headers CORS avant d'envoyer la réponse
-    Object.entries(corsHeaders).forEach(([name, value]) => {
-      originalSetHeader.call(this, name, value);
-    });
-    
-    // Si la langue cible est le français, ne pas traduire
-    if (req.targetLang === 'fr') {
-      return originalJson.call(this, data);
-    }
-    
-    // Traduire les données
-    if (data && typeof data === 'object') {
-      translateObject(data, req.targetLang)
-        .then(translatedData => {
-          originalJson.call(this, translatedData);
-        })
-        .catch(err => {
-          console.error('Translation error:', err);
-          originalJson.call(this, data);
-        });
-    } else {
-      originalJson.call(this, data);
-    }
-  };
-  
+
   next();
 }
 
-module.exports = autoTranslate;
+export default autoTranslate; // ✅ export ESM
