@@ -180,9 +180,10 @@ class ApiService {
     return this.request(`/properties${query ? `?${query}` : ''}`);
   }
 
-  async getPropertyById(id) {
-    return this.request(`/properties/${id}`);
-  }
+  async getPropertyById(id, params = {}) {
+  const query = new URLSearchParams(params).toString();
+  return this.request(`/properties/${id}${query ? `?${query}` : ''}`);
+}
 
   async createProperty(propertyData) {
     return this.request('/properties', {
