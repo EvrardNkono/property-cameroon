@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { 
@@ -62,32 +62,29 @@ const ProjectDetailsPage = () => {
   const [error, setError] = useState(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
-  const [showSharePopup, setShowSharePopup] = useState(false);
-  const heroRef = useRef(null);
 
   const { scrollYProgress } = useScroll();
-  const heroScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.97]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.85]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0.9]);
 
   const t = {
     fr: {
       back: "Retour",
       assetId: "ID Actif",
-      overview: "Vue d'ensemble",
+      overview: "Aperçu",
       location: "Localisation",
-      technical: "Spécifications techniques",
+      technical: "Caractéristiques techniques",
       whyInvest: "Pourquoi investir ?",
       expectedReturn: "Rendement attendu",
-      annualReturn: "Rendement annuel",
+      annualReturn: "par an",
       riskLevel: "Niveau de risque",
       moderate: "Modéré",
       secured: "Sécurisé",
-      certified: "Certifié",
+      certified: "Certifié CAPEF",
       requestInfo: "Demander les informations",
       contactAdvisor: "Contacter un conseiller",
       downloadBrochure: "Télécharger la brochure",
       contactNow: "Contacter maintenant",
-      features: "Caractéristiques",
+      features: "Atouts",
       benefits: "Avantages exclusifs",
       investment: "Investissement",
       cycle: "Cycle",
@@ -97,12 +94,20 @@ const ProjectDetailsPage = () => {
       premium: "Premium",
       share: "Partager",
       like: "J'aime",
-      yourName: "Votre nom",
-      yourEmail: "Votre email",
-      yourPhone: "Votre téléphone",
-      yourMessage: "Votre message",
+      yourName: "Nom complet",
+      yourEmail: "Email",
+      yourPhone: "Téléphone",
+      yourMessage: "Message",
       sendRequest: "Envoyer la demande",
-      weWillContact: "Un conseiller vous recontactera sous 24h"
+      weWillContact: "Un conseiller vous contactera sous 24h",
+      bioSecurity: "Bio-Sécurité",
+      bioSecurityDesc: "Surveillance sanitaire de pointe avec monitoring vétérinaire 24/7.",
+      strategicZone: "Zone stratégique",
+      strategicZoneDesc: "Emplacement privilégié avec un accès optimal aux réseaux de distribution.",
+      sustainable: "Agriculture durable",
+      sustainableDesc: "Pratiques éco-responsables certifiées pour une production respectueuse.",
+      logistics: "Logistique intégrée",
+      logisticsDesc: "Distribution nationale et potentiel export vers les marchés internationaux."
     },
     en: {
       back: "Back",
@@ -112,11 +117,11 @@ const ProjectDetailsPage = () => {
       technical: "Technical specifications",
       whyInvest: "Why invest?",
       expectedReturn: "Expected return",
-      annualReturn: "Annual return",
+      annualReturn: "per year",
       riskLevel: "Risk level",
       moderate: "Moderate",
       secured: "Secured",
-      certified: "Certified",
+      certified: "CAPEF Certified",
       requestInfo: "Request information",
       contactAdvisor: "Contact advisor",
       downloadBrochure: "Download brochure",
@@ -131,12 +136,20 @@ const ProjectDetailsPage = () => {
       premium: "Premium",
       share: "Share",
       like: "Like",
-      yourName: "Your name",
-      yourEmail: "Your email",
-      yourPhone: "Your phone",
-      yourMessage: "Your message",
+      yourName: "Full name",
+      yourEmail: "Email",
+      yourPhone: "Phone",
+      yourMessage: "Message",
       sendRequest: "Send request",
-      weWillContact: "An advisor will contact you within 24h"
+      weWillContact: "An advisor will contact you within 24h",
+      bioSecurity: "Bio-Security",
+      bioSecurityDesc: "State-of-the-art health monitoring with 24/7 veterinary surveillance.",
+      strategicZone: "Strategic zone",
+      strategicZoneDesc: "Prime location with optimal access to distribution networks.",
+      sustainable: "Sustainable farming",
+      sustainableDesc: "Eco-responsible certified practices for respectful production.",
+      logistics: "Integrated logistics",
+      logisticsDesc: "National distribution and export potential to international markets."
     }
   }[currentLang] || {};
 
@@ -151,20 +164,14 @@ const ProjectDetailsPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        setError(null);
-        
         const livestockRes = await api.getLivestockById(id, { lang: currentLang });
         const livestock = extractData(livestockRes, 'livestock');
         
-        if (!livestock || !livestock._id) throw new Error('No livestock data found');
+        if (!livestock || !livestock._id) throw new Error('No data');
         
         const mainImage = livestock.images?.[0] 
           ? getImageUrl(livestock.images[0]) 
           : 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000';
-        
-        const featuresArray = Array.isArray(livestock.features) 
-          ? livestock.features 
-          : ['Géré durablement', 'Bio-Certifié', 'Prêt à l\'export'];
         
         setProject({
           id: livestock._id,
@@ -172,29 +179,25 @@ const ProjectDetailsPage = () => {
           description: livestock.description,
           price: livestock.price?.amount || 0,
           roi: livestock.roi || 0,
-          location: livestock.location?.city || livestock.location || 'Cameroun',
+          location: livestock.location?.city || 'Cameroun',
           region: livestock.location?.region || '',
           cycleDuration: livestock.cycleDuration || '12 months',
           capacity: livestock.capacity?.value || 0,
           capacityUnit: livestock.capacity?.unit || 'unités',
           image: mainImage,
-          status: livestock.status || 'Available',
-          features: featuresArray
+          status: livestock.status || 'Available'
         });
-        
       } catch (err) {
-        console.error('Error:', err);
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-    
     window.scrollTo(0, 0);
     fetchData();
   }, [id, currentLang]);
 
-  const formatCycleDuration = (duration) => {
+  const formatCycle = (duration) => {
     if (!duration) return '12 mois';
     const months = parseInt(duration);
     return isNaN(months) ? duration : `${months} mois`;
@@ -202,16 +205,11 @@ const ProjectDetailsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0a0a0a] to-[#1a1a1a]">
+      <div className="min-h-screen bg-white">
         <Navbar />
         <div className="flex flex-col items-center justify-center h-[calc(100vh-80px)]">
-          <div className="relative">
-            <div className="w-20 h-20 border-2 border-amber-500/30 rounded-full animate-spin border-t-amber-500" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Gem size={24} className="text-amber-500 animate-pulse" />
-            </div>
-          </div>
-          <p className="text-white/50 mt-6 text-sm tracking-wider">CHARGEMENT</p>
+          <div className="w-12 h-12 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-400 mt-4 text-sm">Chargement...</p>
         </div>
         <Footer />
       </div>
@@ -220,21 +218,14 @@ const ProjectDetailsPage = () => {
 
   if (error || !project) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0a0a0a] to-[#1a1a1a]">
+      <div className="min-h-screen bg-white">
         <Navbar />
         <div className="flex flex-col items-center justify-center py-32 px-6">
-          <div className="text-center">
-            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-red-500/10 flex items-center justify-center">
-              <AlertCircle size={40} className="text-red-400" />
-            </div>
-            <p className="text-white/60 text-lg">{error || 'Projet non trouvé'}</p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="mt-8 px-8 py-3 bg-amber-500 text-black rounded-full font-medium hover:bg-amber-400 transition-all"
-            >
-              Réessayer
-            </button>
-          </div>
+          <AlertCircle size={48} className="text-amber-500 mb-4" />
+          <p className="text-gray-500">{error || 'Projet non trouvé'}</p>
+          <button onClick={() => window.location.reload()} className="mt-6 px-6 py-2 bg-emerald-600 text-white rounded-full text-sm">
+            Réessayer
+          </button>
         </div>
         <Footer />
       </div>
@@ -242,318 +233,288 @@ const ProjectDetailsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen bg-white">
       <Navbar />
 
-      {/* Hero Section - Luxe */}
-      <section ref={heroRef} className="relative h-[85vh] overflow-hidden">
-        <motion.div 
-          style={{ scale: heroScale, opacity: heroOpacity }}
-          className="w-full h-full"
-        >
-          <img 
-            src={project.image} 
-            className="w-full h-full object-cover"
-            alt={project.title}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-black/50 to-black/30" />
-        </motion.div>
+      {/* Hero Section - Élégant et raffiné */}
+      <section className="relative pt-32 pb-20 bg-gradient-to-br from-emerald-50 via-white to-amber-50">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-100/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-100/30 rounded-full blur-3xl" />
         
-        <div className="absolute bottom-0 left-0 right-0 px-6 md:px-12 pb-16 md:pb-24">
-          <div className="max-w-7xl mx-auto">
-            <motion.div
-              initial={{ y: 30, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <button 
+              onClick={() => navigate(-1)}
+              className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 transition-all text-sm"
             >
-              <button 
-                onClick={() => navigate(-1)}
-                className="group inline-flex items-center gap-2 text-white/60 hover:text-white transition-all mb-8 text-sm tracking-wide"
-              >
-                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-                {t.back}
-              </button>
-            </motion.div>
+              <ArrowLeft size={16} /> {t.back}
+            </button>
+          </motion.div>
 
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
+            {/* Left - Image */}
             <motion.div
-              initial={{ y: 40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="relative"
             >
-              <div className="flex flex-wrap items-center gap-3 mb-4">
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 backdrop-blur-sm text-amber-400 text-[10px] font-bold uppercase tracking-wider">
-                  <Star size={10} /> {t.certified}
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl">
+                <img 
+                  src={project.image} 
+                  alt={project.title}
+                  className="w-full h-[400px] md:h-[500px] object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+              </div>
+              
+              {/* Badges flottants */}
+              <div className="absolute -bottom-4 -right-4 flex gap-2">
+                <span className="px-4 py-2 bg-emerald-600 text-white text-[10px] font-bold uppercase rounded-full shadow-lg">
+                  {t.certified}
                 </span>
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm text-white/60 text-[10px] font-bold uppercase tracking-wider">
-                  {t.assetId}: #{project.id?.slice(-8)}
+                <span className="px-4 py-2 bg-amber-500 text-white text-[10px] font-bold uppercase rounded-full shadow-lg">
+                  +{project.roi}% ROI
                 </span>
               </div>
-              <h1 className="text-5xl sm:text-7xl md:text-8xl font-light tracking-tighter text-white leading-[1.1] max-w-4xl">
+            </motion.div>
+
+            {/* Right - Title & Info */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-6"
+            >
+              <div className="flex items-center gap-2 text-emerald-600 text-sm">
+                <span className="w-8 h-px bg-emerald-600" />
+                <span>{t.assetId} #{project.id?.slice(-8)}</span>
+              </div>
+              
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-light text-gray-900 leading-tight">
                 {project.title}
               </h1>
-              <div className="flex items-center gap-2 mt-6 text-white/50">
+              
+              <div className="flex items-center gap-2 text-gray-500">
                 <MapPin size={16} className="text-amber-500" />
-                <span className="text-sm tracking-wide">{project.location}{project.region ? `, ${project.region}` : ''}</span>
+                <span>{project.location}{project.region ? `, ${project.region}` : ''}</span>
+              </div>
+
+              <div className="flex flex-wrap gap-6 pt-4">
+                <div>
+                  <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">{t.investment}</p>
+                  <p className="text-2xl font-bold text-emerald-700">
+                    {(project.price / 1000000).toFixed(1)}M <span className="text-sm font-normal text-gray-400">FCFA</span>
+                  </p>
+                </div>
+                <div className="w-px h-12 bg-gray-200" />
+                <div>
+                  <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">{t.expectedReturn}</p>
+                  <p className="text-2xl font-bold text-amber-600">+{project.roi}% <span className="text-sm font-normal text-gray-400">{t.annualReturn}</span></p>
+                </div>
+                <div className="w-px h-12 bg-gray-200" />
+                <div>
+                  <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">{t.cycle}</p>
+                  <p className="text-xl font-semibold text-gray-800">{formatCycle(project.cycleDuration)}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 pt-4">
+                <button
+                  onClick={() => setShowContactModal(true)}
+                  className="px-8 py-3 bg-emerald-600 text-white rounded-full text-sm font-semibold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg"
+                >
+                  <MessageCircle size={16} /> {t.contactAdvisor}
+                </button>
+                <button className="px-8 py-3 border border-gray-300 text-gray-700 rounded-full text-sm font-semibold hover:border-emerald-600 hover:text-emerald-600 transition-all flex items-center gap-2">
+                  <Download size={16} /> {t.downloadBrochure}
+                </button>
               </div>
             </motion.div>
           </div>
         </div>
-
-        {/* Scroll indicator */}
-        <motion.div 
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
-          animate={{ y: [0, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-        >
-          <div className="w-px h-12 bg-white/30" />
-        </motion.div>
       </section>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 md:px-12 py-20">
+      <main className="max-w-7xl mx-auto px-6 py-20">
         <div className="grid lg:grid-cols-12 gap-16">
           
-          {/* Left Column - Content */}
+          {/* Left Column */}
           <div className="lg:col-span-7 space-y-16">
             
             {/* Description */}
             <section>
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-12 h-px bg-amber-500/50" />
-                <h2 className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-500">{t.overview}</h2>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-px bg-amber-500" />
+                <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400">{t.overview}</h2>
               </div>
-              <p className="text-white/70 text-lg leading-relaxed font-light">
+              <p className="text-gray-600 leading-relaxed text-lg font-light">
                 {project.description}
               </p>
-              <div className="flex flex-wrap gap-3 mt-8">
-                {project.features.map((tag, i) => (
-                  <span key={i} className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/40 text-[10px] font-bold uppercase tracking-wide hover:border-amber-500/30 hover:text-amber-400 transition-all">
-                    {tag}
-                  </span>
-                ))}
-              </div>
             </section>
 
-            {/* Features Grid - Luxe */}
+            {/* Avantages - Grille élégante */}
             <section>
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-12 h-px bg-amber-500/50" />
-                <h2 className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-500">{t.benefits}</h2>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-px bg-amber-500" />
+                <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400">{t.benefits}</h2>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {[
-                  { icon: <ShieldCheck size={20} />, title: "Bio-Sécurité avancée", desc: "Protocoles stricts et monitoring 24/7" },
-                  { icon: <MapPin size={20} />, title: "Zone stratégique", desc: `Situé à ${project.location}, Cameroun` },
-                  { icon: <Leaf size={20} />, title: "Agriculture durable", desc: "Pratiques éco-responsables certifiées" },
-                  { icon: <Truck size={20} />, title: "Logistique intégrée", desc: "Distribution nationale et export" }
+                  { icon: <ShieldCheck size={20} />, title: t.bioSecurity, desc: t.bioSecurityDesc, color: "emerald" },
+                  { icon: <MapPin size={20} />, title: t.strategicZone, desc: t.strategicZoneDesc, color: "amber" },
+                  { icon: <Leaf size={20} />, title: t.sustainable, desc: t.sustainableDesc, color: "emerald" },
+                  { icon: <Truck size={20} />, title: t.logistics, desc: t.logisticsDesc, color: "amber" }
                 ].map((item, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    className="group p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-amber-500/30 hover:bg-white/10 transition-all duration-500"
-                  >
-                    <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 mb-4 group-hover:scale-110 transition-transform">
+                  <div key={i} className="group p-6 bg-gray-50 rounded-2xl hover:shadow-lg transition-all duration-300">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all group-hover:scale-110 ${
+                      item.color === 'emerald' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
+                    }`}>
                       {item.icon}
                     </div>
-                    <h3 className="text-white font-medium mb-2">{item.title}</h3>
-                    <p className="text-white/40 text-sm">{item.desc}</p>
-                  </motion.div>
+                    <h3 className="font-semibold text-gray-800 mb-2">{item.title}</h3>
+                    <p className="text-gray-400 text-sm leading-relaxed">{item.desc}</p>
+                  </div>
                 ))}
               </div>
             </section>
 
             {/* Technical Specs */}
             <section>
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-12 h-px bg-amber-500/50" />
-                <h2 className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-500">{t.technical}</h2>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-px bg-amber-500" />
+                <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400">{t.technical}</h2>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden">
+              <div className="bg-gray-50 rounded-2xl overflow-hidden">
                 {[
-                  { label: t.cycle, value: formatCycleDuration(project.cycleDuration), icon: <Clock size={16} /> },
-                  { label: t.capacity, value: `${project.capacity} ${project.capacityUnit}`, icon: <Activity size={16} /> },
-                  { label: t.status, value: t.available, icon: <CheckCircle size={16} /> },
-                  { label: t.investment, value: `${(project.price / 1000000).toFixed(1)}M FCFA`, icon: <BadgeDollarSign size={16} /> }
+                  { label: t.cycle, value: formatCycle(project.cycleDuration) },
+                  { label: t.capacity, value: `${project.capacity} ${project.capacityUnit}` },
+                  { label: t.status, value: t.available },
+                  { label: "ROI projeté", value: `+${project.roi}% ${t.annualReturn}` }
                 ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between py-5 px-6 border-b border-white/10 last:border-0">
-                    <div className="flex items-center gap-3 text-white/40 text-xs font-bold uppercase tracking-wider">
-                      {item.icon} {item.label}
-                    </div>
-                    <div className="text-white font-medium">{item.value}</div>
+                  <div key={i} className="flex items-center justify-between py-4 px-6 border-b border-gray-100 last:border-0">
+                    <span className="text-gray-400 text-sm">{item.label}</span>
+                    <span className="text-gray-800 font-medium">{item.value}</span>
                   </div>
                 ))}
               </div>
             </section>
-
-            {/* ROI Section */}
-            <section className="bg-gradient-to-r from-amber-500/10 to-transparent rounded-3xl p-8 border border-amber-500/20">
-              <div className="flex items-center gap-4 flex-wrap justify-between">
-                <div>
-                  <p className="text-amber-500 text-[10px] font-bold uppercase tracking-wider mb-2">{t.expectedReturn}</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-5xl font-light text-white">+{project.roi}%</span>
-                    <span className="text-white/40 text-sm">{t.annualReturn}</span>
-                  </div>
-                </div>
-                <div className="w-px h-12 bg-white/10 hidden sm:block" />
-                <div>
-                  <p className="text-white/40 text-[10px] font-bold uppercase tracking-wider mb-2">{t.riskLevel}</p>
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck size={18} className="text-emerald-500" />
-                    <span className="text-white font-medium">{t.moderate}</span>
-                  </div>
-                </div>
-                <button className="px-6 py-3 bg-amber-500 text-black rounded-full text-xs font-bold uppercase tracking-wider hover:bg-amber-400 transition-all">
-                  {t.requestInfo}
-                </button>
-              </div>
-            </section>
           </div>
 
-          {/* Right Column - Investment Card */}
+          {/* Right Column - Investment Widget */}
           <div className="lg:col-span-5">
             <div className="sticky top-32">
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden"
-              >
-                {/* Card Header */}
-                <div className="p-8 border-b border-white/10">
+              <div className="bg-white border border-gray-100 rounded-3xl shadow-xl overflow-hidden">
+                <div className="p-8 border-b border-gray-100 bg-gradient-to-br from-emerald-50 to-white">
                   <div className="flex items-center gap-2 mb-4">
-                    <Gem size={16} className="text-amber-500" />
-                    <span className="text-amber-500 text-[10px] font-bold uppercase tracking-wider">{t.investment}</span>
+                    <Gem size={18} className="text-amber-500" />
+                    <span className="text-amber-600 text-[10px] font-bold uppercase tracking-wider">{t.investment}</span>
                   </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-light text-white">
-                      {project.price >= 10000000 
-                        ? `${(project.price / 1000000).toFixed(0)}M` 
-                        : `${(project.price / 1000000).toFixed(1)}M`}
-                    </span>
-                    <span className="text-white/40">FCFA</span>
-                  </div>
+                  <p className="text-3xl font-bold text-emerald-700">
+                    {(project.price / 1000000).toFixed(1)}M <span className="text-sm font-normal text-gray-400">FCFA</span>
+                  </p>
                 </div>
 
-                {/* Stats */}
                 <div className="p-8 space-y-6">
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <div className="flex items-center gap-2 text-white/40 text-[10px] font-bold uppercase tracking-wider mb-2">
-                        <TrendingUp size={12} /> ROI
-                      </div>
-                      <div className="text-2xl font-light text-white">+{project.roi}%</div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-4 bg-emerald-50 rounded-xl">
+                      <TrendingUp size={18} className="text-emerald-600 mx-auto mb-2" />
+                      <p className="text-emerald-700 text-xl font-bold">+{project.roi}%</p>
+                      <p className="text-gray-500 text-[9px] uppercase tracking-wider">{t.expectedReturn}</p>
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2 text-white/40 text-[10px] font-bold uppercase tracking-wider mb-2">
-                        <Calendar size={12} /> {t.cycle}
-                      </div>
-                      <div className="text-2xl font-light text-white">{formatCycleDuration(project.cycleDuration)}</div>
+                    <div className="text-center p-4 bg-amber-50 rounded-xl">
+                      <Calendar size={18} className="text-amber-600 mx-auto mb-2" />
+                      <p className="text-amber-700 text-xl font-bold">{formatCycle(project.cycleDuration)}</p>
+                      <p className="text-gray-500 text-[9px] uppercase tracking-wider">{t.cycle}</p>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <button
                       onClick={() => setShowContactModal(true)}
-                      className="w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-black rounded-xl font-bold text-sm uppercase tracking-wider hover:from-amber-400 hover:to-amber-500 transition-all flex items-center justify-center gap-2"
+                      className="w-full py-4 bg-emerald-600 text-white rounded-xl font-semibold text-sm hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
                     >
                       <MessageCircle size={18} /> {t.contactAdvisor}
                     </button>
                     
-                    <button className="w-full py-4 bg-white/5 border border-white/10 text-white/80 rounded-xl font-bold text-sm uppercase tracking-wider hover:bg-white/10 transition-all flex items-center justify-center gap-2">
+                    <button className="w-full py-4 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-all flex items-center justify-center gap-2">
                       <Download size={18} /> {t.downloadBrochure}
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                    <button 
-                      onClick={() => setIsLiked(!isLiked)}
-                      className="flex items-center gap-2 text-white/40 hover:text-rose-500 transition-all"
-                    >
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <button onClick={() => setIsLiked(!isLiked)} className="flex items-center gap-2 text-gray-400 hover:text-rose-500 transition-all">
                       <Heart size={18} className={isLiked ? 'fill-rose-500 text-rose-500' : ''} />
                       <span className="text-xs">{t.like}</span>
                     </button>
-                    <button 
-                      onClick={() => setShowSharePopup(!showSharePopup)}
-                      className="flex items-center gap-2 text-white/40 hover:text-amber-500 transition-all"
-                    >
+                    <button className="flex items-center gap-2 text-gray-400 hover:text-emerald-600 transition-all">
                       <Share2 size={18} />
                       <span className="text-xs">{t.share}</span>
                     </button>
+                    <div className="flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                      <span className="text-[8px] text-gray-400 uppercase">{t.secured}</span>
+                    </div>
                   </div>
-                </div>
 
-                {/* Disclaimer */}
-                <div className="p-6 bg-white/5 border-t border-white/10">
-                  <div className="flex items-start gap-3">
-                    <Lock size={14} className="text-white/30 mt-0.5" />
-                    <p className="text-[9px] text-white/30 leading-relaxed">
+                  <div className="pt-4">
+                    <p className="text-[9px] text-gray-400 text-center leading-relaxed">
                       {t.weWillContact}
                     </p>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             </div>
           </div>
         </div>
       </main>
 
-      {/* Contact Modal - Luxe */}
+      {/* Contact Modal */}
       <AnimatePresence>
         {showContactModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
             onClick={() => setShowContactModal(false)}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#111] border border-white/10 rounded-3xl max-w-md w-full overflow-hidden"
+              className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-8">
-                <div className="flex justify-between items-center mb-8">
-                  <div className="flex items-center gap-2">
-                    <Gem size={20} className="text-amber-500" />
-                    <h3 className="text-xl font-light text-white">{t.contactAdvisor}</h3>
-                  </div>
-                  <button 
-                    onClick={() => setShowContactModal(false)}
-                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                  >
-                    <X size={18} className="text-white/60" />
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-2xl font-serif font-light text-gray-900">{t.contactAdvisor}</h3>
+                  <button onClick={() => setShowContactModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                    <X size={18} className="text-gray-400" />
                   </button>
                 </div>
                 
-                <div className="mb-8 p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
-                  <p className="text-sm text-amber-400 font-medium">{project.title}</p>
-                  <p className="text-xs text-white/40 mt-1">{t.requestInfo}</p>
+                <div className="mb-6 p-4 bg-emerald-50 rounded-xl">
+                  <p className="text-sm text-emerald-800 font-medium">{project.title}</p>
                 </div>
                 
                 <form className="space-y-4">
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">{t.yourName}</label>
-                    <input type="text" className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent text-white" />
+                    <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">{t.yourName}</label>
+                    <input type="text" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">{t.yourEmail}</label>
-                    <input type="email" className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent text-white" />
+                    <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">{t.yourEmail}</label>
+                    <input type="email" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">{t.yourPhone}</label>
-                    <input type="tel" className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent text-white" />
+                    <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">{t.yourPhone}</label>
+                    <input type="tel" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">{t.yourMessage}</label>
-                    <textarea rows={3} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent text-white resize-none" />
-                  </div>
-                  <button className="w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-black rounded-xl font-bold text-sm uppercase tracking-wider hover:from-amber-400 hover:to-amber-500 transition-all flex items-center justify-center gap-2">
-                    <Send size={16} /> {t.sendRequest}
+                  <button className="w-full py-4 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-all">
+                    {t.sendRequest}
                   </button>
                 </form>
               </div>
