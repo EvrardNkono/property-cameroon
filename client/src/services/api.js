@@ -357,9 +357,10 @@ class ApiService {
     return this.request(`/livestock/category/${category}`);
   }
 
-  async getLivestockById(id) {
-    return this.request(`/livestock/${id}`);
-  }
+  async getLivestockById(id, params = {}) {
+  const query = new URLSearchParams(params).toString();
+  return this.request(`/livestock/${id}${query ? `?${query}` : ''}`);
+}
 
   async getLivestockByOwner(ownerId) {
     return this.request(`/livestock/owner/${ownerId}`);
