@@ -226,6 +226,8 @@ const ProjectDetailsPage = () => {
       console.log(`🔍 Fetching livestock with id: ${id}, lang: ${currentLang}`);
       
       const livestockRes = await api.getLivestockById(id, { lang: currentLang });
+      console.log('🌍 Lang envoyé:', currentLang);
+console.log('📦 Réponse complète:', JSON.stringify(livestockRes, null, 2));
       console.log('📦 API Response:', livestockRes);
       
       // Extraction correcte des données
