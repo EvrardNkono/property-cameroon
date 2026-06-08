@@ -422,6 +422,9 @@ const LivestockIntroduction = () => {
       if (livestock.length === 0 && Array.isArray(livestockRes)) livestock = livestockRes;
       if (livestock.length === 0 && livestockRes.data && Array.isArray(livestockRes.data)) livestock = livestockRes.data;
       
+
+       console.log('dbCategories:', dbCategories.length, dbCategories.map(c => c.slug));
+console.log('livestock:', livestock.length, livestock.map(l => l.category));
       const totalValue = livestock.reduce((sum, item) => sum + (item.price?.amount || 0), 0);
       const avgRoi = livestock.length > 0 
         ? livestock.reduce((sum, item) => sum + (item.roi || 0), 0) / livestock.length 
@@ -433,13 +436,15 @@ const LivestockIntroduction = () => {
         totalValue: totalValue
       });
       
+      
       const grouped = {};
       livestock.forEach(item => {
         const catSlug = item.category?.slug || item.category?.toLowerCase().replace(/\s+/g, '-') || 'livestock';
         if (!grouped[catSlug]) grouped[catSlug] = [];
         grouped[catSlug].push(item);
       });
-      
+      console.log('grouped keys:', Object.keys(grouped));
+
       const formattedCategories = dbCategories.map(cat => {
         const categorySlug = cat.slug || cat._id;
         const categoryAssets = grouped[categorySlug] || [];
