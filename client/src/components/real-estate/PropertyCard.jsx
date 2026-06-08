@@ -1,7 +1,31 @@
-// frontend/src/components/real-estate/PropertyCard.jsx - CORRIGÉ
+// frontend/src/components/real-estate/PropertyCard.jsx - AVEC TRADUCTIONS
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+
+// Hook pour récupérer la langue actuelle
+const useCurrentLang = () => {
+  const [lang, setLang] = React.useState(() => {
+    if (typeof window === 'undefined') return 'en';
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    return ['fr', 'en'].includes(finalLang) ? finalLang : 'en';
+  });
+  
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    setLang(finalLang);
+  }, []);
+  
+  return lang;
+};
 
 // 🔥 Détection automatique de l'environnement
 const isDevelopment = typeof window !== 'undefined' && 
@@ -9,7 +33,6 @@ const isDevelopment = typeof window !== 'undefined' &&
                        window.location.hostname === '127.0.0.1' ||
                        window.location.hostname === '');
 
-// URLs en dur selon l'environnement
 const BACKEND_URL = isDevelopment 
   ? 'http://localhost:5000'
   : 'https://property-cameroon-backend.vercel.app';
@@ -56,25 +79,71 @@ const getCategoryColor = (category) => {
   return colors[category] || 'bg-slate-50 text-slate-700';
 };
 
-// 🎨 Icône pour le statut meublé/non meublé
 const getFurnishedIcon = (isFurnished) => {
   return isFurnished ? '🛋️' : '📦';
 };
 
-const getFurnishedLabel = (isFurnished) => {
-  return isFurnished ? 'Furnished' : 'Unfurnished';
-};
-
 const PropertyCard = ({ property }) => {
   const navigate = useNavigate();
-  
-  // ✅ Utilisation de listingType (sale/rent) depuis le backend
+  const currentLang = useCurrentLang();
+
+  // ========== TRADUCTIONS ==========
+  const t = {
+    fr: {
+      forSale: "À VENDRE",
+      forRent: "À LOUER",
+      furnished: "Meublé",
+      unfurnished: "Non meublé",
+      verified: "Vérifié",
+      viewDetails: "Voir les détails",
+      beds: "Lits",
+      baths: "Salles de bain",
+      area: "Surface",
+      totalArea: "Surface totale",
+      roomArea: "Surface chambre",
+      status: "Statut",
+      parkingSpots: "Places",
+      perMonth: "/mois",
+      spots: "places"
+    },
+    en: {
+      forSale: "FOR SALE",
+      forRent: "FOR RENT",
+      furnished: "Furnished",
+      unfurnished: "Unfurnished",
+      verified: "Verified",
+      viewDetails: "View Details",
+      beds: "Beds",
+      baths: "Baths",
+      area: "Area",
+      totalArea: "Total Area",
+      roomArea: "Room Area",
+      status: "Status",
+      parkingSpots: "Spots",
+      perMonth: "/month",
+      spots: "spots"
+    }
+  }[currentLang] || {
+    forSale: "FOR SALE",
+    forRent: "FOR RENT",
+    furnished: "Furnished",
+    unfurnished: "Unfurnished",
+    verified: "Verified",
+    viewDetails: "View Details",
+    beds: "Beds",
+    baths: "Baths",
+    area: "Area",
+    totalArea: "Total Area",
+    roomArea: "Room Area",
+    status: "Status",
+    parkingSpots: "Spots",
+    perMonth: "/month",
+    spots: "spots"
+  };
+
   const isSale = property.listingType === 'sale' || property.listingType === 'SALE';
-  
-  // 🔥 Récupérer l'ID correctement
   const propertyId = property._id || property.id;
   
-  // 🔥 Fonction pour obtenir l'URL complète de l'image avec fallback backend
   const getImageUrl = (image) => {
     if (!image) return 'https://images.unsplash.com/photo-1594759714300-8456f9f68800?q=80&w=2070&auto=format&fit=crop';
     if (image.startsWith('http')) return image;
@@ -83,47 +152,33 @@ const PropertyCard = ({ property }) => {
     return `${BACKEND_URL}/uploads/properties/${image}`;
   };
 
-  // Récupérer la première image du tableau d'images
   const firstImage = property.images?.[0] || property.image;
-  
-  // 🔥 Traitement de l'image
   const processedImage = getImageUrl(firstImage);
 
-  // Déterminer si c'est une propriété résidentielle (pour afficher le statut meublé)
   const residentialCategories = ['House', 'Villa', 'Duplex', 'Apartment', 'Studio', 'Room'];
   const showFurnishedStatus = residentialCategories.includes(property.category);
 
-  // Récupérer la surface (priorité à surface.value, puis size)
   const surfaceValue = property.surface?.value || property.size || 0;
   const surfaceUnit = property.surface?.unit || 'm²';
-
-  // Récupérer le prix
   const priceAmount = property.price?.amount || property.price || 0;
   const priceCurrency = property.price?.currency || 'FCFA';
 
-  // Récupérer la localisation
   const locationText = property.location?.city 
     ? `${property.location.city}, ${property.location.region || ''}`
     : property.location || 'Cameroon';
 
-  // Récupérer les caractéristiques
   const bedrooms = property.features?.bedrooms || property.beds || 0;
   const bathrooms = property.features?.bathrooms || property.baths || 0;
   const isFurnished = property.features?.isFurnished || property.isFurnished || false;
 
-  
-
-  // 🔥 Gestion du clic manuelle (alternative si Link ne fonctionne pas)
   const handleViewDetails = (e) => {
     e.preventDefault();
     if (propertyId) {
-      console.log('Navigating to:', `/real-estate/${propertyId}`);
       navigate(`/real-estate/${propertyId}`);
     } else {
       console.error('No property ID found!', property);
     }
   };
-  
 
   return (
     <div className="group bg-white border border-slate-100 hover:shadow-2xl transition-all duration-500 relative flex flex-col h-full rounded-xl overflow-hidden">
@@ -140,18 +195,18 @@ const PropertyCard = ({ property }) => {
           }}
         />
         
-        {/* ✅ Status Badge - Vente ou Location */}
+        {/* Status Badge - TRADUIT */}
         <div className={`absolute top-4 left-4 px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-white shadow-xl z-10 ${isSale ? 'bg-pc-gold' : 'bg-slate-900'}`}>
-          {isSale ? 'For Sale' : 'For Rent'}
+          {isSale ? t.forSale : t.forRent}
         </div>
 
-        {/* ✅ Category Tag - Avec icône et couleur */}
+        {/* Category Tag */}
         <div className={`absolute bottom-4 right-4 backdrop-blur-md px-3 py-1.5 text-[8px] uppercase font-black tracking-tighter rounded-lg shadow-md flex items-center gap-1.5 z-10 ${getCategoryColor(property.category)}`}>
           <span className="text-sm">{getCategoryIcon(property.category)}</span>
           <span>{property.category}</span>
         </div>
 
-        {/* ✅ Furnished Badge - Pour les propriétés résidentielles */}
+        {/* Furnished Badge - TRADUIT */}
         {showFurnishedStatus && isFurnished !== undefined && (
           <div className={`absolute top-4 right-4 px-3 py-1.5 text-[8px] font-black uppercase tracking-widest rounded-lg shadow-md flex items-center gap-1.5 z-10 ${
             isFurnished 
@@ -159,7 +214,7 @@ const PropertyCard = ({ property }) => {
               : 'bg-gray-500 text-white'
           }`}>
             <span className="text-xs">{getFurnishedIcon(isFurnished)}</span>
-            <span>{getFurnishedLabel(isFurnished)}</span>
+            <span>{isFurnished ? t.furnished : t.unfurnished}</span>
           </div>
         )}
       </div>
@@ -177,7 +232,7 @@ const PropertyCard = ({ property }) => {
               {priceAmount.toLocaleString()} {priceCurrency}
             </span>
             <span className="text-[8px] text-slate-400 uppercase font-bold">
-              {!isSale && '/ month'}
+              {!isSale && t.perMonth}
             </span>
           </div>
         </div>
@@ -188,13 +243,13 @@ const PropertyCard = ({ property }) => {
           <span className="truncate">{locationText}</span>
         </p>
 
-        {/* Spécifications dynamiques */}
+        {/* Spécifications dynamiques - TRADUITES */}
         <div className="flex items-center gap-6 border-t border-slate-50 pt-5 mb-6 flex-wrap">
           
           {/* Cas des terrains */}
           {property.category === 'Land' || property.category === 'Agricultural Land' ? (
             <div className="flex flex-col">
-              <span className="text-[8px] text-slate-400 uppercase tracking-widest">Total Area</span>
+              <span className="text-[8px] text-slate-400 uppercase tracking-widest">{t.totalArea}</span>
               <span className="text-xs text-slate-900 font-bold">{surfaceValue} {surfaceUnit}</span>
             </div>
           ) : 
@@ -202,14 +257,14 @@ const PropertyCard = ({ property }) => {
           property.category === 'Room' ? (
             <>
               <div className="flex flex-col">
-                <span className="text-[8px] text-slate-400 uppercase tracking-widest">Room Area</span>
+                <span className="text-[8px] text-slate-400 uppercase tracking-widest">{t.roomArea}</span>
                 <span className="text-xs text-slate-900 font-bold">{surfaceValue} {surfaceUnit}</span>
               </div>
               {isFurnished !== undefined && (
                 <div className="flex flex-col">
-                  <span className="text-[8px] text-slate-400 uppercase tracking-widest">Status</span>
+                  <span className="text-[8px] text-slate-400 uppercase tracking-widest">{t.status}</span>
                   <span className="text-xs font-semibold flex items-center gap-1">
-                    {isFurnished ? '🛋️ Furnished' : '📦 Unfurnished'}
+                    {isFurnished ? `🛋️ ${t.furnished}` : `📦 ${t.unfurnished}`}
                   </span>
                 </div>
               )}
@@ -218,8 +273,8 @@ const PropertyCard = ({ property }) => {
           /* Cas des parkings */
           property.category === 'Parking' ? (
             <div className="flex flex-col">
-              <span className="text-[8px] text-slate-400 uppercase tracking-widest">Parking Spots</span>
-              <span className="text-xs text-slate-900 font-bold">{surfaceValue || 1} spots</span>
+              <span className="text-[8px] text-slate-400 uppercase tracking-widest">{t.parkingSpots}</span>
+              <span className="text-xs text-slate-900 font-bold">{surfaceValue || 1} {t.spots}</span>
             </div>
           ) : 
           /* Cas des maisons, appartements, villas, duplex, commerces */
@@ -227,56 +282,54 @@ const PropertyCard = ({ property }) => {
             <>
               {bedrooms > 0 && (
                 <div className="flex flex-col">
-                  <span className="text-[8px] text-slate-400 uppercase tracking-widest">Beds</span>
+                  <span className="text-[8px] text-slate-400 uppercase tracking-widest">{t.beds}</span>
                   <span className="text-xs text-slate-900 font-bold">{bedrooms}</span>
                 </div>
               )}
               {bathrooms > 0 && (
                 <div className="flex flex-col">
-                  <span className="text-[8px] text-slate-400 uppercase tracking-widest">Baths</span>
+                  <span className="text-[8px] text-slate-400 uppercase tracking-widest">{t.baths}</span>
                   <span className="text-xs text-slate-900 font-bold">{bathrooms}</span>
                 </div>
               )}
               {surfaceValue > 0 && (
                 <div className="flex flex-col">
-                  <span className="text-[8px] text-slate-400 uppercase tracking-widest">Area</span>
+                  <span className="text-[8px] text-slate-400 uppercase tracking-widest">{t.area}</span>
                   <span className="text-xs text-slate-900 font-bold">{surfaceValue} {surfaceUnit}</span>
                 </div>
               )}
-              {/* Statut meublé pour les propriétés résidentielles */}
               {showFurnishedStatus && isFurnished !== undefined && (
                 <div className="flex flex-col">
-                  <span className="text-[8px] text-slate-400 uppercase tracking-widest">Status</span>
+                  <span className="text-[8px] text-slate-400 uppercase tracking-widest">{t.status}</span>
                   <span className="text-xs font-semibold flex items-center gap-1">
-                    {isFurnished ? '🛋️ Furnished' : '📦 Unfurnished'}
+                    {isFurnished ? `🛋️ ${t.furnished}` : `📦 ${t.unfurnished}`}
                   </span>
                 </div>
               )}
             </>
           )}
           
-          {/* Badge Verified */}
+          {/* Badge Verified - TRADUIT */}
           <div className="ml-auto flex items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
             <div className="w-1.5 h-1.5 bg-pc-green rounded-full animate-pulse"></div>
-            <span className="text-[8px] uppercase font-black tracking-tighter text-pc-green">Verified</span>
+            <span className="text-[8px] uppercase font-black tracking-tighter text-pc-green">{t.verified}</span>
           </div>
         </div>
 
-        {/* Bouton Détail - Version 1: Link (recommendée) */}
+        {/* Bouton Détail - TRADUIT */}
         {propertyId ? (
           <Link 
             to={`/real-estate/${propertyId}`} 
             className="block w-full text-center border border-slate-900 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 hover:bg-slate-900 hover:text-white transition-all duration-300 rounded-lg"
           >
-            View Full Details
+            {t.viewDetails}
           </Link>
         ) : (
-          // Fallback: bouton avec navigate manuel
           <button
             onClick={handleViewDetails}
             className="block w-full text-center border border-slate-900 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 hover:bg-slate-900 hover:text-white transition-all duration-300 rounded-lg cursor-pointer"
           >
-            View Full Details
+            {t.viewDetails}
           </button>
         )}
       </div>
