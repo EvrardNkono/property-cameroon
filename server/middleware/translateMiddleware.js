@@ -25,11 +25,20 @@ async function translateObject(obj, targetLang) {
   if (obj && typeof obj === 'object') {
     const translated = {};
     for (const [key, value] of Object.entries(obj)) {
-      const skip = ['_id','id','createdAt','updatedAt','status','listingType','category','currency','unit','email','sourceUrl'].includes(key)
+      const skip = [
+        '_id', 'id', 'createdAt', 'updatedAt', 'status', 'listingType',
+        'category', 'currency', 'unit', 'email', 'sourceUrl',
+        'slug',        // ✅ ne jamais traduire les slugs
+        'imageUrl',    // ✅ ne pas traduire les URLs
+        'imageUpload', // ✅ ne pas traduire les URLs
+        'iconName',    // ✅ ne pas traduire les noms d'icônes
+        'marketDemand' // ✅ garder le format "+X% YoY"
+      ].includes(key)
         || typeof value === 'number'
         || typeof value === 'boolean'
         || value === null
         || value === undefined;
+
       if (skip) {
         translated[key] = value;
       } else if (typeof value === 'string' && value.length > 0) {
@@ -46,14 +55,12 @@ async function translateObject(obj, targetLang) {
 }
 
 function autoTranslate(req, res, next) {
-  // Détecter la langue demandée
   const lang = req.query.lang
     || req.headers['accept-language']?.split(',')[0]?.split('-')[0]
     || 'en';
 
   req.targetLang = lang;
 
-  // ✅ Vos données sont en anglais → ne traduire QUE si la langue demandée N'EST PAS l'anglais
   if (req.targetLang === 'en') return next();
 
   const originalJson = res.json.bind(res);

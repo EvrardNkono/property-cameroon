@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import translate from 'google-translate-api-x';
 
-// ========== FONCTIONS DE TRADUCTION (copiées de property.controller.js) ==========
+// ========== FONCTIONS DE TRADUCTION ==========
 const memCache = new Map();
 
 async function translateText(text, targetLang) {
@@ -27,6 +27,9 @@ async function translateText(text, targetLang) {
 async function applyTranslation(category, targetLang) {
   const doc = category.toObject ? category.toObject() : { ...category };
 
+  // ✅ Sauvegarder le slug original AVANT toute traduction
+  const originalSlug = doc.slug;
+
   if (!targetLang || targetLang === 'en') {
     return doc;
   }
@@ -40,6 +43,7 @@ async function applyTranslation(category, targetLang) {
   if (cached && cached.title) {
     return {
       ...doc,
+      slug: originalSlug, // ✅ toujours le slug original
       title: cached.title,
       subtitle: cached.subtitle ?? doc.subtitle,
       description: cached.description ?? doc.description
@@ -51,11 +55,11 @@ async function applyTranslation(category, targetLang) {
       translateText(doc.title, targetLang),
       translateText(doc.subtitle, targetLang),
       translateText(doc.description, targetLang)
+      // ✅ slug NON traduit
     ]);
 
     const cacheEntry = { title, subtitle, description };
 
-    // Sauvegarde en cache asynchrone
     LivestockCategory.findByIdAndUpdate(
       doc._id,
       { $set: { [`translations.${targetLang}`]: cacheEntry } },
@@ -64,13 +68,14 @@ async function applyTranslation(category, targetLang) {
 
     return {
       ...doc,
+      slug: originalSlug, // ✅ toujours le slug original
       title,
       subtitle,
       description
     };
   } catch (err) {
     console.error(`[category] Translation failed:`, err.message);
-    return doc;
+    return { ...doc, slug: originalSlug };
   }
 }
 // ========== FIN DES FONCTIONS DE TRADUCTION ==========
@@ -85,7 +90,6 @@ export const getAllCategories = async (req, res) => {
     
     const categories = await LivestockCategory.find(filter).sort('order');
     
-    // ✅ Appliquer la traduction
     const translatedCategories = await Promise.all(
       categories.map(cat => applyTranslation(cat, targetLang))
     );
@@ -107,7 +111,6 @@ export const getCategoryBySlug = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Category not found' });
     }
     
-    // ✅ Appliquer la traduction
     const translated = await applyTranslation(category, targetLang);
     res.json({ success: true, category: translated });
   } catch (error) {
@@ -126,7 +129,6 @@ export const getCategoryById = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Category not found' });
     }
     
-    // ✅ Appliquer la traduction
     const translated = await applyTranslation(category, targetLang);
     res.json({ success: true, category: translated });
   } catch (error) {
@@ -163,7 +165,7 @@ export const createCategory = async (req, res) => {
       imageType: imageType || 'url',
       imageUrl: imageUrl || '',
       imageUpload: '',
-      translations: new Map() // ✅ Initialiser le cache de traductions
+      translations: new Map()
     };
     
     if (req.file) {
@@ -214,7 +216,6 @@ export const updateCategory = async (req, res) => {
       imageUrl: imageUrl || category.imageUrl
     };
     
-    // ✅ Invalider le cache de traduction si le titre, sous-titre ou description change
     if (title || subtitle || description) {
       updateData.translations = {};
     }
