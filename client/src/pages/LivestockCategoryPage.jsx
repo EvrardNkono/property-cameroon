@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -12,18 +12,43 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
 
-// Hook pour récupérer la langue actuelle
+// Hook pour récupérer la langue actuelle - CORRIGÉ
 const useCurrentLang = () => {
-  const [lang, setLang] = useState('fr');
-  
-  useEffect(() => {
+  const getInitialLang = () => {
     const params = new URLSearchParams(window.location.search);
     const urlLang = params.get('lang');
     const storedLang = localStorage.getItem('preferredLanguage');
     const browserLang = navigator.language.split('-')[0];
+    return urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+  };
+  
+  const [lang, setLang] = useState(getInitialLang);
+  
+  useEffect(() => {
+    const handleLangChange = () => {
+      const params = new URLSearchParams(window.location.search);
+      const urlLang = params.get('lang');
+      const storedLang = localStorage.getItem('preferredLanguage');
+      const browserLang = navigator.language.split('-')[0];
+      const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+      setLang(finalLang);
+    };
     
-    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
-    setLang(finalLang);
+    // Écouter les changements d'URL
+    window.addEventListener('popstate', handleLangChange);
+    
+    // Observer les changements de localStorage
+    const storageListener = (e) => {
+      if (e.key === 'preferredLanguage') {
+        handleLangChange();
+      }
+    };
+    window.addEventListener('storage', storageListener);
+    
+    return () => {
+      window.removeEventListener('popstate', handleLangChange);
+      window.removeEventListener('storage', storageListener);
+    };
   }, []);
   
   return lang;
@@ -110,59 +135,6 @@ const categoryColorMap = {
   }
 };
 
-// Fonction pour obtenir les données d'investissement traduites
-const getInvestmentData = (slug, t) => {
-  const baseData = {
-    aquaculture: {
-      why: t.investWhyAquaculture,
-      roiExplanation: t.roiExplanationAquaculture,
-      risks: t.risksAquaculture,
-      taxAdvantage: t.taxAdvantageAquaculture,
-      marketDrivers: [t.marketDriver1Aqua, t.marketDriver2Aqua, t.marketDriver3Aqua],
-      roiRange: "18-35%",
-      minInvestment: "2,500,000 FCFA"
-    },
-    poultry: {
-      why: t.investWhyPoultry,
-      roiExplanation: t.roiExplanationPoultry,
-      risks: t.risksPoultry,
-      taxAdvantage: t.taxAdvantagePoultry,
-      marketDrivers: [t.marketDriver1Poultry, t.marketDriver2Poultry, t.marketDriver3Poultry],
-      roiRange: "22-40%",
-      minInvestment: "4,000,000 FCFA"
-    },
-    cattle: {
-      why: t.investWhyCattle,
-      roiExplanation: t.roiExplanationCattle,
-      risks: t.risksCattle,
-      taxAdvantage: t.taxAdvantageCattle,
-      marketDrivers: [t.marketDriver1Cattle, t.marketDriver2Cattle, t.marketDriver3Cattle],
-      roiRange: "8-18%",
-      minInvestment: "14,000,000 FCFA"
-    },
-    pigs: {
-      why: t.investWhyPigs,
-      roiExplanation: t.roiExplanationPigs,
-      risks: t.risksPigs,
-      taxAdvantage: t.taxAdvantagePigs,
-      marketDrivers: [t.marketDriver1Pigs, t.marketDriver2Pigs, t.marketDriver3Pigs],
-      roiRange: "18-30%",
-      minInvestment: "9,500,000 FCFA"
-    },
-    goats: {
-      why: t.investWhyGoats,
-      roiExplanation: t.roiExplanationGoats,
-      risks: t.risksGoats,
-      taxAdvantage: t.taxAdvantageGoats,
-      marketDrivers: [t.marketDriver1Goats, t.marketDriver2Goats, t.marketDriver3Goats],
-      roiRange: "22-38%",
-      minInvestment: "5,000,000 FCFA"
-    }
-  };
-  
-  return baseData[slug] || baseData.poultry;
-};
-
 const LivestockCategoryPage = () => {
   const { category } = useParams();
   const navigate = useNavigate();
@@ -181,267 +153,301 @@ const LivestockCategoryPage = () => {
   const [calculatorInput, setCalculatorInput] = useState({ amount: 1000000, months: 12 });
   const [hoveredCard, setHoveredCard] = useState(null);
 
-  // ========== TRADUCTIONS ==========
-  const t = {
-    fr: {
-      // Navigation
-      backToSectors: "Retour à tous les secteurs",
-      investmentSector: "Secteur d'Investissement",
-      investmentHub: "Hub d'Investissement",
-      marketStatus: "Statut du Marché",
-      yearOverYear: "Croissance annuelle",
-      availableAssets: "Actifs Disponibles",
-      avgRoi: "ROI Moyen",
-      totalValue: "Valeur Totale",
-      minInvestment: "Investissement Min",
-      calculateMyRoi: "Calculer mon ROI",
-      
-      // Investment section
-      whyInvest: "Pourquoi investir ?",
-      roiExplanation: "Explication du ROI",
-      taxAdvantage: "Avantage fiscal",
-      keyRisks: "Risques clés",
-      marketDrivers: "Moteurs du marché",
-      roiRange: "Fourchette ROI",
-      
-      // Category specific investment data
-      investWhyAquaculture: "L'aquaculture camerounaise croît de +18% par an. La demande de poisson frais dépasse l'offre de 40%.",
-      roiExplanationAquaculture: "Cycle court (6-8 mois), faible taux de mortalité, demande constante des restaurants et ménages.",
-      risksAquaculture: "Sensibilité à la qualité de l'eau, dépendance aux aliments importés.",
-      taxAdvantageAquaculture: "Exonération de TVA sur les équipements aquacoles (filets, pompes, aérateurs).",
-      marketDriver1Aqua: "Hausse des prix du poisson congelé",
-      marketDriver2Aqua: "Conscience santé",
-      marketDriver3Aqua: "Croissance démographique urbaine",
-      
-      investWhyPoultry: "La volaille est la viande la plus consommée après le poisson. Hausse de +25% de la demande locale.",
-      roiExplanationPoultry: "Cycle très court (2-4 mois), rotation rapide du capital, pics de demande pendant les fêtes.",
-      risksPoultry: "Sensibilité aux maladies aviaires, volatilité des prix du maïs.",
-      taxAdvantagePoultry: "Crédit d'impôt pour les jeunes agriculteurs (Loi de Finances 2025).",
-      marketDriver1Poultry: "Substitution aux importations",
-      marketDriver2Poultry: "Culture de rue",
-      marketDriver3Poultry: "Demande cérémonielle",
-      
-      investWhyCattle: "Les bovins sont une valeur de refuge traditionnelle. La demande de bœuf augmente avec l'urbanisation.",
-      roiExplanationCattle: "Cycle long (12-18 mois) mais rendements stables. Le prix au kilo augmente annuellement.",
-      risksCattle: "Sécheresse, conflits éleveurs-agriculteurs, coûts de transport élevés.",
-      taxAdvantageCattle: "Subventions pour l'engraissement (programme MINEPIA).",
-      marketDriver1Cattle: "Cérémonies de mariage",
-      marketDriver2Cattle: "Expansion des boucheries",
-      marketDriver3Cattle: "Potentiel d'export",
-      
-      investWhyPigs: "Le porc est la troisième viande la plus consommée au Cameroun. Très prisé dans les maquis.",
-      roiExplanationPigs: "Cycle moyen (6-8 mois). Le 'porc villageois' bénéficie d'une prime de +30%.",
-      risksPigs: "Peste porcine africaine (PPA), volatilité des prix des aliments.",
-      taxAdvantagePigs: "Réduction de taxe foncière pour les fermes porcines modernes.",
-      marketDriver1Pigs: "Culture des maquis",
-      marketDriver2Pigs: "Fêtes de fin d'année",
-      marketDriver3Pigs: "Protéine abordable",
-      
-      investWhyGoats: "Les petits ruminants sont le meilleur point d'entrée pour les petits investisseurs.",
-      roiExplanationGoats: "Cycle court (5-7 mois). Les prix grimpent de +50-100% pendant la Tabaski.",
-      risksGoats: "Faible (très rustique). Risque principal : le vol.",
-      taxAdvantageGoats: "Exemption de patente pour les fermes de moins de 50 têtes.",
-      marketDriver1Goats: "Demande Ramadan/Tabaski",
-      marketDriver2Goats: "Cérémonies de dot",
-      marketDriver3Goats: "Barrière d'entrée basse",
-      
-      // Filters
-      highestRoi: "ROI le plus élevé",
-      highestValue: "Valeur la plus élevée",
-      largestCapacity: "Plus grande capacité",
-      allRoiLevels: "Tous les niveaux de ROI",
-      low: "Faible (0% - 15%)",
-      medium: "Moyen (15% - 25%)",
-      high: "Élevé (25%+)",
-      
-      // Asset card
-      unitValue: "Valeur unitaire",
-      capacity: "Capacité",
-      cycle: "Cycle",
-      water: "Eau",
-      power: "Électricité",
-      vet: "Vétérinaire",
-      feedStorage: "Stockage aliment",
-      viewDetails: "Voir détails",
-      projectedWithReinvestment: "Projection avec réinvestissement",
-      
-      // Compare
-      compareAssets: "Comparer les actifs",
-      clearAll: "Tout effacer",
-      compare: "Comparer",
-      assetSelected: "actif sélectionné",
-      assetsSelected: "actifs sélectionnés",
-      
-      // Calculator
-      roiCalculator: "Calculateur de ROI",
-      investmentAmount: "Montant d'investissement (FCFA)",
-      investmentPeriod: "Période d'investissement (mois)",
-      projectedReturn: "Rendement projeté",
-      basedOnAvgRoi: "Basé sur le ROI moyen de ce secteur",
-      disclaimer: "*Les performances passées ne garantissent pas les rendements futurs. Ceci est une estimation.",
-      
-      // Empty state
-      noAssetsAvailable: "Aucun actif d'investissement disponible dans ce secteur.",
-      exploreOtherSectors: "Explorer d'autres secteurs",
-      
-      // Loading
-      loadingData: "Chargement des données du secteur...",
-      loadingError: "Erreur de chargement",
-      categoryNotFound: "Catégorie non trouvée",
-      
-      // Badges
-      projected: "Projection",
-      
-      // Sort options
-      sortByRoi: "ROI le plus élevé",
-      sortByPrice: "Valeur la plus élevée",
-      sortByCapacity: "Plus grande capacité"
-    },
-    en: {
-      // Navigation
-      backToSectors: "Back to all sectors",
-      investmentSector: "Investment Sector",
-      investmentHub: "Investment Hub",
-      marketStatus: "Market Status",
-      yearOverYear: "Year-over-Year growth",
-      availableAssets: "Available Assets",
-      avgRoi: "Avg ROI",
-      totalValue: "Total Value",
-      minInvestment: "Min Investment",
-      calculateMyRoi: "Calculate my ROI",
-      
-      // Investment section
-      whyInvest: "Why invest?",
-      roiExplanation: "ROI explanation",
-      taxAdvantage: "Tax advantage",
-      keyRisks: "Key risks",
-      marketDrivers: "Market Drivers",
-      roiRange: "ROI Range",
-      
-      // Category specific investment data
-      investWhyAquaculture: "Cameroon's fish farming is growing at +18% YoY. Fresh fish demand exceeds supply by 40%.",
-      roiExplanationAquaculture: "Short cycle (6-8 months), low mortality rate, consistent demand from restaurants and households.",
-      risksAquaculture: "Water quality sensitivity, dependency on imported feed.",
-      taxAdvantageAquaculture: "VAT exemption on aquaculture equipment (nets, pumps, aerators).",
-      marketDriver1Aqua: "Rising frozen fish prices",
-      marketDriver2Aqua: "Health consciousness",
-      marketDriver3Aqua: "Urban population growth",
-      
-      investWhyPoultry: "Poultry is the most consumed meat after fish. +25% surge in local chicken demand.",
-      roiExplanationPoultry: "Very short cycle (2-4 months), rapid capital rotation, holiday demand spikes.",
-      risksPoultry: "Avian disease susceptibility, maize price volatility.",
-      taxAdvantagePoultry: "Tax credit for young farmers (2025 Finance Law).",
-      marketDriver1Poultry: "Import substitution",
-      marketDriver2Poultry: "Street food culture",
-      marketDriver3Poultry: "Ceremony demand",
-      
-      investWhyCattle: "Cattle are a traditional store of value. Beef demand rises with urbanization.",
-      roiExplanationCattle: "Long cycle (12-18 months) but stable returns. Price per kilo increases annually.",
-      risksCattle: "Drought, farmer-herder conflicts, high transport costs.",
-      taxAdvantageCattle: "Subsidies for fattening (MINEPIA program).",
-      marketDriver1Cattle: "Wedding ceremonies",
-      marketDriver2Cattle: "Butchery expansion",
-      marketDriver3Cattle: "Export potential",
-      
-      investWhyPigs: "Pork is the third most consumed meat in Cameroon. Highly prized in maquis.",
-      roiExplanationPigs: "Medium cycle (6-8 months). 'Village pork' commands +30% premium price.",
-      risksPigs: "African Swine Fever (ASF), feed cost volatility.",
-      taxAdvantagePigs: "Property tax reduction for modern pig farms.",
-      marketDriver1Pigs: "Maquis culture",
-      marketDriver2Pigs: "Year-end feasts",
-      marketDriver3Pigs: "Affordable protein",
-      
-      investWhyGoats: "Small ruminants are the best entry point for small investors.",
-      roiExplanationGoats: "Short cycle (5-7 months). Prices spike +50-100% during Tabaski.",
-      risksGoats: "Low (high hardiness). Main risk is theft.",
-      taxAdvantageGoats: "Business license exemption for farms under 50 heads.",
-      marketDriver1Goats: "Ramadan/Tabaski demand",
-      marketDriver2Goats: "Dowry ceremonies",
-      marketDriver3Goats: "Low entry barrier",
-      
-      // Filters
-      highestRoi: "Highest ROI",
-      highestValue: "Highest Value",
-      largestCapacity: "Largest Capacity",
-      allRoiLevels: "All ROI levels",
-      low: "Low (0% - 15%)",
-      medium: "Medium (15% - 25%)",
-      high: "High (25%+)",
-      
-      // Asset card
-      unitValue: "Unit Value",
-      capacity: "Capacity",
-      cycle: "Cycle",
-      water: "Water",
-      power: "Power",
-      vet: "Vet",
-      feedStorage: "Feed storage",
-      viewDetails: "View details",
-      projectedWithReinvestment: "Projected with reinvestment",
-      
-      // Compare
-      compareAssets: "Compare Assets",
-      clearAll: "Clear all",
-      compare: "Compare",
-      assetSelected: "asset selected",
-      assetsSelected: "assets selected",
-      
-      // Calculator
-      roiCalculator: "ROI Calculator",
-      investmentAmount: "Investment Amount (FCFA)",
-      investmentPeriod: "Investment Period (months)",
-      projectedReturn: "Projected Return",
-      basedOnAvgRoi: "Based on average ROI for this sector",
-      disclaimer: "*Past performance does not guarantee future returns. This is an estimate.",
-      
-      // Empty state
-      noAssetsAvailable: "No investment assets available in this sector.",
-      exploreOtherSectors: "Explore other sectors",
-      
-      // Loading
-      loadingData: "Loading sector data...",
-      loadingError: "Loading Error",
-      categoryNotFound: "Category not found",
-      
-      // Badges
-      projected: "Projected",
-      
-      // Sort options
-      sortByRoi: "Highest ROI",
-      sortByPrice: "Highest Value",
-      sortByCapacity: "Largest Capacity"
-    }
-  }[currentLang] || {
-    // Fallback français
-    backToSectors: "Retour à tous les secteurs",
-    investmentSector: "Secteur d'Investissement",
-    investmentHub: "Hub d'Investissement",
-    marketStatus: "Statut du Marché",
-    yearOverYear: "Croissance annuelle",
-    availableAssets: "Actifs Disponibles",
-    avgRoi: "ROI Moyen",
-    totalValue: "Valeur Totale",
-    minInvestment: "Investissement Min",
-    calculateMyRoi: "Calculer mon ROI",
-    whyInvest: "Pourquoi investir ?",
-    roiExplanation: "Explication du ROI",
-    taxAdvantage: "Avantage fiscal",
-    keyRisks: "Risques clés",
-    marketDrivers: "Moteurs du marché",
-    roiRange: "Fourchette ROI",
-    // ... autres traductions par défaut
-  };
+  // ========== TRADUCTIONS - CORRIGÉ avec useMemo ==========
+  const t = useMemo(() => {
+    const translations = {
+      fr: {
+        // Navigation
+        backToSectors: "Retour à tous les secteurs",
+        investmentSector: "Secteur d'Investissement",
+        investmentHub: "Hub d'Investissement",
+        marketStatus: "Statut du Marché",
+        yearOverYear: "Croissance annuelle",
+        availableAssets: "Actifs Disponibles",
+        avgRoi: "ROI Moyen",
+        totalValue: "Valeur Totale",
+        minInvestment: "Investissement Min",
+        calculateMyRoi: "Calculer mon ROI",
+        contactUs: "Nous contacter",
+        
+        // Investment section
+        whyInvest: "Pourquoi investir ?",
+        roiExplanation: "Explication du ROI",
+        taxAdvantage: "Avantage fiscal",
+        keyRisks: "Risques clés",
+        marketDrivers: "Moteurs du marché",
+        roiRange: "Fourchette ROI",
+        
+        // Category specific investment data
+        investWhyAquaculture: "L'aquaculture camerounaise croît de +18% par an. La demande de poisson frais dépasse l'offre de 40%.",
+        roiExplanationAquaculture: "Cycle court (6-8 mois), faible taux de mortalité, demande constante des restaurants et ménages.",
+        risksAquaculture: "Sensibilité à la qualité de l'eau, dépendance aux aliments importés.",
+        taxAdvantageAquaculture: "Exonération de TVA sur les équipements aquacoles (filets, pompes, aérateurs).",
+        marketDriver1Aqua: "Hausse des prix du poisson congelé",
+        marketDriver2Aqua: "Conscience santé",
+        marketDriver3Aqua: "Croissance démographique urbaine",
+        
+        investWhyPoultry: "La volaille est la viande la plus consommée après le poisson. Hausse de +25% de la demande locale.",
+        roiExplanationPoultry: "Cycle très court (2-4 mois), rotation rapide du capital, pics de demande pendant les fêtes.",
+        risksPoultry: "Sensibilité aux maladies aviaires, volatilité des prix du maïs.",
+        taxAdvantagePoultry: "Crédit d'impôt pour les jeunes agriculteurs (Loi de Finances 2025).",
+        marketDriver1Poultry: "Substitution aux importations",
+        marketDriver2Poultry: "Culture de rue",
+        marketDriver3Poultry: "Demande cérémonielle",
+        
+        investWhyCattle: "Les bovins sont une valeur de refuge traditionnelle. La demande de bœuf augmente avec l'urbanisation.",
+        roiExplanationCattle: "Cycle long (12-18 mois) mais rendements stables. Le prix au kilo augmente annuellement.",
+        risksCattle: "Sécheresse, conflits éleveurs-agriculteurs, coûts de transport élevés.",
+        taxAdvantageCattle: "Subventions pour l'engraissement (programme MINEPIA).",
+        marketDriver1Cattle: "Cérémonies de mariage",
+        marketDriver2Cattle: "Expansion des boucheries",
+        marketDriver3Cattle: "Potentiel d'export",
+        
+        investWhyPigs: "Le porc est la troisième viande la plus consommée au Cameroun. Très prisé dans les maquis.",
+        roiExplanationPigs: "Cycle moyen (6-8 mois). Le 'porc villageois' bénéficie d'une prime de +30%.",
+        risksPigs: "Peste porcine africaine (PPA), volatilité des prix des aliments.",
+        taxAdvantagePigs: "Réduction de taxe foncière pour les fermes porcines modernes.",
+        marketDriver1Pigs: "Culture des maquis",
+        marketDriver2Pigs: "Fêtes de fin d'année",
+        marketDriver3Pigs: "Protéine abordable",
+        
+        investWhyGoats: "Les petits ruminants sont le meilleur point d'entrée pour les petits investisseurs.",
+        roiExplanationGoats: "Cycle court (5-7 mois). Les prix grimpent de +50-100% pendant la Tabaski.",
+        risksGoats: "Faible (très rustique). Risque principal : le vol.",
+        taxAdvantageGoats: "Exemption de patente pour les fermes de moins de 50 têtes.",
+        marketDriver1Goats: "Demande Ramadan/Tabaski",
+        marketDriver2Goats: "Cérémonies de dot",
+        marketDriver3Goats: "Barrière d'entrée basse",
+        
+        // Filters
+        sortByRoi: "ROI le plus élevé",
+        sortByPrice: "Valeur la plus élevée",
+        sortByCapacity: "Plus grande capacité",
+        allRoiLevels: "Tous les niveaux de ROI",
+        low: "Faible (0% - 15%)",
+        medium: "Moyen (15% - 25%)",
+        high: "Élevé (25%+)",
+        
+        // Asset card
+        unitValue: "Valeur unitaire",
+        capacity: "Capacité",
+        cycle: "Cycle",
+        water: "Eau",
+        power: "Électricité",
+        vet: "Vétérinaire",
+        feedStorage: "Stockage aliment",
+        viewDetails: "Voir détails",
+        projectedWithReinvestment: "Projection avec réinvestissement",
+        location: "Localisation",
+        
+        // Compare
+        compareAssets: "Comparer les actifs",
+        clearAll: "Tout effacer",
+        compare: "Comparer",
+        assetSelected: "actif sélectionné",
+        assetsSelected: "actifs sélectionnés",
+        
+        // Calculator
+        roiCalculator: "Calculateur de ROI",
+        investmentAmount: "Montant d'investissement (FCFA)",
+        investmentPeriod: "Période d'investissement (mois)",
+        projectedReturn: "Rendement projeté",
+        basedOnAvgRoi: "Basé sur le ROI moyen de ce secteur",
+        disclaimer: "*Les performances passées ne garantissent pas les rendements futurs. Ceci est une estimation.",
+        
+        // Empty state
+        noAssetsAvailable: "Aucun actif d'investissement disponible dans ce secteur.",
+        exploreOtherSectors: "Explorer d'autres secteurs",
+        
+        // Loading
+        loadingData: "Chargement des données du secteur...",
+        loadingError: "Erreur de chargement",
+        categoryNotFound: "Catégorie non trouvée",
+        
+        // Badges
+        projected: "Projection"
+      },
+      en: {
+        // Navigation
+        backToSectors: "Back to all sectors",
+        investmentSector: "Investment Sector",
+        investmentHub: "Investment Hub",
+        marketStatus: "Market Status",
+        yearOverYear: "Year-over-Year growth",
+        availableAssets: "Available Assets",
+        avgRoi: "Avg ROI",
+        totalValue: "Total Value",
+        minInvestment: "Min Investment",
+        calculateMyRoi: "Calculate my ROI",
+        contactUs: "Contact Us",
+        
+        // Investment section
+        whyInvest: "Why invest?",
+        roiExplanation: "ROI explanation",
+        taxAdvantage: "Tax advantage",
+        keyRisks: "Key risks",
+        marketDrivers: "Market Drivers",
+        roiRange: "ROI Range",
+        
+        // Category specific investment data
+        investWhyAquaculture: "Cameroon's fish farming is growing at +18% YoY. Fresh fish demand exceeds supply by 40%.",
+        roiExplanationAquaculture: "Short cycle (6-8 months), low mortality rate, consistent demand from restaurants and households.",
+        risksAquaculture: "Water quality sensitivity, dependency on imported feed.",
+        taxAdvantageAquaculture: "VAT exemption on aquaculture equipment (nets, pumps, aerators).",
+        marketDriver1Aqua: "Rising frozen fish prices",
+        marketDriver2Aqua: "Health consciousness",
+        marketDriver3Aqua: "Urban population growth",
+        
+        investWhyPoultry: "Poultry is the most consumed meat after fish. +25% surge in local chicken demand.",
+        roiExplanationPoultry: "Very short cycle (2-4 months), rapid capital rotation, holiday demand spikes.",
+        risksPoultry: "Avian disease susceptibility, maize price volatility.",
+        taxAdvantagePoultry: "Tax credit for young farmers (2025 Finance Law).",
+        marketDriver1Poultry: "Import substitution",
+        marketDriver2Poultry: "Street food culture",
+        marketDriver3Poultry: "Ceremony demand",
+        
+        investWhyCattle: "Cattle are a traditional store of value. Beef demand rises with urbanization.",
+        roiExplanationCattle: "Long cycle (12-18 months) but stable returns. Price per kilo increases annually.",
+        risksCattle: "Drought, farmer-herder conflicts, high transport costs.",
+        taxAdvantageCattle: "Subsidies for fattening (MINEPIA program).",
+        marketDriver1Cattle: "Wedding ceremonies",
+        marketDriver2Cattle: "Butchery expansion",
+        marketDriver3Cattle: "Export potential",
+        
+        investWhyPigs: "Pork is the third most consumed meat in Cameroon. Highly prized in maquis.",
+        roiExplanationPigs: "Medium cycle (6-8 months). 'Village pork' commands +30% premium price.",
+        risksPigs: "African Swine Fever (ASF), feed cost volatility.",
+        taxAdvantagePigs: "Property tax reduction for modern pig farms.",
+        marketDriver1Pigs: "Maquis culture",
+        marketDriver2Pigs: "Year-end feasts",
+        marketDriver3Pigs: "Affordable protein",
+        
+        investWhyGoats: "Small ruminants are the best entry point for small investors.",
+        roiExplanationGoats: "Short cycle (5-7 months). Prices spike +50-100% during Tabaski.",
+        risksGoats: "Low (high hardiness). Main risk is theft.",
+        taxAdvantageGoats: "Business license exemption for farms under 50 heads.",
+        marketDriver1Goats: "Ramadan/Tabaski demand",
+        marketDriver2Goats: "Dowry ceremonies",
+        marketDriver3Goats: "Low entry barrier",
+        
+        // Filters
+        sortByRoi: "Highest ROI",
+        sortByPrice: "Highest Value",
+        sortByCapacity: "Largest Capacity",
+        allRoiLevels: "All ROI levels",
+        low: "Low (0% - 15%)",
+        medium: "Medium (15% - 25%)",
+        high: "High (25%+)",
+        
+        // Asset card
+        unitValue: "Unit Value",
+        capacity: "Capacity",
+        cycle: "Cycle",
+        water: "Water",
+        power: "Power",
+        vet: "Vet",
+        feedStorage: "Feed storage",
+        viewDetails: "View details",
+        projectedWithReinvestment: "Projected with reinvestment",
+        location: "Location",
+        
+        // Compare
+        compareAssets: "Compare Assets",
+        clearAll: "Clear all",
+        compare: "Compare",
+        assetSelected: "asset selected",
+        assetsSelected: "assets selected",
+        
+        // Calculator
+        roiCalculator: "ROI Calculator",
+        investmentAmount: "Investment Amount (FCFA)",
+        investmentPeriod: "Investment Period (months)",
+        projectedReturn: "Projected Return",
+        basedOnAvgRoi: "Based on average ROI for this sector",
+        disclaimer: "*Past performance does not guarantee future returns. This is an estimate.",
+        
+        // Empty state
+        noAssetsAvailable: "No investment assets available in this sector.",
+        exploreOtherSectors: "Explore other sectors",
+        
+        // Loading
+        loadingData: "Loading sector data...",
+        loadingError: "Loading Error",
+        categoryNotFound: "Category not found",
+        
+        // Badges
+        projected: "Projected"
+      }
+    };
+    
+    return translations[currentLang] || translations.fr;
+  }, [currentLang]);
 
-  const getImageUrl = (image) => {
+  // ========== Fonction pour obtenir les données d'investissement traduites - CORRIGÉE ==========
+  const getInvestmentData = useCallback((slug) => {
+    const baseData = {
+      aquaculture: {
+        why: t.investWhyAquaculture,
+        roiExplanation: t.roiExplanationAquaculture,
+        risks: t.risksAquaculture,
+        taxAdvantage: t.taxAdvantageAquaculture,
+        marketDrivers: [t.marketDriver1Aqua, t.marketDriver2Aqua, t.marketDriver3Aqua],
+        roiRange: "18-35%",
+        minInvestment: "2,500,000 FCFA"
+      },
+      poultry: {
+        why: t.investWhyPoultry,
+        roiExplanation: t.roiExplanationPoultry,
+        risks: t.risksPoultry,
+        taxAdvantage: t.taxAdvantagePoultry,
+        marketDrivers: [t.marketDriver1Poultry, t.marketDriver2Poultry, t.marketDriver3Poultry],
+        roiRange: "22-40%",
+        minInvestment: "4,000,000 FCFA"
+      },
+      cattle: {
+        why: t.investWhyCattle,
+        roiExplanation: t.roiExplanationCattle,
+        risks: t.risksCattle,
+        taxAdvantage: t.taxAdvantageCattle,
+        marketDrivers: [t.marketDriver1Cattle, t.marketDriver2Cattle, t.marketDriver3Cattle],
+        roiRange: "8-18%",
+        minInvestment: "14,000,000 FCFA"
+      },
+      pigs: {
+        why: t.investWhyPigs,
+        roiExplanation: t.roiExplanationPigs,
+        risks: t.risksPigs,
+        taxAdvantage: t.taxAdvantagePigs,
+        marketDrivers: [t.marketDriver1Pigs, t.marketDriver2Pigs, t.marketDriver3Pigs],
+        roiRange: "18-30%",
+        minInvestment: "9,500,000 FCFA"
+      },
+      goats: {
+        why: t.investWhyGoats,
+        roiExplanation: t.roiExplanationGoats,
+        risks: t.risksGoats,
+        taxAdvantage: t.taxAdvantageGoats,
+        marketDrivers: [t.marketDriver1Goats, t.marketDriver2Goats, t.marketDriver3Goats],
+        roiRange: "22-38%",
+        minInvestment: "5,000,000 FCFA"
+      }
+    };
+    
+    return baseData[slug] || baseData.poultry;
+  }, [t]);
+
+  const getImageUrl = useCallback((image) => {
     if (!image) return null;
     if (image.startsWith('http')) return image;
     if (image.startsWith('/uploads')) return `${BACKEND_URL}${image}`;
     return `${BACKEND_URL}/uploads/livestock/${image}`;
-  };
+  }, []);
 
-  const fetchCategoryData = async () => {
+  // ========== FETCH CATEGORY DATA - CORRIGÉ avec useCallback ==========
+  const fetchCategoryData = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       
       const catResponse = await api.getLivestockCategoryBySlug(category, { lang: currentLang });
       const cat = catResponse.category || catResponse;
@@ -449,7 +455,7 @@ const LivestockCategoryPage = () => {
       if (!cat) throw new Error(`Category "${category}" not found`);
       
       const colors = categoryColorMap[cat.slug] || categoryColorMap.poultry;
-      const investData = getInvestmentData(cat.slug, t);
+      const investData = getInvestmentData(cat.slug);
       
       let categoryImage = null;
       if (cat.imageType === 'upload' && cat.imageUpload) {
@@ -474,6 +480,7 @@ const LivestockCategoryPage = () => {
         buttonColor: colors.button,
         accent: colors.accent,
         badgeColor: colors.badge,
+        light: colors.light,
         marketDemand: cat.marketDemand || '+0% YoY',
         features: cat.features || [],
         image: categoryImage,
@@ -501,7 +508,7 @@ const LivestockCategoryPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [category, currentLang, getInvestmentData, getImageUrl, t.loadingError]);
 
   const filteredAndSortedLivestock = useMemo(() => {
     let filtered = [...livestock];
@@ -521,36 +528,41 @@ const LivestockCategoryPage = () => {
     return filtered;
   }, [livestock, sortBy, filterRoi]);
 
-  const handleSelectAsset = (assetId) => {
+  const handleSelectAsset = useCallback((assetId) => {
     setSelectedAssets(prev => 
       prev.includes(assetId) 
         ? prev.filter(id => id !== assetId)
         : [...prev, assetId]
     );
-  };
+  }, []);
 
-  const handleCompare = () => {
+  const handleCompare = useCallback(() => {
     if (selectedAssets.length >= 2) {
       setShowCompare(true);
     }
-  };
+  }, [selectedAssets.length]);
 
-  const calculateROI = (amount, months, assetRoi) => {
+  const calculateROI = useCallback((amount, months, assetRoi) => {
     const yearlyReturn = amount * (assetRoi / 100);
     const proRatedReturn = yearlyReturn * (months / 12);
     return proRatedReturn;
-  };
+  }, []);
 
-  const avgRoi = filteredAndSortedLivestock.length > 0 
-    ? (filteredAndSortedLivestock.reduce((sum, i) => sum + (i.roi || 0), 0) / filteredAndSortedLivestock.length).toFixed(1)
-    : 0;
+  const avgRoi = useMemo(() => {
+    if (filteredAndSortedLivestock.length === 0) return 0;
+    const sum = filteredAndSortedLivestock.reduce((acc, item) => acc + (item.roi || 0), 0);
+    return (sum / filteredAndSortedLivestock.length).toFixed(1);
+  }, [filteredAndSortedLivestock]);
 
-  const totalValue = filteredAndSortedLivestock.reduce((sum, i) => sum + (i.price?.amount || 0), 0);
+  const totalValue = useMemo(() => {
+    return filteredAndSortedLivestock.reduce((sum, item) => sum + (item.price?.amount || 0), 0);
+  }, [filteredAndSortedLivestock]);
 
+  // ========== EFFECTS ==========
   useEffect(() => {
     window.scrollTo(0, 0);
     fetchCategoryData();
-  }, [category, currentLang]);
+  }, [fetchCategoryData]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
