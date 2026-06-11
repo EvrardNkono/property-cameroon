@@ -181,9 +181,9 @@ class ApiService {
   }
 
   async getPropertyById(id, params = {}) {
-  const query = new URLSearchParams(params).toString();
-  return this.request(`/properties/${id}${query ? `?${query}` : ''}`);
-}
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/properties/${id}${query ? `?${query}` : ''}`);
+  }
 
   async createProperty(propertyData) {
     return this.request('/properties', {
@@ -213,8 +213,9 @@ class ApiService {
     return this.request(`/agriculture${query ? `?${query}` : ''}`);
   }
 
-  async getAgriculturalLandById(id) {
-    return this.request(`/agriculture/${id}`);
+  async getAgriculturalLandById(id, params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/agriculture/${id}${query ? `?${query}` : ''}`);
   }
 
   async filterAgriculturalByCrop(crop) {
@@ -249,12 +250,14 @@ class ApiService {
     return this.request(`/agriculture/products${query ? `?${query}` : ''}`);
   }
 
-  async getAgriculturalProductById(id) {
-    return this.request(`/agriculture/products/${id}`);
+  async getAgriculturalProductById(id, params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/agriculture/products/${id}${query ? `?${query}` : ''}`);
   }
 
-  async getAgriculturalProductsByCategory(category) {
-    return this.request(`/agriculture/products/category/${category}`);
+  async getAgriculturalProductsByCategory(category, params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/agriculture/products/category/${category}${query ? `?${query}` : ''}`);
   }
 
   async createAgriculturalProduct(productData) {
@@ -313,12 +316,16 @@ class ApiService {
     return this.request(`/livestock-categories${query ? `?${query}` : ''}`);
   }
 
-  async getLivestockCategoryBySlug(slug) {
-    return this.request(`/livestock-categories/slug/${slug}`);
+  // 🔥 CORRIGÉ - Ajout du paramètre params pour la langue
+  async getLivestockCategoryBySlug(slug, params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/livestock-categories/slug/${slug}${query ? `?${query}` : ''}`);
   }
 
-  async getLivestockCategoryById(id) {
-    return this.request(`/livestock-categories/${id}`);
+  // 🔥 CORRIGÉ - Ajout du paramètre params pour la langue
+  async getLivestockCategoryById(id, params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/livestock-categories/${id}${query ? `?${query}` : ''}`);
   }
 
   async createLivestockCategory(formData) {
@@ -353,17 +360,20 @@ class ApiService {
     return this.request(`/livestock${query ? `?${query}` : ''}`);
   }
 
-  async getLivestockByCategory(category) {
-    return this.request(`/livestock/category/${category}`);
+  // 🔥 CORRIGÉ - Ajout du paramètre params pour la langue
+  async getLivestockByCategory(category, params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/livestock/category/${category}${query ? `?${query}` : ''}`);
   }
 
   async getLivestockById(id, params = {}) {
-  const query = new URLSearchParams(params).toString();
-  return this.request(`/livestock/${id}${query ? `?${query}` : ''}`);
-}
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/livestock/${id}${query ? `?${query}` : ''}`);
+  }
 
-  async getLivestockByOwner(ownerId) {
-    return this.request(`/livestock/owner/${ownerId}`);
+  async getLivestockByOwner(ownerId, params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/livestock/owner/${ownerId}${query ? `?${query}` : ''}`);
   }
 
   async createLivestock(data) {
