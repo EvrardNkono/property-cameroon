@@ -29,6 +29,8 @@ const BACKEND_URL = isDevelopment
 const PropertyTicker = ({ properties, interval = 10000 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [nextProperty, setNextProperty] = useState(null);
   const currentLang = useCurrentLang();
   const timerRef = useRef(null);
 
@@ -56,12 +58,27 @@ const PropertyTicker = ({ properties, interval = 10000 }) => {
   const price = currentProperty.price?.amount?.toLocaleString() || 0;
   const location = currentProperty.location?.city || '';
 
+  // Changer de bien avec animation
+  const changeProperty = useCallback(() => {
+    const nextIndex = (currentIndex + 1) % publishedProperties.length;
+    setNextProperty(publishedProperties[nextIndex]);
+    setIsAnimating(true);
+    
+    // Après l'animation de sortie, changer l'index
+    setTimeout(() => {
+      setCurrentIndex(nextIndex);
+      setNextProperty(null);
+      setIsAnimating(false);
+    }, 500);
+  }, [currentIndex, publishedProperties]);
+
+  // Timer pour changer automatiquement
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
-      setCurrentIndex(prev => (prev + 1) % publishedProperties.length);
+      changeProperty();
     }, interval);
-  }, [publishedProperties.length, interval]);
+  }, [changeProperty, interval]);
 
   useEffect(() => {
     startTimer();
@@ -83,31 +100,35 @@ const PropertyTicker = ({ properties, interval = 10000 }) => {
   if (!isVisible) return null;
 
   return (
-    <>
-      {/* Bandeau flottant - Responsive */}
-      <div className="fixed z-40 group">
-        {/* Positions responsives */}
-        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 md:bottom-8 md:right-8">
+    <div className="fixed bottom-4 right-0 sm:bottom-6 z-50">
+      {/* Conteneur du ticker avec animation de glissement */}
+      <div className="relative overflow-hidden">
+        
+        {/* Bandeau principal - avec animation de sortie */}
+        <div
+          className={`transition-all duration-500 ease-in-out ${
+            isAnimating 
+              ? 'translate-x-full opacity-0' 
+              : 'translate-x-0 opacity-100'
+          }`}
+        >
           <Link
             to={`/real-estate/${currentProperty._id || currentProperty.id}`}
             className="block"
           >
-            {/* Bandeau - Largeur responsive */}
-            <div className="bg-white/95 backdrop-blur-md rounded-xl sm:rounded-2xl shadow-2xl border border-slate-100 overflow-hidden hover:shadow-xl transition-all duration-300 relative">
+            <div className="bg-white/95 backdrop-blur-md rounded-l-xl sm:rounded-l-2xl shadow-2xl border border-slate-100 border-r-0 overflow-hidden hover:shadow-xl transition-all duration-300 relative">
               
-              {/* Bouton de fermeture - repositionné */}
+              {/* Bouton de fermeture */}
               <button
                 onClick={handleClose}
-                className="absolute top-1 right-1 sm:top-2 sm:right-2 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100 hover:bg-red-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-300 z-10"
+                className="absolute top-1 right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100 hover:bg-red-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-300 z-10"
                 aria-label="Fermer"
               >
                 <X size={8} className="sm:w-[10px] sm:h-[10px]" />
               </button>
 
-              {/* Contenu responsive */}
               <div className="flex items-center gap-2 sm:gap-3 p-2 pr-5 sm:p-3 sm:pr-8">
-                
-                {/* Mini image - taille responsive */}
+                {/* Mini image */}
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden bg-slate-100 shrink-0">
                   {imageUrl && (
                     <img
@@ -120,18 +141,12 @@ const PropertyTicker = ({ properties, interval = 10000 }) => {
 
                 {/* Infos */}
                 <div className="flex-1 min-w-0">
-                  {/* Titre défilant */}
-                  <div className="overflow-hidden max-w-[120px] sm:max-w-[180px] md:max-w-[200px]">
-                    <div className="animate-slide whitespace-nowrap">
-                      <h4 className="text-xs sm:text-sm font-semibold text-slate-800 inline-block">
-                        {currentProperty.title.length > 30 
-                          ? currentProperty.title.substring(0, 30) + '...' 
-                          : currentProperty.title}
-                      </h4>
-                    </div>
-                  </div>
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-800">
+                    {currentProperty.title.length > 30 
+                      ? currentProperty.title.substring(0, 30) + '...' 
+                      : currentProperty.title}
+                  </h4>
 
-                  {/* Prix et localisation - responsive */}
                   <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-0.5 sm:mt-1">
                     <span className={`text-[10px] sm:text-xs font-bold ${isSale ? 'text-pc-gold' : 'text-pc-green'}`}>
                       {price} FCFA {!isSale && <span className="text-[7px] sm:text-[9px]">/mois</span>}
@@ -149,7 +164,6 @@ const PropertyTicker = ({ properties, interval = 10000 }) => {
                     )}
                   </div>
 
-                  {/* Badge */}
                   <div className="mt-0.5 sm:mt-1">
                     <span className={`text-[6px] sm:text-[7px] px-1 sm:px-1.5 py-0.5 rounded-full font-bold uppercase ${
                       isSale ? 'bg-pc-gold/10 text-pc-gold' : 'bg-slate-100 text-slate-600'
@@ -167,30 +181,50 @@ const PropertyTicker = ({ properties, interval = 10000 }) => {
             </div>
           </Link>
         </div>
-      </div>
 
-      {/* Animations */}
-      <style>{`
-        @keyframes slideRightToLeft {
-          0% {
-            transform: translateX(100%);
-          }
-          100% {
-            transform: translateX(-100%);
-          }
-        }
-        .animate-slide {
-          animation: slideRightToLeft 8s linear infinite;
-          display: inline-block;
-          padding-right: 100%;
-        }
-        
-        /* Pause animation on hover */
-        .group:hover .animate-slide {
-          animation-play-state: paused;
-        }
-      `}</style>
-    </>
+        {/* Prochain bandeau (pré-chargé pour l'animation d'entrée) */}
+        {nextProperty && (
+          <div
+            className={`absolute top-0 right-0 transition-all duration-500 ease-in-out ${
+              isAnimating 
+                ? 'translate-x-0 opacity-100' 
+                : 'translate-x-full opacity-0'
+            }`}
+            style={{ width: '100%' }}
+          >
+            <Link
+              to={`/real-estate/${nextProperty._id || nextProperty.id}`}
+              className="block"
+            >
+              <div className="bg-white/95 backdrop-blur-md rounded-l-xl sm:rounded-l-2xl shadow-2xl border border-slate-100 border-r-0 overflow-hidden relative">
+                <div className="flex items-center gap-2 sm:gap-3 p-2 pr-5 sm:p-3 sm:pr-8">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden bg-slate-100 shrink-0">
+                    <img
+                      src={getImageUrl(nextProperty.images?.[0] || nextProperty.image)}
+                      alt={nextProperty.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs sm:text-sm font-semibold text-slate-800">
+                      {nextProperty.title.length > 30 ? nextProperty.title.substring(0, 30) + '...' : nextProperty.title}
+                    </h4>
+                    <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-0.5 sm:mt-1">
+                      <span className={`text-[10px] sm:text-xs font-bold ${nextProperty.listingType === 'sale' ? 'text-pc-gold' : 'text-pc-green'}`}>
+                        {nextProperty.price?.amount?.toLocaleString() || 0} FCFA
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-slate-300">
+                    <ChevronRight size={12} className="sm:w-4 sm:h-4" />
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
