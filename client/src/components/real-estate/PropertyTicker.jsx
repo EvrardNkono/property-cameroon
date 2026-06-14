@@ -17,20 +17,15 @@ const getImageUrl = (image) => {
   return `${BACKEND_URL}/uploads/properties/${image}`;
 };
 
-const PropertyTicker = ({ properties, interval = 20000 }) => {
+const PropertyTicker = ({ properties, interval = 10000 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isVisible, setIsVisible]       = useState(true);
-  const [animState, setAnimState]       = useState('visible'); 
-  // 'enter' → entre depuis droite
-  // 'visible' → au repos au coin bas-droit
-  // 'exit' → sort vers la gauche
-
-  const indexRef   = useRef(0);
-  const timerRef   = useRef(null);
+  const [isVisible, setIsVisible] = useState(true);
+  const [animState, setAnimState] = useState('enter'); // 'enter' → 'visible' → 'exit'
+  const timerRef = useRef(null);
+  const indexRef = useRef(0);
 
   const published = properties?.filter(p => p.status === 'PUBLISHED') || [];
 
-  // Cycle : attendre interval → sortir → changer → entrer → attendre…
   useEffect(() => {
     if (!isVisible || published.length < 2) return;
 
@@ -39,25 +34,24 @@ const PropertyTicker = ({ properties, interval = 20000 }) => {
       setAnimState('exit');
 
       setTimeout(() => {
-        // 2. Changer de propriété (invisible pendant le transit)
+        // 2. Changer de propriété
         indexRef.current = (indexRef.current + 1) % published.length;
         setCurrentIndex(indexRef.current);
 
-        // 3. Positionner à droite (hors écran) sans transition
+        // 3. Réinitialiser à droite (hors écran)
         setAnimState('hidden');
 
+        // Petit délai pour que le DOM se mette à jour
         setTimeout(() => {
           // 4. Entrer depuis la droite
           setAnimState('enter');
-
+          
+          // 5. Après l'entrée, passer en visible
           setTimeout(() => {
-            // 5. Au repos
             setAnimState('visible');
-          }, 700);
-
-        }, 50); // petit délai pour que le navigateur applique 'hidden' avant 'enter'
-
-      }, 700); // durée de la sortie
+          }, 600);
+        }, 50);
+      }, 600);
     };
 
     timerRef.current = setInterval(cycle, interval);
@@ -68,86 +62,90 @@ const PropertyTicker = ({ properties, interval = 20000 }) => {
     e.preventDefault();
     e.stopPropagation();
     setAnimState('exit');
-    setTimeout(() => setIsVisible(false), 700);
-    clearInterval(timerRef.current);
+    setTimeout(() => setIsVisible(false), 600);
+    if (timerRef.current) clearInterval(timerRef.current);
   };
 
   if (!isVisible || !published.length) return null;
 
-  const prop     = published[currentIndex];
-  const isSale   = prop.listingType === 'sale';
-  const price    = prop.price?.amount?.toLocaleString() || 0;
+  const prop = published[currentIndex];
+  const isSale = prop.listingType === 'sale';
+  const price = prop.price?.amount?.toLocaleString() || 0;
   const location = prop.location?.city || '';
   const imageUrl = getImageUrl(prop.images?.[0] || prop.image);
 
-  // Transform selon l'état
-  const transforms = {
-    hidden:  'translateX(120vw)',
-    enter:   'translateX(0)',
-    visible: 'translateX(0)',
-    exit:    'translateX(-120vw)',
-  };
+  // Positions et transitions
+  let transform = 'translateX(0)';
+  let transition = 'transform 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 
-  const transitions = {
-    hidden:  'none',
-    enter:   'transform 700ms cubic-bezier(0.16, 1, 0.3, 1)',
-    visible: 'none',
-    exit:    'transform 700ms cubic-bezier(0.55, 0, 1, 0.45)',
-  };
+  switch (animState) {
+    case 'hidden':
+      transform = 'translateX(100%)'; // Caché à droite
+      transition = 'none';
+      break;
+    case 'enter':
+      transform = 'translateX(0)'; // Entre depuis la droite
+      transition = 'transform 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      break;
+    case 'visible':
+      transform = 'translateX(0)';
+      transition = 'none';
+      break;
+    case 'exit':
+      transform = 'translateX(-100%)'; // Sort vers la gauche
+      transition = 'transform 600ms cubic-bezier(0.55, 0.085, 0.68, 0.53)';
+      break;
+    default:
+      transform = 'translateX(0)';
+  }
 
   return (
     <div
       style={{
-        position:   'fixed',
-        bottom:     24,
-        right:      0,
-        zIndex:     9999,
-        transform:  transforms[animState],
-        transition: transitions[animState],
+        position: 'fixed',
+        bottom: 24,
+        right: 0,
+        zIndex: 9999,
+        transform: transform,
+        transition: transition,
       }}
     >
-      <Link
-        to={`/real-estate/${prop._id || prop.id}`}
-        style={{ textDecoration: 'none', display: 'block' }}
-      >
+      <Link to={`/real-estate/${prop._id || prop.id}`} style={{ textDecoration: 'none', display: 'block' }}>
         <div style={{
-          background:   'rgba(255,255,255,0.97)',
+          background: 'rgba(255,255,255,0.97)',
           backdropFilter: 'blur(12px)',
           borderRadius: '16px 0 0 16px',
-          boxShadow:    '0 8px 32px rgba(0,0,0,0.12)',
-          border:       '1px solid #f1f5f9',
-          borderRight:  'none',
-          display:      'flex',
-          alignItems:   'center',
-          gap:          12,
-          padding:      '10px 20px 10px 12px',
-          minWidth:     260,
-          position:     'relative',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+          border: '1px solid #f1f5f9',
+          borderRight: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          padding: '10px 20px 10px 12px',
+          minWidth: 260,
+          position: 'relative',
         }}>
-
-          {/* Fermer */}
           <button
             onClick={handleClose}
             style={{
-              position:   'absolute',
-              top:        4,
-              right:      6,
-              width:      18,
-              height:     18,
+              position: 'absolute',
+              top: 4,
+              right: 6,
+              width: 18,
+              height: 18,
               borderRadius: '50%',
               background: '#f1f5f9',
-              border:     'none',
-              cursor:     'pointer',
-              display:    'flex',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding:    0,
+              padding: 0,
             }}
           >
             <X size={10} color="#94a3b8" />
           </button>
 
-          {/* Image */}
           <div style={{
             width: 48, height: 48,
             borderRadius: 10,
@@ -164,7 +162,6 @@ const PropertyTicker = ({ properties, interval = 20000 }) => {
             )}
           </div>
 
-          {/* Infos */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
               fontSize: 13, fontWeight: 600,
