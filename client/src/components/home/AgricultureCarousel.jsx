@@ -36,7 +36,7 @@ const getImageUrl = (image) => {
   return `${BACKEND_URL}/uploads/agriculture/${image}`;
 };
 
-// Produits avec données multilingues
+// Produits avec données multilingues (sans prix)
 const PRODUCTS = [
   { 
     id: 1, 
@@ -44,7 +44,6 @@ const PRODUCTS = [
     name_en: "Premium Cocoa Beans",
     origin_fr: "Centre, Cameroun",
     origin_en: "Centre, Cameroon",
-    price: "2,800", 
     unit_fr: "Kg",
     unit_en: "Kg",
     img: "/images/feve-cacao-chocolat.webp",
@@ -59,7 +58,6 @@ const PRODUCTS = [
     name_en: "Sweet Cayenne Pineapple",
     origin_fr: "Littoral, Cameroun",
     origin_en: "Littoral, Cameroon",
-    price: "1,500", 
     unit_fr: "Pièce",
     unit_en: "Unit",
     img: "/images/ananas-biosphoto.jpg",
@@ -74,7 +72,6 @@ const PRODUCTS = [
     name_en: "Yellow Corn (Grade A)",
     origin_fr: "Ouest, Cameroun",
     origin_en: "West, Cameroon",
-    price: "22,000", 
     unit_fr: "Sac 100kg",
     unit_en: "100kg Bag",
     img: "/images/El-Bayadh-une-superficie-de-170-hectares-cultivee-en-mais-jaune.jpg",
@@ -89,7 +86,6 @@ const PRODUCTS = [
     name_en: "Red Onions",
     origin_fr: "Nord, Cameroun",
     origin_en: "North, Cameroon",
-    price: "12,500", 
     unit_fr: "Sac 50kg",
     unit_en: "50kg Bag",
     img: "/images/75030664-jeune-rouge-oignon-les-plantes-croissance-dans-une-champ-photo.jpg",
@@ -113,15 +109,9 @@ const AgricultureCarousel = () => {
       currentHarvests: "Produits du Terroir",
       subtitle: "Découvrez les meilleurs produits agricoles camerounais, certifiés et traçables",
       origin: "Origine",
-      price: "Prix",
-      perKg: "/ Kg",
-      perUnit: "/ Pièce",
-      perBag100: "/ Sac 100kg",
-      perBag50: "/ Sac 50kg",
       contactSeller: "Contacter",
       organic: "Bio",
       conventional: "Standard",
-      from: "À partir de",
       viewAll: "Voir tous les produits",
       season: "Saison"
     },
@@ -130,15 +120,9 @@ const AgricultureCarousel = () => {
       currentHarvests: "Local Products",
       subtitle: "Discover the best Cameroonian agricultural products, certified and traceable",
       origin: "Origin",
-      price: "Price",
-      perKg: "/ Kg",
-      perUnit: "/ Unit",
-      perBag100: "/ 100kg Bag",
-      perBag50: "/ 50kg Bag",
       contactSeller: "Contact",
       organic: "Organic",
       conventional: "Standard",
-      from: "From",
       viewAll: "View all products",
       season: "Season"
     }
@@ -147,11 +131,9 @@ const AgricultureCarousel = () => {
     currentHarvests: "Produits du Terroir",
     subtitle: "Découvrez les meilleurs produits agricoles camerounais, certifiés et traçables",
     origin: "Origine",
-    price: "Prix",
     contactSeller: "Contacter",
     organic: "Bio",
     conventional: "Standard",
-    from: "À partir de",
     viewAll: "Voir tous les produits",
     season: "Saison"
   };
@@ -183,15 +165,6 @@ const AgricultureCarousel = () => {
     origin: currentLang === 'fr' ? currentProduct.origin_fr : currentProduct.origin_en,
     unit: currentLang === 'fr' ? currentProduct.unit_fr : currentProduct.unit_en,
     season: currentLang === 'fr' ? currentProduct.season_fr : currentProduct.season_en
-  };
-
-  const getUnitLabel = () => {
-    const unit = currentData.unit.toLowerCase();
-    if (unit.includes('kg')) return t.perKg;
-    if (unit.includes('sac 100')) return t.perBag100;
-    if (unit.includes('sac 50')) return t.perBag50;
-    if (unit.includes('pièce') || unit.includes('unit')) return t.perUnit;
-    return '';
   };
 
   return (
@@ -273,19 +246,7 @@ const AgricultureCarousel = () => {
 
                 <div className="border-t border-slate-100 my-6" />
 
-                {/* Price */}
-                <div className="mb-6">
-                  <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">{t.price}</span>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl md:text-4xl font-bold text-emerald-700">
-                      {currentProduct.price}
-                    </span>
-                    <span className="text-sm text-slate-400">FCFA</span>
-                    <span className="text-xs text-slate-400 ml-1">{getUnitLabel()}</span>
-                  </div>
-                </div>
-
-                {/* Specs */}
+                {/* Specs - sans prix */}
                 <div className="grid grid-cols-3 gap-3 mb-6">
                   <div className="bg-slate-50 rounded-xl p-3 text-center">
                     <Package size={16} className="text-amber-500 mx-auto mb-1" />
@@ -295,12 +256,12 @@ const AgricultureCarousel = () => {
                   <div className="bg-slate-50 rounded-xl p-3 text-center">
                     <Truck size={16} className="text-amber-500 mx-auto mb-1" />
                     <p className="text-[8px] font-bold uppercase text-slate-500">Livraison</p>
-                    <p className="text-[10px] font-semibold text-slate-700">Cameroon</p>
+                    <p className="text-[10px] font-semibold text-slate-700">Cameroun</p>
                   </div>
                   <div className="bg-slate-50 rounded-xl p-3 text-center">
                     <ShoppingBag size={16} className="text-amber-500 mx-auto mb-1" />
-                    <p className="text-[8px] font-bold uppercase text-slate-500">Stock</p>
-                    <p className="text-[10px] font-semibold text-slate-700"> 1000</p>
+                    <p className="text-[8px] font-bold uppercase text-slate-500">Unité</p>
+                    <p className="text-[10px] font-semibold text-slate-700">{currentData.unit}</p>
                   </div>
                 </div>
               </div>
