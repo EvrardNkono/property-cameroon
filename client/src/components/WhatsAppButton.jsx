@@ -1,6 +1,5 @@
 // frontend/src/components/WhatsAppButton.jsx
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, X } from 'lucide-react';
 
 const WhatsAppButton = () => {
   const [isVisible, setIsVisible] = useState(true);
@@ -109,12 +108,12 @@ const WhatsAppButton = () => {
           </div>
         )}
 
-        {/* Bouton principal */}
+        {/* Bouton principal avec image personnalisée */}
         <button
           onClick={handleClick}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          className="group relative flex items-center justify-center bg-green-500 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2"
+          className="group relative flex items-center justify-center rounded-full shadow-2xl transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 overflow-hidden"
           style={{
             width: '60px',
             height: '60px',
@@ -125,16 +124,15 @@ const WhatsAppButton = () => {
           {/* Ripple effect */}
           <span className="absolute inset-0 rounded-full bg-green-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
           
-          {/* Icône WhatsApp */}
-          <MessageCircle 
-            size={32} 
-            className="text-white relative z-10"
-            fill="white"
-            strokeWidth={1.5}
+          {/* Image WhatsApp personnalisée */}
+          <img 
+            src="/images/WhatsApp_icon.png"
+            alt="WhatsApp"
+            className="w-full h-full object-cover relative z-10"
           />
           
           {/* Badge de notification (optionnel) */}
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[8px] flex items-center justify-center font-bold animate-bounce">
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[8px] flex items-center justify-center font-bold animate-bounce z-20">
             !
           </span>
         </button>
