@@ -1,6 +1,6 @@
 // frontend/src/components/home/RealEstateCarousel.jsx
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ChevronLeft, ChevronRight, MapPin, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 
 // Hook pour la langue
 const useCurrentLang = () => {
@@ -63,8 +63,6 @@ const RealEstateCarousel = () => {
       images: ['/images/a (1).jpg', '/images/a (2).jpg', '/images/a (3).jpg'],
       title_fr: "Villa d'Exception",
       title_en: "Exceptional Villa",
-      location_fr: "Bonapriso, Douala",
-      location_en: "Bonapriso, Douala",
       tag_fr: "Exclusivité",
       tag_en: "Exclusive",
       rating: 4.9
@@ -74,8 +72,6 @@ const RealEstateCarousel = () => {
       images: ['/images/a (2).jpg', '/images/a (3).jpg', '/images/a (1).jpg'],
       title_fr: "Appartement de Luxe",
       title_en: "Luxury Apartment",
-      location_fr: "Bastos, Yaoundé",
-      location_en: "Bastos, Yaoundé",
       tag_fr: "Nouveauté",
       tag_en: "New",
       rating: 4.8
@@ -85,8 +81,6 @@ const RealEstateCarousel = () => {
       images: ['/images/a (3).jpg', '/images/a (1).jpg', '/images/a (2).jpg'],
       title_fr: "Propriété Prestige",
       title_en: "Prestige Property",
-      location_fr: "Quartier du Lac, Douala",
-      location_en: "Lake Quarter, Douala",
       tag_fr: "Premium",
       tag_en: "Premium",
       rating: 5.0
@@ -117,7 +111,6 @@ const RealEstateCarousel = () => {
   const currentProperty = properties[activeIndex];
   const currentData = {
     title: currentLang === 'fr' ? currentProperty.title_fr : currentProperty.title_en,
-    location: currentLang === 'fr' ? currentProperty.location_fr : currentProperty.location_en,
     tag: currentLang === 'fr' ? currentProperty.tag_fr : currentProperty.tag_en
   };
 
@@ -244,22 +237,20 @@ const RealEstateCarousel = () => {
                   </div>
                 </div>
 
-                {/* Content overlay - Version simplifiée sans specs ni prix */}
+                {/* Content overlay - Version ultra simplifiée */}
                 <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 z-20 text-white">
                   <div className="max-w-2xl">
-                    <h3 className="text-3xl md:text-5xl lg:text-6xl font-serif mb-3">
+                    <h3 className="text-3xl md:text-5xl lg:text-6xl font-serif mb-6">
                       {currentData.title}
                     </h3>
-                    <div className="flex items-center gap-2 mb-6">
-                      <MapPin size={16} className="text-amber-400" />
-                      <span className="text-sm md:text-base text-white/80">{currentData.location}</span>
-                      <div className="flex items-center gap-1 ml-4">
-                        <Star size={12} className="fill-amber-400 text-amber-400" />
-                        <span className="text-sm font-medium">{currentProperty.rating}</span>
-                      </div>
+                    
+                    {/* Rating uniquement */}
+                    <div className="flex items-center gap-1 mb-6">
+                      <Star size={16} className="fill-amber-400 text-amber-400" />
+                      <span className="text-sm font-medium">{currentProperty.rating}</span>
                     </div>
 
-                    {/* Bouton Découvrir uniquement */}
+                    {/* Bouton Découvrir */}
                     <button className="group px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full text-[10px] font-bold uppercase tracking-wider text-white hover:bg-amber-500 hover:text-white transition-all duration-300">
                       {t.viewDetails}
                       <ChevronRight size={12} className="inline ml-2 group-hover:translate-x-1 transition-transform" />
