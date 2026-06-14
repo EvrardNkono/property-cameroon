@@ -21,16 +21,201 @@ import {
   Hash,
   Link as LinkIcon,
   Upload,
-  ZoomIn
+  ZoomIn,
+  Star,
+  Archive
 } from 'lucide-react';
 import api from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
+
+// Hook pour récupérer la langue actuelle
+const useCurrentLang = () => {
+  const [lang, setLang] = useState('fr');
+  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    setLang(finalLang);
+  }, []);
+  
+  return lang;
+};
 
 const BlogEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const currentLang = useCurrentLang();
   
+  // ========== TRADUCTIONS ==========
+  const t = {
+    fr: {
+      editArticle: "Modifier l'article",
+      editArticleDesc: "Modifiez le contenu, les images et les paramètres SEO",
+      preview: "Prévisualiser",
+      publish: "Publier",
+      save: "Enregistrer",
+      cancel: "Annuler",
+      delete: "Supprimer",
+      currentStatus: "Statut actuel",
+      featured: "À la une",
+      content: "Contenu",
+      media: "Média",
+      seo: "SEO",
+      title: "Titre de l'article",
+      titlePlaceholder: "Ex: Comment investir dans l'immobilier au Cameroun",
+      category: "Catégorie",
+      makeFeatured: "Mettre à la une",
+      excerpt: "Résumé",
+      excerptPlaceholder: "Court résumé de l'article (max 300 caractères)",
+      excerptHint: "caractères",
+      tags: "Tags",
+      tagsPlaceholder: "Ajouter un tag (ex: investissement, immobilier)",
+      contentLabel: "Contenu",
+      contentPlaceholder: "Écrivez votre article ici... (supporte le HTML)",
+      contentHint: "Vous pouvez utiliser du HTML pour formater votre contenu",
+      featuredImage: "Image principale",
+      clickOrDrag: "Cliquez ou glissez une image",
+      imageFormats: "PNG, JPG, GIF jusqu'à 5MB",
+      deleteImage: "Supprimer",
+      changeImage: "Changer",
+      seoInfo: "Ces informations aident les moteurs de recherche à mieux comprendre votre contenu",
+      seoTitle: "Titre SEO",
+      seoTitlePlaceholder: "Titre pour les moteurs de recherche (laissez vide pour utiliser le titre de l'article)",
+      seoTitleRecommended: "Recommandé: 50-60 caractères",
+      seoDescription: "Description SEO",
+      seoDescriptionPlaceholder: "Description pour les résultats de recherche",
+      seoKeywords: "Mots-clés SEO",
+      seoKeywordsPlaceholder: "Ajouter un mot-clé",
+      updateSuccess: "Article mis à jour avec succès !",
+      publishSuccess: "Article publié avec succès !",
+      errorUpdate: "Erreur lors de la mise à jour",
+      errorPublish: "Erreur lors de la publication",
+      errorDelete: "Erreur lors de la suppression",
+      errorLoad: "Impossible de charger l'article",
+      deleteConfirm: "Confirmer la suppression",
+      deleteConfirmMessage: "Êtes-vous sûr de vouloir supprimer définitivement cet article ?",
+      deleteIrreversible: "Cette action est irréversible.",
+      imageTooLarge: "L'image ne doit pas dépasser 5MB",
+      invalidImage: "Veuillez sélectionner une image valide",
+      draft: "Brouillon",
+      published: "Publié",
+      archived: "Archivé",
+      characters: "caractères"
+    },
+    en: {
+      editArticle: "Edit Article",
+      editArticleDesc: "Edit content, images and SEO settings",
+      preview: "Preview",
+      publish: "Publish",
+      save: "Save",
+      cancel: "Cancel",
+      delete: "Delete",
+      currentStatus: "Current status",
+      featured: "Featured",
+      content: "Content",
+      media: "Media",
+      seo: "SEO",
+      title: "Article Title",
+      titlePlaceholder: "Ex: How to invest in real estate in Cameroon",
+      category: "Category",
+      makeFeatured: "Make featured",
+      excerpt: "Excerpt",
+      excerptPlaceholder: "Short summary of the article (max 300 characters)",
+      excerptHint: "characters",
+      tags: "Tags",
+      tagsPlaceholder: "Add a tag (ex: investment, real estate)",
+      contentLabel: "Content",
+      contentPlaceholder: "Write your article here... (supports HTML)",
+      contentHint: "You can use HTML to format your content",
+      featuredImage: "Featured Image",
+      clickOrDrag: "Click or drag an image",
+      imageFormats: "PNG, JPG, GIF up to 5MB",
+      deleteImage: "Delete",
+      changeImage: "Change",
+      seoInfo: "This information helps search engines better understand your content",
+      seoTitle: "SEO Title",
+      seoTitlePlaceholder: "Title for search engines (leave empty to use article title)",
+      seoTitleRecommended: "Recommended: 50-60 characters",
+      seoDescription: "SEO Description",
+      seoDescriptionPlaceholder: "Description for search results",
+      seoKeywords: "SEO Keywords",
+      seoKeywordsPlaceholder: "Add a keyword",
+      updateSuccess: "Article updated successfully!",
+      publishSuccess: "Article published successfully!",
+      errorUpdate: "Error updating article",
+      errorPublish: "Error publishing article",
+      errorDelete: "Error deleting article",
+      errorLoad: "Unable to load article",
+      deleteConfirm: "Confirm deletion",
+      deleteConfirmMessage: "Are you sure you want to permanently delete this article?",
+      deleteIrreversible: "This action is irreversible.",
+      imageTooLarge: "Image must not exceed 5MB",
+      invalidImage: "Please select a valid image",
+      draft: "Draft",
+      published: "Published",
+      archived: "Archived",
+      characters: "characters"
+    }
+  }[currentLang] || {
+    editArticle: "Edit Article",
+    editArticleDesc: "Edit content, images and SEO settings",
+    preview: "Preview",
+    publish: "Publish",
+    save: "Save",
+    cancel: "Cancel",
+    delete: "Delete",
+    currentStatus: "Current status",
+    featured: "Featured",
+    content: "Content",
+    media: "Media",
+    seo: "SEO",
+    title: "Article Title",
+    titlePlaceholder: "Ex: How to invest in real estate in Cameroon",
+    category: "Category",
+    makeFeatured: "Make featured",
+    excerpt: "Excerpt",
+    excerptPlaceholder: "Short summary of the article (max 300 characters)",
+    excerptHint: "characters",
+    tags: "Tags",
+    tagsPlaceholder: "Add a tag (ex: investment, real estate)",
+    contentLabel: "Content",
+    contentPlaceholder: "Write your article here... (supports HTML)",
+    contentHint: "You can use HTML to format your content",
+    featuredImage: "Featured Image",
+    clickOrDrag: "Click or drag an image",
+    imageFormats: "PNG, JPG, GIF up to 5MB",
+    deleteImage: "Delete",
+    changeImage: "Change",
+    seoInfo: "This information helps search engines better understand your content",
+    seoTitle: "SEO Title",
+    seoTitlePlaceholder: "Title for search engines (leave empty to use article title)",
+    seoTitleRecommended: "Recommended: 50-60 characters",
+    seoDescription: "SEO Description",
+    seoDescriptionPlaceholder: "Description for search results",
+    seoKeywords: "SEO Keywords",
+    seoKeywordsPlaceholder: "Add a keyword",
+    updateSuccess: "Article updated successfully!",
+    publishSuccess: "Article published successfully!",
+    errorUpdate: "Error updating article",
+    errorPublish: "Error publishing article",
+    errorDelete: "Error deleting article",
+    errorLoad: "Unable to load article",
+    deleteConfirm: "Confirm deletion",
+    deleteConfirmMessage: "Are you sure you want to permanently delete this article?",
+    deleteIrreversible: "This action is irreversible.",
+    imageTooLarge: "Image must not exceed 5MB",
+    invalidImage: "Please select a valid image",
+    draft: "Draft",
+    published: "Published",
+    archived: "Archived",
+    characters: "characters"
+  };
+
   // États du formulaire
   const [formData, setFormData] = useState({
     title: '',
@@ -56,22 +241,26 @@ const BlogEdit = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('content'); // content, seo, media
+  const [activeTab, setActiveTab] = useState('content');
   
-  // Catégories disponibles
+  // Catégories disponibles (traduites)
   const categories = [
-    { value: 'Real Estate', label: 'Immobilier', icon: '🏠' },
-    { value: 'Agriculture', label: 'Agriculture', icon: '🌾' },
-    { value: 'Sourcing', label: 'Approvisionnement', icon: '🚢' },
-    { value: 'Lifestyle', label: 'Mode de Vie', icon: '🌟' }
+    { value: 'Real Estate', labelFr: 'Immobilier', labelEn: 'Real Estate', icon: '🏠' },
+    { value: 'Agriculture', labelFr: 'Agriculture', labelEn: 'Agriculture', icon: '🌾' },
+    { value: 'Sourcing', labelFr: 'Approvisionnement', labelEn: 'Sourcing', icon: '🚢' },
+    { value: 'Lifestyle', labelFr: 'Mode de Vie', labelEn: 'Lifestyle', icon: '🌟' }
   ];
   
-  // Statuts disponibles
-  const statuses = [
-    { value: 'draft', label: 'Brouillon', icon: <EyeOff size={14} />, color: 'bg-yellow-100 text-yellow-700' },
-    { value: 'published', label: 'Publié', icon: <Eye size={14} />, color: 'bg-green-100 text-green-700' },
-    { value: 'archived', label: 'Archivé', icon: <Archive size={14} />, color: 'bg-gray-100 text-gray-700' }
+  const getCategoryLabel = (cat) => currentLang === 'fr' ? cat.labelFr : cat.labelEn;
+  
+  // Statuts disponibles (traduits)
+  const getStatuses = () => [
+    { value: 'draft', label: t.draft, icon: <EyeOff size={14} />, color: 'bg-yellow-100 text-yellow-700' },
+    { value: 'published', label: t.published, icon: <Eye size={14} />, color: 'bg-green-100 text-green-700' },
+    { value: 'archived', label: t.archived, icon: <Archive size={14} />, color: 'bg-gray-100 text-gray-700' }
   ];
+  
+  const statuses = getStatuses();
   
   // Charger l'article existant
   useEffect(() => {
@@ -97,11 +286,11 @@ const BlogEdit = () => {
           });
           setImagePreview(post.featuredImage);
         } else {
-          throw new Error(response.message || 'Article non trouvé');
+          throw new Error(response.message || t.errorLoad);
         }
       } catch (err) {
         console.error('Error fetching post:', err);
-        setError(err.message || 'Impossible de charger l\'article');
+        setError(err.message || t.errorLoad);
       } finally {
         setLoading(false);
       }
@@ -110,7 +299,7 @@ const BlogEdit = () => {
     if (id) {
       fetchPost();
     }
-  }, [id]);
+  }, [id, t.errorLoad]);
   
   // Gérer les changements de formulaire
   const handleChange = (e) => {
@@ -126,11 +315,11 @@ const BlogEdit = () => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        alert('L\'image ne doit pas dépasser 5MB');
+        alert(t.imageTooLarge);
         return;
       }
       if (!file.type.startsWith('image/')) {
-        alert('Veuillez sélectionner une image valide');
+        alert(t.invalidImage);
         return;
       }
       setImageFile(file);
@@ -207,16 +396,16 @@ const BlogEdit = () => {
       const response = await api.updateBlogPost(id, submitData);
       
       if (response.success) {
-        setSuccess('Article mis à jour avec succès !');
+        setSuccess(t.updateSuccess);
         setTimeout(() => {
           navigate('/dashboard/admin/blog');
         }, 1500);
       } else {
-        throw new Error(response.message || 'Erreur lors de la mise à jour');
+        throw new Error(response.message || t.errorUpdate);
       }
     } catch (err) {
       console.error('Error saving post:', err);
-      setError(err.message || 'Une erreur est survenue');
+      setError(err.message || t.errorUpdate);
     } finally {
       setSaving(false);
     }
@@ -229,10 +418,10 @@ const BlogEdit = () => {
       const response = await api.updateBlogPost(id, { status: 'published' });
       if (response.success) {
         setFormData(prev => ({ ...prev, status: 'published' }));
-        setSuccess('Article publié avec succès !');
+        setSuccess(t.publishSuccess);
       }
     } catch (err) {
-      setError('Erreur lors de la publication');
+      setError(t.errorPublish);
     } finally {
       setSaving(false);
     }
@@ -246,7 +435,7 @@ const BlogEdit = () => {
         navigate('/dashboard/admin/blog');
       }
     } catch (err) {
-      setError('Erreur lors de la suppression');
+      setError(t.errorDelete);
     }
   };
   
@@ -275,10 +464,8 @@ const BlogEdit = () => {
             <ArrowLeft size={20} className="text-slate-500" />
           </Link>
           <div>
-            <h1 className="text-2xl font-serif text-slate-800">Modifier l'article</h1>
-            <p className="text-sm text-slate-500 mt-1">
-              Modifiez le contenu, les images et les paramètres SEO
-            </p>
+            <h1 className="text-2xl font-serif text-slate-800">{t.editArticle}</h1>
+            <p className="text-sm text-slate-500 mt-1">{t.editArticleDesc}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -287,7 +474,7 @@ const BlogEdit = () => {
             className="px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors text-sm font-medium flex items-center gap-2"
           >
             <Eye size={16} />
-            Prévisualiser
+            {t.preview}
           </button>
           {formData.status !== 'published' && (
             <button
@@ -296,7 +483,7 @@ const BlogEdit = () => {
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center gap-2"
             >
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Globe size={16} />}
-              Publier
+              {t.publish}
             </button>
           )}
           <button
@@ -327,7 +514,7 @@ const BlogEdit = () => {
       <div className="bg-white rounded-xl border border-slate-100 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-500">Statut actuel :</span>
+            <span className="text-sm text-slate-500">{t.currentStatus} :</span>
             <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
               statuses.find(s => s.value === formData.status)?.color
             }`}>
@@ -338,7 +525,7 @@ const BlogEdit = () => {
           {formData.isFeatured && (
             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
               <Star size={12} />
-              À la une
+              {t.featured}
             </span>
           )}
         </div>
@@ -355,7 +542,7 @@ const BlogEdit = () => {
           }`}
         >
           <FileText size={14} className="inline mr-2" />
-          Contenu
+          {t.content}
         </button>
         <button
           onClick={() => setActiveTab('media')}
@@ -366,7 +553,7 @@ const BlogEdit = () => {
           }`}
         >
           <ImageIcon size={14} className="inline mr-2" />
-          Média
+          {t.media}
         </button>
         <button
           onClick={() => setActiveTab('seo')}
@@ -377,7 +564,7 @@ const BlogEdit = () => {
           }`}
         >
           <Globe size={14} className="inline mr-2" />
-          SEO
+          {t.seo}
         </button>
       </div>
       
@@ -389,7 +576,7 @@ const BlogEdit = () => {
             {/* Titre */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Titre de l'article *
+                {t.title} *
               </label>
               <input
                 type="text"
@@ -398,7 +585,7 @@ const BlogEdit = () => {
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#c5a059] focus:border-transparent"
-                placeholder="Ex: Comment investir dans l'immobilier au Cameroun"
+                placeholder={t.titlePlaceholder}
               />
             </div>
             
@@ -406,7 +593,7 @@ const BlogEdit = () => {
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Catégorie *
+                  {t.category} *
                 </label>
                 <select
                   name="category"
@@ -416,7 +603,7 @@ const BlogEdit = () => {
                 >
                   {categories.map(cat => (
                     <option key={cat.value} value={cat.value}>
-                      {cat.icon} {cat.label}
+                      {cat.icon} {getCategoryLabel(cat)}
                     </option>
                   ))}
                 </select>
@@ -431,7 +618,7 @@ const BlogEdit = () => {
                     onChange={handleChange}
                     className="w-4 h-4 text-[#c5a059] focus:ring-[#c5a059]"
                   />
-                  <span className="text-sm text-slate-700">Mettre à la une</span>
+                  <span className="text-sm text-slate-700">{t.makeFeatured}</span>
                 </label>
               </div>
             </div>
@@ -439,7 +626,7 @@ const BlogEdit = () => {
             {/* Résumé */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Résumé *
+                {t.excerpt} *
               </label>
               <textarea
                 name="excerpt"
@@ -449,17 +636,17 @@ const BlogEdit = () => {
                 required
                 maxLength={300}
                 className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#c5a059] focus:border-transparent resize-none"
-                placeholder="Court résumé de l'article (max 300 caractères)"
+                placeholder={t.excerptPlaceholder}
               />
               <p className="text-xs text-slate-400 mt-1">
-                {formData.excerpt.length}/300 caractères
+                {formData.excerpt.length}/300 {t.excerptHint}
               </p>
             </div>
             
             {/* Tags */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Tags
+                {t.tags}
               </label>
               <div className="flex gap-2">
                 <input
@@ -468,7 +655,7 @@ const BlogEdit = () => {
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
                   className="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#c5a059] focus:border-transparent"
-                  placeholder="Ajouter un tag (ex: investissement, immobilier)"
+                  placeholder={t.tagsPlaceholder}
                 />
                 <button
                   type="button"
@@ -503,7 +690,7 @@ const BlogEdit = () => {
             {/* Contenu */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Contenu *
+                {t.contentLabel} *
               </label>
               <textarea
                 name="content"
@@ -512,10 +699,10 @@ const BlogEdit = () => {
                 rows={15}
                 required
                 className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#c5a059] focus:border-transparent font-mono text-sm"
-                placeholder="Écrivez votre article ici... (supporte le HTML)"
+                placeholder={t.contentPlaceholder}
               />
               <p className="text-xs text-slate-400 mt-1">
-                Vous pouvez utiliser du HTML pour formater votre contenu
+                {t.contentHint}
               </p>
             </div>
           </div>
@@ -527,14 +714,14 @@ const BlogEdit = () => {
             {/* Image principale */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Image principale *
+                {t.featuredImage} *
               </label>
               <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-[#c5a059] transition-colors">
                 {imagePreview ? (
                   <div className="space-y-3">
                     <img
                       src={imagePreview}
-                      alt="Aperçu"
+                      alt="Preview"
                       className="max-h-64 mx-auto rounded-lg object-contain"
                     />
                     <div className="flex gap-2 justify-center">
@@ -547,10 +734,10 @@ const BlogEdit = () => {
                         }}
                         className="px-3 py-1 bg-red-100 text-red-600 rounded-lg text-sm hover:bg-red-200 transition-colors"
                       >
-                        Supprimer
+                        {t.deleteImage}
                       </button>
                       <label className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-sm hover:bg-slate-200 transition-colors cursor-pointer">
-                        Changer
+                        {t.changeImage}
                         <input
                           type="file"
                           accept="image/*"
@@ -563,8 +750,8 @@ const BlogEdit = () => {
                 ) : (
                   <label className="cursor-pointer block">
                     <Upload size={48} className="mx-auto text-slate-400 mb-3" />
-                    <p className="text-slate-600">Cliquez ou glissez une image</p>
-                    <p className="text-xs text-slate-400 mt-1">PNG, JPG, GIF jusqu'à 5MB</p>
+                    <p className="text-slate-600">{t.clickOrDrag}</p>
+                    <p className="text-xs text-slate-400 mt-1">{t.imageFormats}</p>
                     <input
                       type="file"
                       accept="image/*"
@@ -585,14 +772,14 @@ const BlogEdit = () => {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
               <p className="text-sm text-blue-700">
                 <Globe size={14} className="inline mr-1" />
-                Ces informations aident les moteurs de recherche à mieux comprendre votre contenu
+                {t.seoInfo}
               </p>
             </div>
             
             {/* Titre SEO */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Titre SEO
+                {t.seoTitle}
               </label>
               <input
                 type="text"
@@ -600,17 +787,17 @@ const BlogEdit = () => {
                 value={formData.seoTitle}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#c5a059] focus:border-transparent"
-                placeholder="Titre pour les moteurs de recherche (laissez vide pour utiliser le titre de l'article)"
+                placeholder={t.seoTitlePlaceholder}
               />
               <p className="text-xs text-slate-400 mt-1">
-                Recommandé: 50-60 caractères
+                {t.seoTitleRecommended}
               </p>
             </div>
             
             {/* Description SEO */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Description SEO
+                {t.seoDescription}
               </label>
               <textarea
                 name="seoDescription"
@@ -619,17 +806,17 @@ const BlogEdit = () => {
                 rows={3}
                 maxLength={160}
                 className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#c5a059] focus:border-transparent resize-none"
-                placeholder="Description pour les résultats de recherche"
+                placeholder={t.seoDescriptionPlaceholder}
               />
               <p className="text-xs text-slate-400 mt-1">
-                {formData.seoDescription.length}/160 caractères
+                {formData.seoDescription.length}/160 {t.characters}
               </p>
             </div>
             
             {/* Mots-clés SEO */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Mots-clés SEO
+                {t.seoKeywords}
               </label>
               <div className="flex gap-2">
                 <input
@@ -638,7 +825,7 @@ const BlogEdit = () => {
                   onChange={(e) => setKeywordInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addKeyword())}
                   className="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#c5a059] focus:border-transparent"
-                  placeholder="Ajouter un mot-clé"
+                  placeholder={t.seoKeywordsPlaceholder}
                 />
                 <button
                   type="button"
@@ -678,7 +865,7 @@ const BlogEdit = () => {
             to="/dashboard/admin/blog"
             className="px-6 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
           >
-            Annuler
+            {t.cancel}
           </Link>
           <button
             type="submit"
@@ -686,7 +873,7 @@ const BlogEdit = () => {
             className="px-6 py-2 bg-[#c5a059] text-white rounded-lg hover:bg-[#b08a4a] transition-colors flex items-center gap-2"
           >
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-            Enregistrer
+            {t.save}
           </button>
         </div>
       </form>
@@ -699,25 +886,25 @@ const BlogEdit = () => {
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
                 <Trash2 size={20} className="text-red-600" />
               </div>
-              <h2 className="text-xl font-serif text-slate-800">Confirmer la suppression</h2>
+              <h2 className="text-xl font-serif text-slate-800">{t.deleteConfirm}</h2>
             </div>
             <p className="text-slate-600 mb-6">
-              Êtes-vous sûr de vouloir supprimer définitivement cet article ?
+              {t.deleteConfirmMessage}
               <br />
-              <span className="text-xs text-red-500 mt-2 block">Cette action est irréversible.</span>
+              <span className="text-xs text-red-500 mt-2 block">{t.deleteIrreversible}</span>
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteModal(false)}
                 className="flex-1 px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
               >
-                Annuler
+                {t.cancel}
               </button>
               <button
                 onClick={handleDelete}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
-                Supprimer
+                {t.delete}
               </button>
             </div>
           </div>

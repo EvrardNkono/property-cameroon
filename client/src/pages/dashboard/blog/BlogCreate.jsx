@@ -24,10 +24,232 @@ import {
 import api from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
 
+// Hook pour récupérer la langue actuelle
+const useCurrentLang = () => {
+  const [lang, setLang] = useState('fr');
+  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    setLang(finalLang);
+  }, []);
+  
+  return lang;
+};
+
 const BlogCreate = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const currentLang = useCurrentLang();
   
+  // ========== TRADUCTIONS ==========
+  const t = {
+    fr: {
+      newArticle: "Nouvel article",
+      newArticleDesc: "Créez un nouvel article pour le blog",
+      saveDraft: "Sauvegarder brouillon",
+      publish: "Publier",
+      articlePreview: "Aperçu de l'article",
+      url: "URL",
+      content: "Contenu",
+      media: "Média",
+      seo: "SEO",
+      title: "Titre de l'article",
+      titlePlaceholder: "Ex: Comment investir dans l'immobilier au Cameroun",
+      titleRequired: "Le titre est requis",
+      category: "Catégorie",
+      categoryRequired: "La catégorie est requise",
+      excerpt: "Résumé",
+      excerptPlaceholder: "Court résumé de l'article qui apparaîtra dans les aperçus (max 300 caractères)",
+      excerptRequired: "Le résumé est requis",
+      tags: "Tags",
+      tagsPlaceholder: "Ajouter un tag (ex: investissement, immobilier, guide)",
+      contentLabel: "Contenu",
+      contentPlaceholder: "Écrivez votre article ici...\n\nVous pouvez utiliser du HTML pour le formatage :\n<h2>Titre</h2>\n<p>Paragraphe</p>\n<ul><li>Liste</li></ul>\n<strong>Gras</strong> et <em>italique</em>",
+      contentRequired: "Le contenu est requis",
+      featuredImage: "Image principale",
+      featuredImageRequired: "Une image principale est requise",
+      clickOrDrag: "Cliquez ou glissez une image",
+      imageFormats: "PNG, JPG, GIF, WebP jusqu'à 5MB",
+      recommendedSize: "Recommandé : 1200 x 630 pixels pour un partage optimal",
+      delete: "Supprimer",
+      change: "Changer",
+      imageTips: "Conseils images",
+      imageTip1: "Utilisez des images de haute qualité (min. 800px de large)",
+      imageTip2: "Privilégiez des visuels authentiques liés au Cameroun",
+      imageTip3: "Évitez les images avec trop de texte",
+      seoInfo: "Ces informations aident les moteurs de recherche à mieux comprendre et classer votre contenu. Laissez vides pour utiliser les valeurs par défaut.",
+      seoTitle: "Titre SEO",
+      seoTitlePlaceholder: "Titre pour les moteurs de recherche (laissez vide pour utiliser le titre de l'article)",
+      seoTitleSuggest: "Suggérer depuis le titre",
+      seoTitleRecommended: "Recommandé: 50-60 caractères",
+      seoDescription: "Description SEO",
+      seoDescriptionPlaceholder: "Description pour les résultats de recherche (max 160 caractères)",
+      seoDescriptionSuggest: "Suggérer depuis le résumé",
+      seoKeywords: "Mots-clés SEO",
+      seoKeywordsPlaceholder: "Ajouter un mot-clé (ex: investissement cameroun, immobilier douala)",
+      seoKeywordsHint: "Les mots-clés aident à catégoriser votre contenu pour la recherche",
+      googlePreview: "Aperçu dans Google",
+      tipsTitle: "✨ Conseils pour un article réussi",
+      tip1: "📝 Titre accrocheur et descriptif (idéalement entre 50 et 70 caractères)",
+      tip2: "🖼️ Utilisez des images de qualité et pertinentes",
+      tip3: "🔗 Structurez votre contenu avec des sous-titres (h2, h3)",
+      tip4: "📊 Ajoutez des données chiffrées pour renforcer votre crédibilité",
+      tip5: "🎯 Optimisez votre SEO en incluant des mots-clés pertinents",
+      tip6: "📱 Testez toujours l'affichage sur mobile",
+      isFeatured: "Mettre à la une (apparaît en avant-première)",
+      addTag: "Ajouter un tag",
+      addParagraph: "+ Paragraphe",
+      characters: "caractères",
+      articleCreated: "Article créé avec succès !",
+      draftSaved: "Brouillon sauvegardé avec succès !",
+      errorTitle: "Le titre est requis",
+      errorExcerpt: "Le résumé est requis",
+      errorContent: "Le contenu est requis",
+      errorImage: "Une image principale est requise",
+      errorOccurred: "Une erreur est survenue",
+      imageTooLarge: "L'image ne doit pas dépasser 5MB",
+      invalidImage: "Veuillez sélectionner une image valide (JPEG, PNG, GIF)"
+    },
+    en: {
+      newArticle: "New Article",
+      newArticleDesc: "Create a new blog article",
+      saveDraft: "Save draft",
+      publish: "Publish",
+      articlePreview: "Article Preview",
+      url: "URL",
+      content: "Content",
+      media: "Media",
+      seo: "SEO",
+      title: "Article Title",
+      titlePlaceholder: "Ex: How to invest in real estate in Cameroon",
+      titleRequired: "Title is required",
+      category: "Category",
+      categoryRequired: "Category is required",
+      excerpt: "Excerpt",
+      excerptPlaceholder: "Short summary of the article that will appear in previews (max 300 characters)",
+      excerptRequired: "Excerpt is required",
+      tags: "Tags",
+      tagsPlaceholder: "Add a tag (ex: investment, real estate, guide)",
+      contentLabel: "Content",
+      contentPlaceholder: "Write your article here...\n\nYou can use HTML for formatting:\n<h2>Title</h2>\n<p>Paragraph</p>\n<ul><li>List</li></ul>\n<strong>Bold</strong> and <em>italic</em>",
+      contentRequired: "Content is required",
+      featuredImage: "Featured Image",
+      featuredImageRequired: "A featured image is required",
+      clickOrDrag: "Click or drag an image",
+      imageFormats: "PNG, JPG, GIF, WebP up to 5MB",
+      recommendedSize: "Recommended: 1200 x 630 pixels for optimal sharing",
+      delete: "Delete",
+      change: "Change",
+      imageTips: "Image Tips",
+      imageTip1: "Use high-quality images (min. 800px wide)",
+      imageTip2: "Choose authentic visuals related to Cameroon",
+      imageTip3: "Avoid images with too much text",
+      seoInfo: "This information helps search engines better understand and rank your content. Leave empty to use default values.",
+      seoTitle: "SEO Title",
+      seoTitlePlaceholder: "Title for search engines (leave empty to use article title)",
+      seoTitleSuggest: "Suggest from title",
+      seoTitleRecommended: "Recommended: 50-60 characters",
+      seoDescription: "SEO Description",
+      seoDescriptionPlaceholder: "Description for search results (max 160 characters)",
+      seoDescriptionSuggest: "Suggest from excerpt",
+      seoKeywords: "SEO Keywords",
+      seoKeywordsPlaceholder: "Add a keyword (ex: cameroon investment, douala real estate)",
+      seoKeywordsHint: "Keywords help categorize your content for search",
+      googlePreview: "Google Preview",
+      tipsTitle: "✨ Tips for a successful article",
+      tip1: "📝 Catchy and descriptive title (ideally 50-70 characters)",
+      tip2: "🖼️ Use high-quality, relevant images",
+      tip3: "🔗 Structure your content with subheadings (h2, h3)",
+      tip4: "📊 Add data and figures to strengthen credibility",
+      tip5: "🎯 Optimize your SEO with relevant keywords",
+      tip6: "📱 Always test mobile display",
+      isFeatured: "Feature this article (appears in preview)",
+      addTag: "Add tag",
+      addParagraph: "+ Paragraph",
+      characters: "characters",
+      articleCreated: "Article published successfully!",
+      draftSaved: "Draft saved successfully!",
+      errorTitle: "Title is required",
+      errorExcerpt: "Excerpt is required",
+      errorContent: "Content is required",
+      errorImage: "A featured image is required",
+      errorOccurred: "An error occurred",
+      imageTooLarge: "Image must not exceed 5MB",
+      invalidImage: "Please select a valid image (JPEG, PNG, GIF)"
+    }
+  }[currentLang] || {
+    newArticle: "New Article",
+    newArticleDesc: "Create a new blog article",
+    saveDraft: "Save draft",
+    publish: "Publish",
+    articlePreview: "Article Preview",
+    url: "URL",
+    content: "Content",
+    media: "Media",
+    seo: "SEO",
+    title: "Article Title",
+    titlePlaceholder: "Ex: How to invest in real estate in Cameroon",
+    titleRequired: "Title is required",
+    category: "Category",
+    categoryRequired: "Category is required",
+    excerpt: "Excerpt",
+    excerptPlaceholder: "Short summary of the article that will appear in previews (max 300 characters)",
+    excerptRequired: "Excerpt is required",
+    tags: "Tags",
+    tagsPlaceholder: "Add a tag (ex: investment, real estate, guide)",
+    contentLabel: "Content",
+    contentPlaceholder: "Write your article here...\n\nYou can use HTML for formatting:\n<h2>Title</h2>\n<p>Paragraph</p>\n<ul><li>List</li></ul>\n<strong>Bold</strong> and <em>italic</em>",
+    contentRequired: "Content is required",
+    featuredImage: "Featured Image",
+    featuredImageRequired: "A featured image is required",
+    clickOrDrag: "Click or drag an image",
+    imageFormats: "PNG, JPG, GIF, WebP up to 5MB",
+    recommendedSize: "Recommended: 1200 x 630 pixels for optimal sharing",
+    delete: "Delete",
+    change: "Change",
+    imageTips: "Image Tips",
+    imageTip1: "Use high-quality images (min. 800px wide)",
+    imageTip2: "Choose authentic visuals related to Cameroon",
+    imageTip3: "Avoid images with too much text",
+    seoInfo: "This information helps search engines better understand and rank your content. Leave empty to use default values.",
+    seoTitle: "SEO Title",
+    seoTitlePlaceholder: "Title for search engines (leave empty to use article title)",
+    seoTitleSuggest: "Suggest from title",
+    seoTitleRecommended: "Recommended: 50-60 characters",
+    seoDescription: "SEO Description",
+    seoDescriptionPlaceholder: "Description for search results (max 160 characters)",
+    seoDescriptionSuggest: "Suggest from excerpt",
+    seoKeywords: "SEO Keywords",
+    seoKeywordsPlaceholder: "Add a keyword (ex: cameroon investment, douala real estate)",
+    seoKeywordsHint: "Keywords help categorize your content for search",
+    googlePreview: "Google Preview",
+    tipsTitle: "✨ Tips for a successful article",
+    tip1: "📝 Catchy and descriptive title (ideally 50-70 characters)",
+    tip2: "🖼️ Use high-quality, relevant images",
+    tip3: "🔗 Structure your content with subheadings (h2, h3)",
+    tip4: "📊 Add data and figures to strengthen credibility",
+    tip5: "🎯 Optimize your SEO with relevant keywords",
+    tip6: "📱 Always test mobile display",
+    isFeatured: "Feature this article (appears in preview)",
+    addTag: "Add tag",
+    addParagraph: "+ Paragraph",
+    characters: "characters",
+    articleCreated: "Article published successfully!",
+    draftSaved: "Draft saved successfully!",
+    errorTitle: "Title is required",
+    errorExcerpt: "Excerpt is required",
+    errorContent: "Content is required",
+    errorImage: "A featured image is required",
+    errorOccurred: "An error occurred",
+    imageTooLarge: "Image must not exceed 5MB",
+    invalidImage: "Please select a valid image (JPEG, PNG, GIF)"
+  };
+
   // États du formulaire
   const [formData, setFormData] = useState({
     title: '',
@@ -50,15 +272,18 @@ const BlogCreate = () => {
   const [success, setSuccess] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
-  const [activeTab, setActiveTab] = useState('content'); // content, seo, media
+  const [activeTab, setActiveTab] = useState('content');
   
-  // Catégories disponibles
+  // Catégories disponibles (traduites dynamiquement)
   const categories = [
-    { value: 'Real Estate', label: 'Immobilier', icon: '🏠', description: 'Articles sur l\'immobilier, investissements fonciers' },
-    { value: 'Agriculture', label: 'Agriculture', icon: '🌾', description: 'Agriculture, élevage, agrobusiness' },
-    { value: 'Sourcing', label: 'Approvisionnement', icon: '🚢', description: 'Importation, logistique, sourcing international' },
-    { value: 'Lifestyle', label: 'Mode de Vie', icon: '🌟', description: 'Culture, lifestyle, diaspora' }
+    { value: 'Real Estate', labelFr: 'Immobilier', labelEn: 'Real Estate', icon: '🏠', descriptionFr: 'Articles sur l\'immobilier, investissements fonciers', descriptionEn: 'Real estate articles, land investments' },
+    { value: 'Agriculture', labelFr: 'Agriculture', labelEn: 'Agriculture', icon: '🌾', descriptionFr: 'Agriculture, élevage, agrobusiness', descriptionEn: 'Agriculture, livestock, agribusiness' },
+    { value: 'Sourcing', labelFr: 'Approvisionnement', labelEn: 'Sourcing', icon: '🚢', descriptionFr: 'Importation, logistique, sourcing international', descriptionEn: 'Import, logistics, international sourcing' },
+    { value: 'Lifestyle', labelFr: 'Mode de Vie', labelEn: 'Lifestyle', icon: '🌟', descriptionFr: 'Culture, lifestyle, diaspora', descriptionEn: 'Culture, lifestyle, diaspora' }
   ];
+  
+  const getCategoryLabel = (cat) => currentLang === 'fr' ? cat.labelFr : cat.labelEn;
+  const getCategoryDesc = (cat) => currentLang === 'fr' ? cat.descriptionFr : cat.descriptionEn;
   
   // Suggestions de titres SEO
   const suggestSeoTitle = () => {
@@ -93,13 +318,12 @@ const BlogCreate = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validation
       if (file.size > 5 * 1024 * 1024) {
-        setError('L\'image ne doit pas dépasser 5MB');
+        setError(t.imageTooLarge);
         return;
       }
       if (!file.type.startsWith('image/')) {
-        setError('Veuillez sélectionner une image valide (JPEG, PNG, GIF)');
+        setError(t.invalidImage);
         return;
       }
       
@@ -163,21 +387,20 @@ const BlogCreate = () => {
   
   // Sauvegarder l'article
   const savePost = async (status) => {
-    // Validation
     if (!formData.title.trim()) {
-      setError('Le titre est requis');
+      setError(t.errorTitle);
       return;
     }
     if (!formData.excerpt.trim()) {
-      setError('Le résumé est requis');
+      setError(t.errorExcerpt);
       return;
     }
     if (!formData.content.trim()) {
-      setError('Le contenu est requis');
+      setError(t.errorContent);
       return;
     }
     if (!imageFile && !formData.featuredImage) {
-      setError('Une image principale est requise');
+      setError(t.errorImage);
       return;
     }
     
@@ -205,19 +428,17 @@ const BlogCreate = () => {
       const response = await api.createBlogPost(submitData);
       
       if (response.success) {
-        const message = status === 'published' 
-          ? 'Article publié avec succès !' 
-          : 'Brouillon sauvegardé avec succès !';
+        const message = status === 'published' ? t.articleCreated : t.draftSaved;
         setSuccess(message);
         setTimeout(() => {
           navigate('/dashboard/admin/blog');
         }, 1500);
       } else {
-        throw new Error(response.message || 'Erreur lors de la création');
+        throw new Error(response.message || t.errorOccurred);
       }
     } catch (err) {
       console.error('Error saving post:', err);
-      setError(err.message || 'Une erreur est survenue');
+      setError(err.message || t.errorOccurred);
     } finally {
       setLoading(false);
     }
@@ -249,10 +470,8 @@ const BlogCreate = () => {
             <ArrowLeft size={20} className="text-slate-500" />
           </Link>
           <div>
-            <h1 className="text-2xl font-serif text-slate-800">Nouvel article</h1>
-            <p className="text-sm text-slate-500 mt-1">
-              Créez un nouvel article pour le blog
-            </p>
+            <h1 className="text-2xl font-serif text-slate-800">{t.newArticle}</h1>
+            <p className="text-sm text-slate-500 mt-1">{t.newArticleDesc}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -262,7 +481,7 @@ const BlogCreate = () => {
             className="px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors text-sm font-medium flex items-center gap-2"
           >
             {loading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-            Sauvegarder brouillon
+            {t.saveDraft}
           </button>
           <button
             onClick={handlePublish}
@@ -270,7 +489,7 @@ const BlogCreate = () => {
             className="px-4 py-2 bg-[#c5a059] text-white rounded-lg hover:bg-[#b08a4a] transition-colors text-sm font-medium flex items-center gap-2"
           >
             {loading ? <Loader2 size={16} className="animate-spin" /> : <Globe size={16} />}
-            Publier
+            {t.publish}
           </button>
         </div>
       </div>
@@ -295,9 +514,9 @@ const BlogCreate = () => {
         <div className="flex items-start gap-3">
           <Sparkles size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm text-amber-800 font-medium">Aperçu de l'article</p>
+            <p className="text-sm text-amber-800 font-medium">{t.articlePreview}</p>
             <p className="text-xs text-amber-700 mt-1">
-              URL: <span className="font-mono">{window.location.origin}/blog/{generateSlug() || '...'}</span>
+              {t.url}: <span className="font-mono">{window.location.origin}/blog/{generateSlug() || '...'}</span>
             </p>
           </div>
         </div>
@@ -314,7 +533,7 @@ const BlogCreate = () => {
           }`}
         >
           <FileText size={14} className="inline mr-2" />
-          Contenu
+          {t.content}
         </button>
         <button
           onClick={() => setActiveTab('media')}
@@ -325,7 +544,7 @@ const BlogCreate = () => {
           }`}
         >
           <ImageIcon size={14} className="inline mr-2" />
-          Média
+          {t.media}
         </button>
         <button
           onClick={() => setActiveTab('seo')}
@@ -336,7 +555,7 @@ const BlogCreate = () => {
           }`}
         >
           <Globe size={14} className="inline mr-2" />
-          SEO
+          {t.seo}
         </button>
       </div>
       
@@ -346,7 +565,7 @@ const BlogCreate = () => {
           {/* Titre */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Titre de l'article *
+              {t.title} *
             </label>
             <input
               type="text"
@@ -355,17 +574,17 @@ const BlogCreate = () => {
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#c5a059] focus:border-transparent text-lg"
-              placeholder="Ex: Comment investir dans l'immobilier au Cameroun"
+              placeholder={t.titlePlaceholder}
             />
             <p className="text-xs text-slate-400 mt-1">
-              {formData.title.length}/200 caractères
+              {formData.title.length}/200 {t.characters}
             </p>
           </div>
           
           {/* Catégorie */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Catégorie *
+              {t.category} *
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {categories.map(cat => (
@@ -388,9 +607,9 @@ const BlogCreate = () => {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-xl">{cat.icon}</span>
-                      <span className="font-medium text-slate-700">{cat.label}</span>
+                      <span className="font-medium text-slate-700">{getCategoryLabel(cat)}</span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-1">{cat.description}</p>
+                    <p className="text-xs text-slate-400 mt-1">{getCategoryDesc(cat)}</p>
                   </div>
                 </label>
               ))}
@@ -400,7 +619,7 @@ const BlogCreate = () => {
           {/* Résumé */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Résumé *
+              {t.excerpt} *
             </label>
             <textarea
               name="excerpt"
@@ -410,17 +629,17 @@ const BlogCreate = () => {
               required
               maxLength={300}
               className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#c5a059] focus:border-transparent resize-none"
-              placeholder="Court résumé de l'article qui apparaîtra dans les aperçus (max 300 caractères)"
+              placeholder={t.excerptPlaceholder}
             />
             <p className="text-xs text-slate-400 mt-1">
-              {formData.excerpt.length}/300 caractères
+              {formData.excerpt.length}/300 {t.characters}
             </p>
           </div>
           
           {/* Tags */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Tags
+              {t.tags}
             </label>
             <div className="flex gap-2">
               <input
@@ -429,7 +648,7 @@ const BlogCreate = () => {
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
                 className="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#c5a059] focus:border-transparent"
-                placeholder="Ajouter un tag (ex: investissement, immobilier, guide)"
+                placeholder={t.tagsPlaceholder}
               />
               <button
                 type="button"
@@ -465,19 +684,18 @@ const BlogCreate = () => {
           <div>
             <div className="flex justify-between items-center mb-1">
               <label className="block text-sm font-medium text-slate-700">
-                Contenu *
+                {t.contentLabel} *
               </label>
               <div className="flex gap-2">
                 <button
                   type="button"
                   className="text-xs text-slate-400 hover:text-slate-600"
                   onClick={() => {
-                    // Helper pour insérer des balises HTML simples
-                    const newContent = formData.content + '\n\n<p>Nouveau paragraphe</p>';
+                    const newContent = formData.content + '\n\n<p>New paragraph</p>';
                     setFormData(prev => ({ ...prev, content: newContent }));
                   }}
                 >
-                  + Paragraphe
+                  {t.addParagraph}
                 </button>
               </div>
             </div>
@@ -488,10 +706,10 @@ const BlogCreate = () => {
               rows={15}
               required
               className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#c5a059] focus:border-transparent font-mono text-sm"
-              placeholder="Écrivez votre article ici...&#10;&#10;Vous pouvez utiliser du HTML pour le formatage :&#10;&lt;h2&gt;Titre&lt;/h2&gt;&#10;&lt;p&gt;Paragraphe&lt;/p&gt;&#10;&lt;ul&gt;&lt;li&gt;Liste&lt;/li&gt;&lt;/ul&gt;&#10;&lt;strong&gt;Gras&lt;/strong&gt; et &lt;em&gt;italique&lt;/em&gt;"
+              placeholder={t.contentPlaceholder}
             />
             <p className="text-xs text-slate-400 mt-1">
-              Supporte le HTML pour le formatage. Utilisez les balises standards.
+              Supports HTML for formatting. Use standard tags.
             </p>
           </div>
           
@@ -505,7 +723,7 @@ const BlogCreate = () => {
                 onChange={handleChange}
                 className="w-4 h-4 text-[#c5a059] focus:ring-[#c5a059]"
               />
-              <span className="text-sm text-slate-700">Mettre à la une (apparaît en avant-première)</span>
+              <span className="text-sm text-slate-700">{t.isFeatured}</span>
             </label>
           </div>
         </div>
@@ -517,7 +735,7 @@ const BlogCreate = () => {
           {/* Image principale */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Image principale *
+              {t.featuredImage} *
             </label>
             <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
               error && !imagePreview ? 'border-red-300 bg-red-50' : 'border-slate-200 hover:border-[#c5a059]'
@@ -526,7 +744,7 @@ const BlogCreate = () => {
                 <div className="space-y-3">
                   <img
                     src={imagePreview}
-                    alt="Aperçu"
+                    alt="Preview"
                     className="max-h-64 mx-auto rounded-lg object-contain"
                   />
                   <div className="flex gap-2 justify-center">
@@ -538,10 +756,10 @@ const BlogCreate = () => {
                       }}
                       className="px-3 py-1 bg-red-100 text-red-600 rounded-lg text-sm hover:bg-red-200 transition-colors"
                     >
-                      Supprimer
+                      {t.delete}
                     </button>
                     <label className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-sm hover:bg-slate-200 transition-colors cursor-pointer">
-                      Changer
+                      {t.change}
                       <input
                         type="file"
                         accept="image/*"
@@ -554,13 +772,9 @@ const BlogCreate = () => {
               ) : (
                 <label className="cursor-pointer block">
                   <Upload size={48} className="mx-auto text-slate-400 mb-3" />
-                  <p className="text-slate-600 font-medium">Cliquez ou glissez une image</p>
-                  <p className="text-xs text-slate-400 mt-2">
-                    PNG, JPG, GIF, WebP jusqu'à 5MB
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    Recommandé : 1200 x 630 pixels pour un partage optimal
-                  </p>
+                  <p className="text-slate-600 font-medium">{t.clickOrDrag}</p>
+                  <p className="text-xs text-slate-400 mt-2">{t.imageFormats}</p>
+                  <p className="text-xs text-slate-400">{t.recommendedSize}</p>
                   <input
                     type="file"
                     accept="image/*"
@@ -578,10 +792,10 @@ const BlogCreate = () => {
             <p className="text-xs text-slate-600 flex items-start gap-2">
               <ImageIcon size={14} className="text-slate-400 flex-shrink-0 mt-0.5" />
               <span>
-                <strong className="font-medium">Conseils images :</strong><br />
-                • Utilisez des images de haute qualité (min. 800px de large)<br />
-                • Privilégiez des visuels authentiques liés au Cameroun<br />
-                • Évitez les images avec trop de texte
+                <strong className="font-medium">{t.imageTips}:</strong><br />
+                • {t.imageTip1}<br />
+                • {t.imageTip2}<br />
+                • {t.imageTip3}
               </span>
             </p>
           </div>
@@ -594,8 +808,7 @@ const BlogCreate = () => {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
             <p className="text-sm text-blue-700">
               <Globe size={14} className="inline mr-1" />
-              Ces informations aident les moteurs de recherche à mieux comprendre et classer votre contenu.
-              Laissez vides pour utiliser les valeurs par défaut.
+              {t.seoInfo}
             </p>
           </div>
           
@@ -603,7 +816,7 @@ const BlogCreate = () => {
           <div>
             <div className="flex justify-between items-center mb-1">
               <label className="block text-sm font-medium text-slate-700">
-                Titre SEO
+                {t.seoTitle}
               </label>
               <button
                 type="button"
@@ -611,7 +824,7 @@ const BlogCreate = () => {
                 className="text-xs text-[#c5a059] hover:underline"
                 disabled={!formData.title}
               >
-                Suggérer depuis le titre
+                {t.seoTitleSuggest}
               </button>
             </div>
             <input
@@ -620,10 +833,10 @@ const BlogCreate = () => {
               value={formData.seoTitle}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#c5a059] focus:border-transparent"
-              placeholder="Titre pour les moteurs de recherche (laissez vide pour utiliser le titre de l'article)"
+              placeholder={t.seoTitlePlaceholder}
             />
             <p className="text-xs text-slate-400 mt-1">
-              Recommandé: 50-60 caractères • {formData.seoTitle.length} caractères
+              {t.seoTitleRecommended} • {formData.seoTitle.length} {t.characters}
             </p>
           </div>
           
@@ -631,7 +844,7 @@ const BlogCreate = () => {
           <div>
             <div className="flex justify-between items-center mb-1">
               <label className="block text-sm font-medium text-slate-700">
-                Description SEO
+                {t.seoDescription}
               </label>
               <button
                 type="button"
@@ -639,7 +852,7 @@ const BlogCreate = () => {
                 className="text-xs text-[#c5a059] hover:underline"
                 disabled={!formData.excerpt}
               >
-                Suggérer depuis le résumé
+                {t.seoDescriptionSuggest}
               </button>
             </div>
             <textarea
@@ -649,17 +862,17 @@ const BlogCreate = () => {
               rows={3}
               maxLength={160}
               className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#c5a059] focus:border-transparent resize-none"
-              placeholder="Description pour les résultats de recherche (max 160 caractères)"
+              placeholder={t.seoDescriptionPlaceholder}
             />
             <p className="text-xs text-slate-400 mt-1">
-              {formData.seoDescription.length}/160 caractères
+              {formData.seoDescription.length}/160 {t.characters}
             </p>
           </div>
           
           {/* Mots-clés SEO */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Mots-clés SEO
+              {t.seoKeywords}
             </label>
             <div className="flex gap-2">
               <input
@@ -668,7 +881,7 @@ const BlogCreate = () => {
                 onChange={(e) => setKeywordInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addKeyword())}
                 className="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#c5a059] focus:border-transparent"
-                placeholder="Ajouter un mot-clé (ex: investissement cameroun, immobilier douala)"
+                placeholder={t.seoKeywordsPlaceholder}
               />
               <button
                 type="button"
@@ -699,23 +912,23 @@ const BlogCreate = () => {
               </div>
             )}
             <p className="text-xs text-slate-400 mt-1">
-              Les mots-clés aident à catégoriser votre contenu pour la recherche
+              {t.seoKeywordsHint}
             </p>
           </div>
           
           {/* Aperçu Google */}
           {(formData.seoTitle || formData.seoDescription) && (
             <div className="mt-6 pt-4 border-t border-slate-100">
-              <p className="text-xs font-medium text-slate-500 mb-3">Aperçu dans Google :</p>
+              <p className="text-xs font-medium text-slate-500 mb-3">{t.googlePreview}:</p>
               <div className="bg-slate-50 rounded-lg p-4">
                 <p className="text-blue-800 text-lg font-medium">
-                  {formData.seoTitle || formData.title || 'Titre de l\'article'}
+                  {formData.seoTitle || formData.title || 'Article title'}
                 </p>
                 <p className="text-green-700 text-sm mt-1">
                   {window.location.origin}/blog/{generateSlug() || '...'}
                 </p>
                 <p className="text-slate-600 text-sm mt-2">
-                  {formData.seoDescription || formData.excerpt || 'Description de l\'article...'}
+                  {formData.seoDescription || formData.excerpt || 'Article description...'}
                 </p>
               </div>
             </div>
@@ -725,14 +938,14 @@ const BlogCreate = () => {
       
       {/* Tips Section */}
       <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-100">
-        <h3 className="text-sm font-semibold text-amber-800 mb-2">✨ Conseils pour un article réussi</h3>
+        <h3 className="text-sm font-semibold text-amber-800 mb-2">{t.tipsTitle}</h3>
         <ul className="text-xs text-amber-700 space-y-1">
-          <li>• 📝 Titre accrocheur et descriptif (idéalement entre 50 et 70 caractères)</li>
-          <li>• 🖼️ Utilisez des images de qualité et pertinentes</li>
-          <li>• 🔗 Structurez votre contenu avec des sous-titres (h2, h3)</li>
-          <li>• 📊 Ajoutez des données chiffrées pour renforcer votre crédibilité</li>
-          <li>• 🎯 Optimisez votre SEO en incluant des mots-clés pertinents</li>
-          <li>• 📱 Testez toujours l'affichage sur mobile</li>
+          <li>• {t.tip1}</li>
+          <li>• {t.tip2}</li>
+          <li>• {t.tip3}</li>
+          <li>• {t.tip4}</li>
+          <li>• {t.tip5}</li>
+          <li>• {t.tip6}</li>
         </ul>
       </div>
     </div>
