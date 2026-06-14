@@ -6,7 +6,7 @@ dns.setDefaultResultOrder('ipv4first'); // Force IPv4
 import dotenv from 'dotenv';
 dotenv.config();
 
-// VÉRIFIER LES VARIABES D'ENVIRONNEMENT AVANT TOUT
+// VÉRIFIER LES VARIABLES D'ENVIRONNEMENT AVANT TOUT
 console.log('=== CONFIGURATION ===');
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
@@ -39,10 +39,6 @@ import amenityRoutes from './routes/amenity.routes.js';
 import livestockRoutes from './routes/livestock.routes.js';
 import livestockCategoryRoutes from './routes/livestockCategory.routes.js';
 import sitemapRoutes from './routes/sitemap.js';
-
-// 🌟 NOUVELLE IMPORTATION DES ROUTES BLOG
-import blogRoutes from './routes/blog.js';
-import blogCategoryRoutes from './routes/blogCategories.js';
 
 // ✅ Import complet des controllers upload (restauré)
 import { 
@@ -254,31 +250,6 @@ const MOCK_DATA = {
     { _id: "3", name: "Maraîchage", isActive: true, description: "Tomates, oignons, salades" },
     { _id: "4", name: "Arboriculture", isActive: true, description: "Mangues, oranges, avocats" }
   ],
-  // 🌟 AJOUT DES DONNÉES MOCK POUR LE BLOG
-  blogPosts: [
-    {
-      _id: "1",
-      title: "Sécuriser votre Titre Foncier au Cameroun",
-      slug: "securiser-titre-foncier-cameroun",
-      excerpt: "Tout ce que vous devez savoir pour éviter les litiges fonciers",
-      category: "Real Estate",
-      featuredImage: "/uploads/blog/sample1.jpg",
-      status: "published",
-      publishedAt: new Date(),
-      authorName: "Admin"
-    },
-    {
-      _id: "2",
-      title: "L'essor de l'Élevage Porcin au Cameroun",
-      slug: "essor-elevage-porcin-cameroun",
-      excerpt: "Une analyse approfondie du marché local",
-      category: "Agriculture",
-      featuredImage: "/uploads/blog/sample2.jpg",
-      status: "published",
-      publishedAt: new Date(),
-      authorName: "Expert Agro"
-    }
-  ],
   properties: []
 };
 
@@ -427,41 +398,6 @@ app.use('/api', (req, res, next) => {
         mock: true
       });
     }
-    
-    // 🌟 AJOUT DES ROUTES BLOG EN MODE DÉGRADÉ
-    if (req.url.includes('/blog')) {
-      if (req.url === '/blog' || req.url === '/blog/') {
-        return res.json({
-          success: true,
-          data: MOCK_DATA.blogPosts,
-          message: "Mode dégradé - Reconnexion à la base de données en cours",
-          mock: true,
-          pagination: { total: MOCK_DATA.blogPosts.length, page: 1, pages: 1 }
-        });
-      }
-      if (req.url.includes('/featured')) {
-        return res.json({
-          success: true,
-          data: MOCK_DATA.blogPosts.filter(p => p.isFeatured),
-          mock: true
-        });
-      }
-      if (req.url.includes('/admin/all')) {
-        return res.json({
-          success: true,
-          data: MOCK_DATA.blogPosts,
-          mock: true
-        });
-      }
-    }
-    
-    if (req.url.includes('/blog/categories')) {
-      return res.json({
-        success: true,
-        data: [],
-        mock: true
-      });
-    }
   }
   
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
@@ -500,10 +436,6 @@ app.use('/api/livestock', livestockRoutes);
 app.use('/api/livestock-categories', livestockCategoryRoutes);
 app.use('/', sitemapRoutes);
 
-// 🌟 NOUVELLES ROUTES BLOG
-app.use('/api/blog', blogRoutes);
-app.use('/api/blog/categories', blogCategoryRoutes);
-
 // ========== ROUTES D'UPLOAD ==========
 app.post('/api/upload/property-images', propertyUpload.array('images', 10), handlePropertyImages);
 app.post('/api/upload/livestock-images', livestockUpload.array('images', 10), handleLivestockImages);
@@ -527,8 +459,7 @@ app.get('/api/health', (req, res) => {
     mongodb_uri_exists: !!process.env.MONGODB_URI,
     vercel_env: process.env.VERCEL === '1' ? true : false,
     mock_mode: mongoose.connection.readyState !== 1,
-    translation_active: true,
-    blog_routes: 'active'  // 🌟 Indique que les routes blog sont actives
+    translation_active: true
   });
 });
 
@@ -548,27 +479,14 @@ app.get('/api/diagnostic', async (req, res) => {
     node_version: process.version,
     mongoose_version: mongoose.version,
     mock_mode_active: mongoose.connection.readyState !== 1,
-    translation_middleware: 'active',
-    blog_routes: 'active',  // 🌟 Indique que les routes blog sont actives
-    routes_configured: [
-      '/api/blog',
-      '/api/blog/categories'
-    ]
+    translation_middleware: 'active'
   };
   
   res.json(diagnostics);
 });
 
 app.get('/', (req, res) => {
-  res.status(200).json({ 
-    status: "Property Cameroon API is running",
-    endpoints: {
-      blog: "/api/blog",
-      blogCategories: "/api/blog/categories",
-      health: "/api/health",
-      diagnostic: "/api/diagnostic"
-    }
-  });
+  res.status(200).json({ status: "Property Cameroon API is running" });
 });
 
 // ========== GESTION DES ERREURS ==========
@@ -603,7 +521,6 @@ app.use((err, req, res, next) => {
 const startServer = async () => {
   console.log('🚀 Starting server...');
   console.log('🌐 Translation middleware enabled - Auto-translates API responses');
-  console.log('📝 Blog routes enabled - /api/blog and /api/blog/categories');
   
   await new Promise(resolve => setTimeout(resolve, 2000));
   
@@ -624,7 +541,6 @@ const startServer = async () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📍 http://localhost:${PORT}`);
       console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
-      console.log(`📝 Blog API: http://localhost:${PORT}/api/blog`);
       console.log(`🛠️ Debug MongoDB: http://localhost:${PORT}/api/debug-mongo`);
       console.log(`📊 Test real data: http://localhost:${PORT}/api/test-real-data`);
     });
