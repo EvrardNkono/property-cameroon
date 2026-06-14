@@ -3,6 +3,7 @@ import React, { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, useParams, useLocation } from 'react-router-dom'; // ← Enlève BrowserRouter
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
+import WhatsAppButton from './components/WhatsAppButton'; // 👈 Ajout de l'import
 
 // --- PAGES PUBLIQUES ---
 const Home                = lazy(() => import('./pages/Home'));
@@ -191,6 +192,9 @@ function App() {
             </Suspense>
           </RouteChangeHandler>
         </div>
+
+        {/* WhatsApp Button - Visible sur toutes les pages */}
+        <WhatsAppButton />
 
         <Suspense fallback={null}>
           <ChatAssistant />
