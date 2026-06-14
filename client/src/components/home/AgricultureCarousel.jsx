@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Leaf, Truck, Package, ShoppingBag, ChevronLeft, ChevronRight, Star, MapPin, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom'; // Ajout de l'import Link
 
 // Hook pour récupérer la langue actuelle
 const useCurrentLang = () => {
@@ -109,7 +110,7 @@ const AgricultureCarousel = () => {
       currentHarvests: "Produits du Terroir",
       subtitle: "Découvrez les meilleurs produits agricoles camerounais, certifiés et traçables",
       origin: "Origine",
-      contactSeller: "Contacter",
+      contactSeller: "Contacter un expert",
       organic: "Bio",
       conventional: "Standard",
       viewAll: "Voir tous les produits",
@@ -120,7 +121,7 @@ const AgricultureCarousel = () => {
       currentHarvests: "Local Products",
       subtitle: "Discover the best Cameroonian agricultural products, certified and traceable",
       origin: "Origin",
-      contactSeller: "Contact",
+      contactSeller: "Contact an expert",
       organic: "Organic",
       conventional: "Standard",
       viewAll: "View all products",
@@ -131,7 +132,7 @@ const AgricultureCarousel = () => {
     currentHarvests: "Produits du Terroir",
     subtitle: "Découvrez les meilleurs produits agricoles camerounais, certifiés et traçables",
     origin: "Origine",
-    contactSeller: "Contacter",
+    contactSeller: "Contacter un expert",
     organic: "Bio",
     conventional: "Standard",
     viewAll: "Voir tous les produits",
@@ -266,11 +267,14 @@ const AgricultureCarousel = () => {
                 </div>
               </div>
 
-              {/* CTA Buttons */}
+              {/* CTA Buttons - MODIFICATION ICI : lien vers /experts */}
               <div className="flex gap-3">
-                <button className="flex-1 bg-emerald-600 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-emerald-700 transition-all flex items-center justify-center gap-2">
+                <Link 
+                  to="/experts"
+                  className="flex-1 bg-emerald-600 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
+                >
                   <ShoppingBag size={14} /> {t.contactSeller}
-                </button>
+                </Link>
                 <button className="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 hover:border-amber-500 hover:text-amber-500 transition-all">
                   <ArrowRight size={18} />
                 </button>
@@ -311,10 +315,13 @@ const AgricultureCarousel = () => {
 
         {/* View All Link */}
         <div className="text-center mt-10">
-          <button className="inline-flex items-center gap-2 text-slate-400 text-[10px] font-bold uppercase tracking-wider hover:text-amber-600 transition-colors group">
+          <Link 
+            to="/experts"
+            className="inline-flex items-center gap-2 text-slate-400 text-[10px] font-bold uppercase tracking-wider hover:text-amber-600 transition-colors group"
+          >
             {t.viewAll}
             <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
-          </button>
+          </Link>
         </div>
       </div>
 
