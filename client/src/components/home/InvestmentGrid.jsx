@@ -7,8 +7,8 @@ const INVESTMENTS = [
     location: "Littoral Region",
     yield: "+22%",
     term: "Short-Cycle",
-    image: "/images/palm-plantation.jpg",
-    imageWebp: "/images/palm-plantation.webp",
+    image: "/images/oil-palm.jpg",
+    imageWebp: "/images/oil-palm.jpg",
   },
   {
     id: 2,
@@ -17,7 +17,7 @@ const INVESTMENTS = [
     yield: "+18%",
     term: "18 Months",
     image: "/images/propertyananas.jpg",
-    imageWebp: "/images/propertyananas.webp",
+    imageWebp: "/images/istockphoto-182513179-612x612.jpg",
   },
   {
     id: 3,
@@ -25,8 +25,8 @@ const INVESTMENTS = [
     location: "South-West Region",
     yield: "+15%",
     term: "Long-Term",
-    image: "/images/propertycacao.jfif",
-    imageWebp: "/images/propertycacao.webp",
+    image: "/images/chocolate-cacao-tree-farm-green-600nw-2256239597.webp",
+    imageWebp: "/images/chocolate-cacao-tree-farm-green-600nw-2256239597.webp",
   }
 ];
 
