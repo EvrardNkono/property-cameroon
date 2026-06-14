@@ -23,12 +23,12 @@ export const register = async (req, res) => {
       size: req.file.size,
       filename: req.file.filename,
       mimetype: req.file.mimetype
-    } : 'No file uploaded');
+    } : 'No file uploaded (optional)');
     
     const { name, email, password, phone, roles } = req.body;
     const parsedRoles = typeof roles === 'string' ? JSON.parse(roles) : roles || ['BUYER'];
     
-    // Validation des champs requis
+    // Validation des champs requis (SANS le document KYC)
     if (!name || !email || !password) {
       return res.status(400).json({ 
         success: false, 
@@ -48,10 +48,10 @@ export const register = async (req, res) => {
       phone: phone || '',
       roles: parsedRoles,
       status: 'PENDING',
-      kycStatus: 'NOT_SUBMITTED'
+      kycStatus: 'NOT_SUBMITTED'  // ✅ Changé de 'PENDING' à 'NOT_SUBMITTED' si pas de document
     };
     
-    // Gérer l'upload du document KYC
+    // ✅ Gérer l'upload du document KYC (MAINTENANT OPTIONNEL)
     if (req.file && req.file.filename) {
       // Construire l'URL complète du document KYC
       let kycDocumentUrl = req.file.filename;
@@ -70,17 +70,25 @@ export const register = async (req, res) => {
         uploadedAt: new Date(),
         verifiedAt: null
       }];
-      userData.kycStatus = 'PENDING';
+      userData.kycStatus = 'PENDING';  // Seulement si un document a été uploadé
       
       console.log('📄 KYC Document URL:', kycDocumentUrl);
+    } else {
+      console.log('ℹ️ No KYC document uploaded - user can add later');
     }
     
     const user = await User.create(userData);
     console.log('✅ User created:', user._id);
     
+    // ✅ Générer un token même sans document KYC
+    const token = generateToken(user);
+    
     res.status(201).json({
       success: true,
-      message: 'Registration submitted. Awaiting admin approval.',
+      message: req.file && req.file.filename 
+        ? 'Registration submitted. Awaiting admin approval.' 
+        : 'Registration successful. You can add KYC documents later in your profile.',
+      token,  // ✅ Ajouter le token pour connecter automatiquement l'utilisateur
       user: { 
         id: user._id, 
         name: user.name, 
@@ -96,6 +104,7 @@ export const register = async (req, res) => {
   }
 };
 
+// Le reste du fichier (login, getMe) reste identique
 export const login = async (req, res) => {
   try {
     console.log('🔐 Login attempt:', req.body.email);
@@ -115,12 +124,13 @@ export const login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
     
-    if (user.status === 'PENDING') {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Your account is pending admin approval.' 
-      });
-    }
+    // Ne pas bloquer la connexion si le KYC est en attente
+    // if (user.status === 'PENDING') {
+    //   return res.status(403).json({ 
+    //     success: false, 
+    //     message: 'Your account is pending admin approval.' 
+    //   });
+    // }
     
     if (user.status === 'BANNED') {
       return res.status(403).json({ success: false, message: 'Account is banned' });

@@ -8,12 +8,12 @@ import {
 import { useOutletContext } from 'react-router-dom';
 import api from '../../../services/api';
 
-// Importation des modals
+// Importation des modals (sans UserVerificationModal)
 import UserDetailModal from './users/UserDetailModal';
 import UserAccessModal from './users/UserAccessModal';
 import UserBanModal from './users/UserBanModal';
 import UserEditModal from './users/UserEditModal';
-import UserVerificationModal from './users/UserVerificationModal';
+// UserVerificationModal supprimé
 
 // --- SUB-COMPONENT: SMART ACTION MENU AVEC HANDLERS ---
 const UserActionMenu = ({ user, onAction }) => {
@@ -25,7 +25,7 @@ const UserActionMenu = ({ user, onAction }) => {
   const updatePosition = () => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      const menuHeight = 280; 
+      const menuHeight = 250; // Réduit car on a enlevé l'option KYC
       const spaceBelow = window.innerHeight - rect.bottom;
       const shouldDropUp = spaceBelow < menuHeight;
 
@@ -123,9 +123,7 @@ const UserActionMenu = ({ user, onAction }) => {
           <button onClick={() => { onAction('EDIT_ACCESS'); setIsOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-blue-600 hover:bg-blue-50 text-left">
             <ShieldCheck size={14} /> Edit Access
           </button>
-          <button onClick={() => { onAction('VERIFY_KYC'); setIsOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-emerald-600 hover:bg-emerald-50 text-left">
-            <ShieldCheck size={14} /> Verify KYC
-          </button>
+          {/* Bouton Verify KYC SUPPRIMÉ */}
           <button onClick={() => { onAction('BAN_USER'); setIsOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 text-left">
             <Trash2 size={14} /> Ban Member
           </button>
@@ -185,14 +183,14 @@ const UserManagement = () => {
     else if (actionType === 'EDIT_INFO') setActiveModal('EDIT');
     else if (actionType === 'EDIT_ACCESS') setActiveModal('ACCESS');
     else if (actionType === 'BAN_USER') setActiveModal('BAN');
-    else if (actionType === 'VERIFY_KYC') setActiveModal('VERIFY');
+    // VERIFY_KYC supprimé
   };
 
   // Handlers pour les actions backend
   const handleUpdateRoles = async (userId, roles) => {
     try {
       await api.updateUserRoles(userId, roles);
-      await fetchUsers(); // Rafraîchir la liste
+      await fetchUsers();
       setActiveModal(null);
     } catch (err) {
       console.error('Error updating roles:', err);
@@ -211,18 +209,7 @@ const UserManagement = () => {
     }
   };
 
-  const handleVerifyKYC = async (userId, kycStatusValue) => {
-  console.log('📝 handleVerifyKYC received:', { userId, kycStatusValue });
-  
-  try {
-    await api.verifyKYC(userId, kycStatusValue);
-    await fetchUsers();
-    setActiveModal(null);
-  } catch (err) {
-    console.error('Error verifying KYC:', err);
-    alert('Erreur lors de la vérification KYC');
-  }
-};
+  // handleVerifyKYC SUPPRIMÉ
 
   const handleEditUser = async (userId, userData) => {
     try {
@@ -393,7 +380,7 @@ const UserManagement = () => {
         </div>
       </div>
 
-      {/* MODALS */}
+      {/* MODALS (SANS UserVerificationModal) */}
       {activeModal === 'VIEW' && selectedUser && (
         <UserDetailModal 
           isOpen={true} 
@@ -426,14 +413,7 @@ const UserManagement = () => {
           onConfirm={handleBanUser} 
         />
       )}
-      {activeModal === 'VERIFY' && selectedUser && (
-        <UserVerificationModal 
-          isOpen={true} 
-          user={selectedUser} 
-          onClose={() => setActiveModal(null)} 
-          onVerify={handleVerifyKYC} 
-        />
-      )}
+      {/* UserVerificationModal SUPPRIMÉ */}
 
     </div>
   );
