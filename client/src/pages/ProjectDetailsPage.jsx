@@ -108,7 +108,6 @@ const ProjectDetailsPage = () => {
       sustainableDesc: "Pratiques éco-responsables certifiées pour une production respectueuse.",
       logistics: "Logistique intégrée",
       logisticsDesc: "Distribution nationale et potentiel export vers les marchés internationaux.",
-      // Nouvelles traductions
       customQuote: "Sur devis personnalisé",
       whatYouCanDo: "Ce que vous pouvez faire",
       investFarm: "Investir dans la ferme",
@@ -163,7 +162,6 @@ const ProjectDetailsPage = () => {
       sustainableDesc: "Eco-responsible certified practices for respectful production.",
       logistics: "Integrated logistics",
       logisticsDesc: "National distribution and export potential to international markets.",
-      // New translations
       customQuote: "Custom quote",
       whatYouCanDo: "What you can do",
       investFarm: "Invest in the farm",
@@ -477,17 +475,15 @@ const ProjectDetailsPage = () => {
                   </div>
 
                   <div className="pt-2 space-y-3">
-                    {/* Lien direct vers la page des experts */}
-                    <a
-                      href="https://www.propertycameroon.com/experts"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    {/* Lien vers experts - Version React Router comme dans la navbar */}
+                    <Link
+                      to="/experts"
                       className="w-full py-4 bg-amber-500 text-white rounded-xl font-semibold text-sm hover:bg-amber-600 transition-all flex items-center justify-center gap-2 group"
                     >
                       <MessageCircle size={18} />
                       {t.talkToExpert}
                       <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                    </a>
+                    </Link>
                     
                     {/* Bouton devis personnalisé (ouvre modal) */}
                     <button
