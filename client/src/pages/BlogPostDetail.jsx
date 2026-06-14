@@ -14,13 +14,11 @@ import {
   ChevronRight,
   Loader2,
   AlertCircle,
-  Facebook,
-  Twitter,
-  Linkedin,
   Mail,
   CheckCircle,
   BookOpen,
-  ThumbsUp
+  ThumbsUp,
+  Link as LinkIcon
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
@@ -345,26 +343,26 @@ const BlogPostDetail = () => {
                 {showShareMenu && (
                   <div className="absolute lg:left-full lg:top-0 lg:ml-2 left-0 top-full mt-2 lg:mt-0 bg-white rounded-xl shadow-lg border border-slate-100 p-2 z-20">
                     <button
-                      onClick={() => shareOnSocial('facebook')}
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg w-full"
-                    >
-                      <Facebook size={16} className="text-blue-600" />
-                      Facebook
-                    </button>
-                    <button
-                      onClick={() => shareOnSocial('twitter')}
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg w-full"
-                    >
-                      <Twitter size={16} className="text-sky-500" />
-                      Twitter
-                    </button>
-                    <button
-                      onClick={() => shareOnSocial('linkedin')}
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg w-full"
-                    >
-                      <Linkedin size={16} className="text-blue-700" />
-                      LinkedIn
-                    </button>
+  onClick={() => shareOnSocial('facebook')}
+  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg w-full"
+>
+  <span className="w-4 text-center">📘</span>
+  Facebook
+</button>
+<button
+  onClick={() => shareOnSocial('twitter')}
+  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg w-full"
+>
+  <span className="w-4 text-center">🐦</span>
+  Twitter
+</button>
+<button
+  onClick={() => shareOnSocial('linkedin')}
+  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg w-full"
+>
+  <span className="w-4 text-center">💼</span>
+  LinkedIn
+</button>
                     <button
                       onClick={() => shareOnSocial('email')}
                       className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg w-full"
