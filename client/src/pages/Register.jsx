@@ -1,536 +1,424 @@
 // frontend/src/pages/Register.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { 
-  Loader2, CheckCircle2, Building2, TrendingUp, Home, 
-  Sprout, Beef, ArrowRight, ShieldCheck, Mail, Lock, User, Phone,
-  Upload, FileText, X
+  User, 
+  Mail, 
+  Lock, 
+  Phone, 
+  Building2, 
+  Briefcase, 
+  MapPin, 
+  Globe, 
+  Calendar,
+  FileText,
+  CheckCircle,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Upload,
+  X,
+  Loader2
 } from 'lucide-react';
-import api from '../services/api';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-
-// Hook pour récupérer la langue actuelle
-const useCurrentLang = () => {
-  const [lang, setLang] = useState('fr');
-  
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const urlLang = params.get('lang');
-    const storedLang = localStorage.getItem('preferredLanguage');
-    const browserLang = navigator.language.split('-')[0];
-    
-    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
-    setLang(finalLang);
-  }, []);
-  
-  return lang;
-};
-
-// 🔥 Détection automatique de l'environnement
-const isDevelopment = typeof window !== 'undefined' && 
-                      (window.location.hostname === 'localhost' || 
-                       window.location.hostname === '127.0.0.1' ||
-                       window.location.hostname === '');
-
-// URLs en dur selon l'environnement
-const BACKEND_URL = isDevelopment 
-  ? 'http://localhost:5000'           // URL locale
-  : 'https://property-cameroon-backend.vercel.app';  // URL de production
 
 const Register = () => {
   const navigate = useNavigate();
-  const currentLang = useCurrentLang();
+  const { register } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [kycDocument, setKycDocument] = useState(null);
-  const [kycPreview, setKycPreview] = useState(null);
-  
+  const [success, setSuccess] = useState('');
+
+  // État du formulaire
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
     phone: '',
-    roles: []
+    company: '',
+    position: '',
+    city: '',
+    country: 'Cameroon',
+    accountType: 'investor'
   });
 
-  // ========== TRADUCTIONS ==========
-  const t = {
-    fr: {
-      // Header
-      createAccount: "Créer un compte",
-      joinEcosystem: "Rejoignez l'écosystème d'investissement Property Cameroon",
-      
-      // Success page
-      registrationSubmitted: "Inscription soumise !",
-      successMessage: "Votre demande de compte a été envoyée à l'administration pour examen. Vous recevrez un email de confirmation une fois votre compte approuvé.",
-      goToLogin: "Aller à la connexion",
-      
-      // Form labels
-      fullName: "Nom complet *",
-      phoneNumber: "Numéro de téléphone",
-      emailAddress: "Adresse email *",
-      password: "Mot de passe *",
-      confirmPassword: "Confirmer le mot de passe *",
-      selectProfileType: "Sélectionnez votre(s) type(s) de profil * (Plusieurs choix possibles)",
-      identityDocument: "Document d'identité (Carte d'identité ou Passeport) *",
-      clickToUpload: "Cliquez pour télécharger votre document d'identité",
-      uploadHint: "PDF, JPG, PNG (Max. 10MB)",
-      requiredForVerification: "Requis pour la vérification du compte",
-      
-      // Buttons
-      registerSubmit: "S'inscrire & Soumettre pour approbation",
-      signIn: "Se connecter",
-      alreadyHaveAccount: "Vous avez déjà un compte ?",
-      
-      // Role options
-      investor: "Investisseur",
-      investorDesc: "Accédez aux portefeuilles financiers, suivi du ROI et opportunités d'investissement.",
-      propertyOwner: "Propriétaire",
-      propertyOwnerDesc: "Listez des propriétés, gérez les titres fonciers et les actifs immobiliers.",
-      buyer: "Acheteur",
-      buyerDesc: "Parcourez et achetez des propriétés à travers le Cameroun.",
-      agricultureOwner: "Propriétaire Agricole",
-      agricultureOwnerDesc: "Gérez les terres agricoles et les opérations agricoles.",
-      livestockOwner: "Propriétaire d'Élevage",
-      livestockOwnerDesc: "Gérez les unités de production animale.",
-      
-      // Errors
-      passwordsDoNotMatch: "Les mots de passe ne correspondent pas",
-      passwordMinLength: "Le mot de passe doit contenir au moins 6 caractères",
-      selectAtLeastOneRole: "Veuillez sélectionner au moins un rôle",
-      uploadIdDocument: "Veuillez télécharger un document d'identité pour vous inscrire",
-      fileTooLarge: "La taille du fichier doit être inférieure à 10 Mo",
-      registrationFailed: "L'inscription a échoué. Veuillez réessayer.",
-      
-      // File upload
-      fileSize: "Mo"
-    },
-    en: {
-      // Header
-      createAccount: "Create an Account",
-      joinEcosystem: "Join Property Cameroon's investment ecosystem",
-      
-      // Success page
-      registrationSubmitted: "Registration Submitted!",
-      successMessage: "Your account request has been sent to the administration for review. You will receive a confirmation email once your account is approved.",
-      goToLogin: "Go to Login",
-      
-      // Form labels
-      fullName: "Full Name *",
-      phoneNumber: "Phone Number",
-      emailAddress: "Email Address *",
-      password: "Password *",
-      confirmPassword: "Confirm Password *",
-      selectProfileType: "Select your profile type(s) * (You can select multiple)",
-      identityDocument: "Identity Document (ID Card or Passport) *",
-      clickToUpload: "Click to upload your ID document",
-      uploadHint: "PDF, JPG, PNG (Max. 10MB)",
-      requiredForVerification: "Required for account verification",
-      
-      // Buttons
-      registerSubmit: "Register & Submit for Approval",
-      signIn: "Sign In",
-      alreadyHaveAccount: "Already have an account?",
-      
-      // Role options
-      investor: "Investor",
-      investorDesc: "Access financial portfolios, ROI tracking, and investment opportunities.",
-      propertyOwner: "Property Owner",
-      propertyOwnerDesc: "List properties, manage land titles, and handle real estate assets.",
-      buyer: "Buyer",
-      buyerDesc: "Browse and purchase properties across Cameroon.",
-      agricultureOwner: "Agriculture Owner",
-      agricultureOwnerDesc: "Manage agricultural lands and farming operations.",
-      livestockOwner: "Livestock Owner",
-      livestockOwnerDesc: "Manage livestock production units.",
-      
-      // Errors
-      passwordsDoNotMatch: "Passwords do not match",
-      passwordMinLength: "Password must be at least 6 characters",
-      selectAtLeastOneRole: "Please select at least one role",
-      uploadIdDocument: "Please upload an identity document to register",
-      fileTooLarge: "File size must be less than 10MB",
-      registrationFailed: "Registration failed. Please try again.",
-      
-      // File upload
-      fileSize: "MB"
-    }
-  }[currentLang] || {
-    // Fallback français
-    createAccount: "Créer un compte",
-    joinEcosystem: "Rejoignez l'écosystème d'investissement Property Cameroon",
-    registrationSubmitted: "Inscription soumise !",
-    successMessage: "Votre demande de compte a été envoyée à l'administration pour examen.",
-    goToLogin: "Aller à la connexion",
-    fullName: "Nom complet *",
-    phoneNumber: "Numéro de téléphone",
-    emailAddress: "Adresse email *",
-    password: "Mot de passe *",
-    confirmPassword: "Confirmer le mot de passe *",
-    selectProfileType: "Sélectionnez votre(s) type(s) de profil *",
-    identityDocument: "Document d'identité *",
-    clickToUpload: "Cliquez pour télécharger",
-    uploadHint: "PDF, JPG, PNG (Max. 10MB)",
-    requiredForVerification: "Requis pour la vérification",
-    registerSubmit: "S'inscrire",
-    signIn: "Se connecter",
-    alreadyHaveAccount: "Vous avez déjà un compte ?",
-    investor: "Investisseur",
-    investorDesc: "Accédez aux portefeuilles financiers.",
-    propertyOwner: "Propriétaire",
-    propertyOwnerDesc: "Gérez vos propriétés.",
-    buyer: "Acheteur",
-    buyerDesc: "Achetez des propriétés.",
-    agricultureOwner: "Propriétaire Agricole",
-    agricultureOwnerDesc: "Gérez les terres agricoles.",
-    livestockOwner: "Propriétaire d'Élevage",
-    livestockOwnerDesc: "Gérez les unités d'élevage.",
-    passwordsDoNotMatch: "Les mots de passe ne correspondent pas",
-    passwordMinLength: "6 caractères minimum",
-    selectAtLeastOneRole: "Sélectionnez au moins un rôle",
-    uploadIdDocument: "Téléchargez un document d'identité",
-    fileTooLarge: "Fichier trop volumineux (max 10Mo)",
-    registrationFailed: "Échec de l'inscription",
-    fileSize: "Mo"
-  };
-
-  // ✅ IDs des rôles cohérents avec le backend (traduits)
-  const roleOptions = [
-    { id: 'INVESTOR', label: t.investor, icon: <TrendingUp size={18} />, description: t.investorDesc },
-    { id: 'OWNER', label: t.propertyOwner, icon: <Home size={18} />, description: t.propertyOwnerDesc },
-    { id: 'BUYER', label: t.buyer, icon: <Building2 size={18} />, description: t.buyerDesc },
-    { id: 'AGRICULTURE_OWNER', label: t.agricultureOwner, icon: <Sprout size={18} />, description: t.agricultureOwnerDesc },
-    { id: 'LIVESTOCK_OWNER', label: t.livestockOwner, icon: <Beef size={18} />, description: t.livestockOwnerDesc }
-  ];
-
-  // 🔥 Console.log pour debug (optionnel)
-  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-    console.log(`🌍 Register page - Environnement: ${isDevelopment ? 'LOCAL' : 'PRODUCTION'}`);
-    console.log(`🔗 Register page - Backend URL: ${BACKEND_URL}`);
-    console.log(`🌐 Current language: ${currentLang}`);
-  }
-
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleRoleToggle = (roleId) => {
-    setFormData(prev => ({
-      ...prev,
-      roles: prev.roles.includes(roleId)
-        ? prev.roles.filter(r => r !== roleId)
-        : [...prev.roles, roleId]
-    }));
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        setError(t.fileTooLarge);
-        return;
-      }
-      setKycDocument(file);
-      setKycPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const removeFile = () => {
-    setKycDocument(null);
-    if (kycPreview) {
-      URL.revokeObjectURL(kycPreview);
-      setKycPreview(null);
-    }
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     
+    // Validation
     if (formData.password !== formData.confirmPassword) {
-      setError(t.passwordsDoNotMatch);
+      setError('Les mots de passe ne correspondent pas');
       return;
     }
     
     if (formData.password.length < 6) {
-      setError(t.passwordMinLength);
-      return;
-    }
-    
-    if (formData.roles.length === 0) {
-      setError(t.selectAtLeastOneRole);
-      return;
-    }
-    
-    if (!kycDocument) {
-      setError(t.uploadIdDocument);
+      setError('Le mot de passe doit contenir au moins 6 caractères');
       return;
     }
     
     setLoading(true);
     
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('name', formData.name);
-      formDataToSend.append('email', formData.email);
-      formDataToSend.append('password', formData.password);
-      formDataToSend.append('phone', formData.phone);
-      formDataToSend.append('roles', JSON.stringify(formData.roles));
-      formDataToSend.append('kycDocument', kycDocument);
+      const userData = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        company: formData.company,
+        position: formData.position,
+        city: formData.city,
+        country: formData.country,
+        accountType: formData.accountType,
+        roles: [formData.accountType === 'investor' ? 'INVESTOR' : 
+                formData.accountType === 'owner' ? 'OWNER' : 
+                formData.accountType === 'buyer' ? 'BUYER' : 'USER']
+      };
       
-      await api.register(formDataToSend);
+      const response = await register(userData);
       
-      setSuccess(true);
-      setTimeout(() => navigate('/login'), 3000);
+      if (response.success) {
+        setSuccess('Inscription réussie ! Redirection vers le tableau de bord...');
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
+      } else {
+        setError(response.message || 'Erreur lors de l\'inscription');
+      }
     } catch (err) {
       console.error('Registration error:', err);
-      setError(err.message || t.registrationFailed);
+      setError(err.message || 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }
   };
 
-  if (success) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-50">
-        <Navbar />
-        <div className="min-h-[calc(100vh-200px)] flex items-center justify-center py-20 px-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 text-center">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 size={40} className="text-green-600" />
-            </div>
-            <h2 className="text-2xl font-serif text-emerald-900 mb-3">{t.registrationSubmitted}</h2>
-            <p className="text-emerald-600 text-sm mb-6">
-              {t.successMessage}
-            </p>
-            <Link 
-              to="/login" 
-              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-800 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-emerald-900 transition-all"
-            >
-              {t.goToLogin} <ArrowRight size={14} />
-            </Link>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
+  // Types de compte
+  const accountTypes = [
+    { value: 'investor', label: 'Investisseur', icon: <Briefcase size={18} />, description: 'Recherche d\'opportunités d\'investissement' },
+    { value: 'owner', label: 'Propriétaire', icon: <Building2 size={18} />, description: 'Je souhaite vendre ou louer mes biens' },
+    { value: 'buyer', label: 'Acheteur', icon: <Building2 size={18} />, description: 'À la recherche d\'un bien immobilier' },
+    { value: 'other', label: 'Autre', icon: <User size={18} />, description: 'Prestataire, expert, ou autre profil' }
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-50">
-      <Navbar />
-      
-      <div className="py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-
-            {/* Header */}
-            <div className="bg-emerald-900 px-8 py-6 text-center">
-              <div className="inline-flex items-center justify-center w-14 h-14 bg-amber-400 rounded-2xl mb-3">
-                <Building2 size={28} className="text-emerald-900" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pt-32 pb-20">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="grid md:grid-cols-2">
+            {/* Left Side - Info */}
+            <div className="bg-gradient-to-br from-emerald-900 to-slate-900 p-8 text-white">
+              <div className="h-full flex flex-col justify-between">
+                <div>
+                  <h2 className="text-2xl font-serif mb-4">Rejoignez Property Cameroon</h2>
+                  <p className="text-slate-300 text-sm leading-relaxed mb-8">
+                    Créez un compte pour accéder aux meilleures opportunités immobilières et 
+                    agricoles au Cameroun, gérer vos investissements et suivre vos projets.
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <CheckCircle size={16} className="text-emerald-400" />
+                      </div>
+                      <span className="text-sm text-slate-300">Accès aux opportunités exclusives</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <CheckCircle size={16} className="text-emerald-400" />
+                      </div>
+                      <span className="text-sm text-slate-300">Gestion simplifiée de vos investissements</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <CheckCircle size={16} className="text-emerald-400" />
+                      </div>
+                      <span className="text-sm text-slate-300">Support personnalisé 7j/7</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-8 pt-6 border-t border-white/10">
+                  <p className="text-xs text-slate-400">
+                    En créant un compte, vous acceptez nos{' '}
+                    <Link to="/terms" className="text-emerald-400 hover:underline">
+                      Conditions d'utilisation
+                    </Link>{' '}
+                    et notre{' '}
+                    <Link to="/privacy" className="text-emerald-400 hover:underline">
+                      Politique de confidentialité
+                    </Link>
+                  </p>
+                </div>
               </div>
-              <h1 className="text-2xl font-serif text-white">{t.createAccount}</h1>
-              <p className="text-emerald-300 text-sm">{t.joinEcosystem}</p>
             </div>
-
+            
+            {/* Right Side - Form */}
             <div className="p-8">
+              <div className="mb-6">
+                <h3 className="text-2xl font-serif text-slate-800">Inscription</h3>
+                <p className="text-slate-500 text-sm mt-1">
+                  Remplissez le formulaire ci-dessous pour créer votre compte
+                </p>
+              </div>
+              
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl text-sm mb-6">
-                  {error}
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                  <AlertCircle size={18} className="text-red-500" />
+                  <p className="text-red-600 text-sm">{error}</p>
                 </div>
               )}
-
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">{t.fullName}</label>
-                    <div className="relative">
-                      <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" />
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        className="w-full pl-10 pr-4 py-3 bg-emerald-50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">{t.phoneNumber}</label>
-                    <div className="relative">
-                      <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" />
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        className="w-full pl-10 pr-4 py-3 bg-emerald-50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"
-                      />
-                    </div>
+              
+              {success && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+                  <CheckCircle size={18} className="text-green-500" />
+                  <p className="text-green-600 text-sm">{success}</p>
+                </div>
+              )}
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Type de compte */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Je suis *
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {accountTypes.map((type) => (
+                      <label
+                        key={type.value}
+                        className={`flex items-center gap-2 p-3 border rounded-lg cursor-pointer transition-all ${
+                          formData.accountType === type.value
+                            ? 'border-emerald-500 bg-emerald-50'
+                            : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="accountType"
+                          value={type.value}
+                          checked={formData.accountType === type.value}
+                          onChange={handleChange}
+                          className="text-emerald-600 focus:ring-emerald-500"
+                        />
+                        <div>
+                          <p className="text-sm font-medium text-slate-700">{type.label}</p>
+                          <p className="text-[10px] text-slate-400">{type.description}</p>
+                        </div>
+                      </label>
+                    ))}
                   </div>
                 </div>
-
+                
+                {/* Nom complet */}
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">{t.emailAddress}</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Nom complet *
+                  </label>
                   <div className="relative">
-                    <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" />
+                    <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      placeholder="Jean Dupont"
+                    />
+                  </div>
+                </div>
+                
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Email *
+                  </label>
+                  <div className="relative">
+                    <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-3 bg-emerald-50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"
                       required
+                      className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      placeholder="jean@exemple.com"
                     />
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">{t.password}</label>
-                    <div className="relative">
-                      <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" />
-                      <input
-                        type="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        className="w-full pl-10 pr-4 py-3 bg-emerald-50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">{t.confirmPassword}</label>
-                    <div className="relative">
-                      <ShieldCheck size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" />
-                      <input
-                        type="password"
-                        name="confirmPassword"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        className="w-full pl-10 pr-4 py-3 bg-emerald-50 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Roles Selection */}
+                
+                {/* Téléphone */}
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-emerald-600 mb-3">
-                    {t.selectProfileType}
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Téléphone
                   </label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {roleOptions.map((role) => (
-                      <div
-                        key={role.id}
-                        onClick={() => handleRoleToggle(role.id)}
-                        className={`flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                          formData.roles.includes(role.id)
-                            ? 'border-emerald-500 bg-emerald-50'
-                            : 'border-emerald-100 hover:border-emerald-200'
-                        }`}
-                      >
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 ${
-                          formData.roles.includes(role.id)
-                            ? 'bg-emerald-500 border-emerald-500'
-                            : 'border-gray-300'
-                        }`}>
-                          {formData.roles.includes(role.id) && <CheckCircle2 size={12} className="text-white" />}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-emerald-600">{role.icon}</span>
-                            <span className="font-bold text-emerald-900 text-sm">{role.label}</span>
-                          </div>
-                          <p className="text-[10px] text-emerald-600/70">{role.description}</p>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="relative">
+                    <Phone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      placeholder="+237 6XX XXX XXX"
+                    />
                   </div>
                 </div>
-
-                {/* KYC Document Upload */}
-                <div className="space-y-3">
-                  <label className="block text-[10px] font-black uppercase text-emerald-600 mb-1">
-                    {t.identityDocument}
+                
+                {/* Mot de passe */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Mot de passe *
                   </label>
-                  {!kycDocument ? (
-                    <div className="border-2 border-dashed border-emerald-200 rounded-xl p-6 text-center hover:border-emerald-400 transition-colors">
-                      <input
-                        type="file"
-                        id="kyc-document"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                      <label htmlFor="kyc-document" className="cursor-pointer">
-                        <Upload size={32} className="mx-auto text-emerald-400 mb-2" />
-                        <p className="text-xs text-emerald-600">{t.clickToUpload}</p>
-                        <p className="text-[9px] text-emerald-400 mt-1">{t.uploadHint}</p>
-                      </label>
-                    </div>
-                  ) : (
-                    <div className="bg-emerald-50 rounded-xl p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <FileText size={24} className="text-emerald-600" />
-                        <div>
-                          <p className="text-sm font-medium text-emerald-900">{kycDocument.name}</p>
-                          <p className="text-[9px] text-emerald-500">{(kycDocument.size / 1024 / 1024).toFixed(2)} {t.fileSize}</p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={removeFile}
-                        className="p-1 hover:bg-emerald-100 rounded-full transition-colors"
-                      >
-                        <X size={18} className="text-emerald-600" />
-                      </button>
-                    </div>
-                  )}
-                  <p className="text-[9px] text-amber-600 flex items-center gap-1">
-                    <ShieldCheck size={12} /> {t.requiredForVerification}
-                  </p>
+                  <div className="relative">
+                    <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      required
+                      className="w-full pl-10 pr-10 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
-
+                
+                {/* Confirmer mot de passe */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Confirmer le mot de passe *
+                  </label>
+                  <div className="relative">
+                    <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      required
+                      className="w-full pl-10 pr-10 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Société (optionnel) */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Société / Organisation
+                  </label>
+                  <div className="relative">
+                    <Building2 size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      name="company"
+                      value={formData.company}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      placeholder="Votre société"
+                    />
+                  </div>
+                </div>
+                
+                {/* Poste */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Poste / Fonction
+                  </label>
+                  <div className="relative">
+                    <Briefcase size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      name="position"
+                      value={formData.position}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      placeholder="Votre poste"
+                    />
+                  </div>
+                </div>
+                
+                {/* Ville */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Ville
+                  </label>
+                  <div className="relative">
+                    <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      placeholder="Douala, Yaoundé..."
+                    />
+                  </div>
+                </div>
+                
+                {/* Pays */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Pays
+                  </label>
+                  <div className="relative">
+                    <Globe size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      name="country"
+                      value={formData.country}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      placeholder="Cameroun"
+                    />
+                  </div>
+                </div>
+                
+                {/* Bouton d'inscription */}
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 bg-emerald-800 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-emerald-900 transition-all disabled:opacity-50 flex items-center justify-center gap-2 group"
+                  className="w-full py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {loading ? (
-                    <Loader2 className="animate-spin" size={20} />
-                  ) : (
-                    <>
-                      {t.registerSubmit}
-                      <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
+                  {loading ? <Loader2 size={20} className="animate-spin" /> : <User size={20} />}
+                  {loading ? 'Inscription en cours...' : 'Créer mon compte'}
                 </button>
-              </form>
-
-              <div className="mt-6 pt-4 border-t border-emerald-100 text-center">
-                <p className="text-[10px] text-emerald-500">
-                  {t.alreadyHaveAccount}{' '}
-                  <Link to="/login" className="font-bold text-emerald-700 hover:text-emerald-900 underline">
-                    {t.signIn}
+                
+                <p className="text-center text-sm text-slate-500">
+                  Déjà un compte ?{' '}
+                  <Link to="/login" className="text-emerald-600 hover:underline font-medium">
+                    Se connecter
                   </Link>
                 </p>
-              </div>
-
+              </form>
             </div>
           </div>
         </div>
       </div>
-
-      <Footer />
     </div>
   );
 };
