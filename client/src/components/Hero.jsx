@@ -110,7 +110,7 @@ const Hero = () => {
 
   // Images disponibles initiales avec liens et labels traduits dynamiquement
   const getInitialImages = () => [
-    { id: 'img0', src: '/images/heroimo.webp', label: t.realEstateLabel, alt: t.realEstateLabel, link: getPathWithLang('/real-estate') },
+    { id: 'img0', src: '/images/heroimo.jpg', label: t.realEstateLabel, alt: t.realEstateLabel, link: getPathWithLang('/real-estate') },
     { id: 'img1', src: '/images/heroagri.webp', label: t.agricultureLabel, alt: t.agricultureLabel, link: getPathWithLang('/agriculture') },
     { id: 'img2', src: '/images/lifstock.jfif', label: t.livestockLabel, alt: t.livestockLabel, link: getPathWithLang('/agriculture/livestock') }
   ];
