@@ -22,11 +22,18 @@ const Overview = () => {
   });
   const [pendingValidations, setPendingValidations] = useState([]);
 
+  // Récupère l'ID utilisateur, peu importe si c'est _id ou id
+  const getUserId = () => {
+    return user?._id || user?.id || null;
+  };
+
   // Load dashboard data
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
+
+      const userId = getUserId();
       
       let propertiesCount = 0;
       let investmentsCount = 0;
@@ -38,9 +45,9 @@ const Overview = () => {
       let agricultureValue = 0;
       
       // Load properties (if OWNER)
-      if (activeRoles.includes('OWNER') && user) {
+      if (activeRoles.includes('OWNER') && userId) {
         try {
-          const propertiesRes = await api.getPropertiesByOwner(user._id);
+          const propertiesRes = await api.getPropertiesByOwner(userId);
           propertiesCount = propertiesRes.properties?.length || 0;
         } catch (err) {
           console.error('Error fetching properties:', err);
@@ -48,16 +55,14 @@ const Overview = () => {
       }
       
       // Load livestock (if LIVESTOCK_OWNER)
-      if (activeRoles.includes('LIVESTOCK_OWNER') && user) {
+      if (activeRoles.includes('LIVESTOCK_OWNER') && userId) {
         try {
           // Récupérer tous les animaux (le backend filtrera par owner via le token)
           const livestockRes = await api.getAllLivestock();
           let livestock = livestockRes.items || livestockRes.livestock || [];
           
           // Filtrer par propriétaire si nécessaire
-          if (user && user._id) {
-            livestock = livestock.filter(item => item.owner?._id === user._id || item.owner === user._id);
-          }
+          livestock = livestock.filter(item => item.owner?._id === userId || item.owner === userId);
           
           livestockCount = livestock.length;
           
@@ -73,15 +78,13 @@ const Overview = () => {
       }
       
       // Load agriculture products (if AGRICULTURE_OWNER)
-      if (activeRoles.includes('AGRICULTURE_OWNER') && user) {
+      if (activeRoles.includes('AGRICULTURE_OWNER') && userId) {
         try {
           const agricultureRes = await api.getAgriculturalProducts();
           let agriculture = agricultureRes.items || agricultureRes.products || [];
           
           // Filtrer par propriétaire si nécessaire
-          if (user && user._id) {
-            agriculture = agriculture.filter(item => item.owner?._id === user._id || item.owner === user._id);
-          }
+          agriculture = agriculture.filter(item => item.owner?._id === userId || item.owner === userId);
           
           agricultureCount = agriculture.length;
           
@@ -101,8 +104,8 @@ const Overview = () => {
         try {
           const investmentsRes = await api.getInvestments();
           let investments = investmentsRes.items || investmentsRes.investments || [];
-          if (user && user._id) {
-            investments = investments.filter(inv => inv.investor === user._id);
+          if (userId) {
+            investments = investments.filter(inv => inv.investor === userId);
           }
           investmentsCount = investments.length;
           
@@ -121,9 +124,9 @@ const Overview = () => {
         try {
           const transactionsRes = await api.getTransactions();
           let transactions = transactionsRes.items || transactionsRes.transactions || [];
-          if (user && user._id) {
+          if (userId) {
             transactions = transactions.filter(t => 
-              (t.from === user._id || t.to === user._id) && 
+              (t.from === userId || t.to === userId) && 
               (t.type === 'PROPERTY_PURCHASE' || t.type === 'SOURCE_PAYMENT')
             );
           }
@@ -137,9 +140,9 @@ const Overview = () => {
       try {
         const docsRes = await api.getDocuments();
         let documents = docsRes.items || docsRes.documents || [];
-        if (user && user._id) {
+        if (userId) {
           documents = documents.filter(doc => 
-            doc.uploadedBy === user._id && doc.status === 'PENDING'
+            doc.uploadedBy === userId && doc.status === 'PENDING'
           );
         }
         setPendingValidations(documents.slice(0, 3));
@@ -212,8 +215,14 @@ const Overview = () => {
   };
 
   useEffect(() => {
-    if (user) {
+    // Attendre que l'utilisateur soit chargé avant de faire les appels API
+    const userId = getUserId();
+    if (user && userId) {
       fetchDashboardData();
+    } else if (user && !userId) {
+      // L'utilisateur est chargé mais sans ID exploitable : on arrête le loading
+      // sans appeler l'API pour éviter le crash "owner/undefined"
+      setLoading(false);
     }
   }, [activeRoles, user]);
 

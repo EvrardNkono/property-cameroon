@@ -23,7 +23,8 @@ import {
   Package,
   Newspaper,
   Edit3,
-  Image
+  Image,
+  ChevronRight  // ← AJOUTER CECI
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
