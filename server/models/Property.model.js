@@ -89,12 +89,20 @@ const propertySchema = new mongoose.Schema({
     bakeries: { count: { type: Number, default: 0 }, names: [{ type: String }] }
   },
 
-  // ✅ Cache des traductions persisté en base MongoDB
-  // Tes données source sont en anglais (EN).
-  // Ce champ stocke les traductions déjà effectuées pour éviter de rappeler Google Translate.
-  // Structure : { "fr": { title, description, location: { city, region, district } }, "de": {...} }
-  // Peuplé automatiquement par le controller à la première requête dans chaque langue.
-  // Invalidé automatiquement si title/description/location sont modifiés (voir updateProperty).
+  // Cache des traductions - MAINTENANT inclut les amenities
+  // Structure: { 
+  //   "fr": { 
+  //     title: "Maison moderne",
+  //     description: "Belle maison...",
+  //     location: { city: "Douala", region: "Littoral", district: "Bonapriso" },
+  //     amenities: {
+  //       schools: { count: 3, names: ["Lycée Fustel", "Collège de la Salle"] },
+  //       markets: { count: 2, names: ["Carrefour Market", "Super U"] },
+  //       stations: { count: 1, names: ["Total"] },
+  //       bakeries: { count: 2, names: ["Boulangerie des Délices", "Pain Chaud"] }
+  //     }
+  //   }
+  // }
   translations: {
     type: Map,
     of: mongoose.Schema.Types.Mixed,

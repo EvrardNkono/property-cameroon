@@ -6,7 +6,7 @@
 // - Si lang=fr (ou autre) → on cherche d'abord dans translations.{lang} en base (cache persistant)
 //   → si trouvé : on l'utilise directement (0 appel Google Translate)
 //   → si absent : on traduit via google-translate-api-x, on stocke en base, on retourne le résultat
-// - La librairie google-translate-api-x est celle déjà utilisée dans translateMiddleware.js
+// - Les amenities (écoles, commerces, stations, boulangeries) sont maintenant traduites également
 
 import Property from '../models/Property.model.js';
 import translate from 'google-translate-api-x';
@@ -34,6 +34,47 @@ async function translateText(text, targetLang) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Traduit les amenities (écoles, commerces, stations, boulangeries)
+// ─────────────────────────────────────────────────────────────
+async function translateAmenities(amenities, targetLang) {
+  if (!amenities || targetLang === 'en') {
+    return amenities || {
+      schools:  { count: 0, names: [] },
+      markets:  { count: 0, names: [] },
+      stations: { count: 0, names: [] },
+      bakeries: { count: 0, names: [] }
+    };
+  }
+
+  const categories = ['schools', 'markets', 'stations', 'bakeries'];
+  const translatedAmenities = {};
+
+  for (const category of categories) {
+    const categoryData = amenities[category];
+    
+    if (!categoryData || !categoryData.names || categoryData.names.length === 0) {
+      translatedAmenities[category] = { 
+        count: categoryData?.count || 0, 
+        names: [] 
+      };
+      continue;
+    }
+
+    // Traduire chaque nom dans la catégorie
+    const translatedNames = await Promise.all(
+      categoryData.names.map(name => translateText(name, targetLang))
+    );
+
+    translatedAmenities[category] = {
+      count: categoryData.count || 0,
+      names: translatedNames
+    };
+  }
+
+  return translatedAmenities;
+}
+
+// ─────────────────────────────────────────────────────────────
 // Normalise les amenities (repris de ton code original)
 // ─────────────────────────────────────────────────────────────
 function sanitizeAmenities(property) {
@@ -58,6 +99,7 @@ function sanitizeAmenities(property) {
 
 // ─────────────────────────────────────────────────────────────
 // Fonction principale : applique la traduction avec cache MongoDB
+// MAINTENANT INCLUT LES AMENITIES
 // ─────────────────────────────────────────────────────────────
 async function applyTranslation(property, targetLang) {
   const doc = property.toObject ? property.toObject() : { ...property };
@@ -74,7 +116,7 @@ async function applyTranslation(property, targetLang) {
 
   const cached = translationsMap[targetLang];
 
-  // Cache présent et valide → retourner directement
+  // Cache présent et valide → retourner directement (AVEC amenities)
   if (cached && cached.title) {
     return sanitizeAmenities({
       ...doc,
@@ -82,24 +124,29 @@ async function applyTranslation(property, targetLang) {
       description: cached.description ?? doc.description,
       location:    cached.location
         ? { ...doc.location, ...cached.location }
-        : doc.location
+        : doc.location,
+      amenities:   cached.amenities || doc.amenities  // ← Utiliser les amenities du cache
     });
   }
 
-  // Pas de cache → traduire les champs textuels
+  // Pas de cache → traduire les champs textuels (y compris amenities)
   try {
-    const [title, description, city, region, district] = await Promise.all([
+    console.log(`[translate] Translating property ${doc._id} to ${targetLang}...`);
+    
+    const [title, description, city, region, district, translatedAmenities] = await Promise.all([
       translateText(doc.title,              targetLang),
       translateText(doc.description,        targetLang),
       translateText(doc.location?.city,     targetLang),
       translateText(doc.location?.region,   targetLang),
-      translateText(doc.location?.district, targetLang)
+      translateText(doc.location?.district, targetLang),
+      translateAmenities(doc.amenities,     targetLang)  // ← Traduire les amenities
     ]);
 
     const cacheEntry = {
       title,
       description,
-      location: { city, region, district }
+      location: { city, region, district },
+      amenities: translatedAmenities  // ← Stocker les amenities dans le cache
     };
 
     // Stocker en base de façon asynchrone (ne bloque pas la réponse)
@@ -111,15 +158,18 @@ async function applyTranslation(property, targetLang) {
       console.error(`[property] Cache write failed for ${doc._id}:`, err.message)
     );
 
+    console.log(`[translate] Successfully translated property ${doc._id} to ${targetLang}`);
+
     return sanitizeAmenities({
       ...doc,
       title,
       description,
-      location: { ...doc.location, city, region, district }
+      location: { ...doc.location, city, region, district },
+      amenities: translatedAmenities  // ← Retourner les amenities traduites
     });
 
   } catch (err) {
-    console.error(`[property] Translation failed for ${doc._id}:`, err.message);
+    console.error(`[translate] Translation failed for ${doc._id}:`, err.message);
     return sanitizeAmenities(doc); // fallback : données brutes
   }
 }
@@ -204,7 +254,8 @@ export const updateProperty = async (req, res) => {
     const updateData = { ...req.body };
 
     // Si le contenu textuel change, invalider le cache de traductions
-    if (req.body.title || req.body.description || req.body.location) {
+    // Inclure amenities dans l'invalidation
+    if (req.body.title || req.body.description || req.body.location || req.body.amenities) {
       updateData.translations = {};
     }
 
