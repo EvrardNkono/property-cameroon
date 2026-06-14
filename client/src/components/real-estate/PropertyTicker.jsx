@@ -26,7 +26,7 @@ const BACKEND_URL = isDevelopment
   ? 'http://localhost:5000'
   : 'https://property-cameroon-backend.vercel.app';
 
-const PropertyTicker = ({ properties, interval = 10000 }) => { // 10 secondes par défaut
+const PropertyTicker = ({ properties, interval = 10000 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const currentLang = useCurrentLang();
@@ -56,7 +56,6 @@ const PropertyTicker = ({ properties, interval = 10000 }) => { // 10 secondes pa
   const price = currentProperty.price?.amount?.toLocaleString() || 0;
   const location = currentProperty.location?.city || '';
 
-  // Changement automatique toutes les X secondes
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
@@ -71,101 +70,103 @@ const PropertyTicker = ({ properties, interval = 10000 }) => { // 10 secondes pa
     };
   }, [startTimer]);
 
-  // Fermer le ticker
   const handleClose = (e) => {
     e.preventDefault();
     e.stopPropagation();
     setIsVisible(false);
-    // Arrêter le timer
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
   };
 
-  // Réouvrir (optionnel - si besoin plus tard)
-  const handleReopen = () => {
-    setIsVisible(true);
-    startTimer();
-  };
-
   if (!isVisible) return null;
 
   return (
     <>
-      {/* Bandeau flottant */}
-      <div className="fixed bottom-6 right-6 z-40 group">
-        <Link
-          to={`/real-estate/${currentProperty._id || currentProperty.id}`}
-          className="block"
-        >
-          {/* Bandeau compact */}
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-100 overflow-hidden hover:shadow-xl transition-all duration-300 max-w-sm relative">
-            {/* Bouton de fermeture */}
-            <button
-              onClick={handleClose}
-              className="absolute top-2 right-2 w-5 h-5 rounded-full bg-slate-100 hover:bg-red-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-300 z-10"
-              aria-label="Fermer"
-            >
-              <X size={10} />
-            </button>
+      {/* Bandeau flottant - Responsive */}
+      <div className="fixed z-40 group">
+        {/* Positions responsives */}
+        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 md:bottom-8 md:right-8">
+          <Link
+            to={`/real-estate/${currentProperty._id || currentProperty.id}`}
+            className="block"
+          >
+            {/* Bandeau - Largeur responsive */}
+            <div className="bg-white/95 backdrop-blur-md rounded-xl sm:rounded-2xl shadow-2xl border border-slate-100 overflow-hidden hover:shadow-xl transition-all duration-300 relative">
+              
+              {/* Bouton de fermeture - repositionné */}
+              <button
+                onClick={handleClose}
+                className="absolute top-1 right-1 sm:top-2 sm:right-2 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-slate-100 hover:bg-red-500 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-300 z-10"
+                aria-label="Fermer"
+              >
+                <X size={8} className="sm:w-[10px] sm:h-[10px]" />
+              </button>
 
-            <div className="flex items-center gap-3 p-3 pr-8">
-              {/* Mini image */}
-              <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 shrink-0">
-                {imageUrl && (
-                  <img
-                    src={imageUrl}
-                    alt={currentProperty.title}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-              </div>
-
-              {/* Infos */}
-              <div className="flex-1 min-w-0">
-                {/* Titre défilant (de droite à gauche) */}
-                <div className="overflow-hidden">
-                  <div className="animate-slide whitespace-nowrap">
-                    <h4 className="text-sm font-semibold text-slate-800 inline-block">
-                      {currentProperty.title}
-                    </h4>
-                  </div>
-                </div>
-
-                {/* Prix et localisation */}
-                <div className="flex items-center gap-2 mt-1">
-                  <span className={`text-xs font-bold ${isSale ? 'text-pc-gold' : 'text-pc-green'}`}>
-                    {price} FCFA {!isSale && <span className="text-[9px]">/mois</span>}
-                  </span>
-                  {location && (
-                    <>
-                      <span className="text-slate-300 text-[8px]">•</span>
-                      <div className="flex items-center gap-0.5">
-                        <MapPin size={8} className="text-slate-400" />
-                        <span className="text-[9px] text-slate-500 truncate max-w-[100px]">{location}</span>
-                      </div>
-                    </>
+              {/* Contenu responsive */}
+              <div className="flex items-center gap-2 sm:gap-3 p-2 pr-5 sm:p-3 sm:pr-8">
+                
+                {/* Mini image - taille responsive */}
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden bg-slate-100 shrink-0">
+                  {imageUrl && (
+                    <img
+                      src={imageUrl}
+                      alt={currentProperty.title}
+                      className="w-full h-full object-cover"
+                    />
                   )}
                 </div>
 
-                {/* Badge */}
-                <div className="mt-1">
-                  <span className={`text-[7px] px-1.5 py-0.5 rounded-full font-bold uppercase ${
-                    isSale ? 'bg-pc-gold/10 text-pc-gold' : 'bg-slate-100 text-slate-600'
-                  }`}>
-                    {isSale ? 'À VENDRE' : 'À LOUER'}
-                  </span>
+                {/* Infos */}
+                <div className="flex-1 min-w-0">
+                  {/* Titre défilant */}
+                  <div className="overflow-hidden max-w-[120px] sm:max-w-[180px] md:max-w-[200px]">
+                    <div className="animate-slide whitespace-nowrap">
+                      <h4 className="text-xs sm:text-sm font-semibold text-slate-800 inline-block">
+                        {currentProperty.title.length > 30 
+                          ? currentProperty.title.substring(0, 30) + '...' 
+                          : currentProperty.title}
+                      </h4>
+                    </div>
+                  </div>
+
+                  {/* Prix et localisation - responsive */}
+                  <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-0.5 sm:mt-1">
+                    <span className={`text-[10px] sm:text-xs font-bold ${isSale ? 'text-pc-gold' : 'text-pc-green'}`}>
+                      {price} FCFA {!isSale && <span className="text-[7px] sm:text-[9px]">/mois</span>}
+                    </span>
+                    {location && (
+                      <>
+                        <span className="text-slate-300 text-[6px] sm:text-[8px] hidden sm:inline">•</span>
+                        <div className="flex items-center gap-0.5">
+                          <MapPin size={6} className="sm:w-2 sm:h-2 text-slate-400" />
+                          <span className="text-[7px] sm:text-[9px] text-slate-500 truncate max-w-[60px] sm:max-w-[100px]">
+                            {location.length > 15 ? location.substring(0, 15) + '...' : location}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Badge */}
+                  <div className="mt-0.5 sm:mt-1">
+                    <span className={`text-[6px] sm:text-[7px] px-1 sm:px-1.5 py-0.5 rounded-full font-bold uppercase ${
+                      isSale ? 'bg-pc-gold/10 text-pc-gold' : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      {isSale ? 'VENTE' : 'LOCATION'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Flèche */}
+                <div className="text-slate-300 group-hover:text-pc-gold transition-colors -mr-1 sm:mr-0">
+                  <ChevronRight size={12} className="sm:w-4 sm:h-4" />
                 </div>
               </div>
-
-              {/* Flèche */}
-              <div className="text-slate-300 group-hover:text-pc-gold transition-colors">
-                <ChevronRight size={16} />
-              </div>
             </div>
-          </div>
-        </Link>
+          </Link>
+        </div>
       </div>
 
       {/* Animations */}
@@ -179,9 +180,14 @@ const PropertyTicker = ({ properties, interval = 10000 }) => { // 10 secondes pa
           }
         }
         .animate-slide {
-          animation: slideRightToLeft 10s linear infinite;
+          animation: slideRightToLeft 8s linear infinite;
           display: inline-block;
           padding-right: 100%;
+        }
+        
+        /* Pause animation on hover */
+        .group:hover .animate-slide {
+          animation-play-state: paused;
         }
       `}</style>
     </>
