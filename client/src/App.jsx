@@ -1,9 +1,11 @@
 // frontend/src/App.jsx
-import React, { Suspense, lazy, useEffect } from 'react';
-import { Routes, Route, useParams, useLocation } from 'react-router-dom'; // ← Enlève BrowserRouter
+import React, { Suspense, lazy, useEffect, useState } from 'react';
+import { Routes, Route, useParams, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
-import WhatsAppButton from './components/WhatsAppButton'; // 👈 Ajout de l'import
+import WhatsAppButton from './components/WhatsAppButton';
+import PropertyTicker from './components/real-estate/PropertyTicker';
+import api from './services/api';
 
 // --- PAGES PUBLIQUES ---
 const Home                = lazy(() => import('./pages/Home'));
@@ -92,10 +94,7 @@ const RouteChangeHandler = ({ children }) => {
   const location = useLocation();
   
   useEffect(() => {
-    // Scroll en haut à chaque changement de route
     window.scrollTo(0, 0);
-    
-    // Force le reflow des composants lazy
     const timer = setTimeout(() => {
       window.dispatchEvent(new Event('resize'));
     }, 50);
@@ -124,6 +123,25 @@ const globalStyles = `
 `;
 
 function App() {
+  const [allProperties, setAllProperties] = useState([]);
+  const [propertiesLoaded, setPropertiesLoaded] = useState(false);
+
+  // Récupérer les propriétés pour le ticker
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        const response = await api.getProperties({ status: 'PUBLISHED', limit: 20 });
+        const properties = response.properties || response.data?.properties || [];
+        setAllProperties(properties);
+      } catch (error) {
+        console.error('Error fetching properties for ticker:', error);
+      } finally {
+        setPropertiesLoaded(true);
+      }
+    };
+    fetchProperties();
+  }, []);
+
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = globalStyles;
@@ -192,6 +210,11 @@ function App() {
             </Suspense>
           </RouteChangeHandler>
         </div>
+
+        {/* Property Ticker - Visible sur toutes les pages (sauf dashboard peut-être) */}
+        {propertiesLoaded && allProperties.length > 0 && (
+          <PropertyTicker properties={allProperties} interval={120000} />
+        )}
 
         {/* WhatsApp Button - Visible sur toutes les pages */}
         <WhatsAppButton />
