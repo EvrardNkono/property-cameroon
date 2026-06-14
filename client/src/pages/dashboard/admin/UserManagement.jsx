@@ -413,7 +413,7 @@ const UserManagement = () => {
           onConfirm={handleBanUser} 
         />
       )}
-      {/* UserVerificationModal SUPPRIMÉ */}
+      {/* UserVer ificationModal SUPPRIMÉ */}
 
     </div>
   );
