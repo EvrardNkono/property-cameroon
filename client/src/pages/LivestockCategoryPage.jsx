@@ -6,7 +6,7 @@ import {
   TrendingUp, Info, Loader2, Filter, Grid3x3, List, Heart, Share2,
   DollarSign, ShieldCheck, Droplets, Sun, AlertCircle, CheckCircle,
   Clock, Users, Award, Zap, BarChart3, Calculator, X, Plus,
-  TrendingDown, Activity, Briefcase, Target, Calendar
+  TrendingDown, Activity, Briefcase, Target, Calendar, MessageCircle
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -34,10 +34,8 @@ const useCurrentLang = () => {
       setLang(finalLang);
     };
     
-    // Écouter les changements d'URL
     window.addEventListener('popstate', handleLangChange);
     
-    // Observer les changements de localStorage
     const storageListener = (e) => {
       if (e.key === 'preferredLanguage') {
         handleLangChange();
@@ -153,7 +151,7 @@ const LivestockCategoryPage = () => {
   const [calculatorInput, setCalculatorInput] = useState({ amount: 1000000, months: 12 });
   const [hoveredCard, setHoveredCard] = useState(null);
 
-  // ========== TRADUCTIONS - CORRIGÉ avec useMemo ==========
+  // ========== TRADUCTIONS ==========
   const t = useMemo(() => {
     const translations = {
       fr: {
@@ -221,7 +219,7 @@ const LivestockCategoryPage = () => {
         
         // Filters
         sortByRoi: "ROI le plus élevé",
-        sortByPrice: "Valeur la plus élevée",
+        sortByValue: "Valeur la plus élevée",
         sortByCapacity: "Plus grande capacité",
         allRoiLevels: "Tous les niveaux de ROI",
         low: "Faible (0% - 15%)",
@@ -229,7 +227,7 @@ const LivestockCategoryPage = () => {
         high: "Élevé (25%+)",
         
         // Asset card
-        unitValue: "Valeur unitaire",
+        customQuote: "Sur devis",
         capacity: "Capacité",
         cycle: "Cycle",
         water: "Eau",
@@ -237,8 +235,9 @@ const LivestockCategoryPage = () => {
         vet: "Vétérinaire",
         feedStorage: "Stockage aliment",
         viewDetails: "Voir détails",
-        projectedWithReinvestment: "Projection avec réinvestissement",
+        talkToExpert: "Parler avec un expert",
         location: "Localisation",
+        requestQuote: "Demander un devis",
         
         // Compare
         compareAssets: "Comparer les actifs",
@@ -265,7 +264,8 @@ const LivestockCategoryPage = () => {
         categoryNotFound: "Catégorie non trouvée",
         
         // Badges
-        projected: "Projection"
+        projected: "Projection",
+        contactExpert: "Contacter un expert"
       },
       en: {
         // Navigation
@@ -332,7 +332,7 @@ const LivestockCategoryPage = () => {
         
         // Filters
         sortByRoi: "Highest ROI",
-        sortByPrice: "Highest Value",
+        sortByValue: "Highest Value",
         sortByCapacity: "Largest Capacity",
         allRoiLevels: "All ROI levels",
         low: "Low (0% - 15%)",
@@ -340,7 +340,7 @@ const LivestockCategoryPage = () => {
         high: "High (25%+)",
         
         // Asset card
-        unitValue: "Unit Value",
+        customQuote: "Custom quote",
         capacity: "Capacity",
         cycle: "Cycle",
         water: "Water",
@@ -348,8 +348,9 @@ const LivestockCategoryPage = () => {
         vet: "Vet",
         feedStorage: "Feed storage",
         viewDetails: "View details",
-        projectedWithReinvestment: "Projected with reinvestment",
+        talkToExpert: "Talk to an expert",
         location: "Location",
+        requestQuote: "Request a quote",
         
         // Compare
         compareAssets: "Compare Assets",
@@ -376,14 +377,15 @@ const LivestockCategoryPage = () => {
         categoryNotFound: "Category not found",
         
         // Badges
-        projected: "Projected"
+        projected: "Projected",
+        contactExpert: "Contact an expert"
       }
     };
     
     return translations[currentLang] || translations.fr;
   }, [currentLang]);
 
-  // ========== Fonction pour obtenir les données d'investissement traduites - CORRIGÉE ==========
+  // ========== Fonction pour obtenir les données d'investissement traduites ==========
   const getInvestmentData = useCallback((slug) => {
     const baseData = {
       aquaculture: {
@@ -393,7 +395,7 @@ const LivestockCategoryPage = () => {
         taxAdvantage: t.taxAdvantageAquaculture,
         marketDrivers: [t.marketDriver1Aqua, t.marketDriver2Aqua, t.marketDriver3Aqua],
         roiRange: "18-35%",
-        minInvestment: "2,500,000 FCFA"
+        minInvestment: t.customQuote
       },
       poultry: {
         why: t.investWhyPoultry,
@@ -402,7 +404,7 @@ const LivestockCategoryPage = () => {
         taxAdvantage: t.taxAdvantagePoultry,
         marketDrivers: [t.marketDriver1Poultry, t.marketDriver2Poultry, t.marketDriver3Poultry],
         roiRange: "22-40%",
-        minInvestment: "4,000,000 FCFA"
+        minInvestment: t.customQuote
       },
       cattle: {
         why: t.investWhyCattle,
@@ -411,7 +413,7 @@ const LivestockCategoryPage = () => {
         taxAdvantage: t.taxAdvantageCattle,
         marketDrivers: [t.marketDriver1Cattle, t.marketDriver2Cattle, t.marketDriver3Cattle],
         roiRange: "8-18%",
-        minInvestment: "14,000,000 FCFA"
+        minInvestment: t.customQuote
       },
       pigs: {
         why: t.investWhyPigs,
@@ -420,7 +422,7 @@ const LivestockCategoryPage = () => {
         taxAdvantage: t.taxAdvantagePigs,
         marketDrivers: [t.marketDriver1Pigs, t.marketDriver2Pigs, t.marketDriver3Pigs],
         roiRange: "18-30%",
-        minInvestment: "9,500,000 FCFA"
+        minInvestment: t.customQuote
       },
       goats: {
         why: t.investWhyGoats,
@@ -429,7 +431,7 @@ const LivestockCategoryPage = () => {
         taxAdvantage: t.taxAdvantageGoats,
         marketDrivers: [t.marketDriver1Goats, t.marketDriver2Goats, t.marketDriver3Goats],
         roiRange: "22-38%",
-        minInvestment: "5,000,000 FCFA"
+        minInvestment: t.customQuote
       }
     };
     
@@ -443,7 +445,7 @@ const LivestockCategoryPage = () => {
     return `${BACKEND_URL}/uploads/livestock/${image}`;
   }, []);
 
-  // ========== FETCH CATEGORY DATA - CORRIGÉ avec useCallback ==========
+  // ========== FETCH CATEGORY DATA ==========
   const fetchCategoryData = useCallback(async () => {
     try {
       setLoading(true);
@@ -520,7 +522,7 @@ const LivestockCategoryPage = () => {
     
     filtered.sort((a, b) => {
       if (sortBy === 'roi') return (b.roi || 0) - (a.roi || 0);
-      if (sortBy === 'price') return (b.price?.amount || 0) - (a.price?.amount || 0);
+      if (sortBy === 'value') return (b.price?.amount || 0) - (a.price?.amount || 0);
       if (sortBy === 'capacity') return (b.capacity?.value || 0) - (a.capacity?.value || 0);
       return 0;
     });
@@ -699,21 +701,21 @@ const LivestockCategoryPage = () => {
                 </div>
                 <div>
                   <p className="text-[10px] uppercase text-white/40">{t.totalValue}</p>
-                  <p className="text-sm font-bold">{(totalValue / 1000000).toFixed(0)}M FCFA</p>
+                  <p className="text-sm font-bold">{t.customQuote}</p>
                 </div>
                 <div>
                   <p className="text-[10px] uppercase text-white/40">{t.minInvestment}</p>
-                  <p className="text-sm font-bold">{categoryData.investData?.minInvestment || t.contactUs}</p>
+                  <p className="text-sm font-bold">{categoryData.investData?.minInvestment || t.customQuote}</p>
                 </div>
               </div>
 
-              <button
-                onClick={() => setShowCalculator(true)}
+              <Link
+                to="/experts"
                 className={`w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all bg-white/10 hover:bg-white/20`}
               >
-                <Calculator size={16} />
-                {t.calculateMyRoi}
-              </button>
+                <MessageCircle size={16} />
+                {t.talkToExpert}
+              </Link>
             </div>
             
             <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:scale-110 transition-transform duration-700">
@@ -828,7 +830,7 @@ const LivestockCategoryPage = () => {
           <div className="flex gap-2 flex-wrap">
             {[
               { id: 'roi', label: t.sortByRoi, icon: <TrendingUp size={12} /> },
-              { id: 'price', label: t.sortByPrice, icon: <DollarSign size={12} /> },
+              { id: 'value', label: t.sortByValue, icon: <DollarSign size={12} /> },
               { id: 'capacity', label: t.sortByCapacity, icon: <Users size={12} /> }
             ].map(opt => (
               <button 
@@ -952,13 +954,19 @@ const LivestockCategoryPage = () => {
                     {asset.title}
                   </h3>
                   
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-3 gap-4 mb-5 pt-4 border-t border-gray-100">
+                  {/* Stats Grid - SANS PRIX */}
+                  <div className="grid grid-cols-2 gap-4 mb-5 pt-4 border-t border-gray-100">
                     <div>
-                      <p className="text-[8px] font-bold uppercase text-gray-400 tracking-wider">{t.unitValue}</p>
-                      <p className="text-base font-bold text-gray-900">
-                        {(asset.price?.amount / 1000000).toFixed(1)}M <span className="text-[8px] text-gray-400">FCFA</span>
-                      </p>
+                      <p className="text-[8px] font-bold uppercase text-gray-400 tracking-wider">{t.customQuote}</p>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate('/experts');
+                        }}
+                        className={`text-xs font-bold ${categoryData.color} hover:underline flex items-center gap-1 mt-1`}
+                      >
+                        {t.requestQuote} <ChevronRight size={10} />
+                      </button>
                     </div>
                     <div>
                       <p className="text-[8px] font-bold uppercase text-gray-400 tracking-wider">{t.capacity}</p>
@@ -1009,15 +1017,14 @@ const LivestockCategoryPage = () => {
                         <Share2 size={14} />
                       </div>
                     </div>
-                    <button 
+                    <Link
+                      to="/experts"
+                      onClick={(e) => e.stopPropagation()}
                       className={`flex items-center gap-2 px-4 py-2 rounded-full text-[9px] font-bold uppercase tracking-wide text-white transition-all ${categoryData.buttonColor}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/agriculture/livestock/${category}/${asset.id}`);
-                      }}
                     >
-                      {t.viewDetails} <ChevronRight size={12} />
-                    </button>
+                      <MessageCircle size={12} />
+                      {t.talkToExpert}
+                    </Link>
                   </div>
                 </div>
 
@@ -1030,7 +1037,7 @@ const LivestockCategoryPage = () => {
                       exit={{ opacity: 0, y: 10 }}
                       className={`absolute bottom-20 right-6 ${categoryData.badgeColor} px-3 py-1.5 rounded-lg shadow-lg text-xs font-bold`}
                     >
-                      {t.projectedWithReinvestment}: +{((asset.roi || 0) * 1.15).toFixed(0)}%
+                      {t.projected}: +{((asset.roi || 0) * 1.15).toFixed(0)}%
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -1095,8 +1102,10 @@ const LivestockCategoryPage = () => {
                           <span className="font-bold text-emerald-600">+{asset.roi}%</span>
                         </div>
                         <div className="flex justify-between py-2 border-b border-gray-100">
-                          <span className="text-gray-500">{t.unitValue}</span>
-                          <span className="font-bold">{(asset.price?.amount / 1000000).toFixed(1)}M FCFA</span>
+                          <span className="text-gray-500">{t.customQuote}</span>
+                          <Link to="/experts" className="font-bold text-amber-600 text-xs underline">
+                            {t.requestQuote}
+                          </Link>
                         </div>
                         <div className="flex justify-between py-2 border-b border-gray-100">
                           <span className="text-gray-500">{t.capacity}</span>
