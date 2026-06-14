@@ -40,11 +40,11 @@ import livestockRoutes from './routes/livestock.routes.js';
 import livestockCategoryRoutes from './routes/livestockCategory.routes.js';
 import sitemapRoutes from './routes/sitemap.js';
 
-// 🌟 ROUTES BLOG
+// 🌟 NOUVELLES ROUTES BLOG
 import blogRoutes from './routes/blog.js';
 import blogCategoryRoutes from './routes/blogCategories.js';
 
-// ✅ Import des controllers upload
+// ✅ Import complet des controllers upload
 import { 
   uploadPropertyImages, 
   handlePropertyImages,
@@ -62,64 +62,35 @@ import {
 
 const app = express();
 
-// ========== ✅ CONFIGURATION CORS CORRIGÉE ==========
-// Liste des origines autorisées
-const allowedOrigins = [
-  'https://www.propertycameroon.com',
-  'https://propertycameroon.com',
-  'https://property-cameroon-frontend.vercel.app',
-  'https://property-cameroon.vercel.app',
-  'http://localhost:3000',
-  'http://localhost:5000',
-  'http://localhost:5173',
-  'http://localhost:8080'
-];
-
-// Middleware CORS personnalisé plus permissif
+// ========== CONFIGURATION CORS POUR VERCEL ==========
 app.use((req, res, next) => {
+  const allowedOrigins = [
+    'https://www.propertycameroon.com',
+    'https://propertycameroon.com',
+    'https://property-cameroon-frontend.vercel.app',
+    'https://property-cameroon.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5000',
+    'http://localhost:5173'
+  ];
+  
   const origin = req.headers.origin;
   
-  // Accepter l'origine si elle est dans la liste OU si c'est une prévisualisation Vercel
-  const isAllowedOrigin = allowedOrigins.includes(origin) || 
-                          (origin && origin.includes('vercel.app')) ||
-                          process.env.NODE_ENV !== 'production';
-  
-  if (isAllowedOrigin) {
+  if (allowedOrigins.includes(origin) || (origin && origin.includes('vercel.app')) || process.env.NODE_ENV !== 'production') {
     res.setHeader('Access-Control-Allow-Origin', origin || '*');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, X-HTTP-Method-Override');
-    res.setHeader('Access-Control-Expose-Headers', 'Content-Length, X-Requested-With, X-Total-Count');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Length, X-Requested-With');
     res.setHeader('Access-Control-Max-Age', '86400');
   }
   
-  // Répondre immédiatement aux requêtes OPTIONS (preflight)
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
   
   next();
 });
-
-// Configuration CORS avec le package cors (double sécurité)
-app.use(cors({
-  origin: function(origin, callback) {
-    // Permettre les requêtes sans origine (comme les apps mobile)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin) || origin.includes('vercel.app') || process.env.NODE_ENV !== 'production') {
-      callback(null, true);
-    } else {
-      console.log('⚠️ CORS blocked for origin:', origin);
-      // En production, on bloque. En dev, on accepte.
-      callback(null, process.env.NODE_ENV !== 'production');
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['Content-Length', 'X-Requested-With'],
-  maxAge: 86400
-}));
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -128,28 +99,6 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 if (process.env.NODE_ENV !== 'production') {
   app.use('/uploads', express.static('uploads'));
 }
-
-// ========== ROUTE TEST CORS (À PLACER EN PREMIER) ==========
-app.options('/api/*', (req, res) => {
-  const origin = req.headers.origin;
-  if (origin) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-  }
-  res.status(200).end();
-});
-
-// Route de test CORS
-app.get('/api/cors-test', (req, res) => {
-  res.json({ 
-    success: true, 
-    message: 'CORS is working!',
-    origin: req.headers.origin,
-    timestamp: new Date()
-  });
-});
 
 // ========== ROUTE DEBUG MONGO ==========
 app.get('/api/debug-mongo', async (req, res) => {
@@ -305,6 +254,7 @@ const MOCK_DATA = {
     { _id: "3", name: "Maraîchage", isActive: true, description: "Tomates, oignons, salades" },
     { _id: "4", name: "Arboriculture", isActive: true, description: "Mangues, oranges, avocats" }
   ],
+  // 🌟 AJOUT DES DONNÉES MOCK POUR LE BLOG
   blogPosts: [
     {
       _id: "1",
@@ -424,8 +374,7 @@ const connectMongoDB = async () => {
 
 // ========== MIDDLEWARE 1 : CONNEXION MONGODB ==========
 app.use('/api', async (req, res, next) => {
-  const excludedPaths = ['/debug-mongo', '/test-real-data', '/health', '/diagnostic', '/cors-test'];
-  if (excludedPaths.some(path => req.url.includes(path))) {
+  if (req.url.includes('/debug-mongo') || req.url.includes('/test-real-data') || req.url.includes('/health') || req.url.includes('/diagnostic')) {
     return next();
   }
   
@@ -439,8 +388,7 @@ app.use('/api', async (req, res, next) => {
 
 // ========== MIDDLEWARE 2 : MODE DÉGRADÉ ==========
 app.use('/api', (req, res, next) => {
-  const excludedPaths = ['/debug-mongo', '/test-real-data', '/health', '/diagnostic', '/cors-test'];
-  if (excludedPaths.some(path => req.url.includes(path))) {
+  if (req.url.includes('/debug-mongo') || req.url.includes('/test-real-data') || req.url.includes('/health') || req.url.includes('/diagnostic')) {
     return next();
   }
   
@@ -478,6 +426,7 @@ app.use('/api', (req, res, next) => {
       });
     }
     
+    // 🌟 ROUTES BLOG EN MODE DÉGRADÉ
     if (req.url.includes('/blog')) {
       if (req.url === '/blog' || req.url === '/blog/') {
         return res.json({
@@ -511,23 +460,9 @@ app.use('/api', (req, res, next) => {
         mock: true
       });
     }
-    
-    // ✅ AJOUT : Permettre la connexion même en mode dégradé
-    if (req.url.includes('/auth/me')) {
-      return res.status(401).json({
-        success: false,
-        message: "Session expirée ou utilisateur non authentifié",
-        mock: true
-      });
-    }
   }
   
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
-    // ✅ AJOUT : Permettre la connexion en mode dégradé
-    if (req.url.includes('/auth/login')) {
-      return next(); // Laisser passer la requête de login
-    }
-    
     return res.status(503).json({
       success: false,
       message: 'Service temporairement en mode dégradé. Les modifications ne sont pas disponibles.',
@@ -540,7 +475,7 @@ app.use('/api', (req, res, next) => {
 
 // ========== MIDDLEWARE 3 : TRADUCTION ==========
 app.use('/api', (req, res, next) => {
-  const excludedPaths = ['/debug-mongo', '/test-real-data', '/health', '/diagnostic', '/cors-test'];
+  const excludedPaths = ['/debug-mongo', '/test-real-data', '/health', '/diagnostic'];
   if (excludedPaths.some(path => req.url.includes(path))) {
     return next();
   }
@@ -561,10 +496,12 @@ app.use('/api/amenities', amenityRoutes);
 app.use('/api/livestock', livestockRoutes);
 app.use('/api/livestock-categories', livestockCategoryRoutes);
 app.use('/', sitemapRoutes);
+
+// 🌟 NOUVELLES ROUTES BLOG
 app.use('/api/blog', blogRoutes);
 app.use('/api/blog/categories', blogCategoryRoutes);
 
-// ========== ROUTES UPLOAD ==========
+// ========== ROUTES D'UPLOAD ==========
 app.post('/api/upload/property-images', propertyUpload.array('images', 10), handlePropertyImages);
 app.post('/api/upload/livestock-images', livestockUpload.array('images', 10), handleLivestockImages);
 app.post('/api/upload/agriculture-images', agricultureUpload.array('images', 10), handleAgricultureImages);
@@ -588,8 +525,7 @@ app.get('/api/health', (req, res) => {
     vercel_env: process.env.VERCEL === '1' ? true : false,
     mock_mode: mongoose.connection.readyState !== 1,
     translation_active: true,
-    blog_routes: 'active',
-    cors_configured: true
+    blog_routes: 'active'  // 🌟 Indique que les routes blog sont actives
   });
 });
 
@@ -610,7 +546,7 @@ app.get('/api/diagnostic', async (req, res) => {
     mongoose_version: mongoose.version,
     mock_mode_active: mongoose.connection.readyState !== 1,
     translation_middleware: 'active',
-    blog_routes: 'active',
+    blog_routes: 'active',  // 🌟 Indique que les routes blog sont actives
     routes_configured: [
       '/api/blog',
       '/api/blog/categories'
@@ -627,8 +563,7 @@ app.get('/', (req, res) => {
       blog: "/api/blog",
       blogCategories: "/api/blog/categories",
       health: "/api/health",
-      diagnostic: "/api/diagnostic",
-      corsTest: "/api/cors-test"
+      diagnostic: "/api/diagnostic"
     }
   });
 });
@@ -664,25 +599,31 @@ app.use((err, req, res, next) => {
 // ========== DÉMARRAGE ==========
 const startServer = async () => {
   console.log('🚀 Starting server...');
-  console.log('🌐 Translation middleware enabled');
-  console.log('📝 Blog routes enabled - /api/blog');
-  console.log('🔓 CORS enabled for all origins');
+  console.log('🌐 Translation middleware enabled - Auto-translates API responses');
+  console.log('📝 Blog routes enabled - /api/blog and /api/blog/categories');
   
   await new Promise(resolve => setTimeout(resolve, 2000));
   
   const connected = await connectMongoDB();
   
   if (!connected && process.env.NODE_ENV === 'production') {
-    console.log('📦 Running in MOCK MODE');
+    console.log('📦 Running in MOCK MODE - API returns sample data');
+    console.log('🔗 Go to /api/debug-mongo to test MongoDB connection');
+    console.log('🔗 Go to /api/test-real-data to see real data');
+    console.log('💡 MongoDB will auto-reconnect on first API request');
   } else if (connected) {
-    console.log('🎉 MongoDB connected!');
+    console.log('🎉 MongoDB connected! Real data is now available.');
   }
   
   if (process.env.NODE_ENV !== 'production') {
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`🔓 CORS Test: http://localhost:${PORT}/api/cors-test`);
+      console.log(`📍 http://localhost:${PORT}`);
+      console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
+      console.log(`📝 Blog API: http://localhost:${PORT}/api/blog`);
+      console.log(`🛠️ Debug MongoDB: http://localhost:${PORT}/api/debug-mongo`);
+      console.log(`📊 Test real data: http://localhost:${PORT}/api/test-real-data`);
     });
   }
 };
