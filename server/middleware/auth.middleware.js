@@ -18,7 +18,6 @@ export const protect = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'User not found' });
     }
 
-    // ✅ Log pour debug (optionnel, à retirer en production)
     console.log(`✅ User authenticated: ${req.user.email}, Roles: ${req.user.roles.join(', ')}`);
     
     next();
@@ -28,18 +27,20 @@ export const protect = async (req, res, next) => {
   }
 };
 
-// ✅ Version unique et corrigée de authorize
+// ✅ Version CORRIGÉE - Insensible à la casse
 export const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'User not authenticated' });
     }
     
-    // ✅ Log pour debug
-    console.log(`🔒 Checking authorization: User roles: [${req.user.roles.join(', ')}], Required: [${roles.join(', ')}]`);
+    // 🔥 CORRECTION : Convertir les deux côtés en minuscules pour comparaison
+    const userRoles = req.user.roles.map(role => role.toLowerCase());
+    const requiredRoles = roles.map(role => role.toLowerCase());
     
-    // ✅ Vérification correcte
-    const hasRole = req.user.roles.some(role => roles.includes(role));
+    const hasRole = userRoles.some(role => requiredRoles.includes(role));
+    
+    console.log(`🔒 Authorization check: User: ${userRoles}, Required: ${requiredRoles}, HasRole: ${hasRole}`);
     
     if (!hasRole) {
       return res.status(403).json({ 
