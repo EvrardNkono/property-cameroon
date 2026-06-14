@@ -316,13 +316,11 @@ class ApiService {
     return this.request(`/livestock-categories${query ? `?${query}` : ''}`);
   }
 
-  // 🔥 CORRIGÉ - Ajout du paramètre params pour la langue
   async getLivestockCategoryBySlug(slug, params = {}) {
     const query = new URLSearchParams(params).toString();
     return this.request(`/livestock-categories/slug/${slug}${query ? `?${query}` : ''}`);
   }
 
-  // 🔥 CORRIGÉ - Ajout du paramètre params pour la langue
   async getLivestockCategoryById(id, params = {}) {
     const query = new URLSearchParams(params).toString();
     return this.request(`/livestock-categories/${id}${query ? `?${query}` : ''}`);
@@ -360,7 +358,6 @@ class ApiService {
     return this.request(`/livestock${query ? `?${query}` : ''}`);
   }
 
-  // 🔥 CORRIGÉ - Ajout du paramètre params pour la langue
   async getLivestockByCategory(category, params = {}) {
     const query = new URLSearchParams(params).toString();
     return this.request(`/livestock/category/${category}${query ? `?${query}` : ''}`);
@@ -392,6 +389,83 @@ class ApiService {
 
   async deleteLivestock(id) {
     return this.request(`/livestock/${id}`, { method: 'DELETE' });
+  }
+
+  // ========== BLOG POSTS ==========
+  async getBlogPosts(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/blog${query ? `?${query}` : ''}`);
+  }
+
+  async getBlogPost(slug, params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/blog/${slug}${query ? `?${query}` : ''}`);
+  }
+
+  async getFeaturedPosts(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/blog/featured${query ? `?${query}` : ''}`);
+  }
+
+  // Admin Blog Methods
+  async getAllBlogPostsAdmin() {
+    return this.request('/blog/admin/all');
+  }
+
+  async createBlogPost(formData) {
+    const response = await fetch(`${API_URL}/blog`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.token}`,
+      },
+      body: formData,
+    });
+    return response.json();
+  }
+
+  async updateBlogPost(id, formData) {
+    const response = await fetch(`${API_URL}/blog/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${this.token}`,
+      },
+      body: formData,
+    });
+    return response.json();
+  }
+
+  async deleteBlogPost(id) {
+    return this.request(`/blog/${id}`, { method: 'DELETE' });
+  }
+
+  // ========== OPPORTUNITIES ==========
+  async getOpportunities(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/opportunities${query ? `?${query}` : ''}`);
+  }
+
+  async getOpportunityById(id, params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/opportunities/${id}${query ? `?${query}` : ''}`);
+  }
+
+  // Admin Opportunities Methods
+  async createOpportunity(opportunityData) {
+    return this.request('/opportunities', {
+      method: 'POST',
+      body: JSON.stringify(opportunityData),
+    });
+  }
+
+  async updateOpportunity(id, opportunityData) {
+    return this.request(`/opportunities/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(opportunityData),
+    });
+  }
+
+  async deleteOpportunity(id) {
+    return this.request(`/opportunities/${id}`, { method: 'DELETE' });
   }
 
   // ========== INQUIRIES ==========

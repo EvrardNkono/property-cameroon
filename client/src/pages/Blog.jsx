@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import api from '../services/api';
 
 // Hook pour récupérer la langue actuelle
 const useCurrentLang = () => {
@@ -22,109 +23,74 @@ const useCurrentLang = () => {
 const Blog = () => {
   const currentLang = useCurrentLang();
   const [activeCategory, setActiveCategory] = useState('all');
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [opportunities, setOpportunities] = useState([]);
+  const [featuredPosts, setFeaturedPosts] = useState([]);
 
   // ========== TRADUCTIONS ==========
   const t = {
     fr: {
-      // Hero
       heroTitle: "Investissez au Cameroun",
       heroTitleLine2: "Sans compromis",
       heroSubtitle: "Immobilier, Agriculture et Approvisionnement international — une approche sécurisée et rentable pour l'investisseur moderne.",
       exploreNow: "Explorer Maintenant",
       diasporaPortal: "Portail Diaspora",
-      
-      // CAPEF Section
       strategicPartnership: "Partenariat Stratégique avec le CAPEF",
       capefDescription: "Nous travaillons en étroite collaboration avec la Chambre d'Agriculture, des Pêches, de l'Élevage et des Forêts (CAPEF) pour garantir des investissements agricoles sécurisés et rentables, gérés par des experts locaux certifiés.",
       learnMore: "En Savoir Plus",
-      
-      // Diaspora Section
       investFromAbroad: "Investissez depuis l'Étranger en Toute Confiance",
       diasporaDescription: "Nous gérons, sécurisons et développons vos investissements au Cameroun. En exploitant notre expertise locale : vous investissez, nous exécutons.",
-      
-      // Opportunities Section
       currentOpportunities: "Opportunités Actuelles",
       details: "Détails →",
       estimatedRoi: "ROI Annuel Estimé",
       potentialRoi: "ROI Potentiel",
-      
-      // Blog Header
       theJournal: "Le Journal",
       insightsExpertise: "Perspectives & Expertise",
-      
-      // Categories
       all: "Tous",
       realEstate: "Immobilier",
       agriculture: "Agriculture",
       sourcing: "Approvisionnement",
       lifestyle: "Mode de Vie",
-      
-      // Post labels
       by: "Par",
-      
-      // Final CTA
       readyToInvest: "Prêt à Investir Intelligemment ?",
       talkToExpert: "Parler à un Expert",
       viewOpportunities: "Voir les Opportunités",
-      
-      // SEO / Meta
-      pageTitle: "Blog | Investir au Cameroun",
-      pageDescription: "Conseils d'experts sur l'immobilier, l'agriculture et l'approvisionnement au Cameroun",
-      
-      // Placeholders
-      readMore: "Lire la suite"
+      readMore: "Lire la suite",
+      noPosts: "Aucun article pour le moment",
+      loading: "Chargement..."
     },
     en: {
-      // Hero
       heroTitle: "Invest in Cameroon",
       heroTitleLine2: "Without Compromise",
       heroSubtitle: "Real Estate, Agriculture, and International Sourcing — a secure and profitable approach for the modern investor.",
       exploreNow: "Explore Now",
       diasporaPortal: "Diaspora Portal",
-      
-      // CAPEF Section
       strategicPartnership: "Strategic Partnership with CAPEF",
       capefDescription: "We work closely with the Chamber of Agriculture, Fisheries, Livestock and Forests (CAPEF) to guarantee secured and profitable agricultural investments, managed by certified local experts.",
       learnMore: "Learn More",
-      
-      // Diaspora Section
       investFromAbroad: "Invest from Abroad with Confidence",
       diasporaDescription: "We manage, secure, and develop your investments in Cameroon. Leveraging our local expertise: you invest, we execute.",
-      
-      // Opportunities Section
       currentOpportunities: "Current Opportunities",
       details: "Details →",
       estimatedRoi: "Estimated Annual ROI",
       potentialRoi: "Potential ROI",
-      
-      // Blog Header
       theJournal: "The Journal",
       insightsExpertise: "Insights & Expertise",
-      
-      // Categories
       all: "All",
       realEstate: "Real Estate",
       agriculture: "Agriculture",
       sourcing: "Sourcing",
       lifestyle: "Lifestyle",
-      
-      // Post labels
       by: "By",
-      
-      // Final CTA
       readyToInvest: "Ready to Invest Smartly?",
       talkToExpert: "Talk to an Expert",
       viewOpportunities: "View Opportunities",
-      
-      // SEO / Meta
-      pageTitle: "Blog | Invest in Cameroon",
-      pageDescription: "Expert insights on real estate, agriculture, and sourcing in Cameroon",
-      
-      // Placeholders
-      readMore: "Read more"
+      readMore: "Read more",
+      noPosts: "No posts yet",
+      loading: "Loading..."
     }
   }[currentLang] || {
-    // Fallback français
     heroTitle: "Investissez au Cameroun",
     heroTitleLine2: "Sans compromis",
     heroSubtitle: "Immobilier, Agriculture et Approvisionnement international — une approche sécurisée et rentable pour l'investisseur moderne.",
@@ -150,10 +116,155 @@ const Blog = () => {
     readyToInvest: "Prêt à Investir Intelligemment ?",
     talkToExpert: "Parler à un Expert",
     viewOpportunities: "Voir les Opportunités",
-    pageTitle: "Blog | Investir au Cameroun",
-    pageDescription: "Conseils d'experts sur l'immobilier, l'agriculture et l'approvisionnement au Cameroun",
-    readMore: "Lire la suite"
+    readMore: "Lire la suite",
+    noPosts: "Aucun article pour le moment",
+    loading: "Chargement..."
   };
+
+  // Données par défaut (fallback si pas de données backend)
+  const defaultPosts = {
+    fr: [
+      {
+        id: 1,
+        category: 'Real Estate',
+        title: "Sécuriser votre Titre Foncier au Cameroun : Le Guide Complet 2026",
+        excerpt: "Tout ce que vous devez savoir pour éviter les litiges fonciers et investir en toute sérénité...",
+        image: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&q=80",
+        date: "12 Avril 2026",
+        author: "Admin"
+      },
+      {
+        id: 2,
+        category: 'Agriculture',
+        title: "L'essor de l'Élevage Porcin : Pourquoi Investir Maintenant",
+        excerpt: "Une analyse approfondie du marché local et des opportunités de rentabilité pour la saison à venir...",
+        image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80",
+        date: "10 Avril 2026",
+        author: "Expert Agro"
+      },
+      {
+        id: 3,
+        category: 'Sourcing',
+        title: "Importer des Machines Chinoises : Évitez ces 5 Erreurs Courantes",
+        excerpt: "Comment vérifier la fiabilité des fournisseurs et assurer le contrôle qualité avant l'expédition...",
+        image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80",
+        date: "08 Avril 2026",
+        author: "Équipe Sourcing"
+      }
+    ],
+    en: [
+      {
+        id: 1,
+        category: 'Real Estate',
+        title: "Securing Your Land Title in Cameroon: The 2026 Comprehensive Guide",
+        excerpt: "Everything you need to know to avoid land disputes and invest with complete peace of mind...",
+        image: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&q=80",
+        date: "April 12, 2026",
+        author: "Admin"
+      },
+      {
+        id: 2,
+        category: 'Agriculture',
+        title: "The Rise of Pig Farming: Why You Should Invest Now",
+        excerpt: "A deep dive into the local market analysis and profitability opportunities for the upcoming season...",
+        image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80",
+        date: "April 10, 2026",
+        author: "Agro Expert"
+      },
+      {
+        id: 3,
+        category: 'Sourcing',
+        title: "Importing Chinese Machinery: Avoid These 5 Common Mistakes",
+        excerpt: "How to verify supplier reliability and ensure quality control before shipment...",
+        image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80",
+        date: "April 08, 2026",
+        author: "Sourcing Team"
+      }
+    ]
+  };
+
+  const defaultOpportunities = {
+    fr: [
+      {
+        id: 1,
+        title: "Terrain Agricole Sécurisé - 5 Hectares",
+        location: "Centre Cameroun",
+        roi: "12% ROI Annuel Estimé"
+      },
+      {
+        id: 2,
+        title: "Projet d'Élevage Porcin Clé en Main",
+        location: "Ouest Cameroun",
+        roi: "18% ROI Potentiel"
+      }
+    ],
+    en: [
+      {
+        id: 1,
+        title: "Secured Agricultural Land - 5 Hectares",
+        location: "Central Cameroon",
+        roi: "12% Estimated Annual ROI"
+      },
+      {
+        id: 2,
+        title: "Turnkey Pig Farming Project",
+        location: "West Cameroon",
+        roi: "18% Potential ROI"
+      }
+    ]
+  };
+
+  // Charger les articles depuis l'API
+  useEffect(() => {
+    const fetchPosts = async () => {
+      setLoading(true);
+      try {
+        const response = await api.get(`/blog?lang=${currentLang}`);
+        if (response.data && response.data.success && response.data.data.length > 0) {
+          setPosts(response.data.data);
+        } else {
+          // Fallback aux données par défaut
+          setPosts(defaultPosts[currentLang] || defaultPosts.fr);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des articles:', error);
+        // Fallback aux données par défaut en cas d'erreur
+        setPosts(defaultPosts[currentLang] || defaultPosts.fr);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Charger les opportunités
+    const fetchOpportunities = async () => {
+      try {
+        const response = await api.get('/opportunities?lang=' + currentLang);
+        if (response.data && response.data.success && response.data.data.length > 0) {
+          setOpportunities(response.data.data);
+        } else {
+          setOpportunities(defaultOpportunities[currentLang] || defaultOpportunities.fr);
+        }
+      } catch (error) {
+        setOpportunities(defaultOpportunities[currentLang] || defaultOpportunities.fr);
+      }
+    };
+
+    // Charger les articles à la une
+    const fetchFeatured = async () => {
+      try {
+        const response = await api.get('/blog/featured?lang=' + currentLang);
+        if (response.data && response.data.success && response.data.data.length > 0) {
+          setFeaturedPosts(response.data.data);
+        }
+      } catch (error) {
+        console.error('Erreur chargement featured:', error);
+      }
+    };
+
+    fetchPosts();
+    fetchOpportunities();
+    fetchFeatured();
+  }, [currentLang]);
 
   // Catégories avec traduction
   const categories = [
@@ -164,123 +275,28 @@ const Blog = () => {
     { id: 'Lifestyle', label: t.lifestyle }
   ];
 
-  // Posts avec versions traduites
-  const getPosts = (lang) => {
-    const posts = {
-      fr: [
-        {
-          id: 1,
-          category: 'Real Estate',
-          title: "Sécuriser votre Titre Foncier au Cameroun : Le Guide Complet 2026",
-          excerpt: "Tout ce que vous devez savoir pour éviter les litiges fonciers et investir en toute sérénité...",
-          image: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&q=80",
-          date: "12 Avril 2026",
-          author: "Admin"
-        },
-        {
-          id: 2,
-          category: 'Agriculture',
-          title: "L'essor de l'Élevage Porcin : Pourquoi Investir Maintenant",
-          excerpt: "Une analyse approfondie du marché local et des opportunités de rentabilité pour la saison à venir...",
-          image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80",
-          date: "10 Avril 2026",
-          author: "Expert Agro"
-        },
-        {
-          id: 3,
-          category: 'Sourcing',
-          title: "Importer des Machines Chinoises : Évitez ces 5 Erreurs Courantes",
-          excerpt: "Comment vérifier la fiabilité des fournisseurs et assurer le contrôle qualité avant l'expédition...",
-          image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80",
-          date: "08 Avril 2026",
-          author: "Équipe Sourcing"
-        }
-      ],
-      en: [
-        {
-          id: 1,
-          category: 'Real Estate',
-          title: "Securing Your Land Title in Cameroon: The 2026 Comprehensive Guide",
-          excerpt: "Everything you need to know to avoid land disputes and invest with complete peace of mind...",
-          image: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&q=80",
-          date: "April 12, 2026",
-          author: "Admin"
-        },
-        {
-          id: 2,
-          category: 'Agriculture',
-          title: "The Rise of Pig Farming: Why You Should Invest Now",
-          excerpt: "A deep dive into the local market analysis and profitability opportunities for the upcoming season...",
-          image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80",
-          date: "April 10, 2026",
-          author: "Agro Expert"
-        },
-        {
-          id: 3,
-          category: 'Sourcing',
-          title: "Importing Chinese Machinery: Avoid These 5 Common Mistakes",
-          excerpt: "How to verify supplier reliability and ensure quality control before shipment...",
-          image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80",
-          date: "April 08, 2026",
-          author: "Sourcing Team"
-        }
-      ]
-    };
-    return posts[lang] || posts.fr;
-  };
-
-  const posts = getPosts(currentLang);
-
-  // Opportunities avec versions traduites
-  const getOpportunities = (lang) => {
-    const opportunities = {
-      fr: [
-        {
-          id: 1,
-          title: "Terrain Agricole Sécurisé - 5 Hectares",
-          location: "Centre Cameroun",
-          roi: "12% ROI Annuel Estimé",
-          roiLabel: "estimatedRoi"
-        },
-        {
-          id: 2,
-          title: "Projet d'Élevage Porcin Clé en Main",
-          location: "Ouest Cameroun",
-          roi: "18% ROI Potentiel",
-          roiLabel: "potentialRoi"
-        }
-      ],
-      en: [
-        {
-          id: 1,
-          title: "Secured Agricultural Land - 5 Hectares",
-          location: "Central Cameroon",
-          roi: "12% Estimated Annual ROI",
-          roiLabel: "estimatedRoi"
-        },
-        {
-          id: 2,
-          title: "Turnkey Pig Farming Project",
-          location: "West Cameroon",
-          roi: "18% Potential ROI",
-          roiLabel: "potentialRoi"
-        }
-      ]
-    };
-    return opportunities[lang] || opportunities.fr;
-  };
-
-  const opportunities = getOpportunities(currentLang);
-
   const filteredPosts = activeCategory === 'all'
     ? posts
     : posts.filter(post => post.category === activeCategory);
+
+  // Si loading, afficher un spinner
+  if (loading) {
+    return (
+      <div className="bg-white min-h-screen">
+        <Navbar />
+        <div className="flex items-center justify-center h-[60vh]">
+          <div className="w-12 h-12 border-2 border-pc-gold border-t-transparent rounded-full animate-spin" />
+          <span className="ml-3 text-gray-500">{t.loading}</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white min-h-screen">
       <Navbar />
 
-      {/* HERO SECTION */}
+      {/* HERO SECTION - Inchangé */}
       <div className="relative h-[80vh] flex items-center justify-center text-center pt-20">
         <img
           src="https://images.unsplash.com/photo-1500382017468-9049fed747ef"
@@ -312,7 +328,7 @@ const Blog = () => {
 
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-20">
 
-        {/* CAPEF PARTNERSHIP SECTION */}
+        {/* CAPEF PARTNERSHIP SECTION - Inchangé */}
         <div className="bg-white border border-slate-100 p-10 mb-20 shadow-sm">
           <h2 className="text-3xl font-serif italic mb-4">
             {t.strategicPartnership}
@@ -327,7 +343,7 @@ const Blog = () => {
           </Link>
         </div>
 
-        {/* DIASPORA SECTION */}
+        {/* DIASPORA SECTION - Inchangé */}
         <div className="bg-slate-900 text-white p-16 mb-20 relative overflow-hidden">
           <div className="relative z-10">
             <h2 className="text-4xl font-serif italic mb-6">
@@ -385,24 +401,37 @@ const Blog = () => {
           ))}
         </div>
 
-        {/* POSTS GRID */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12">
-          {filteredPosts.map((post) => (
-            <Link key={post.id} to={`/blog/${post.id}`} className="group">
-              <div className="aspect-video overflow-hidden mb-6 bg-slate-100">
-                <img src={post.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={post.title} />
-              </div>
-              <p className="text-[9px] text-pc-gold uppercase font-bold tracking-widest mb-3">{post.category}</p>
-              <h3 className="text-xl font-serif italic text-slate-900 mb-3 group-hover:text-pc-green transition-colors">{post.title}</h3>
-              <p className="text-sm text-slate-500 line-clamp-2 italic leading-relaxed">{post.excerpt}</p>
-              <div className="flex items-center gap-2 mt-3 text-[10px] text-slate-400">
-                <span>{post.date}</span>
-                <span>•</span>
-                <span>{t.by} {post.author}</span>
-              </div>
-            </Link>
-          ))}
-        </div>
+        {/* POSTS GRID - Dynamique avec fallback */}
+        {filteredPosts.length > 0 ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12">
+            {filteredPosts.map((post) => (
+              <Link key={post.id} to={`/blog/${post.slug || post.id}`} className="group">
+                <div className="aspect-video overflow-hidden mb-6 bg-slate-100">
+                  <img 
+                    src={post.image} 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                    alt={post.title} 
+                    onError={(e) => {
+                      e.target.src = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000';
+                    }}
+                  />
+                </div>
+                <p className="text-[9px] text-pc-gold uppercase font-bold tracking-widest mb-3">{post.category}</p>
+                <h3 className="text-xl font-serif italic text-slate-900 mb-3 group-hover:text-pc-green transition-colors line-clamp-2">{post.title}</h3>
+                <p className="text-sm text-slate-500 line-clamp-2 italic leading-relaxed">{post.excerpt}</p>
+                <div className="flex items-center gap-2 mt-3 text-[10px] text-slate-400">
+                  <span>{post.date}</span>
+                  <span>•</span>
+                  <span>{t.by} {post.author}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20">
+            <p className="text-slate-400 italic">{t.noPosts}</p>
+          </div>
+        )}
 
         {/* FINAL CTA */}
         <div className="mt-32 bg-slate-50 p-16 text-center border border-slate-100">

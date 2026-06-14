@@ -26,11 +26,7 @@ const LegalCompliancePage = lazy(() => import('./pages/LegalCompliance'));
 
 // --- BLOG ---
 const BlogPage            = lazy(() => import('./pages/Blog'));
-const BlogPostDetail = () => (
-  <div className="pt-40 text-center font-serif italic text-slate-500">
-    Lecture de l'article en cours de développement...
-  </div>
-);
+const BlogPostDetail      = lazy(() => import('./pages/BlogPostDetail'));
 
 // --- LIVESTOCK ---
 const LivestockPage         = lazy(() => import('./pages/LivestockIntroduction'));
@@ -59,6 +55,12 @@ const FinancialControl           = lazy(() => import('./pages/dashboard/admin/Fi
 const AgriculturalInventory      = lazy(() => import('./pages/dashboard/admin/AgriculturalInventory'));
 const LivestockCategoriesManager = lazy(() => import('./pages/dashboard/admin/LivestockCategoriesManager'));
 const LivestockAssetsManager     = lazy(() => import('./pages/dashboard/admin/LivestockAssetsManager'));
+
+// --- DASHBOARD (BLOG ADMINISTRATION) ---
+const BlogManagement      = lazy(() => import('./pages/dashboard/blog/BlogManagement'));
+const BlogCreate          = lazy(() => import('./pages/dashboard/blog/BlogCreate'));
+const BlogEdit            = lazy(() => import('./pages/dashboard/blog/BlogEdit'));
+const BlogCategories      = lazy(() => import('./pages/dashboard/blog/BlogCategories'));
 
 // --- PROPERTY FORM ---
 const PropertyForm = lazy(() => import('./pages/dashboard/properties/PropertyForm'));
@@ -180,7 +182,9 @@ function App() {
                 <Route path="/agriculture/institutional-framework" element={<InstitutionalPage />} />
                 <Route path="/agriculture/legal-safety" element={<LegalCompliancePage />} />
                 <Route path="/blog" element={<BlogPage />} />
-                <Route path="/blog/:id" element={<BlogPostDetail />} />
+                <Route path="/blog/:slug" element={<BlogPostDetail />} />
+                
+                {/* Dashboard Routes */}
                 <Route path="/dashboard" element={<DashboardLayout />}>
                   <Route index element={<Overview />} />
                   <Route path="admin" element={<AdminOverview />} />
@@ -193,6 +197,14 @@ function App() {
                   <Route path="admin/agricultural-products" element={<AgriculturalManagement />} />
                   <Route path="admin/livestock-categories" element={<LivestockCategoriesManager />} />
                   <Route path="admin/livestock" element={<LivestockAssetsManager />} />
+                  
+                  {/* 🌟 NOUVELLES ROUTES BLOG ADMIN 🌟 */}
+                  <Route path="admin/blog" element={<BlogManagement />} />
+                  <Route path="admin/blog/create" element={<BlogCreate />} />
+                  <Route path="admin/blog/edit/:id" element={<BlogEdit />} />
+                  <Route path="admin/blog/categories" element={<BlogCategories />} />
+                  
+                  {/* User Routes */}
                   <Route path="profile" element={<UserProfile />} />
                   <Route path="properties" element={<MyLands />} />
                   <Route path="properties/new" element={<PropertyForm />} />

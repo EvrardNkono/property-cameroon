@@ -20,7 +20,10 @@ import {
   PawPrint,
   Map,
   Globe,
-  Package  
+  Package,
+  Newspaper,
+  Edit3,
+  Image
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -120,6 +123,18 @@ const DashboardLayout = () => {
       path: '/dashboard/admin/livestock', 
       icon: <Leaf size={20} />, 
       roles: ['ADMIN'] 
+    },
+    // --- BLOG / JOURNAL SECTION (Admin only) ---
+    { 
+      label: 'Blog Posts', 
+      path: '/dashboard/admin/blog', 
+      icon: <Newspaper size={20} />, 
+      roles: ['ADMIN'],
+      subItems: [
+        { label: 'All Posts', path: '/dashboard/admin/blog', icon: <Newspaper size={16} /> },
+        { label: 'Create New', path: '/dashboard/admin/blog/create', icon: <Edit3 size={16} /> },
+        { label: 'Categories', path: '/dashboard/admin/blog/categories', icon: <Image size={16} /> }
+      ]
     },
     // --- USER SECTION ---
     { 
@@ -235,6 +250,51 @@ const DashboardLayout = () => {
     return allRoles.filter(role => userRoles.includes(role.id));
   };
 
+  // Composant pour les sous-menus
+  const MenuItemWithSubItems = ({ item, onClose }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const isActive = location.pathname === item.path || item.subItems?.some(sub => location.pathname === sub.path);
+    
+    return (
+      <div>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className={`w-full flex items-center justify-between gap-3 p-3.5 rounded-xl transition-all duration-300 ${
+            isActive
+              ? 'bg-[#c5a059] text-[#0a2619] font-bold shadow-lg'
+              : 'hover:bg-white/5 text-white/60 hover:text-white'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            {item.icon}
+            <span className="text-sm tracking-wide">{item.label}</span>
+          </div>
+          <ChevronRight size={16} className={`transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`} />
+        </button>
+        
+        {isOpen && (
+          <div className="ml-8 mt-1 space-y-1 border-l border-white/10 pl-3">
+            {item.subItems.map((subItem, idx) => (
+              <Link
+                key={idx}
+                to={subItem.path}
+                onClick={onClose}
+                className={`flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 text-sm ${
+                  location.pathname === subItem.path
+                    ? 'bg-[#c5a059]/20 text-[#c5a059] font-medium'
+                    : 'hover:bg-white/5 text-white/60 hover:text-white'
+                }`}
+              >
+                {subItem.icon}
+                <span>{subItem.label}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Chargement
   if (authLoading) {
     return (
@@ -277,21 +337,26 @@ const DashboardLayout = () => {
 
         {/* NAVIGATION */}
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto scrollbar-hide hover:scrollbar-default">
-          {filteredMenu.map((item, index) => (
-            <Link
-              key={index}
-              to={item.path}
-              onClick={() => setIsSidebarOpen(false)}
-              className={`flex items-center gap-3 p-3.5 rounded-xl transition-all duration-300 ${
-                location.pathname === item.path 
-                  ? 'bg-[#c5a059] text-[#0a2619] font-bold shadow-lg scale-[1.02]' 
-                  : 'hover:bg-white/5 text-white/60 hover:text-white'
-              }`}
-            >
-              {item.icon}
-              <span className="text-sm tracking-wide">{item.label}</span>
-            </Link>
-          ))}
+          {filteredMenu.map((item, index) => {
+            if (item.subItems) {
+              return <MenuItemWithSubItems key={index} item={item} onClose={() => setIsSidebarOpen(false)} />;
+            }
+            return (
+              <Link
+                key={index}
+                to={item.path}
+                onClick={() => setIsSidebarOpen(false)}
+                className={`flex items-center gap-3 p-3.5 rounded-xl transition-all duration-300 ${
+                  location.pathname === item.path 
+                    ? 'bg-[#c5a059] text-[#0a2619] font-bold shadow-lg scale-[1.02]' 
+                    : 'hover:bg-white/5 text-white/60 hover:text-white'
+                }`}
+              >
+                {item.icon}
+                <span className="text-sm tracking-wide">{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
         {/* LOGOUT BUTTON */}
