@@ -579,13 +579,20 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('❌ Error:', err.stack);
   
+  // Réappliquer CORS même en cas d'erreur
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+  
   if (err.type === 'entity.too.large') {
-    return res.status(413).json({ success: false, message: 'Payload too large. Maximum size is 50MB.' });
+    return res.status(413).json({ success: false, message: 'Payload too large.' });
   }
   
   if (err instanceof multer.MulterError) {
     if (err.code === 'FILE_TOO_LARGE') {
-      return res.status(413).json({ success: false, message: 'File too large. Maximum size is 10MB.' });
+      return res.status(413).json({ success: false, message: 'File too large.' });
     }
     return res.status(400).json({ success: false, message: err.message });
   }
