@@ -313,6 +313,10 @@ const DashboardLayout = () => {
 
   const availableRoles = getAvailableRolesForSelector();
 
+  console.log('🔍 isAdminMode:', isAdminMode);
+console.log('🔍 activeRoles:', activeRoles);
+console.log('🔍 Filtered menu labels:', filteredMenu.map(i => i.label));
+
   return (
     <div className="flex h-screen bg-[#f8fafc] font-sans text-slate-900 overflow-hidden">
       
