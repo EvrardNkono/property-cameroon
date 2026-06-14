@@ -1,7 +1,6 @@
 // frontend/src/pages/dashboard/blog/BlogCategories.jsx
 import React, { useState, useEffect } from 'react';
 // À ajouter en haut du fichier
-import { Star } from 'lucide-react';  // Utilisé mais pas importé
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
