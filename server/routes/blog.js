@@ -1,10 +1,11 @@
-const express = require('express');
+import express from 'express';
+import BlogPost from '../models/BlogPost.js';
+import { protect, authorize } from '../middleware/auth.middleware.js';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
 const router = express.Router();
-const BlogPost = require('../models/BlogPost');
-const { protect, authorize } = require('../middleware/auth');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 
 // Configuration multer pour l'upload d'images
 const storage = multer.diskStorage({
@@ -35,13 +36,12 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: fileFilter
 });
 
 // ========== ROUTES PUBLIQUES ==========
 
-// GET /api/blog - Récupérer tous les articles publiés
 router.get('/', async (req, res) => {
   try {
     const { page = 1, limit = 10, category, tag, search, lang = 'fr' } = req.query;
@@ -51,11 +51,9 @@ router.get('/', async (req, res) => {
     if (category && category !== 'all') {
       query.category = category;
     }
-    
     if (tag) {
       query.tags = tag;
     }
-    
     if (search) {
       query.$text = { $search: search };
     }
@@ -68,7 +66,6 @@ router.get('/', async (req, res) => {
     
     const total = await BlogPost.countDocuments(query);
     
-    // Formater les posts selon la langue
     const formattedPosts = posts.map(post => {
       const translation = post.translations?.[lang];
       return {
@@ -102,7 +99,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/blog/featured - Récupérer les articles à la une
 router.get('/featured', async (req, res) => {
   try {
     const { lang = 'fr' } = req.query;
@@ -133,7 +129,6 @@ router.get('/featured', async (req, res) => {
   }
 });
 
-// GET /api/blog/:slug - Récupérer un article par son slug
 router.get('/:slug', async (req, res) => {
   try {
     const { lang = 'fr' } = req.query;
@@ -145,7 +140,6 @@ router.get('/:slug', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Article non trouvé' });
     }
     
-    // Incrémenter les vues
     post.views += 1;
     await post.save();
     
@@ -181,7 +175,6 @@ router.get('/:slug', async (req, res) => {
 
 // ========== ROUTES ADMIN (protégées) ==========
 
-// GET /api/blog/admin/all - Récupérer tous les articles (admin)
 router.get('/admin/all', protect, authorize('admin', 'editor'), async (req, res) => {
   try {
     const posts = await BlogPost.find()
@@ -195,7 +188,6 @@ router.get('/admin/all', protect, authorize('admin', 'editor'), async (req, res)
   }
 });
 
-// GET /api/blog/admin/post/:id - Récupérer un article par ID pour admin
 router.get('/admin/post/:id', protect, authorize('admin', 'editor'), async (req, res) => {
   try {
     const post = await BlogPost.findById(req.params.id)
@@ -212,7 +204,6 @@ router.get('/admin/post/:id', protect, authorize('admin', 'editor'), async (req,
   }
 });
 
-// POST /api/blog - Créer un article
 router.post('/', protect, authorize('admin', 'editor'), upload.single('featuredImage'), async (req, res) => {
   try {
     const { title, excerpt, content, category, tags, isFeatured, status, translations } = req.body;
@@ -222,7 +213,6 @@ router.post('/', protect, authorize('admin', 'editor'), upload.single('featuredI
       featuredImage = `/uploads/blog/${req.file.filename}`;
     }
     
-    // Générer le slug à partir du titre
     const slug = title
       .toLowerCase()
       .replace(/[^\w\s-]/g, '')
@@ -241,7 +231,7 @@ router.post('/', protect, authorize('admin', 'editor'), upload.single('featuredI
       featuredImage,
       author: req.user.id,
       authorName: req.user.name,
-      status: status || 'draft',  // 🔥 CORRECTION : Utiliser le statut envoyé ou draft par défaut
+      status: status || 'draft',
       translations: translations ? JSON.parse(translations) : {}
     });
     
@@ -252,7 +242,6 @@ router.post('/', protect, authorize('admin', 'editor'), upload.single('featuredI
   }
 });
 
-// PUT /api/blog/:id - Mettre à jour un article
 router.put('/:id', protect, authorize('admin', 'editor'), upload.single('featuredImage'), async (req, res) => {
   try {
     const post = await BlogPost.findById(req.params.id);
@@ -265,7 +254,6 @@ router.put('/:id', protect, authorize('admin', 'editor'), upload.single('feature
     
     if (title) {
       post.title = title;
-      // Mettre à jour le slug si le titre change
       post.slug = title
         .toLowerCase()
         .replace(/[^\w\s-]/g, '')
@@ -282,7 +270,6 @@ router.put('/:id', protect, authorize('admin', 'editor'), upload.single('feature
     if (translations) post.translations = JSON.parse(translations);
     
     if (req.file) {
-      // Supprimer l'ancienne image si elle existe
       if (post.featuredImage && fs.existsSync(`.${post.featuredImage}`)) {
         fs.unlinkSync(`.${post.featuredImage}`);
       }
@@ -298,7 +285,6 @@ router.put('/:id', protect, authorize('admin', 'editor'), upload.single('feature
   }
 });
 
-// DELETE /api/blog/:id - Supprimer un article
 router.delete('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const post = await BlogPost.findById(req.params.id);
@@ -307,7 +293,6 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
       return res.status(404).json({ success: false, message: 'Article non trouvé' });
     }
     
-    // Supprimer l'image associée
     if (post.featuredImage && fs.existsSync(`.${post.featuredImage}`)) {
       fs.unlinkSync(`.${post.featuredImage}`);
     }
@@ -321,4 +306,4 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

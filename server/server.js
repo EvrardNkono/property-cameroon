@@ -44,7 +44,7 @@ import sitemapRoutes from './routes/sitemap.js';
 import blogRoutes from './routes/blog.js';
 import blogCategoryRoutes from './routes/blogCategories.js';
 
-// ✅ Import complet des controllers upload
+// ✅ Import complet des controllers upload (restauré)
 import { 
   uploadPropertyImages, 
   handlePropertyImages,
@@ -100,7 +100,7 @@ if (process.env.NODE_ENV !== 'production') {
   app.use('/uploads', express.static('uploads'));
 }
 
-// ========== ROUTE DEBUG MONGO ==========
+// ========== ROUTE DEBUG MONGO (PLACÉE AVANT LES MIDDLEWARES) ==========
 app.get('/api/debug-mongo', async (req, res) => {
   const { MongoClient } = await import('mongodb');
   const uri = process.env.MONGODB_URI;
@@ -176,7 +176,7 @@ app.get('/api/debug-mongo', async (req, res) => {
   res.end();
 });
 
-// ========== ROUTE TEST REAL DATA ==========
+// ========== ROUTE TEST REAL DATA (PLACÉE AVANT LES MIDDLEWARES) ==========
 app.get('/api/test-real-data', async (req, res) => {
   const { MongoClient } = await import('mongodb');
   const uri = process.env.MONGODB_URI;
@@ -254,35 +254,10 @@ const MOCK_DATA = {
     { _id: "3", name: "Maraîchage", isActive: true, description: "Tomates, oignons, salades" },
     { _id: "4", name: "Arboriculture", isActive: true, description: "Mangues, oranges, avocats" }
   ],
-  // 🌟 AJOUT DES DONNÉES MOCK POUR LE BLOG
-  blogPosts: [
-    {
-      _id: "1",
-      title: "Sécuriser votre Titre Foncier au Cameroun",
-      slug: "securiser-titre-foncier-cameroun",
-      excerpt: "Tout ce que vous devez savoir pour éviter les litiges fonciers",
-      category: "Real Estate",
-      featuredImage: "/uploads/blog/sample1.jpg",
-      status: "published",
-      publishedAt: new Date(),
-      authorName: "Admin"
-    },
-    {
-      _id: "2",
-      title: "L'essor de l'Élevage Porcin au Cameroun",
-      slug: "essor-elevage-porcin-cameroun",
-      excerpt: "Une analyse approfondie du marché local",
-      category: "Agriculture",
-      featuredImage: "/uploads/blog/sample2.jpg",
-      status: "published",
-      publishedAt: new Date(),
-      authorName: "Expert Agro"
-    }
-  ],
   properties: []
 };
 
-// ========== FONCTION DE CONNEXION MONGODB ==========
+// ========== FONCTION DE CONNEXION MONGODB AVEC AUTO-RECONNECTION ==========
 let connectionRetryCount = 0;
 const maxRetries = 10;
 let isConnecting = false;
@@ -373,6 +348,7 @@ const connectMongoDB = async () => {
 };
 
 // ========== MIDDLEWARE 1 : CONNEXION MONGODB ==========
+// ✅ Exclusions des routes debug restaurées
 app.use('/api', async (req, res, next) => {
   if (req.url.includes('/debug-mongo') || req.url.includes('/test-real-data') || req.url.includes('/health') || req.url.includes('/diagnostic')) {
     return next();
@@ -387,6 +363,7 @@ app.use('/api', async (req, res, next) => {
 });
 
 // ========== MIDDLEWARE 2 : MODE DÉGRADÉ ==========
+// ✅ Exclusions des routes debug restaurées
 app.use('/api', (req, res, next) => {
   if (req.url.includes('/debug-mongo') || req.url.includes('/test-real-data') || req.url.includes('/health') || req.url.includes('/diagnostic')) {
     return next();
@@ -427,37 +404,22 @@ app.use('/api', (req, res, next) => {
     }
     
     // 🌟 ROUTES BLOG EN MODE DÉGRADÉ
-    if (req.url.includes('/blog')) {
-      if (req.url === '/blog' || req.url === '/blog/') {
-        return res.json({
-          success: true,
-          data: MOCK_DATA.blogPosts,
-          message: "Mode dégradé - Reconnexion à la base de données en cours",
-          mock: true,
-          pagination: { total: MOCK_DATA.blogPosts.length, page: 1, pages: 1 }
-        });
-      }
-      if (req.url.includes('/featured')) {
-        return res.json({
-          success: true,
-          data: MOCK_DATA.blogPosts.filter(p => p.isFeatured),
-          mock: true
-        });
-      }
-      if (req.url.includes('/admin/all')) {
-        return res.json({
-          success: true,
-          data: MOCK_DATA.blogPosts,
-          mock: true
-        });
-      }
-    }
-    
     if (req.url.includes('/blog/categories')) {
       return res.json({
         success: true,
         data: [],
+        message: "Mode dégradé - Reconnexion à la base de données en cours",
         mock: true
+      });
+    }
+    
+    if (req.url.includes('/blog')) {
+      return res.json({
+        success: true,
+        data: [],
+        message: "Mode dégradé - Reconnexion à la base de données en cours",
+        mock: true,
+        pagination: { total: 0, page: 1, pages: 1 }
       });
     }
   }
@@ -473,7 +435,8 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
-// ========== MIDDLEWARE 3 : TRADUCTION ==========
+// ========== MIDDLEWARE 3 : TRADUCTION (EN DERNIER) ==========
+// ✅ Exclusions des routes debug restaurées
 app.use('/api', (req, res, next) => {
   const excludedPaths = ['/debug-mongo', '/test-real-data', '/health', '/diagnostic'];
   if (excludedPaths.some(path => req.url.includes(path))) {
@@ -495,11 +458,12 @@ app.use('/api/agriculture', agriculturalRoutes);
 app.use('/api/amenities', amenityRoutes);
 app.use('/api/livestock', livestockRoutes);
 app.use('/api/livestock-categories', livestockCategoryRoutes);
-app.use('/', sitemapRoutes);
 
-// 🌟 NOUVELLES ROUTES BLOG
-app.use('/api/blog', blogRoutes);
+// 🌟 NOUVELLES ROUTES BLOG (ordre important : categories avant blog)
 app.use('/api/blog/categories', blogCategoryRoutes);
+app.use('/api/blog', blogRoutes);
+
+app.use('/', sitemapRoutes);
 
 // ========== ROUTES D'UPLOAD ==========
 app.post('/api/upload/property-images', propertyUpload.array('images', 10), handlePropertyImages);
@@ -525,7 +489,7 @@ app.get('/api/health', (req, res) => {
     vercel_env: process.env.VERCEL === '1' ? true : false,
     mock_mode: mongoose.connection.readyState !== 1,
     translation_active: true,
-    blog_routes: 'active'  // 🌟 Indique que les routes blog sont actives
+    blog_routes: 'active'
   });
 });
 
@@ -546,7 +510,7 @@ app.get('/api/diagnostic', async (req, res) => {
     mongoose_version: mongoose.version,
     mock_mode_active: mongoose.connection.readyState !== 1,
     translation_middleware: 'active',
-    blog_routes: 'active',  // 🌟 Indique que les routes blog sont actives
+    blog_routes: 'active',
     routes_configured: [
       '/api/blog',
       '/api/blog/categories'
@@ -587,12 +551,12 @@ app.use((err, req, res, next) => {
   }
   
   if (err.type === 'entity.too.large') {
-    return res.status(413).json({ success: false, message: 'Payload too large.' });
+    return res.status(413).json({ success: false, message: 'Payload too large. Maximum size is 50MB.' });
   }
   
   if (err instanceof multer.MulterError) {
     if (err.code === 'FILE_TOO_LARGE') {
-      return res.status(413).json({ success: false, message: 'File too large.' });
+      return res.status(413).json({ success: false, message: 'File too large. Maximum size is 10MB.' });
     }
     return res.status(400).json({ success: false, message: err.message });
   }
@@ -603,7 +567,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ========== DÉMARRAGE ==========
+// ========== DÉMARRAGE DU SERVEUR POUR VERCEL ==========
 const startServer = async () => {
   console.log('🚀 Starting server...');
   console.log('🌐 Translation middleware enabled - Auto-translates API responses');

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const blogPostSchema = new mongoose.Schema({
   // Informations de base
@@ -24,14 +24,12 @@ const blogPostSchema = new mongoose.Schema({
     required: [true, 'Le contenu est requis']
   },
   
-  // Catégorie
   category: {
     type: String,
     required: true,
     enum: ['Real Estate', 'Agriculture', 'Sourcing', 'Lifestyle']
   },
   
-  // Images
   featuredImage: {
     type: String,
     required: [true, 'L\'image principale est requise']
@@ -40,7 +38,6 @@ const blogPostSchema = new mongoose.Schema({
     type: String
   }],
   
-  // SEO
   seoTitle: {
     type: String,
     trim: true
@@ -53,7 +50,6 @@ const blogPostSchema = new mongoose.Schema({
     type: String
   }],
   
-  // Auteur
   author: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -64,7 +60,6 @@ const blogPostSchema = new mongoose.Schema({
     required: true
   },
   
-  // Dates
   publishedAt: {
     type: Date,
     default: Date.now
@@ -74,32 +69,27 @@ const blogPostSchema = new mongoose.Schema({
     default: Date.now
   },
   
-  // Statut
   status: {
     type: String,
     enum: ['draft', 'published', 'archived'],
     default: 'draft'
   },
   
-  // Featured (à la une)
   isFeatured: {
     type: Boolean,
     default: false
   },
   
-  // Vues
   views: {
     type: Number,
     default: 0
   },
   
-  // Tags
   tags: [{
     type: String,
     trim: true
   }],
   
-  // Traductions
   translations: {
     en: {
       title: String,
@@ -120,7 +110,6 @@ const blogPostSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Middleware pre-save pour générer le slug
 blogPostSchema.pre('save', function(next) {
   if (this.isModified('title')) {
     this.slug = this.title
@@ -134,7 +123,6 @@ blogPostSchema.pre('save', function(next) {
   next();
 });
 
-// Index pour la recherche
 blogPostSchema.index({ title: 'text', content: 'text', tags: 'text' });
 
-module.exports = mongoose.model('BlogPost', blogPostSchema);
+export default mongoose.model('BlogPost', blogPostSchema);
