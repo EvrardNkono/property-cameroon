@@ -362,7 +362,7 @@ app.use('/api', async (req, res, next) => {
   next();
 });
 
-// ========== MIDDLEWARE 2 : MODE DÉGRADÉ CORRIGÉ ==========
+// ========== MIDDLEWARE 2 : MODE DÉGRADÉ ==========
 // ✅ Exclusions des routes debug restaurées
 app.use('/api', (req, res, next) => {
   if (req.url.includes('/debug-mongo') || req.url.includes('/test-real-data') || req.url.includes('/health') || req.url.includes('/diagnostic')) {
@@ -375,7 +375,7 @@ app.use('/api', (req, res, next) => {
   
   console.log(`📦 Mock mode: ${req.method} ${req.url}`);
   
-  // ✅ IMPORTANT : LAISSER PASSER LES ROUTES BLOG (GET et POST)
+  // ✅ UNIQUE MODIFICATION : LAISSER PASSER LES REQUÊTES BLOG (GET et POST)
   // Cela permet de créer des catégories et articles même en mode dégradé
   if (req.url.includes('/blog')) {
     console.log('📝 Blog route in mock mode - passing through to real handler');
@@ -407,6 +407,26 @@ app.use('/api', (req, res, next) => {
         data: MOCK_DATA.agricultureCategories,
         message: "Mode dégradé - Reconnexion à la base de données en cours",
         mock: true
+      });
+    }
+    
+    // 🌟 ROUTES BLOG EN MODE DÉGRADÉ
+    if (req.url.includes('/blog/categories')) {
+      return res.json({
+        success: true,
+        data: [],
+        message: "Mode dégradé - Reconnexion à la base de données en cours",
+        mock: true
+      });
+    }
+    
+    if (req.url.includes('/blog')) {
+      return res.json({
+        success: true,
+        data: [],
+        message: "Mode dégradé - Reconnexion à la base de données en cours",
+        mock: true,
+        pagination: { total: 0, page: 1, pages: 1 }
       });
     }
   }
