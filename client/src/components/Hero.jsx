@@ -111,8 +111,8 @@ const Hero = () => {
   // Images disponibles initiales avec liens et labels traduits dynamiquement
   const getInitialImages = () => [
     { id: 'img0', src: '/images/heroimo.jpg', label: t.realEstateLabel, alt: t.realEstateLabel, link: getPathWithLang('/real-estate') },
-    { id: 'img1', src: '/images/heroagri.webp', label: t.agricultureLabel, alt: t.agricultureLabel, link: getPathWithLang('/agriculture') },
-    { id: 'img2', src: '/images/lifstock.jfif', label: t.livestockLabel, alt: t.livestockLabel, link: getPathWithLang('/agriculture/livestock') }
+    { id: 'img1', src: '/images/agriculture-sector-sees-positive-trends-as-key-crops-post-robust-growth-1720154406-3401.jpeg', label: t.agricultureLabel, alt: t.agricultureLabel, link: getPathWithLang('/agriculture') },
+    { id: 'img2', src: '/images/elevage-de-poulets-en-afrique-1.png', label: t.livestockLabel, alt: t.livestockLabel, link: getPathWithLang('/agriculture/livestock') }
   ];
 
   const [displayImages, setDisplayImages] = useState(getInitialImages());
