@@ -107,7 +107,20 @@ const ProjectDetailsPage = () => {
       sustainable: "Agriculture durable",
       sustainableDesc: "Pratiques éco-responsables certifiées pour une production respectueuse.",
       logistics: "Logistique intégrée",
-      logisticsDesc: "Distribution nationale et potentiel export vers les marchés internationaux."
+      logisticsDesc: "Distribution nationale et potentiel export vers les marchés internationaux.",
+      // Nouvelles traductions
+      customQuote: "Sur devis personnalisé",
+      whatYouCanDo: "Ce que vous pouvez faire",
+      investFarm: "Investir dans la ferme",
+      purchaseAssets: "Acheter des actifs (matériel, cheptel)",
+      farmingContract: "Contractualiser un élevage",
+      directPurchase: "Achat direct de poulets",
+      talkToExpert: "Parler avec un expert",
+      requestCustomQuote: "Demander un devis personnalisé",
+      expertWillContact: "Un expert vous recontactera sous 24h pour discuter de vos besoins spécifiques.",
+      tailoredInvestment: "Investissement sur mesure",
+      tailoredDesc: "Le montant exact dépend de votre projet. Contactez un expert pour un devis personnalisé.",
+      consultationExpert: "Consultation Expert"
     },
     en: {
       back: "Back",
@@ -149,7 +162,20 @@ const ProjectDetailsPage = () => {
       sustainable: "Sustainable farming",
       sustainableDesc: "Eco-responsible certified practices for respectful production.",
       logistics: "Integrated logistics",
-      logisticsDesc: "National distribution and export potential to international markets."
+      logisticsDesc: "National distribution and export potential to international markets.",
+      // New translations
+      customQuote: "Custom quote",
+      whatYouCanDo: "What you can do",
+      investFarm: "Invest in the farm",
+      purchaseAssets: "Purchase assets (equipment, livestock)",
+      farmingContract: "Farming contract",
+      directPurchase: "Direct chicken purchase",
+      talkToExpert: "Talk to an expert",
+      requestCustomQuote: "Request custom quote",
+      expertWillContact: "An expert will contact you within 24h to discuss your specific needs.",
+      tailoredInvestment: "Tailored investment",
+      tailoredDesc: "The exact amount depends on your project. Contact an expert for a custom quote.",
+      consultationExpert: "Expert Consultation"
     }
   }[currentLang] || {};
 
@@ -200,7 +226,7 @@ const ProjectDetailsPage = () => {
   const formatCycle = (duration) => {
     if (!duration) return '12 mois';
     const months = parseInt(duration);
-    return isNaN(months) ? duration : `${months} mois`;
+    return isNaN(months) ? duration : `${months} ${currentLang === 'fr' ? 'mois' : 'months'}`;
   };
 
   if (loading) {
@@ -282,7 +308,7 @@ const ProjectDetailsPage = () => {
               </div>
             </motion.div>
 
-            {/* Right - Title & Info */}
+            {/* Right - Title & Info - SANS PRIX */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -302,14 +328,8 @@ const ProjectDetailsPage = () => {
                 <span>{project.location}{project.region ? `, ${project.region}` : ''}</span>
               </div>
 
+              {/* Section ROI et Cycle - Sans prix */}
               <div className="flex flex-wrap gap-6 pt-4">
-                <div>
-                  <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">{t.investment}</p>
-                  <p className="text-2xl font-bold text-emerald-700">
-                    {(project.price / 1000000).toFixed(1)}M <span className="text-sm font-normal text-gray-400">FCFA</span>
-                  </p>
-                </div>
-                <div className="w-px h-12 bg-gray-200" />
                 <div>
                   <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">{t.expectedReturn}</p>
                   <p className="text-2xl font-bold text-amber-600">+{project.roi}% <span className="text-sm font-normal text-gray-400">{t.annualReturn}</span></p>
@@ -353,6 +373,19 @@ const ProjectDetailsPage = () => {
               <p className="text-gray-600 leading-relaxed text-lg font-light">
                 {project.description}
               </p>
+              
+              {/* Note investissement sur mesure */}
+              <div className="mt-6 p-4 bg-amber-50/50 border border-amber-100 rounded-xl flex items-start gap-3">
+                <Info size={18} className="text-amber-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-amber-800 text-sm font-medium">
+                    {t.tailoredInvestment}
+                  </p>
+                  <p className="text-amber-700/70 text-xs">
+                    {t.tailoredDesc}
+                  </p>
+                </div>
+              </div>
             </section>
 
             {/* Avantages - Grille élégante */}
@@ -403,65 +436,84 @@ const ProjectDetailsPage = () => {
             </section>
           </div>
 
-          {/* Right Column - Investment Widget */}
+          {/* Right Column - Expert Consultation Widget (SANS PRIX) */}
           <div className="lg:col-span-5">
             <div className="sticky top-32">
               <div className="bg-white border border-gray-100 rounded-3xl shadow-xl overflow-hidden">
-                <div className="p-8 border-b border-gray-100 bg-gradient-to-br from-emerald-50 to-white">
+                <div className="p-8 border-b border-gray-100 bg-gradient-to-br from-amber-50 to-white">
                   <div className="flex items-center gap-2 mb-4">
-                    <Gem size={18} className="text-amber-500" />
-                    <span className="text-amber-600 text-[10px] font-bold uppercase tracking-wider">{t.investment}</span>
+                    <Crown size={18} className="text-amber-500" />
+                    <span className="text-amber-600 text-[10px] font-bold uppercase tracking-wider">{t.consultationExpert}</span>
                   </div>
-                  <p className="text-3xl font-bold text-emerald-700">
-                    {(project.price / 1000000).toFixed(1)}M <span className="text-sm font-normal text-gray-400">FCFA</span>
+                  <h3 className="text-xl font-serif font-light text-gray-800 mb-2">
+                    {t.customQuote}
+                  </h3>
+                  <p className="text-gray-500 text-sm">
+                    {currentLang === 'fr' 
+                      ? 'Le montant exact dépend de votre objectif d\'investissement.' 
+                      : 'The exact amount depends on your investment goal.'}
                   </p>
                 </div>
 
                 <div className="p-8 space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-emerald-50 rounded-xl">
-                      <TrendingUp size={18} className="text-emerald-600 mx-auto mb-2" />
-                      <p className="text-emerald-700 text-xl font-bold">+{project.roi}%</p>
-                      <p className="text-gray-500 text-[9px] uppercase tracking-wider">{t.expectedReturn}</p>
-                    </div>
-                    <div className="text-center p-4 bg-amber-50 rounded-xl">
-                      <Calendar size={18} className="text-amber-600 mx-auto mb-2" />
-                      <p className="text-amber-700 text-xl font-bold">{formatCycle(project.cycleDuration)}</p>
-                      <p className="text-gray-500 text-[9px] uppercase tracking-wider">{t.cycle}</p>
+                  {/* Options disponibles */}
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                      {t.whatYouCanDo}
+                    </p>
+                    <div className="space-y-2">
+                      {[
+                        t.investFarm,
+                        t.purchaseAssets,
+                        t.farmingContract,
+                        t.directPurchase
+                      ].map((option, i) => (
+                        <div key={i} className="flex items-center gap-2 text-gray-600 text-sm">
+                          <CheckCircle size={14} className="text-emerald-500" />
+                          <span>{option}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="pt-2 space-y-3">
+                    {/* Lien direct vers la page des experts */}
+                    <a
+                      href="https://www.propertycameroon.com/experts"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-4 bg-amber-500 text-white rounded-xl font-semibold text-sm hover:bg-amber-600 transition-all flex items-center justify-center gap-2 group"
+                    >
+                      <MessageCircle size={18} />
+                      {t.talkToExpert}
+                      <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                    </a>
+                    
+                    {/* Bouton devis personnalisé (ouvre modal) */}
                     <button
                       onClick={() => setShowContactModal(true)}
                       className="w-full py-4 bg-emerald-600 text-white rounded-xl font-semibold text-sm hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
                     >
-                      <MessageCircle size={18} /> {t.contactAdvisor}
+                      <FileText size={18} />
+                      {t.requestCustomQuote}
                     </button>
                     
-                    <button className="w-full py-4 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-all flex items-center justify-center gap-2">
-                      <Download size={18} /> {t.downloadBrochure}
+                    {/* Brochure */}
+                    <button className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-medium text-sm hover:bg-gray-200 transition-all flex items-center justify-center gap-2">
+                      <Download size={16} />
+                      {t.downloadBrochure}
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <button onClick={() => setIsLiked(!isLiked)} className="flex items-center gap-2 text-gray-400 hover:text-rose-500 transition-all">
-                      <Heart size={18} className={isLiked ? 'fill-rose-500 text-rose-500' : ''} />
-                      <span className="text-xs">{t.like}</span>
-                    </button>
-                    <button className="flex items-center gap-2 text-gray-400 hover:text-emerald-600 transition-all">
-                      <Share2 size={18} />
-                      <span className="text-xs">{t.share}</span>
-                    </button>
-                    <div className="flex items-center gap-1">
+                  <div className="pt-4 border-t border-gray-100">
+                    <div className="flex items-center justify-center gap-2 mb-3">
                       <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                      <span className="text-[8px] text-gray-400 uppercase">{t.secured}</span>
+                      <span className="text-[8px] text-gray-400 uppercase tracking-wider">{t.secured}</span>
+                      <span className="text-[8px] text-gray-300">•</span>
+                      <span className="text-[8px] text-gray-400 uppercase tracking-wider">{t.certified}</span>
                     </div>
-                  </div>
-
-                  <div className="pt-4">
                     <p className="text-[9px] text-gray-400 text-center leading-relaxed">
-                      {t.weWillContact}
+                      {t.expertWillContact}
                     </p>
                   </div>
                 </div>
