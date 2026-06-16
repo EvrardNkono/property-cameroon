@@ -1,5 +1,5 @@
 // frontend/src/pages/Register.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
@@ -22,16 +22,150 @@ import {
   Loader2
 } from 'lucide-react';
 
+// ─────────────────────────────────────────────────────────────
+// Détection de langue — SYNCHRONE
+// ─────────────────────────────────────────────────────────────
+const detectLang = () => {
+  if (typeof window === 'undefined') return 'en';
+  const params     = new URLSearchParams(window.location.search);
+  const urlLang    = params.get('lang');
+  const storedLang = localStorage.getItem('preferredLanguage');
+  const detected   = urlLang || storedLang || navigator.language.split('-')[0];
+  return ['fr', 'en'].includes(detected) ? detected : 'en';
+};
+
+const useCurrentLang = () => {
+  const [lang, setLang] = useState(detectLang);
+
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key === 'preferredLanguage') setLang(detectLang());
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  return lang;
+};
+
+// ─────────────────────────────────────────────────────────────
+// TRADUCTIONS
+// ─────────────────────────────────────────────────────────────
+const TRANSLATIONS = {
+  en: {
+    title: 'Create an Account',
+    subtitle: 'Fill in the form below to create your account',
+    accountType: 'I am a *',
+    investor: 'Investor',
+    investorDesc: 'Looking for investment opportunities',
+    owner: 'Owner',
+    ownerDesc: 'I want to sell or rent my properties',
+    buyer: 'Buyer',
+    buyerDesc: 'Looking for a property to buy',
+    other: 'Other',
+    otherDesc: 'Service provider, expert, or other profile',
+    fullName: 'Full Name *',
+    fullNamePlaceholder: 'John Doe',
+    email: 'Email *',
+    emailPlaceholder: 'john@example.com',
+    phone: 'Phone',
+    phonePlaceholder: '+237 6XX XXX XXX',
+    password: 'Password *',
+    passwordPlaceholder: '••••••••',
+    confirmPassword: 'Confirm Password *',
+    confirmPasswordPlaceholder: '••••••••',
+    company: 'Company / Organization',
+    companyPlaceholder: 'Your company',
+    position: 'Position / Role',
+    positionPlaceholder: 'Your position',
+    city: 'City',
+    cityPlaceholder: 'Douala, Yaoundé...',
+    country: 'Country',
+    countryPlaceholder: 'Cameroon',
+    register: 'Create Account',
+    registering: 'Creating account...',
+    alreadyHaveAccount: 'Already have an account?',
+    login: 'Log in',
+    termsText: 'By creating an account, you agree to our',
+    termsLink: 'Terms of Use',
+    and: 'and',
+    privacyLink: 'Privacy Policy',
+    passwordMismatch: 'Passwords do not match',
+    passwordTooShort: 'Password must be at least 6 characters',
+    registrationSuccess: 'Registration successful! Redirecting to dashboard...',
+    errorOccurred: 'An error occurred',
+    joinTitle: 'Join Property Cameroon',
+    joinDesc: 'Create an account to access the best real estate and agricultural opportunities in Cameroon, manage your investments and track your projects.',
+    exclusiveAccess: 'Access to exclusive opportunities',
+    easyManagement: 'Simplified investment management',
+    support247: '24/7 personalized support',
+    emailRequired: 'Email is required',
+    passwordRequired: 'Password is required'
+  },
+  fr: {
+    title: 'Créer un compte',
+    subtitle: 'Remplissez le formulaire ci-dessous pour créer votre compte',
+    accountType: 'Je suis *',
+    investor: 'Investisseur',
+    investorDesc: 'Recherche d\'opportunités d\'investissement',
+    owner: 'Propriétaire',
+    ownerDesc: 'Je souhaite vendre ou louer mes biens',
+    buyer: 'Acheteur',
+    buyerDesc: 'À la recherche d\'un bien immobilier',
+    other: 'Autre',
+    otherDesc: 'Prestataire, expert, ou autre profil',
+    fullName: 'Nom complet *',
+    fullNamePlaceholder: 'Jean Dupont',
+    email: 'Email *',
+    emailPlaceholder: 'jean@exemple.com',
+    phone: 'Téléphone',
+    phonePlaceholder: '+237 6XX XXX XXX',
+    password: 'Mot de passe *',
+    passwordPlaceholder: '••••••••',
+    confirmPassword: 'Confirmer le mot de passe *',
+    confirmPasswordPlaceholder: '••••••••',
+    company: 'Société / Organisation',
+    companyPlaceholder: 'Votre société',
+    position: 'Poste / Fonction',
+    positionPlaceholder: 'Votre poste',
+    city: 'Ville',
+    cityPlaceholder: 'Douala, Yaoundé...',
+    country: 'Pays',
+    countryPlaceholder: 'Cameroun',
+    register: 'Créer mon compte',
+    registering: 'Inscription en cours...',
+    alreadyHaveAccount: 'Déjà un compte ?',
+    login: 'Se connecter',
+    termsText: 'En créant un compte, vous acceptez nos',
+    termsLink: 'Conditions d\'utilisation',
+    and: 'et notre',
+    privacyLink: 'Politique de confidentialité',
+    passwordMismatch: 'Les mots de passe ne correspondent pas',
+    passwordTooShort: 'Le mot de passe doit contenir au moins 6 caractères',
+    registrationSuccess: 'Inscription réussie ! Redirection vers le tableau de bord...',
+    errorOccurred: 'Une erreur est survenue',
+    joinTitle: 'Rejoignez Property Cameroon',
+    joinDesc: 'Créez un compte pour accéder aux meilleures opportunités immobilières et agricoles au Cameroun, gérer vos investissements et suivre vos projets.',
+    exclusiveAccess: 'Accès aux opportunités exclusives',
+    easyManagement: 'Gestion simplifiée de vos investissements',
+    support247: 'Support personnalisé 7j/7',
+    emailRequired: 'L\'email est requis',
+    passwordRequired: 'Le mot de passe est requis'
+  }
+};
+
 const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
+  const currentLang = useCurrentLang();
+  const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // État du formulaire
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -55,14 +189,13 @@ const Register = () => {
     setError('');
     setSuccess('');
     
-    // Validation
     if (formData.password !== formData.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
+      setError(t.passwordMismatch);
       return;
     }
     
     if (formData.password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères');
+      setError(t.passwordTooShort);
       return;
     }
     
@@ -87,27 +220,26 @@ const Register = () => {
       const response = await register(userData);
       
       if (response.success) {
-        setSuccess('Inscription réussie ! Redirection vers le tableau de bord...');
+        setSuccess(t.registrationSuccess);
         setTimeout(() => {
           navigate('/dashboard');
         }, 2000);
       } else {
-        setError(response.message || 'Erreur lors de l\'inscription');
+        setError(response.message || t.errorOccurred);
       }
     } catch (err) {
       console.error('Registration error:', err);
-      setError(err.message || 'Une erreur est survenue');
+      setError(err.message || t.errorOccurred);
     } finally {
       setLoading(false);
     }
   };
 
-  // Types de compte
   const accountTypes = [
-    { value: 'investor', label: 'Investisseur', icon: <Briefcase size={18} />, description: 'Recherche d\'opportunités d\'investissement' },
-    { value: 'owner', label: 'Propriétaire', icon: <Building2 size={18} />, description: 'Je souhaite vendre ou louer mes biens' },
-    { value: 'buyer', label: 'Acheteur', icon: <Building2 size={18} />, description: 'À la recherche d\'un bien immobilier' },
-    { value: 'other', label: 'Autre', icon: <User size={18} />, description: 'Prestataire, expert, ou autre profil' }
+    { value: 'investor', label: t.investor, icon: <Briefcase size={18} />, description: t.investorDesc },
+    { value: 'owner', label: t.owner, icon: <Building2 size={18} />, description: t.ownerDesc },
+    { value: 'buyer', label: t.buyer, icon: <Building2 size={18} />, description: t.buyerDesc },
+    { value: 'other', label: t.other, icon: <User size={18} />, description: t.otherDesc }
   ];
 
   return (
@@ -119,10 +251,9 @@ const Register = () => {
             <div className="bg-gradient-to-br from-emerald-900 to-slate-900 p-8 text-white">
               <div className="h-full flex flex-col justify-between">
                 <div>
-                  <h2 className="text-2xl font-serif mb-4">Rejoignez Property Cameroon</h2>
+                  <h2 className="text-2xl font-serif mb-4">{t.joinTitle}</h2>
                   <p className="text-slate-300 text-sm leading-relaxed mb-8">
-                    Créez un compte pour accéder aux meilleures opportunités immobilières et 
-                    agricoles au Cameroun, gérer vos investissements et suivre vos projets.
+                    {t.joinDesc}
                   </p>
                   
                   <div className="space-y-4">
@@ -130,32 +261,32 @@ const Register = () => {
                       <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
                         <CheckCircle size={16} className="text-emerald-400" />
                       </div>
-                      <span className="text-sm text-slate-300">Accès aux opportunités exclusives</span>
+                      <span className="text-sm text-slate-300">{t.exclusiveAccess}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
                         <CheckCircle size={16} className="text-emerald-400" />
                       </div>
-                      <span className="text-sm text-slate-300">Gestion simplifiée de vos investissements</span>
+                      <span className="text-sm text-slate-300">{t.easyManagement}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
                         <CheckCircle size={16} className="text-emerald-400" />
                       </div>
-                      <span className="text-sm text-slate-300">Support personnalisé 7j/7</span>
+                      <span className="text-sm text-slate-300">{t.support247}</span>
                     </div>
                   </div>
                 </div>
                 
                 <div className="mt-8 pt-6 border-t border-white/10">
                   <p className="text-xs text-slate-400">
-                    En créant un compte, vous acceptez nos{' '}
+                    {t.termsText}{' '}
                     <Link to="/terms" className="text-emerald-400 hover:underline">
-                      Conditions d'utilisation
+                      {t.termsLink}
                     </Link>{' '}
-                    et notre{' '}
+                    {t.and}{' '}
                     <Link to="/privacy" className="text-emerald-400 hover:underline">
-                      Politique de confidentialité
+                      {t.privacyLink}
                     </Link>
                   </p>
                 </div>
@@ -165,10 +296,8 @@ const Register = () => {
             {/* Right Side - Form */}
             <div className="p-8">
               <div className="mb-6">
-                <h3 className="text-2xl font-serif text-slate-800">Inscription</h3>
-                <p className="text-slate-500 text-sm mt-1">
-                  Remplissez le formulaire ci-dessous pour créer votre compte
-                </p>
+                <h3 className="text-2xl font-serif text-slate-800">{t.title}</h3>
+                <p className="text-slate-500 text-sm mt-1">{t.subtitle}</p>
               </div>
               
               {error && (
@@ -186,10 +315,10 @@ const Register = () => {
               )}
               
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Type de compte */}
+                {/* Account Type */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Je suis *
+                    {t.accountType}
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     {accountTypes.map((type) => (
@@ -218,10 +347,10 @@ const Register = () => {
                   </div>
                 </div>
                 
-                {/* Nom complet */}
+                {/* Full Name */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Nom complet *
+                    {t.fullName}
                   </label>
                   <div className="relative">
                     <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -232,7 +361,7 @@ const Register = () => {
                       onChange={handleChange}
                       required
                       className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                      placeholder="Jean Dupont"
+                      placeholder={t.fullNamePlaceholder}
                     />
                   </div>
                 </div>
@@ -240,7 +369,7 @@ const Register = () => {
                 {/* Email */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Email *
+                    {t.email}
                   </label>
                   <div className="relative">
                     <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -251,15 +380,15 @@ const Register = () => {
                       onChange={handleChange}
                       required
                       className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                      placeholder="jean@exemple.com"
+                      placeholder={t.emailPlaceholder}
                     />
                   </div>
                 </div>
                 
-                {/* Téléphone */}
+                {/* Phone */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Téléphone
+                    {t.phone}
                   </label>
                   <div className="relative">
                     <Phone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -269,15 +398,15 @@ const Register = () => {
                       value={formData.phone}
                       onChange={handleChange}
                       className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                      placeholder="+237 6XX XXX XXX"
+                      placeholder={t.phonePlaceholder}
                     />
                   </div>
                 </div>
                 
-                {/* Mot de passe */}
+                {/* Password */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Mot de passe *
+                    {t.password}
                   </label>
                   <div className="relative">
                     <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -288,7 +417,7 @@ const Register = () => {
                       onChange={handleChange}
                       required
                       className="w-full pl-10 pr-10 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                      placeholder="••••••••"
+                      placeholder={t.passwordPlaceholder}
                     />
                     <button
                       type="button"
@@ -300,10 +429,10 @@ const Register = () => {
                   </div>
                 </div>
                 
-                {/* Confirmer mot de passe */}
+                {/* Confirm Password */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Confirmer le mot de passe *
+                    {t.confirmPassword}
                   </label>
                   <div className="relative">
                     <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -314,7 +443,7 @@ const Register = () => {
                       onChange={handleChange}
                       required
                       className="w-full pl-10 pr-10 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                      placeholder="••••••••"
+                      placeholder={t.confirmPasswordPlaceholder}
                     />
                     <button
                       type="button"
@@ -326,10 +455,10 @@ const Register = () => {
                   </div>
                 </div>
                 
-                {/* Société (optionnel) */}
+                {/* Company */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Société / Organisation
+                    {t.company}
                   </label>
                   <div className="relative">
                     <Building2 size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -339,15 +468,15 @@ const Register = () => {
                       value={formData.company}
                       onChange={handleChange}
                       className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                      placeholder="Votre société"
+                      placeholder={t.companyPlaceholder}
                     />
                   </div>
                 </div>
                 
-                {/* Poste */}
+                {/* Position */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Poste / Fonction
+                    {t.position}
                   </label>
                   <div className="relative">
                     <Briefcase size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -357,15 +486,15 @@ const Register = () => {
                       value={formData.position}
                       onChange={handleChange}
                       className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                      placeholder="Votre poste"
+                      placeholder={t.positionPlaceholder}
                     />
                   </div>
                 </div>
                 
-                {/* Ville */}
+                {/* City */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Ville
+                    {t.city}
                   </label>
                   <div className="relative">
                     <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -375,15 +504,15 @@ const Register = () => {
                       value={formData.city}
                       onChange={handleChange}
                       className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                      placeholder="Douala, Yaoundé..."
+                      placeholder={t.cityPlaceholder}
                     />
                   </div>
                 </div>
                 
-                {/* Pays */}
+                {/* Country */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Pays
+                    {t.country}
                   </label>
                   <div className="relative">
                     <Globe size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -393,25 +522,24 @@ const Register = () => {
                       value={formData.country}
                       onChange={handleChange}
                       className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                      placeholder="Cameroun"
+                      placeholder={t.countryPlaceholder}
                     />
                   </div>
                 </div>
                 
-                {/* Bouton d'inscription */}
                 <button
                   type="submit"
                   disabled={loading}
                   className="w-full py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? <Loader2 size={20} className="animate-spin" /> : <User size={20} />}
-                  {loading ? 'Inscription en cours...' : 'Créer mon compte'}
+                  {loading ? t.registering : t.register}
                 </button>
                 
                 <p className="text-center text-sm text-slate-500">
-                  Déjà un compte ?{' '}
+                  {t.alreadyHaveAccount}{' '}
                   <Link to="/login" className="text-emerald-600 hover:underline font-medium">
-                    Se connecter
+                    {t.login}
                   </Link>
                 </p>
               </form>
