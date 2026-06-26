@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, Loader2, Sprout, X, CheckCircle2, AlertCircle, Ma
 import api from '../../../services/api';
 
 const MyAgriculturalLands = () => {
+  const [currentLang, setCurrentLang] = useState('fr');
   const [lands, setLands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,6 +14,241 @@ const MyAgriculturalLands = () => {
   const [uploadingImages, setUploadingImages] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
+
+  // ========== TRADUCTIONS ==========
+  const translations = {
+    fr: {
+      title: "Mes Terres Agricoles",
+      subtitle: "Gérez vos propriétés agricoles",
+      addLand: "Ajouter une Terre",
+      searchPlaceholder: "Rechercher par titre, région, culture, description...",
+      allStatus: "Tous les Statuts",
+      pending: "En Attente",
+      published: "Publié",
+      reserved: "Réservé",
+      sold: "Vendu",
+      landsFound: "terre(s) trouvée(s)",
+      noLands: "Aucune terre agricole trouvée",
+      noResults: "Aucun résultat pour",
+      clearSearch: "Effacer la recherche",
+      addFirstLand: "Ajouter Votre Première Terre",
+      
+      // Modal
+      editLand: "Modifier la Terre",
+      addNewLand: "Ajouter une Nouvelle Terre",
+      title: "Titre *",
+      region: "Région *",
+      selectRegion: "Sélectionner une région",
+      city: "Ville",
+      district: "District",
+      description: "Description *",
+      primaryCrop: "Culture Principale *",
+      searchCrop: "Rechercher une culture (ex: cacao, maïs, oignon, ail...)",
+      investmentMetrics: "Métriques d'Investissement",
+      surface: "Superficie (Ha) *",
+      price: "Prix (FCFA) *",
+      expectedRoi: "ROI Attendu (%)",
+      annualYield: "Rendement Annuel (tonnes)",
+      estimatedAnnualReturn: "Est. retour annuel",
+      compatibleCrops: "Cultures Compatibles",
+      searchCropsToAdd: "Rechercher des cultures à ajouter...",
+      soilType: "Type de Sol",
+      selectSoil: "Sélectionner un sol",
+      soilQuality: "Qualité du Sol (%)",
+      slope: "Pente",
+      roadAccess: "Accès Routier",
+      waterAccess: "Accès à l'Eau",
+      electricityAccess: "Accès à l'Électricité",
+      certifications: "Certifications",
+      images: "Images (max 10)",
+      status: "Statut",
+      pendingReview: "En Attente de Revue",
+      publishedVisible: "Publié (Visible aux investisseurs)",
+      reserved: "Réservé",
+      sold: "Vendu",
+      cancel: "Annuler",
+      update: "Mettre à Jour",
+      create: "Créer",
+      
+      // Labels carte
+      surface: "Superficie",
+      price: "Prix",
+      expectedRoi: "ROI Attendu",
+      primaryCrop: "Culture Principale",
+      edit: "Modifier",
+      delete: "Supprimer",
+      
+      // Status colors
+      statusPublished: "Publié",
+      statusPending: "En Attente",
+      statusReserved: "Réservé",
+      statusSold: "Vendu",
+      
+      // Soil types
+      volcanic: "Volcanique",
+      laterite: "Latérite",
+      sandy: "Sableux",
+      clay: "Argileux",
+      loam: "Limoneux",
+      ferrallitic: "Ferralitique",
+      peat: "Tourbeux",
+      silt: "Limon",
+      
+      // Slopes
+      flat: "Plat",
+      gentle: "Douce",
+      moderate: "Modérée",
+      steep: "Raide",
+      mountainous: "Montagneux",
+      
+      // Road access
+      paved: "Goudronné",
+      unpaved: "Non goudronné",
+      trail: "Piste",
+      none: "Aucun",
+      
+      // Errors
+      errorLoad: "Échec du chargement des terres agricoles",
+      errorSave: "Échec de l'enregistrement",
+      errorDelete: "Échec de la suppression",
+      confirmDelete: "Êtes-vous sûr de vouloir supprimer cette terre ?",
+      maxImages: "Maximum 10 images autorisées",
+      errorUpload: "Erreur lors du téléchargement des images",
+      
+      // Regions
+      center: "Centre",
+      south: "Sud",
+      west: "Ouest",
+      northWest: "Nord-Ouest",
+      littoral: "Littoral",
+      adamawa: "Adamaoua",
+      north: "Nord",
+      farNorth: "Extrême-Nord",
+      east: "Est"
+    },
+    en: {
+      title: "My Agricultural Lands",
+      subtitle: "Manage your agricultural properties",
+      addLand: "Add Land",
+      searchPlaceholder: "Search by title, region, crop, description...",
+      allStatus: "All Status",
+      pending: "Pending",
+      published: "Published",
+      reserved: "Reserved",
+      sold: "Sold",
+      landsFound: "land(s) found",
+      noLands: "No agricultural lands found",
+      noResults: "No results for",
+      clearSearch: "Clear search",
+      addFirstLand: "Add Your First Land",
+      
+      // Modal
+      editLand: "Edit Land",
+      addNewLand: "Add New Land",
+      title: "Title *",
+      region: "Region *",
+      selectRegion: "Select region",
+      city: "City",
+      district: "District",
+      description: "Description *",
+      primaryCrop: "Primary Crop *",
+      searchCrop: "Search crop (e.g., cocoa, maize, onion, garlic...)",
+      investmentMetrics: "Investment Metrics",
+      surface: "Surface (Ha) *",
+      price: "Price (FCFA) *",
+      expectedRoi: "Expected ROI (%)",
+      annualYield: "Annual Yield (tons)",
+      estimatedAnnualReturn: "Est. annual return",
+      compatibleCrops: "Compatible Crops",
+      searchCropsToAdd: "Search crops to add...",
+      soilType: "Soil Type",
+      selectSoil: "Select soil",
+      soilQuality: "Soil Quality (%)",
+      slope: "Slope",
+      roadAccess: "Road Access",
+      waterAccess: "Water Access",
+      electricityAccess: "Electricity Access",
+      certifications: "Certifications",
+      images: "Images (max 10)",
+      status: "Status",
+      pendingReview: "Pending Review",
+      publishedVisible: "Published (Visible to investors)",
+      reserved: "Reserved",
+      sold: "Sold",
+      cancel: "Cancel",
+      update: "Update",
+      create: "Create",
+      
+      // Labels carte
+      surface: "Surface",
+      price: "Price",
+      expectedRoi: "Expected ROI",
+      primaryCrop: "Primary Crop",
+      edit: "Edit",
+      delete: "Delete",
+      
+      // Status colors
+      statusPublished: "Published",
+      statusPending: "Pending",
+      statusReserved: "Reserved",
+      statusSold: "Sold",
+      
+      // Soil types
+      volcanic: "Volcanic",
+      laterite: "Laterite",
+      sandy: "Sandy",
+      clay: "Clay",
+      loam: "Loam",
+      ferrallitic: "Ferrallitic",
+      peat: "Peat",
+      silt: "Silt",
+      
+      // Slopes
+      flat: "Flat",
+      gentle: "Gentle",
+      moderate: "Moderate",
+      steep: "Steep",
+      mountainous: "Mountainous",
+      
+      // Road access
+      paved: "Paved",
+      unpaved: "Unpaved",
+      trail: "Trail",
+      none: "None",
+      
+      // Errors
+      errorLoad: "Failed to load agricultural lands",
+      errorSave: "Failed to save",
+      errorDelete: "Failed to delete",
+      confirmDelete: "Are you sure you want to delete this land?",
+      maxImages: "Maximum 10 images allowed",
+      errorUpload: "Error uploading images",
+      
+      // Regions
+      center: "Center",
+      south: "South",
+      west: "West",
+      northWest: "North-West",
+      littoral: "Littoral",
+      adamawa: "Adamawa",
+      north: "North",
+      farNorth: "Far-North",
+      east: "East"
+    }
+  };
+
+  // Récupérer la langue
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    setCurrentLang(finalLang);
+  }, []);
+
+  const t = translations[currentLang] || translations.fr;
 
   // ========== 60+ CULTURES COMPLÈTES ==========
   const cropTypes = [
@@ -42,11 +278,43 @@ const MyAgriculturalLands = () => {
     crop.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const regions = ['Center', 'South', 'West', 'North-West', 'Littoral', 'Adamawa', 'North', 'Far-North', 'East'];
-  const soilTypes = ['volcanic', 'laterite', 'sandy', 'clay', 'loam', 'ferrallitic', 'peat', 'silt'];
-  const roadAccessOptions = ['paved', 'unpaved', 'trail', 'none'];
-  const waterSources = ['river', 'well', 'borehole', 'lake', 'rainfed', 'spring', 'dam'];
-  const slopeOptions = ['flat', 'gentle', 'moderate', 'steep', 'mountainous'];
+  const regions = [
+    { value: 'Center', label: t.center },
+    { value: 'South', label: t.south },
+    { value: 'West', label: t.west },
+    { value: 'North-West', label: t.northWest },
+    { value: 'Littoral', label: t.littoral },
+    { value: 'Adamawa', label: t.adamawa },
+    { value: 'North', label: t.north },
+    { value: 'Far-North', label: t.farNorth },
+    { value: 'East', label: t.east }
+  ];
+
+  const soilTypes = [
+    { value: 'volcanic', label: t.volcanic },
+    { value: 'laterite', label: t.laterite },
+    { value: 'sandy', label: t.sandy },
+    { value: 'clay', label: t.clay },
+    { value: 'loam', label: t.loam },
+    { value: 'ferrallitic', label: t.ferrallitic },
+    { value: 'peat', label: t.peat },
+    { value: 'silt', label: t.silt }
+  ];
+
+  const roadAccessOptions = [
+    { value: 'paved', label: t.paved },
+    { value: 'unpaved', label: t.unpaved },
+    { value: 'trail', label: t.trail },
+    { value: 'none', label: t.none }
+  ];
+
+  const slopeOptions = [
+    { value: 'flat', label: t.flat },
+    { value: 'gentle', label: t.gentle },
+    { value: 'moderate', label: t.moderate },
+    { value: 'steep', label: t.steep },
+    { value: 'mountainous', label: t.mountainous }
+  ];
 
   const getCropEmoji = (crop) => {
     const emojiMap = {
@@ -89,12 +357,12 @@ const MyAgriculturalLands = () => {
   });
 
   const certificationOptions = [
-    { value: 'organic', label: 'Organic', icon: '🌱' },
-    { value: 'fair-trade', label: 'Fair Trade', icon: '🤝' },
-    { value: 'rainforest', label: 'Rainforest Alliance', icon: '🐸' },
-    { value: 'utZ', label: 'UTZ Certified', icon: '✓' },
-    { value: 'bio-certified', label: 'Bio Certified', icon: '🌿' },
-    { value: 'global-gap', label: 'Global GAP', icon: '🌍' }
+    { value: 'organic', label: t.organic || 'Organic', icon: '🌱' },
+    { value: 'fair-trade', label: t.fairTrade || 'Fair Trade', icon: '🤝' },
+    { value: 'rainforest', label: t.rainforest || 'Rainforest Alliance', icon: '🐸' },
+    { value: 'utZ', label: t.utz || 'UTZ Certified', icon: '✓' },
+    { value: 'bio-certified', label: t.bioCertified || 'Bio Certified', icon: '🌿' },
+    { value: 'global-gap', label: t.globalGap || 'Global GAP', icon: '🌍' }
   ];
 
   const getImageUrl = (image) => {
@@ -111,7 +379,7 @@ const MyAgriculturalLands = () => {
       setLands(response.lands || []);
     } catch (err) {
       console.error('Error fetching lands:', err);
-      setError('Failed to load agricultural lands');
+      setError(t.errorLoad);
     } finally {
       setLoading(false);
     }
@@ -119,7 +387,28 @@ const MyAgriculturalLands = () => {
 
   useEffect(() => {
     fetchLands();
-  }, []);
+  }, [currentLang]);
+
+  // Fonction pour obtenir le statut traduit
+  const getStatusLabel = (status) => {
+    const statusMap = {
+      'PENDING': t.pending,
+      'PUBLISHED': t.published,
+      'RESERVED': t.reserved,
+      'SOLD': t.sold
+    };
+    return statusMap[status] || status;
+  };
+
+  const getStatusColor = (status) => {
+    const colorMap = {
+      'PENDING': 'bg-orange-100 text-orange-700',
+      'PUBLISHED': 'bg-green-100 text-green-700',
+      'RESERVED': 'bg-blue-100 text-blue-700',
+      'SOLD': 'bg-red-100 text-red-700'
+    };
+    return colorMap[status] || 'bg-gray-100 text-gray-500';
+  };
 
   const filteredLands = lands.filter(land => {
     const matchesStatus = filterStatus === 'ALL' || land.status === filterStatus;
@@ -133,7 +422,7 @@ const MyAgriculturalLands = () => {
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (formData.images.length + files.length > 10) {
-      alert('Maximum 10 images allowed');
+      alert(t.maxImages);
       return;
     }
     
@@ -157,7 +446,7 @@ const MyAgriculturalLands = () => {
       }
     } catch (err) {
       console.error('Error uploading images:', err);
-      alert('Error uploading images');
+      alert(t.errorUpload);
     } finally {
       setUploadingImages(false);
     }
@@ -220,54 +509,52 @@ const MyAgriculturalLands = () => {
     }
   };
 
-  // Dans MyAgriculturalLands.jsx, modifie handleSubmit
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setSubmitting(true);
-  
-  try {
-    // Nettoyer les valeurs vides pour éviter les erreurs d'enum
-    const cleanData = {
-      ...formData,
-      surface: { value: parseFloat(formData.surface.value), unit: formData.surface.unit },
-      price: { amount: parseFloat(formData.price.amount), currency: formData.price.currency },
-      expectedRoi: parseFloat(formData.expectedRoi) || 0,
-      annualYield: parseFloat(formData.annualYield) || 0,
-      agricultureDetails: {
-        ...formData.agricultureDetails,
-        primaryCrop: formData.agricultureDetails.primaryCrop || undefined,
-        soilType: formData.agricultureDetails.soilType || undefined,
-        waterSource: formData.agricultureDetails.waterSource || undefined,
-        slope: formData.agricultureDetails.slope || 'gentle',
-        cropCompatibility: formData.agricultureDetails.cropCompatibility || []
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    
+    try {
+      const cleanData = {
+        ...formData,
+        surface: { value: parseFloat(formData.surface.value), unit: formData.surface.unit },
+        price: { amount: parseFloat(formData.price.amount), currency: formData.price.currency },
+        expectedRoi: parseFloat(formData.expectedRoi) || 0,
+        annualYield: parseFloat(formData.annualYield) || 0,
+        agricultureDetails: {
+          ...formData.agricultureDetails,
+          primaryCrop: formData.agricultureDetails.primaryCrop || undefined,
+          soilType: formData.agricultureDetails.soilType || undefined,
+          waterSource: formData.agricultureDetails.waterSource || undefined,
+          slope: formData.agricultureDetails.slope || 'gentle',
+          cropCompatibility: formData.agricultureDetails.cropCompatibility || []
+        }
+      };
+      
+      if (editingItem) {
+        await api.put(`/agriculture/${editingItem._id}`, cleanData);
+      } else {
+        await api.post('/agriculture', cleanData);
       }
-    };
-    
-    if (editingItem) {
-      await api.put(`/agriculture/${editingItem._id}`, cleanData);
-    } else {
-      await api.post('/agriculture', cleanData);
+      
+      setShowModal(false);
+      resetForm();
+      fetchLands();
+    } catch (err) {
+      console.error('Error saving land:', err);
+      setError(t.errorSave);
+    } finally {
+      setSubmitting(false);
     }
-    
-    setShowModal(false);
-    resetForm();
-    fetchLands();
-  } catch (err) {
-    console.error('Error saving land:', err);
-    setError(err.message || 'Failed to save');
-  } finally {
-    setSubmitting(false);
-  }
-};
+  };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this land?')) return;
+    if (!window.confirm(t.confirmDelete)) return;
     try {
       await api.del(`/agriculture/${id}`);
       fetchLands();
     } catch (err) {
       console.error('Error deleting land:', err);
-      setError('Failed to delete');
+      setError(t.errorDelete);
     }
   };
 
@@ -354,14 +641,14 @@ const handleSubmit = async (e) => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-serif text-[#0a2619] italic">My Agricultural Lands</h1>
-          <p className="text-slate-500 text-sm mt-1">Manage your agricultural properties</p>
+          <h1 className="text-3xl font-serif text-[#0a2619] italic">{t.title}</h1>
+          <p className="text-slate-500 text-sm mt-1">{t.subtitle}</p>
         </div>
         <button
           onClick={() => { resetForm(); setShowModal(true); }}
           className="flex items-center gap-2 px-4 py-2 bg-[#0a2619] text-[#c5a059] rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#1a3d2a] transition-colors"
         >
-          <Plus size={16} /> Add Land
+          <Plus size={16} /> {t.addLand}
         </button>
       </div>
 
@@ -372,7 +659,7 @@ const handleSubmit = async (e) => {
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search by title, region, crop, description..."
+              placeholder={t.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#c5a059]"
@@ -383,11 +670,11 @@ const handleSubmit = async (e) => {
             onChange={(e) => setFilterStatus(e.target.value)}
             className="px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#c5a059]"
           >
-            <option value="ALL">All Status</option>
-            <option value="PENDING">Pending</option>
-            <option value="PUBLISHED">Published</option>
-            <option value="RESERVED">Reserved</option>
-            <option value="SOLD">Sold</option>
+            <option value="ALL">{t.allStatus}</option>
+            <option value="PENDING">{t.pending}</option>
+            <option value="PUBLISHED">{t.published}</option>
+            <option value="RESERVED">{t.reserved}</option>
+            <option value="SOLD">{t.sold}</option>
           </select>
         </div>
       </div>
@@ -402,13 +689,13 @@ const handleSubmit = async (e) => {
       {filteredLands.length === 0 ? (
         <div className="bg-slate-50 rounded-3xl p-12 text-center">
           <Sprout size={48} className="text-slate-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-slate-700 mb-2">No agricultural lands found</h3>
+          <h3 className="text-lg font-medium text-slate-700 mb-2">{t.noLands}</h3>
           <p className="text-slate-400 text-sm mb-6">
-            {searchTerm ? `No results for "${searchTerm}"` : 'Start by adding your first agricultural land'}
+            {searchTerm ? `${t.noResults} "${searchTerm}"` : ''}
           </p>
           {searchTerm && (
             <button onClick={() => setSearchTerm('')} className="text-[#c5a059] text-sm underline">
-              Clear search
+              {t.clearSearch}
             </button>
           )}
           {!searchTerm && (
@@ -416,13 +703,13 @@ const handleSubmit = async (e) => {
               onClick={() => { resetForm(); setShowModal(true); }}
               className="inline-flex items-center gap-2 px-6 py-3 bg-[#0a2619] text-[#c5a059] rounded-xl text-xs font-black uppercase tracking-widest"
             >
-              <Plus size={16} /> Add Your First Land
+              <Plus size={16} /> {t.addFirstLand}
             </button>
           )}
         </div>
       ) : (
         <>
-          <p className="text-sm text-slate-500">{filteredLands.length} land(s) found</p>
+          <p className="text-sm text-slate-500">{filteredLands.length} {t.landsFound}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredLands.map((land) => (
               <div key={land._id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-lg transition-shadow">
@@ -432,13 +719,8 @@ const handleSubmit = async (e) => {
                 <div className="p-5">
                   <div className="flex justify-between items-start">
                     <h3 className="text-lg font-bold text-slate-800 mb-2">{land.title}</h3>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      land.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' :
-                      land.status === 'PENDING' ? 'bg-orange-100 text-orange-700' :
-                      land.status === 'RESERVED' ? 'bg-blue-100 text-blue-700' :
-                      'bg-red-100 text-red-700'
-                    }`}>
-                      {land.status}
+                    <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(land.status)}`}>
+                      {getStatusLabel(land.status)}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-slate-500 text-sm mb-3">
@@ -448,19 +730,19 @@ const handleSubmit = async (e) => {
                   <p className="text-slate-500 text-sm mb-3 line-clamp-2">{land.description}</p>
                   <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
                     <div>
-                      <p className="text-xs text-slate-400">Surface</p>
+                      <p className="text-xs text-slate-400">{t.surface}</p>
                       <p className="font-bold text-slate-800">{land.surface?.value} {land.surface?.unit}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-400">Price</p>
+                      <p className="text-xs text-slate-400">{t.price}</p>
                       <p className="font-bold text-[#c5a059]">{land.price?.amount?.toLocaleString()} {land.price?.currency}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-400">Expected ROI</p>
+                      <p className="text-xs text-slate-400">{t.expectedRoi}</p>
                       <p className="font-bold text-green-600">{land.expectedRoi || 0}%</p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-400">Primary Crop</p>
+                      <p className="text-xs text-slate-400">{t.primaryCrop}</p>
                       <p className="font-bold text-slate-800 flex items-center gap-1">
                         {getCropEmoji(land.agricultureDetails?.primaryCrop)}
                         {land.agricultureDetails?.primaryCrop || '—'}
@@ -469,10 +751,10 @@ const handleSubmit = async (e) => {
                   </div>
                   <div className="flex gap-2 mt-4">
                     <button onClick={() => openEditModal(land)} className="flex-1 px-3 py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-slate-200">
-                      <Pencil size={14} className="inline mr-1" /> Edit
+                      <Pencil size={14} className="inline mr-1" /> {t.edit}
                     </button>
                     <button onClick={() => handleDelete(land._id)} className="flex-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-red-100">
-                      <Trash2 size={14} className="inline mr-1" /> Delete
+                      <Trash2 size={14} className="inline mr-1" /> {t.delete}
                     </button>
                   </div>
                 </div>
@@ -488,7 +770,7 @@ const handleSubmit = async (e) => {
           <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-slate-100 p-6 flex justify-between items-center">
               <h2 className="text-xl font-serif text-[#0a2619] italic">
-                {editingItem ? 'Edit Land' : 'Add New Land'}
+                {editingItem ? t.editLand : t.addNewLand}
               </h2>
               <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 rounded-xl">
                 <X size={20} />
@@ -499,42 +781,42 @@ const handleSubmit = async (e) => {
               {/* Basic Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Title *</label>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.title}</label>
                   <input type="text" name="title" value={formData.title} onChange={handleChange} required className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059]" placeholder="e.g., Mbalmayo Cocoa Estate" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Region *</label>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.region}</label>
                   <select name="location.region" value={formData.location.region} onChange={handleChange} required className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059]">
-                    <option value="">Select region</option>
-                    {regions.map(r => <option key={r} value={r}>{r}</option>)}
+                    <option value="">{t.selectRegion}</option>
+                    {regions.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">City</label>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.city}</label>
                   <input type="text" name="location.city" value={formData.location.city} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059]" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">District</label>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.district}</label>
                   <input type="text" name="location.district" value={formData.location.district} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Description *</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.description}</label>
                 <textarea name="description" value={formData.description} onChange={handleChange} rows="3" required className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059]" />
               </div>
 
               {/* Primary Crop avec recherche */}
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Primary Crop *</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.primaryCrop}</label>
                 <div className="relative">
                   <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Search crop (e.g., cocoa, maize, onion, garlic...)"
+                    placeholder={t.searchCrop}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059]"
@@ -578,25 +860,25 @@ const handleSubmit = async (e) => {
 
               {/* Investment Metrics */}
               <div className="bg-emerald-50 p-4 rounded-2xl">
-                <h3 className="text-sm font-bold text-emerald-800 mb-3 flex items-center gap-2"><TrendingUp size={16} /> Investment Metrics</h3>
+                <h3 className="text-sm font-bold text-emerald-800 mb-3 flex items-center gap-2"><TrendingUp size={16} /> {t.investmentMetrics}</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Surface (Ha) *</label>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.surface}</label>
                     <input type="number" name="surface.value" value={formData.surface.value} onChange={handleChange} required className="w-full px-4 py-3 bg-white rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059]" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Price (FCFA) *</label>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.price}</label>
                     <input type="number" name="price.amount" value={formData.price.amount} onChange={handleChange} required className="w-full px-4 py-3 bg-white rounded-xl outline-none" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Expected ROI (%)</label>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.expectedRoi}</label>
                     <input type="number" name="expectedRoi" value={formData.expectedRoi} onChange={handleChange} step="0.1" className="w-full px-4 py-3 bg-white rounded-xl outline-none" placeholder="e.g., 15" />
                     {formData.expectedRoi && formData.price.amount && (
-                      <p className="text-[10px] text-green-600 mt-1">Est. annual return: {calculateEstimatedReturn()} FCFA</p>
+                      <p className="text-[10px] text-green-600 mt-1">{t.estimatedAnnualReturn}: {calculateEstimatedReturn()} FCFA</p>
                     )}
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Annual Yield (tons)</label>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.annualYield}</label>
                     <input type="number" name="annualYield" value={formData.annualYield} onChange={handleChange} step="0.1" className="w-full px-4 py-3 bg-white rounded-xl outline-none" />
                   </div>
                 </div>
@@ -604,12 +886,12 @@ const handleSubmit = async (e) => {
 
               {/* Compatible Crops avec recherche */}
               <div className="bg-amber-50 p-4 rounded-2xl">
-                <h3 className="text-sm font-bold text-amber-800 mb-3 flex items-center gap-2"><Sprout size={16} /> Compatible Crops</h3>
+                <h3 className="text-sm font-bold text-amber-800 mb-3 flex items-center gap-2"><Sprout size={16} /> {t.compatibleCrops}</h3>
                 <div className="relative mb-3">
                   <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Search crops to add..."
+                    placeholder={t.searchCropsToAdd}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 bg-white rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] text-sm"
@@ -643,32 +925,32 @@ const handleSubmit = async (e) => {
                 </div>
               </div>
 
-              {/* Soil & Climate (simplifié mais complet) */}
+              {/* Soil & Climate */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Soil Type</label>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.soilType}</label>
                   <select name="agricultureDetails.soilType" value={formData.agricultureDetails.soilType} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059]">
-                    <option value="">Select soil</option>
-                    {soilTypes.map(s => <option key={s} value={s}>{s}</option>)}
+                    <option value="">{t.selectSoil}</option>
+                    {soilTypes.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Soil Quality (%)</label>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.soilQuality}</label>
                   <input type="number" name="agricultureDetails.soilQuality" value={formData.agricultureDetails.soilQuality} onChange={handleChange} min="0" max="100" className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Slope</label>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.slope}</label>
                   <select name="agricultureDetails.slope" value={formData.agricultureDetails.slope} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none">
-                    {slopeOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                    {slopeOptions.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Road Access</label>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.roadAccess}</label>
                   <select name="agricultureDetails.roadAccess" value={formData.agricultureDetails.roadAccess} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none">
-                    {roadAccessOptions.map(r => <option key={r} value={r}>{r}</option>)}
+                    {roadAccessOptions.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                   </select>
                 </div>
               </div>
@@ -676,17 +958,17 @@ const handleSubmit = async (e) => {
               <div className="grid grid-cols-2 gap-4">
                 <label className="flex items-center gap-2">
                   <input type="checkbox" name="waterAccess" checked={formData.agricultureDetails.waterAccess} onChange={handleChange} className="rounded" />
-                  <span className="text-sm text-slate-700">Water Access</span>
+                  <span className="text-sm text-slate-700">{t.waterAccess}</span>
                 </label>
                 <label className="flex items-center gap-2">
                   <input type="checkbox" name="electricityAccess" checked={formData.agricultureDetails.electricityAccess} onChange={handleChange} className="rounded" />
-                  <span className="text-sm text-slate-700">Electricity Access</span>
+                  <span className="text-sm text-slate-700">{t.electricityAccess}</span>
                 </label>
               </div>
 
               {/* Certifications */}
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-2">Certifications</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-2">{t.certifications}</label>
                 <div className="flex flex-wrap gap-3">
                   {certificationOptions.map(cert => (
                     <label key={cert.value} className="flex items-center gap-2 cursor-pointer">
@@ -704,7 +986,7 @@ const handleSubmit = async (e) => {
 
               {/* Images */}
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Images (max 10)</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.images}</label>
                 <div className="flex gap-3 flex-wrap">
                   {formData.images.map((img, idx) => (
                     <div key={idx} className="relative">
@@ -721,22 +1003,22 @@ const handleSubmit = async (e) => {
 
               {/* Status */}
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Status</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.status}</label>
                 <select name="status" value={formData.status} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059]">
-                  <option value="PENDING">Pending Review</option>
-                  <option value="PUBLISHED">Published (Visible to investors)</option>
-                  <option value="RESERVED">Reserved</option>
-                  <option value="SOLD">Sold</option>
+                  <option value="PENDING">{t.pendingReview}</option>
+                  <option value="PUBLISHED">{t.publishedVisible}</option>
+                  <option value="RESERVED">{t.reserved}</option>
+                  <option value="SOLD">{t.sold}</option>
                 </select>
               </div>
 
               <div className="flex gap-4 pt-4">
                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-6 py-4 bg-slate-100 text-slate-600 rounded-xl font-black uppercase text-[11px]">
-                  Cancel
+                  {t.cancel}
                 </button>
                 <button type="submit" disabled={submitting} className="flex-1 px-6 py-4 bg-[#0a2619] text-[#c5a059] rounded-xl font-black uppercase text-[11px] flex items-center justify-center gap-2">
                   {submitting ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
-                  {editingItem ? 'Update' : 'Create'}
+                  {editingItem ? t.update : t.create}
                 </button>
               </div>
             </form>

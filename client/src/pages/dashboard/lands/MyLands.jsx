@@ -1,3 +1,4 @@
+// frontend/src/pages/dashboard/properties/MyLands.jsx
 import React, { useState, useEffect } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { 
@@ -10,6 +11,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 const MyLands = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [currentLang, setCurrentLang] = useState('fr');
   const { activeRoles } = useOutletContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -20,6 +22,137 @@ const MyLands = () => {
   const [updatingStatus, setUpdatingStatus] = useState(null);
 
   const isAdmin = activeRoles?.includes('ADMIN');
+
+  // ========== TRADUCTIONS ==========
+  const translations = {
+    fr: {
+      title: "GESTION DES PROPRIÉTÉS",
+      titleUser: "MES PROPRIÉTÉS",
+      adminBadge: "Admin",
+      subtitle: "Gérez toutes les propriétés — approuvez, publiez ou supprimez.",
+      subtitleUser: "Gérez vos propriétés et suivez l'état de vos titres fonciers.",
+      propertiesFound: "propriété{plural} trouvée{plural}",
+      addProperty: "AJOUTER UNE PROPRIÉTÉ",
+      
+      // Search
+      searchPlaceholder: "Rechercher par titre, ville, district...",
+      
+      // Status
+      all: "TOUS",
+      pending: "EN ATTENTE",
+      published: "PUBLIÉ",
+      reserved: "RÉSERVÉ",
+      sold: "VENDU",
+      
+      // Labels
+      unknownLocation: "Localisation inconnue",
+      viewDocuments: "Voir les Documents",
+      approvePublish: "Approuver & Publier",
+      
+      // Messages
+      noProperties: "Aucune propriété trouvée",
+      addPropertyLink: "Ajouter une propriété",
+      loadingProperties: "Chargement des propriétés...",
+      loadingError: "Erreur de chargement",
+      tryAgain: "Réessayer",
+      
+      // Menu
+      edit: "Modifier",
+      changeStatus: "Changer le Statut",
+      delete: "Supprimer",
+      
+      // Confirmations
+      confirmDelete: "Êtes-vous sûr de vouloir supprimer cette propriété ? Cette action est irréversible.",
+      deleteError: "Erreur lors de la suppression",
+      statusError: "Erreur lors de la mise à jour du statut",
+      
+      // Status labels
+      statusPublished: "Publié",
+      statusPending: "En Attente",
+      statusSold: "Vendu",
+      statusReserved: "Réservé"
+    },
+    en: {
+      title: "PROPERTIES MANAGEMENT",
+      titleUser: "MY PROPERTIES",
+      adminBadge: "Admin",
+      subtitle: "Manage all properties — approve, publish or delete.",
+      subtitleUser: "Manage your properties and track your land titles status.",
+      propertiesFound: "propert{plural} found",
+      addProperty: "ADD PROPERTY",
+      
+      // Search
+      searchPlaceholder: "Search by title, city, district...",
+      
+      // Status
+      all: "ALL",
+      pending: "PENDING",
+      published: "PUBLISHED",
+      reserved: "RESERVED",
+      sold: "SOLD",
+      
+      // Labels
+      unknownLocation: "Unknown location",
+      viewDocuments: "View Documents",
+      approvePublish: "Approve & Publish",
+      
+      // Messages
+      noProperties: "No properties found",
+      addPropertyLink: "Add a property",
+      loadingProperties: "Loading properties...",
+      loadingError: "Loading error",
+      tryAgain: "Try Again",
+      
+      // Menu
+      edit: "Edit",
+      changeStatus: "Change Status",
+      delete: "Delete",
+      
+      // Confirmations
+      confirmDelete: "Are you sure you want to delete this property? This action is irreversible.",
+      deleteError: "Error deleting property",
+      statusError: "Error updating status",
+      
+      // Status labels
+      statusPublished: "Published",
+      statusPending: "Pending",
+      statusSold: "Sold",
+      statusReserved: "Reserved"
+    }
+  };
+
+  // Récupérer la langue
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    setCurrentLang(finalLang);
+  }, []);
+
+  const t = translations[currentLang] || translations.fr;
+
+  // Obtenir le libellé du statut traduit
+  const getStatusLabel = (status) => {
+    const statusMap = {
+      'PUBLISHED': t.statusPublished,
+      'PENDING': t.statusPending,
+      'SOLD': t.statusSold,
+      'RESERVED': t.statusReserved
+    };
+    return statusMap[status] || status;
+  };
+
+  // Filtres avec traduction
+  const statusFilters = [
+    { id: 'ALL', label: t.all },
+    { id: 'PENDING', label: t.pending },
+    { id: 'PUBLISHED', label: t.published },
+    { id: 'RESERVED', label: t.reserved },
+    { id: 'SOLD', label: t.sold }
+  ];
 
   const fetchMyProperties = async () => {
     try {
@@ -40,7 +173,7 @@ const MyLands = () => {
       setLands(properties);
     } catch (err) {
       console.error('Error fetching properties:', err);
-      setError(err.message || 'Error loading properties');
+      setError(err.message || t.loadingError);
       setLands([]);
     } finally {
       setLoading(false);
@@ -49,7 +182,7 @@ const MyLands = () => {
 
   useEffect(() => {
     fetchMyProperties();
-  }, [isAdmin, statusFilter]);
+  }, [isAdmin, statusFilter, currentLang]);
 
   // Changer le statut d'une propriété (admin seulement)
   const handleStatusChange = async (landId, newStatus) => {
@@ -60,7 +193,7 @@ const MyLands = () => {
       setShowMenu(null);
     } catch (err) {
       console.error('Error updating status:', err);
-      alert('Error updating status');
+      alert(t.statusError);
     } finally {
       setUpdatingStatus(null);
     }
@@ -88,17 +221,17 @@ const MyLands = () => {
   };
 
   const getLocationString = (location) => {
-    if (!location) return 'Unknown location';
+    if (!location) return t.unknownLocation;
     const parts = [location.city, location.district].filter(Boolean);
-    return parts.join(', ') || 'Unknown location';
+    return parts.join(', ') || t.unknownLocation;
   };
 
   const getStatusInfo = (status) => {
     const statusMap = {
-      'PUBLISHED': { label: 'Published', color: 'bg-green-100 text-green-700', icon: <CheckCircle2 size={12} /> },
-      'PENDING':   { label: 'Pending',   color: 'bg-orange-100 text-orange-700', icon: <Clock size={12} /> },
-      'SOLD':      { label: 'Sold',      color: 'bg-gray-100 text-gray-700',   icon: <CheckCircle2 size={12} /> },
-      'RESERVED':  { label: 'Reserved',  color: 'bg-blue-100 text-blue-700',   icon: <Clock size={12} /> }
+      'PUBLISHED': { label: getStatusLabel('PUBLISHED'), color: 'bg-green-100 text-green-700', icon: <CheckCircle2 size={12} /> },
+      'PENDING':   { label: getStatusLabel('PENDING'),   color: 'bg-orange-100 text-orange-700', icon: <Clock size={12} /> },
+      'SOLD':      { label: getStatusLabel('SOLD'),      color: 'bg-gray-100 text-gray-700',   icon: <CheckCircle2 size={12} /> },
+      'RESERVED':  { label: getStatusLabel('RESERVED'),  color: 'bg-blue-100 text-blue-700',   icon: <Clock size={12} /> }
     };
     return statusMap[status] || { label: status, color: 'bg-slate-100 text-slate-700', icon: <Clock size={12} /> };
   };
@@ -120,23 +253,31 @@ const MyLands = () => {
   };
 
   const handleDeleteProperty = async (landId) => {
-    if (window.confirm('Are you sure you want to delete this property? This action is irreversible.')) {
+    if (window.confirm(t.confirmDelete)) {
       try {
         await api.deleteProperty(landId);
         await fetchMyProperties();
         setShowMenu(null);
       } catch (err) {
         console.error('Error deleting property:', err);
-        alert('Error deleting property');
+        alert(t.deleteError);
       }
     }
+  };
+
+  // Obtenir le message de propriétés trouvées
+  const getPropertiesMessage = (count) => {
+    const msg = t.propertiesFound
+      .replace('{plural}', count > 1 ? 's' : '')
+      .replace('{plural}', count > 1 ? 'ies' : 'y');
+    return msg;
   };
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-96 space-y-4">
         <Loader2 size={48} className="text-[#c5a059] animate-spin" />
-        <p className="text-slate-500 text-sm">Loading properties...</p>
+        <p className="text-slate-500 text-sm">{t.loadingProperties}</p>
       </div>
     );
   }
@@ -145,10 +286,10 @@ const MyLands = () => {
     return (
       <div className="flex flex-col items-center justify-center h-96 space-y-4">
         <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-center max-w-md">
-          <p className="font-bold">Loading Error</p>
+          <p className="font-bold">{t.loadingError}</p>
           <p className="text-sm mt-1">{error}</p>
           <button onClick={fetchMyProperties} className="mt-4 px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold hover:bg-red-700 transition-colors">
-            Try Again
+            {t.tryAgain}
           </button>
         </div>
       </div>
@@ -162,19 +303,19 @@ const MyLands = () => {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-black text-[#0a2619] tracking-tighter">
-              {isAdmin ? 'PROPERTIES MANAGEMENT' : 'MY PROPERTIES'}
+              {isAdmin ? t.title : t.titleUser}
             </h1>
             {isAdmin && (
               <span className="flex items-center gap-1 px-2 py-1 bg-red-50 text-red-600 text-[9px] font-black uppercase tracking-widest rounded-lg">
-                <Shield size={10} /> Admin
+                <Shield size={10} /> {t.adminBadge}
               </span>
             )}
           </div>
           <p className="text-slate-500 text-sm">
-            {isAdmin ? 'Manage all properties — approve, publish or delete.' : 'Manage your properties and track your land titles status.'}
+            {isAdmin ? t.subtitle : t.subtitleUser}
           </p>
           <p className="text-xs text-green-600 mt-1">
-            ✅ {filteredLands.length} propert{filteredLands.length > 1 ? 'ies' : 'y'} found
+            ✅ {filteredLands.length} {getPropertiesMessage(filteredLands.length)}
           </p>
         </div>
 
@@ -182,7 +323,7 @@ const MyLands = () => {
           onClick={handleAddProperty}
           className="flex items-center justify-center gap-2 bg-[#c5a059] text-[#0a2619] font-black px-6 py-3 rounded-2xl shadow-lg hover:bg-[#b08d4a] transition-all transform hover:scale-105 text-sm"
         >
-          <Plus size={20} /> ADD PROPERTY
+          <Plus size={20} /> {t.addProperty}
         </button>
       </div>
 
@@ -192,25 +333,25 @@ const MyLands = () => {
           <Search size={18} className="text-slate-400" />
           <input
             type="text"
-            placeholder="Search by title, city, district..."
+            placeholder={t.searchPlaceholder}
             className="bg-transparent border-none outline-none text-sm w-full"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        {/* Filtre statut — utile surtout pour l'admin */}
+        {/* Filtre statut */}
         <div className="flex gap-2 flex-wrap">
-          {['ALL', 'PENDING', 'PUBLISHED', 'RESERVED', 'SOLD'].map(s => (
+          {statusFilters.map(s => (
             <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
+              key={s.id}
+              onClick={() => setStatusFilter(s.id)}
               className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                statusFilter === s
+                statusFilter === s.id
                   ? 'bg-[#0a2619] text-[#c5a059]'
                   : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
               }`}
             >
-              {s}
+              {s.label}
             </button>
           ))}
         </div>
@@ -279,30 +420,33 @@ const MyLands = () => {
                           onClick={() => handleEditProperty(land._id)}
                           className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                         >
-                          <Edit3 size={14} /> Edit
+                          <Edit3 size={14} /> {t.edit}
                         </button>
 
                         {/* Actions admin : changer le statut */}
                         {isAdmin && (
                           <>
                             <div className="px-4 py-1 text-[9px] font-black uppercase text-slate-400 tracking-widest mt-1">
-                              Change Status
+                              {t.changeStatus}
                             </div>
-                            {['PUBLISHED', 'PENDING', 'RESERVED', 'SOLD'].map(s => (
-                              land.status !== s && (
-                                <button
-                                  key={s}
-                                  onClick={() => handleStatusChange(land._id, s)}
-                                  className={`w-full px-4 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 ${
-                                    s === 'PUBLISHED' ? 'text-green-600' :
-                                    s === 'PENDING'   ? 'text-orange-500' :
-                                    s === 'RESERVED'  ? 'text-blue-600'  : 'text-gray-600'
-                                  }`}
-                                >
-                                  <CheckCircle2 size={14} /> → {s}
-                                </button>
-                              )
-                            ))}
+                            {['PUBLISHED', 'PENDING', 'RESERVED', 'SOLD'].map(s => {
+                              const statusLabel = getStatusLabel(s);
+                              return (
+                                land.status !== s && (
+                                  <button
+                                    key={s}
+                                    onClick={() => handleStatusChange(land._id, s)}
+                                    className={`w-full px-4 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 ${
+                                      s === 'PUBLISHED' ? 'text-green-600' :
+                                      s === 'PENDING'   ? 'text-orange-500' :
+                                      s === 'RESERVED'  ? 'text-blue-600'  : 'text-gray-600'
+                                    }`}
+                                  >
+                                    <CheckCircle2 size={14} /> → {statusLabel}
+                                  </button>
+                                )
+                              );
+                            })}
                             <div className="border-t border-slate-100 mt-1" />
                           </>
                         )}
@@ -311,7 +455,7 @@ const MyLands = () => {
                           onClick={() => handleDeleteProperty(land._id)}
                           className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                         >
-                          <Trash2 size={14} /> Delete
+                          <Trash2 size={14} /> {t.delete}
                         </button>
                       </div>
                     )}
@@ -353,7 +497,7 @@ const MyLands = () => {
                       ? <Loader2 size={14} className="animate-spin" />
                       : <CheckCircle2 size={14} />
                     }
-                    Approve & Publish
+                    {t.approvePublish}
                   </button>
                 )}
 
@@ -362,7 +506,7 @@ const MyLands = () => {
                     onClick={() => navigate(`/dashboard/documents?property=${land._id}`)}
                     className="w-full mt-2 py-3 bg-[#0a2619] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-colors"
                   >
-                    View Documents
+                    {t.viewDocuments}
                   </button>
                 )}
               </div>
@@ -373,9 +517,9 @@ const MyLands = () => {
 
       {filteredLands.length === 0 && (
         <div className="bg-white rounded-[2rem] p-12 text-center border border-slate-100">
-          <p className="text-slate-400 font-medium">No properties found</p>
+          <p className="text-slate-400 font-medium">{t.noProperties}</p>
           <button onClick={handleAddProperty} className="mt-4 text-[#c5a059] font-bold text-sm hover:underline">
-            Add a property
+            {t.addPropertyLink}
           </button>
         </div>
       )}

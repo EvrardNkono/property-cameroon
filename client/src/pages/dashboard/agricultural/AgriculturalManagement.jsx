@@ -11,37 +11,230 @@ import api from '../../../services/api';
 
 const AgriculturalManagement = () => {
   const navigate = useNavigate();
+  const [currentLang, setCurrentLang] = useState('fr');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [uploading, setUploading] = useState(false);
-  
-  // Categories list
+
+  // ========== TRADUCTIONS ==========
+  const translations = {
+    fr: {
+      // Header
+      title: "Produits Agricoles",
+      subtitle: "Gérez vos produits agricoles et vos cultures",
+      addProduct: "Ajouter un Produit",
+      
+      // Empty state
+      noProducts: "Aucun produit pour le moment",
+      noProductsDesc: "Commencez par ajouter votre premier produit agricole",
+      addFirstProduct: "Ajouter Votre Premier Produit",
+      
+      // Modal
+      editProduct: "Modifier le Produit",
+      addNewProduct: "Ajouter un Nouveau Produit",
+      productName: "Nom du Produit *",
+      category: "Catégorie *",
+      selectCategory: "Sélectionner une catégorie",
+      price: "Prix *",
+      unit: "Unité",
+      origin: "Origine",
+      stock: "Stock",
+      harvestDate: "Date de Récolte",
+      expiryDate: "Date d'Expiration",
+      status: "Statut",
+      description: "Description",
+      certifications: "Certifications",
+      images: "Images (max 10)",
+      cancel: "Annuler",
+      update: "Mettre à Jour",
+      create: "Créer",
+      
+      // Buttons
+      edit: "Modifier",
+      delete: "Supprimer",
+      
+      // Status
+      pending: "En Attente",
+      published: "Publié",
+      soldOut: "Épuisé",
+      discontinued: "Abandonné",
+      
+      // Categories
+      vegetables: "Légumes",
+      livestock: "Élevage",
+      spices: "Épices",
+      processed: "Transformés",
+      cereals: "Céréales",
+      fruits: "Fruits",
+      
+      // Certifications
+      organic: "Bio",
+      fairTrade: "Commerce Équitable",
+      rainforest: "Rainforest Alliance",
+      utz: "Certifié UTZ",
+      
+      // Labels
+      priceLabel: "Prix",
+      unitStock: "Unité/Stock",
+      originLabel: "Origine",
+      certificationsLabel: "Certifications",
+      
+      // Errors
+      errorLoad: "Échec du chargement des produits agricoles",
+      errorSave: "Échec de l'enregistrement du produit",
+      errorDelete: "Échec de la suppression du produit",
+      confirmDelete: "Êtes-vous sûr de vouloir supprimer ce produit ?",
+      maxImages: "Maximum 10 images autorisées",
+      errorUpload: "Erreur lors du téléchargement des images",
+      
+      // Placeholders
+      productNamePlaceholder: "ex: Tomates Bio, Maïs Frais...",
+      originPlaceholder: "ex: Cameroun, France...",
+      pricePlaceholder: "1000",
+      descriptionPlaceholder: "Décrivez votre produit...",
+      stockPlaceholder: "0",
+      
+      // Units
+      kg: "Kg",
+      ton: "Tonne",
+      piece: "Pièce",
+      bundle: "Bot",
+      liter: "Litre"
+    },
+    en: {
+      // Header
+      title: "Agricultural Products",
+      subtitle: "Manage your agricultural products and crops",
+      addProduct: "Add Product",
+      
+      // Empty state
+      noProducts: "No products yet",
+      noProductsDesc: "Start by adding your first agricultural product",
+      addFirstProduct: "Add Your First Product",
+      
+      // Modal
+      editProduct: "Edit Product",
+      addNewProduct: "Add New Product",
+      productName: "Product Name *",
+      category: "Category *",
+      selectCategory: "Select category",
+      price: "Price *",
+      unit: "Unit",
+      origin: "Origin",
+      stock: "Stock",
+      harvestDate: "Harvest Date",
+      expiryDate: "Expiry Date",
+      status: "Status",
+      description: "Description",
+      certifications: "Certifications",
+      images: "Images (max 10)",
+      cancel: "Cancel",
+      update: "Update",
+      create: "Create",
+      
+      // Buttons
+      edit: "Edit",
+      delete: "Delete",
+      
+      // Status
+      pending: "Pending",
+      published: "Published",
+      soldOut: "Sold Out",
+      discontinued: "Discontinued",
+      
+      // Categories
+      vegetables: "Vegetables",
+      livestock: "Livestock",
+      spices: "Spices",
+      processed: "Processed",
+      cereals: "Cereals",
+      fruits: "Fruits",
+      
+      // Certifications
+      organic: "Organic",
+      fairTrade: "Fair Trade",
+      rainforest: "Rainforest Alliance",
+      utz: "UTZ Certified",
+      
+      // Labels
+      priceLabel: "Price",
+      unitStock: "Unit/Stock",
+      originLabel: "Origin",
+      certificationsLabel: "Certifications",
+      
+      // Errors
+      errorLoad: "Failed to load agricultural products",
+      errorSave: "Failed to save product",
+      errorDelete: "Failed to delete product",
+      confirmDelete: "Are you sure you want to delete this product?",
+      maxImages: "Maximum 10 images allowed",
+      errorUpload: "Error uploading images",
+      
+      // Placeholders
+      productNamePlaceholder: "e.g., Organic Tomatoes, Fresh Maize...",
+      originPlaceholder: "e.g., Cameroon, France...",
+      pricePlaceholder: "1000",
+      descriptionPlaceholder: "Describe your product...",
+      stockPlaceholder: "0",
+      
+      // Units
+      kg: "Kg",
+      ton: "Ton",
+      piece: "Piece",
+      bundle: "Bundle",
+      liter: "Liter"
+    }
+  };
+
+  // Récupérer la langue
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    setCurrentLang(finalLang);
+  }, []);
+
+  const t = translations[currentLang] || translations.fr;
+
+  // Categories list avec traduction
   const categories = [
-    { value: 'Maraîcher', label: '🥬 Vegetables', icon: '🥬' },
-    { value: 'Livestock', label: '🐄 Livestock', icon: '🐄' },
-    { value: 'Spices', label: '🌶️ Spices', icon: '🌶️' },
-    { value: 'Transformation', label: '🏭 Processed', icon: '🏭' },
-    { value: 'Cereals', label: '🌾 Cereals', icon: '🌾' },
-    { value: 'Fruits', label: '🍎 Fruits', icon: '🍎' }
+    { value: 'Maraîcher', label: t.vegetables, icon: '🥬' },
+    { value: 'Livestock', label: t.livestock, icon: '🐄' },
+    { value: 'Spices', label: t.spices, icon: '🌶️' },
+    { value: 'Transformation', label: t.processed, icon: '🏭' },
+    { value: 'Cereals', label: t.cereals, icon: '🌾' },
+    { value: 'Fruits', label: t.fruits, icon: '🍎' }
   ];
 
-  // Status options
+  // Status options avec traduction
   const statuses = [
-    { value: 'PENDING', label: 'Pending', color: 'text-orange-600' },
-    { value: 'PUBLISHED', label: 'Published', color: 'text-green-600' },
-    { value: 'SOLD_OUT', label: 'Sold Out', color: 'text-red-600' },
-    { value: 'DISCONTINUED', label: 'Discontinued', color: 'text-gray-500' }
+    { value: 'PENDING', label: t.pending, color: 'text-orange-600' },
+    { value: 'PUBLISHED', label: t.published, color: 'text-green-600' },
+    { value: 'SOLD_OUT', label: t.soldOut, color: 'text-red-600' },
+    { value: 'DISCONTINUED', label: t.discontinued, color: 'text-gray-500' }
   ];
 
-  // Certification options
+  // Certification options avec traduction
   const certifications = [
-    { value: 'organic', label: 'Organic' },
-    { value: 'fair-trade', label: 'Fair Trade' },
-    { value: 'rainforest', label: 'Rainforest Alliance' },
-    { value: 'utZ', label: 'UTZ Certified' }
+    { value: 'organic', label: t.organic },
+    { value: 'fair-trade', label: t.fairTrade },
+    { value: 'rainforest', label: t.rainforest },
+    { value: 'utZ', label: t.utz }
+  ];
+
+  // Unit options avec traduction
+  const unitOptions = [
+    { value: 'Kg', label: t.kg },
+    { value: 'Ton', label: t.ton },
+    { value: 'Piece', label: t.piece },
+    { value: 'Bundle', label: t.bundle },
+    { value: 'Liter', label: t.liter }
   ];
 
   // Form data
@@ -77,7 +270,7 @@ const AgriculturalManagement = () => {
       setProducts(items);
     } catch (err) {
       console.error('Error fetching products:', err);
-      setError('Failed to load agricultural products');
+      setError(t.errorLoad);
     } finally {
       setLoading(false);
     }
@@ -85,7 +278,7 @@ const AgriculturalManagement = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [currentLang]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -116,7 +309,7 @@ const AgriculturalManagement = () => {
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (formData.images.length + files.length > 10) {
-      alert('Maximum 10 images allowed');
+      alert(t.maxImages);
       return;
     }
     
@@ -140,7 +333,7 @@ const AgriculturalManagement = () => {
       }
     } catch (err) {
       console.error('Error uploading images:', err);
-      alert('Error uploading images');
+      alert(t.errorUpload);
     } finally {
       setUploading(false);
     }
@@ -187,21 +380,21 @@ const AgriculturalManagement = () => {
       fetchProducts();
     } catch (err) {
       console.error('Error saving product:', err);
-      setError(err.message || 'Failed to save product');
+      setError(t.errorSave);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this product?')) return;
+    if (!window.confirm(t.confirmDelete)) return;
     
     try {
       await api.del(`/agriculture/products/${id}`);
       fetchProducts();
     } catch (err) {
       console.error('Error deleting product:', err);
-      setError('Failed to delete product');
+      setError(t.errorDelete);
     }
   };
 
@@ -264,6 +457,17 @@ const AgriculturalManagement = () => {
     return colorMap[status] || 'bg-gray-100 text-gray-500';
   };
 
+  // Fonction pour obtenir le libellé du statut traduit
+  const getStatusLabel = (status) => {
+    const statusMap = {
+      'PENDING': t.pending,
+      'PUBLISHED': t.published,
+      'SOLD_OUT': t.soldOut,
+      'DISCONTINUED': t.discontinued
+    };
+    return statusMap[status] || status;
+  };
+
   if (loading && products.length === 0) {
     return (
       <div className="flex justify-center items-center h-96">
@@ -277,14 +481,14 @@ const AgriculturalManagement = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-serif text-[#0a2619] italic">Agricultural Products</h1>
-          <p className="text-slate-500 text-sm mt-1">Manage your agricultural products and crops</p>
+          <h1 className="text-3xl font-serif text-[#0a2619] italic">{t.title}</h1>
+          <p className="text-slate-500 text-sm mt-1">{t.subtitle}</p>
         </div>
         <button
           onClick={() => { resetForm(); setShowModal(true); }}
           className="flex items-center gap-2 px-4 py-2 bg-[#0a2619] text-[#c5a059] rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#1a3d2a] transition-colors"
         >
-          <Plus size={16} /> Add Product
+          <Plus size={16} /> {t.addProduct}
         </button>
       </div>
 
@@ -300,13 +504,13 @@ const AgriculturalManagement = () => {
       {products.length === 0 ? (
         <div className="bg-slate-50 rounded-3xl p-12 text-center">
           <Sprout size={48} className="text-slate-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-slate-700 mb-2">No products yet</h3>
-          <p className="text-slate-400 text-sm mb-6">Start by adding your first agricultural product</p>
+          <h3 className="text-lg font-medium text-slate-700 mb-2">{t.noProducts}</h3>
+          <p className="text-slate-400 text-sm mb-6">{t.noProductsDesc}</p>
           <button
             onClick={() => { resetForm(); setShowModal(true); }}
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#0a2619] text-[#c5a059] rounded-xl text-xs font-black uppercase tracking-widest"
           >
-            <Plus size={16} /> Add Your First Product
+            <Plus size={16} /> {t.addFirstProduct}
           </button>
         </div>
       ) : (
@@ -330,26 +534,26 @@ const AgriculturalManagement = () => {
                 </div>
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(product.status)}`}>
-                    {product.status}
+                    {getStatusLabel(product.status)}
                   </span>
                   <span className="text-xs text-slate-400">{product.category}</span>
                 </div>
                 <p className="text-slate-500 text-sm mb-3 line-clamp-2">{product.description}</p>
                 <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
                   <div>
-                    <p className="text-xs text-slate-400">Price</p>
+                    <p className="text-xs text-slate-400">{t.priceLabel}</p>
                     <p className="font-bold text-[#c5a059]">{product.price?.amount?.toLocaleString()} {product.price?.currency}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400">Unit/Stock</p>
+                    <p className="text-xs text-slate-400">{t.unitStock}</p>
                     <p className="font-bold text-slate-800">{product.unit} / {product.stock}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400">Origin</p>
+                    <p className="text-xs text-slate-400">{t.originLabel}</p>
                     <p className="font-bold text-slate-800">{product.origin || '—'}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400">Certifications</p>
+                    <p className="text-xs text-slate-400">{t.certificationsLabel}</p>
                     <p className="font-bold text-slate-800">{product.certifications?.length || 0}</p>
                   </div>
                 </div>
@@ -358,13 +562,13 @@ const AgriculturalManagement = () => {
                     onClick={() => openEditModal(product)}
                     className="flex-1 px-3 py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-slate-200 transition-colors"
                   >
-                    <Pencil size={14} className="inline mr-1" /> Edit
+                    <Pencil size={14} className="inline mr-1" /> {t.edit}
                   </button>
                   <button
                     onClick={() => handleDelete(product._id)}
                     className="flex-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-red-100 transition-colors"
                   >
-                    <Trash2 size={14} className="inline mr-1" /> Delete
+                    <Trash2 size={14} className="inline mr-1" /> {t.delete}
                   </button>
                 </div>
               </div>
@@ -379,7 +583,7 @@ const AgriculturalManagement = () => {
           <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-slate-100 p-6 flex justify-between items-center">
               <h2 className="text-xl font-serif text-[#0a2619] italic">
-                {editingItem ? 'Edit Product' : 'Add New Product'}
+                {editingItem ? t.editProduct : t.addNewProduct}
               </h2>
               <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 rounded-xl">
                 <X size={20} />
@@ -389,7 +593,7 @@ const AgriculturalManagement = () => {
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               {/* Name */}
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Product Name *</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.productName}</label>
                 <input
                   type="text"
                   name="name"
@@ -397,13 +601,13 @@ const AgriculturalManagement = () => {
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059]"
-                  placeholder="e.g., Organic Tomatoes, Fresh Maize..."
+                  placeholder={t.productNamePlaceholder}
                 />
               </div>
 
               {/* Category */}
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Category *</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.category}</label>
                 <select
                   name="category"
                   value={formData.category}
@@ -411,7 +615,7 @@ const AgriculturalManagement = () => {
                   required
                   className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059]"
                 >
-                  <option value="">Select category</option>
+                  <option value="">{t.selectCategory}</option>
                   {categories.map(cat => (
                     <option key={cat.value} value={cat.value}>
                       {cat.icon} {cat.label}
@@ -423,7 +627,7 @@ const AgriculturalManagement = () => {
               {/* Price and Unit */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Price *</label>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.price}</label>
                   <input
                     type="number"
                     name="price.amount"
@@ -431,22 +635,20 @@ const AgriculturalManagement = () => {
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059]"
-                    placeholder="1000"
+                    placeholder={t.pricePlaceholder}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Unit</label>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.unit}</label>
                   <select
                     name="unit"
                     value={formData.unit}
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059]"
                   >
-                    <option value="Kg">Kg</option>
-                    <option value="Ton">Ton</option>
-                    <option value="Piece">Piece</option>
-                    <option value="Bundle">Bundle</option>
-                    <option value="Liter">Liter</option>
+                    {unitOptions.map(unit => (
+                      <option key={unit.value} value={unit.value}>{unit.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -454,25 +656,25 @@ const AgriculturalManagement = () => {
               {/* Origin and Stock */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Origin</label>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.origin}</label>
                   <input
                     type="text"
                     name="origin"
                     value={formData.origin}
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059]"
-                    placeholder="e.g., Cameroon, France..."
+                    placeholder={t.originPlaceholder}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Stock</label>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.stock}</label>
                   <input
                     type="number"
                     name="stock"
                     value={formData.stock}
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059]"
-                    placeholder="0"
+                    placeholder={t.stockPlaceholder}
                   />
                 </div>
               </div>
@@ -480,7 +682,7 @@ const AgriculturalManagement = () => {
               {/* Harvest and Expiry Dates */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Harvest Date</label>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.harvestDate}</label>
                   <input
                     type="date"
                     name="harvestDate"
@@ -490,7 +692,7 @@ const AgriculturalManagement = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Expiry Date</label>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.expiryDate}</label>
                   <input
                     type="date"
                     name="expiryDate"
@@ -503,7 +705,7 @@ const AgriculturalManagement = () => {
 
               {/* Status */}
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Status</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.status}</label>
                 <select
                   name="status"
                   value={formData.status}
@@ -518,20 +720,20 @@ const AgriculturalManagement = () => {
 
               {/* Description */}
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Description</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.description}</label>
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
                   rows="3"
                   className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] resize-none"
-                  placeholder="Describe your product..."
+                  placeholder={t.descriptionPlaceholder}
                 />
               </div>
 
               {/* Certifications */}
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-2">Certifications</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-2">{t.certifications}</label>
                 <div className="grid grid-cols-2 gap-3">
                   {certifications.map(cert => (
                     <label key={cert.value} className="flex items-center gap-2">
@@ -551,7 +753,7 @@ const AgriculturalManagement = () => {
 
               {/* Images */}
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Images (max 10)</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.images}</label>
                 <div className="flex gap-3 flex-wrap">
                   {formData.images.map((img, idx) => (
                     <div key={idx} className="relative">
@@ -585,7 +787,7 @@ const AgriculturalManagement = () => {
                   onClick={() => setShowModal(false)}
                   className="flex-1 px-6 py-4 bg-slate-100 text-slate-600 rounded-xl font-black uppercase text-[11px]"
                 >
-                  Cancel
+                  {t.cancel}
                 </button>
                 <button
                   type="submit"
@@ -593,7 +795,7 @@ const AgriculturalManagement = () => {
                   className="flex-1 px-6 py-4 bg-[#0a2619] text-[#c5a059] rounded-xl font-black uppercase text-[11px] flex items-center justify-center gap-2"
                 >
                   {loading ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
-                  {editingItem ? 'Update' : 'Create'}
+                  {editingItem ? t.update : t.create}
                 </button>
               </div>
             </form>

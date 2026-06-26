@@ -1,3 +1,4 @@
+// frontend/src/pages/dashboard/admin/AdminOverview.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -17,6 +18,7 @@ import { AdminStatCard } from '../../../components/admin/AdminComponents.jsx';
 import api from '../../../services/api';
 
 const AdminOverview = () => {
+  const [currentLang, setCurrentLang] = useState('fr');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -32,13 +34,137 @@ const AdminOverview = () => {
   const [recentActivity, setRecentActivity] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
 
+  // ========== TRADUCTIONS ==========
+  const translations = {
+    fr: {
+      title: "Contrôle Financier",
+      subtitle: "Flux de trésorerie, dividendes CAPEF et logistique d'importation.",
+      backendConnected: "✅ Connecté au backend - Données en temps réel",
+      
+      // Metrics
+      totalLiquidity: "Liquidité Totale",
+      inTransitImports: "Importations en Transit",
+      dividendsToPay: "Dividendes à Payer",
+      releasePayment: "Libérer le Paiement",
+      
+      // Sections
+      sourcing: "Sourcing",
+      investments: "Investissements",
+      
+      // Sourcing Table
+      bulkOrderTracking: "Suivi des Commandes en Vrac",
+      freightRef: "Réf. Fret",
+      product: "Produit",
+      cargoValue: "Valeur de la Cargaison",
+      logisticsStage: "Étape Logistique",
+      action: "Action",
+      updateStatus: "Mettre à Jour",
+      noShipments: "Aucune expédition en cours",
+      
+      // Status
+      warehouse: "Entrepôt Guangzhou",
+      atSea: "En Mer",
+      portArrival: "Arrivée au Port",
+      customsClearance: "Dédouanement",
+      delivered: "Livré",
+      
+      // Invest Section
+      portfolioPerformance: "Performance du Portefeuille",
+      cashFlow: "Flux de Trésorerie",
+      noTransactions: "Aucune transaction récente",
+      
+      // Buttons
+      retry: "Réessayer",
+      
+      // Messages
+      loadingData: "Chargement des données financières...",
+      errorLoading: "Erreur de chargement",
+      errorUpdate: "Erreur lors de la mise à jour du statut",
+      
+      // Percentages
+      percent: "%",
+      
+      // Currency
+      fcfa: "FCFA"
+    },
+    en: {
+      title: "Financial Control",
+      subtitle: "Cash flow, CAPEF dividends, and import logistics.",
+      backendConnected: "✅ Connected to backend - Real-time data",
+      
+      // Metrics
+      totalLiquidity: "Total Liquidity",
+      inTransitImports: "In-Transit Imports",
+      dividendsToPay: "Dividends to Pay",
+      releasePayment: "Release Payment",
+      
+      // Sections
+      sourcing: "Sourcing",
+      investments: "Investments",
+      
+      // Sourcing Table
+      bulkOrderTracking: "Bulk Order Tracking",
+      freightRef: "Freight Ref",
+      product: "Product",
+      cargoValue: "Cargo Value",
+      logisticsStage: "Logistics Stage",
+      action: "Action",
+      updateStatus: "Update Status",
+      noShipments: "No shipments in progress",
+      
+      // Status
+      warehouse: "Guangzhou Warehouse",
+      atSea: "At Sea",
+      portArrival: "Port Arrival",
+      customsClearance: "Customs Clearance",
+      delivered: "Delivered",
+      
+      // Invest Section
+      portfolioPerformance: "Portfolio Performance",
+      cashFlow: "Cash Flow",
+      noTransactions: "No recent transactions",
+      
+      // Buttons
+      retry: "Retry",
+      
+      // Messages
+      loadingData: "Loading financial data...",
+      errorLoading: "Error loading",
+      errorUpdate: "Error updating status",
+      
+      // Percentages
+      percent: "%",
+      
+      // Currency
+      fcfa: "FCFA"
+    }
+  };
+
+  // Récupérer la langue
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    setCurrentLang(finalLang);
+  }, []);
+
+  const t = translations[currentLang] || translations.fr;
+
   // Format date
   const formatDate = (date) => {
-    return new Intl.DateTimeFormat('en-US', { 
+    const options = { 
       day: '2-digit', 
       month: 'long', 
       year: 'numeric' 
-    }).format(date);
+    };
+    
+    if (currentLang === 'fr') {
+      return new Intl.DateTimeFormat('fr-FR', options).format(date);
+    }
+    return new Intl.DateTimeFormat('en-US', options).format(date);
   };
 
   // Load all dashboard data
@@ -154,13 +280,13 @@ const AdminOverview = () => {
     // Update date every minute
     const interval = setInterval(() => setCurrentDate(new Date()), 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [currentLang]);
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-96 space-y-4">
         <Loader2 size={48} className="text-[#c5a059] animate-spin" />
-        <p className="text-slate-500 text-sm">Loading dashboard...</p>
+        <p className="text-slate-500 text-sm">Chargement du tableau de bord...</p>
       </div>
     );
   }
@@ -273,7 +399,7 @@ const AdminOverview = () => {
               <AlertTriangle size={18} className="text-orange-500" /> Pending Validations
             </h3>
             <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded">
-              {pendingValidations.length} {pendingValidations.length === 1 ? 'urgent' : 'urgent'}
+              {pendingValidations.length} urgent
             </span>
           </div>
           <div className="space-y-4">

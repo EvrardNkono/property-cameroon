@@ -73,6 +73,7 @@ const PropertyForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [currentLang, setCurrentLang] = useState('fr');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(id ? true : false);
   const [error, setError] = useState(null);
@@ -128,6 +129,239 @@ const PropertyForm = () => {
   });
 
   const [imageUrls, setImageUrls] = useState([]);
+
+  // ========== TRADUCTIONS ==========
+  const translations = {
+    fr: {
+      // Header
+      editProperty: "Modifier la Propriété",
+      addNewProperty: "Ajouter une Nouvelle Propriété",
+      modifyDetails: "Modifiez les détails de votre propriété",
+      listProperty: "Listez votre propriété sur le marketplace",
+      delete: "Supprimer",
+      
+      // Sections
+      basicInformation: "Informations de Base",
+      title: "Titre *",
+      titlePlaceholder: "ex: Villa de Luxe à Bastos",
+      category: "Catégorie *",
+      listingType: "Type d'Annonce *",
+      forSale: "À Vendre",
+      forRent: "À Louer",
+      status: "Statut",
+      pendingReview: "En Attente de Revue",
+      published: "Publié",
+      reserved: "Réservé",
+      sold: "Vendu",
+      description: "Description",
+      descriptionPlaceholder: "Décrivez votre propriété...",
+      
+      // Location
+      location: "Localisation",
+      city: "Ville",
+      cityPlaceholder: "Douala",
+      district: "Quartier",
+      districtPlaceholder: "Bonapriso",
+      region: "Région",
+      selectRegion: "Sélectionner une région",
+      
+      // Dimensions & Price
+      dimensionsPrice: "Dimensions & Prix",
+      surfaceArea: "Surface",
+      price: "Prix",
+      pricePerMonth: "Prix par mois",
+      
+      // Features
+      features: "Caractéristiques",
+      bedrooms: "Chambres",
+      bathrooms: "Salles de Bain",
+      electricity: "Électricité",
+      water: "Eau",
+      parking: "Parking",
+      garden: "Jardin",
+      elevator: "Ascenseur",
+      balcony: "Balcon",
+      furnishedStatus: "Statut Meublé",
+      unfurnished: "📦 Non Meublé",
+      furnished: "🛋️ Meublé",
+      furnishedNote: "Optionnel - Précisez si la propriété est meublée",
+      
+      // Land
+      landType: "Type de Terrain",
+      selectLandType: "Sélectionner le type de terrain",
+      buildable: "Constructible",
+      agricultural: "Agricole",
+      commercial: "Commercial",
+      electricityNearby: "Électricité à proximité",
+      waterNearby: "Eau à proximité",
+      roadAccess: "Accès Routier",
+      fenced: "Clôturé",
+      
+      // Commercial
+      commercialZone: "Zone Commerciale",
+      selectZoneType: "Sélectionner le type de zone",
+      residentialZone: "Zone Résidentielle",
+      mixedZone: "Zone Mixte",
+      showWindow: "Vitrine",
+      hasShowWindow: "Avec Vitrine",
+      noShowWindow: "Sans Vitrine",
+      
+      // Proximity
+      strategicProximity: "Proximité Stratégique (Optionnel)",
+      proximityNote: "Indiquez les points de repère à proximité. Laissez vide pour une détection automatique.",
+      schoolsUniversities: "Écoles / Universités",
+      schoolsPlaceholder: "ex: Lycée de Bastos, Université de Yaoundé II",
+      marketsShopping: "Marchés / Commerces",
+      marketsPlaceholder: "ex: Marché Central, Super U Bonapriso",
+      gasStations: "Stations Essence / Carburant",
+      stationsPlaceholder: "ex: Total Bonapriso, Oil Libya",
+      bakeriesRestaurants: "Boulangeries / Restaurants",
+      bakeriesPlaceholder: "ex: Boulangerie La Parisienne, Restaurant La Scala",
+      
+      // Images
+      images: "Images",
+      imagesNote: "Maximum 10 images. Téléchargez au format JPEG ou PNG.",
+      addImage: "Ajouter une Image",
+      existing: "Existante",
+      
+      // Buttons
+      cancel: "Annuler",
+      updateProperty: "Mettre à Jour la Propriété",
+      createProperty: "Créer la Propriété",
+      
+      // Messages
+      successUpdate: "Propriété mise à jour avec succès !",
+      successCreate: "Propriété créée avec succès !",
+      successDelete: "Propriété supprimée avec succès !",
+      errorFetch: "Échec du chargement des données de la propriété",
+      errorSave: "Échec de l'enregistrement de la propriété",
+      errorDelete: "Échec de la suppression de la propriété",
+      confirmDelete: "Êtes-vous sûr de vouloir supprimer cette propriété ? Cette action est irréversible.",
+      maxImages: "Maximum 10 images autorisées. Vous avez actuellement {count} images.",
+      errorCompress: "Erreur lors de la compression de l'image"
+    },
+    en: {
+      // Header
+      editProperty: "Edit Property",
+      addNewProperty: "Add New Property",
+      modifyDetails: "Modify your property details",
+      listProperty: "List your property on the marketplace",
+      delete: "Delete",
+      
+      // Sections
+      basicInformation: "Basic Information",
+      title: "Title *",
+      titlePlaceholder: "e.g., Luxury Villa in Bastos",
+      category: "Category *",
+      listingType: "Listing Type *",
+      forSale: "For Sale",
+      forRent: "For Rent",
+      status: "Status",
+      pendingReview: "Pending Review",
+      published: "Published",
+      reserved: "Reserved",
+      sold: "Sold",
+      description: "Description",
+      descriptionPlaceholder: "Describe your property...",
+      
+      // Location
+      location: "Location",
+      city: "City",
+      cityPlaceholder: "Douala",
+      district: "District",
+      districtPlaceholder: "Bonapriso",
+      region: "Region",
+      selectRegion: "Select region",
+      
+      // Dimensions & Price
+      dimensionsPrice: "Dimensions & Price",
+      surfaceArea: "Surface Area",
+      price: "Price",
+      pricePerMonth: "Price per month",
+      
+      // Features
+      features: "Features",
+      bedrooms: "Bedrooms",
+      bathrooms: "Bathrooms",
+      electricity: "Electricity",
+      water: "Water",
+      parking: "Parking",
+      garden: "Garden",
+      elevator: "Elevator",
+      balcony: "Balcony",
+      furnishedStatus: "Furnished Status",
+      unfurnished: "📦 Unfurnished",
+      furnished: "🛋️ Furnished",
+      furnishedNote: "Optional - Specify if the property comes with furniture",
+      
+      // Land
+      landType: "Land Type",
+      selectLandType: "Select land type",
+      buildable: "Buildable",
+      agricultural: "Agricultural",
+      commercial: "Commercial",
+      electricityNearby: "Electricity nearby",
+      waterNearby: "Water nearby",
+      roadAccess: "Road Access",
+      fenced: "Fenced",
+      
+      // Commercial
+      commercialZone: "Commercial Zone",
+      selectZoneType: "Select zone type",
+      residentialZone: "Residential Zone",
+      mixedZone: "Mixed Zone",
+      showWindow: "Show Window",
+      hasShowWindow: "Has Show Window",
+      noShowWindow: "No Show Window",
+      
+      // Proximity
+      strategicProximity: "Strategic Proximity (Optional)",
+      proximityNote: "Tell us about nearby landmarks. Leave empty for auto-detection from map data.",
+      schoolsUniversities: "Schools / Universities",
+      schoolsPlaceholder: "e.g., Lycée de Bastos, Université de Yaoundé II",
+      marketsShopping: "Markets / Shopping",
+      marketsPlaceholder: "e.g., Marché Central, Super U Bonapriso",
+      gasStations: "Gas Stations / Fuel",
+      stationsPlaceholder: "e.g., Total Bonapriso, Oil Libya",
+      bakeriesRestaurants: "Bakeries / Restaurants",
+      bakeriesPlaceholder: "e.g., Boulangerie La Parisienne, Restaurant La Scala",
+      
+      // Images
+      images: "Images",
+      imagesNote: "Maximum 10 images. Upload JPEG or PNG format.",
+      addImage: "Add Image",
+      existing: "Existing",
+      
+      // Buttons
+      cancel: "Cancel",
+      updateProperty: "Update Property",
+      createProperty: "Create Property",
+      
+      // Messages
+      successUpdate: "Property updated successfully!",
+      successCreate: "Property created successfully!",
+      successDelete: "Property deleted successfully!",
+      errorFetch: "Failed to load property data",
+      errorSave: "Failed to save property",
+      errorDelete: "Failed to delete property",
+      confirmDelete: "Are you sure you want to delete this property? This action cannot be undone.",
+      maxImages: "Maximum {max} images allowed. You currently have {count} images.",
+      errorCompress: "Error compressing image"
+    }
+  };
+
+  // Récupérer la langue
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    setCurrentLang(finalLang);
+  }, []);
+
+  const t = translations[currentLang] || translations.fr;
 
   const categories = [
     { id: 'House', label: '🏠 House', icon: <Home size={18} />, type: 'house' },
@@ -234,7 +468,7 @@ const PropertyForm = () => {
       
     } catch (err) {
       console.error('Error fetching property:', err);
-      setError('Failed to load property data');
+      setError(t.errorFetch);
     } finally {
       setFetching(false);
     }
@@ -275,7 +509,7 @@ const PropertyForm = () => {
     const currentImageCount = imageUrls.length;
     
     if (currentImageCount + files.length > MAX_IMAGES) {
-      alert(`Maximum ${MAX_IMAGES} images allowed. You currently have ${currentImageCount} images.`);
+      alert(t.maxImages.replace('{max}', MAX_IMAGES).replace('{count}', currentImageCount));
       return;
     }
     
@@ -291,7 +525,7 @@ const PropertyForm = () => {
       });
     } catch (err) {
       console.error('Error compressing image:', err);
-      alert('Error compressing image');
+      alert(t.errorCompress);
     } finally {
       setUploadingImage(false);
     }
@@ -425,10 +659,10 @@ const PropertyForm = () => {
       
       if (id) {
         await api.updateProperty(id, submitData);
-        setSuccess('Property updated successfully!');
+        setSuccess(t.successUpdate);
       } else {
         await api.createProperty(submitData);
-        setSuccess('Property created successfully!');
+        setSuccess(t.successCreate);
       }
       
       setTimeout(() => {
@@ -436,35 +670,36 @@ const PropertyForm = () => {
       }, 1500);
     } catch (err) {
       console.error('Error saving property:', err);
-      setError(err.message || 'Failed to save property');
+      setError(t.errorSave);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this property? This action cannot be undone.')) return;
+    if (!window.confirm(t.confirmDelete)) return;
     
     setLoading(true);
     try {
       await api.deleteProperty(id);
-      setSuccess('Property deleted successfully!');
+      setSuccess(t.successDelete);
       setTimeout(() => {
         navigate('/dashboard/properties');
       }, 1500);
     } catch (err) {
       console.error('Error deleting property:', err);
-      setError('Failed to delete property');
+      setError(t.errorDelete);
     } finally {
       setLoading(false);
     }
   };
 
+  // Composant FurnishedStatusSelector avec traduction
   const FurnishedStatusSelector = () => (
     <div className="mt-5 pt-4 border-t border-slate-100">
       <div className="flex items-center gap-4 flex-wrap">
         <span className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
-          <Sofa size={14} /> Furnished Status:
+          <Sofa size={14} /> {t.furnishedStatus}:
         </span>
         <div className="flex gap-3">
           <label className="flex items-center gap-2 cursor-pointer">
@@ -476,7 +711,7 @@ const PropertyForm = () => {
               onChange={() => setFormData(prev => ({ ...prev, features: { ...prev.features, isFurnished: false } }))}
               className="w-4 h-4 text-[#c5a059] focus:ring-[#c5a059]"
             />
-            <span className="text-sm text-slate-700">📦 Unfurnished</span>
+            <span className="text-sm text-slate-700">{t.unfurnished}</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -487,12 +722,12 @@ const PropertyForm = () => {
               onChange={() => setFormData(prev => ({ ...prev, features: { ...prev.features, isFurnished: true } }))}
               className="w-4 h-4 text-[#c5a059] focus:ring-[#c5a059]"
             />
-            <span className="text-sm text-slate-700">🛋️ Furnished</span>
+            <span className="text-sm text-slate-700">{t.furnished}</span>
           </label>
         </div>
       </div>
       <p className="text-[8px] text-slate-400 mt-2">
-        Optional - Specify if the property comes with furniture
+        {t.furnishedNote}
       </p>
     </div>
   );
@@ -518,10 +753,10 @@ const PropertyForm = () => {
           </button>
           <div>
             <h1 className="text-3xl font-serif text-[#0a2619] italic">
-              {id ? 'Edit Property' : 'Add New Property'}
+              {id ? t.editProperty : t.addNewProperty}
             </h1>
             <p className="text-slate-500 text-sm mt-1">
-              {id ? 'Modify your property details' : 'List your property on the marketplace'}
+              {id ? t.modifyDetails : t.listProperty}
             </p>
           </div>
         </div>
@@ -531,7 +766,7 @@ const PropertyForm = () => {
             onClick={handleDelete}
             className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-colors"
           >
-            <Trash2 size={16} /> Delete
+            <Trash2 size={16} /> {t.delete}
           </button>
         )}
       </div>
@@ -554,11 +789,11 @@ const PropertyForm = () => {
         {/* Basic Information */}
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-            <h2 className="font-bold text-[#0a2619]">Basic Information</h2>
+            <h2 className="font-bold text-[#0a2619]">{t.basicInformation}</h2>
           </div>
           <div className="p-6 space-y-5">
             <div>
-              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Title *</label>
+              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.title}</label>
               <input
                 type="text"
                 name="title"
@@ -566,13 +801,13 @@ const PropertyForm = () => {
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
-                placeholder="e.g., Luxury Villa in Bastos"
+                placeholder={t.titlePlaceholder}
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Category *</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.category}</label>
                 <select
                   name="category"
                   value={formData.category}
@@ -587,7 +822,7 @@ const PropertyForm = () => {
               
               {/* Listing Type */}
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Listing Type *</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.listingType}</label>
                 <div className="flex gap-3">
                   <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl cursor-pointer transition-all ${formData.listingType === 'sale' ? 'bg-emerald-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
                     <input
@@ -599,7 +834,7 @@ const PropertyForm = () => {
                       className="hidden"
                     />
                     <Tag size={16} />
-                    For Sale
+                    {t.forSale}
                   </label>
                   <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl cursor-pointer transition-all ${formData.listingType === 'rent' ? 'bg-emerald-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
                     <input
@@ -611,36 +846,36 @@ const PropertyForm = () => {
                       className="hidden"
                     />
                     <Calendar size={16} />
-                    For Rent
+                    {t.forRent}
                   </label>
                 </div>
               </div>
               
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Status</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.status}</label>
                 <select
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
                   className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
                 >
-                  <option value="PENDING">Pending Review</option>
-                  <option value="PUBLISHED">Published</option>
-                  <option value="RESERVED">Reserved</option>
-                  <option value="SOLD">Sold</option>
+                  <option value="PENDING">{t.pendingReview}</option>
+                  <option value="PUBLISHED">{t.published}</option>
+                  <option value="RESERVED">{t.reserved}</option>
+                  <option value="SOLD">{t.sold}</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Description</label>
+              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.description}</label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 rows="4"
                 className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all resize-none"
-                placeholder="Describe your property..."
+                placeholder={t.descriptionPlaceholder}
               />
             </div>
           </div>
@@ -650,42 +885,42 @@ const PropertyForm = () => {
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-100 bg-slate-50/50">
             <h2 className="font-bold text-[#0a2619] flex items-center gap-2">
-              <MapPin size={18} /> Location
+              <MapPin size={18} /> {t.location}
             </h2>
           </div>
           <div className="p-6 space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">City</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.city}</label>
                 <input
                   type="text"
                   name="location.city"
                   value={formData.location.city}
                   onChange={handleChange}
                   className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
-                  placeholder="Douala"
+                  placeholder={t.cityPlaceholder}
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">District</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.district}</label>
                 <input
                   type="text"
                   name="location.district"
                   value={formData.location.district}
                   onChange={handleChange}
                   className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
-                  placeholder="Bonapriso"
+                  placeholder={t.districtPlaceholder}
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Region</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.region}</label>
                 <select
                   name="location.region"
                   value={formData.location.region}
                   onChange={handleChange}
                   className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
                 >
-                  <option value="">Select region</option>
+                  <option value="">{t.selectRegion}</option>
                   {regions.map(region => (
                     <option key={region} value={region}>{region}</option>
                   ))}
@@ -699,13 +934,13 @@ const PropertyForm = () => {
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-100 bg-slate-50/50">
             <h2 className="font-bold text-[#0a2619] flex items-center gap-2">
-              <Maximize2 size={18} /> Dimensions & Price
+              <Maximize2 size={18} /> {t.dimensionsPrice}
             </h2>
           </div>
           <div className="p-6 space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Surface Area</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.surfaceArea}</label>
                 <div className="flex gap-2">
                   <input
                     type="number"
@@ -727,7 +962,7 @@ const PropertyForm = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Price</label>
+                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.price}</label>
                 <div className="flex gap-2">
                   <input
                     type="number"
@@ -749,7 +984,7 @@ const PropertyForm = () => {
                   </select>
                 </div>
                 {formData.listingType === 'rent' && (
-                  <p className="text-[8px] text-slate-400 mt-1">Price per month</p>
+                  <p className="text-[8px] text-slate-400 mt-1">{t.pricePerMonth}</p>
                 )}
               </div>
             </div>
@@ -760,7 +995,7 @@ const PropertyForm = () => {
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-100 bg-slate-50/50">
             <h2 className="font-bold text-[#0a2619] flex items-center gap-2">
-              <CheckCircle2 size={18} /> Features
+              <CheckCircle2 size={18} /> {t.features}
             </h2>
           </div>
           <div className="p-6">
@@ -769,7 +1004,7 @@ const PropertyForm = () => {
               <div className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Bedrooms</label>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.bedrooms}</label>
                     <input
                       type="number"
                       name="features.bedrooms"
@@ -780,7 +1015,7 @@ const PropertyForm = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Bathrooms</label>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.bathrooms}</label>
                     <input
                       type="number"
                       name="features.bathrooms"
@@ -794,19 +1029,19 @@ const PropertyForm = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="hasElectricity" checked={formData.features.hasElectricity} onChange={handleChange} className="w-4 h-4 rounded" />
-                    <span className="text-sm text-slate-700">Electricity</span>
+                    <span className="text-sm text-slate-700">{t.electricity}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="hasWater" checked={formData.features.hasWater} onChange={handleChange} className="w-4 h-4 rounded" />
-                    <span className="text-sm text-slate-700">Water</span>
+                    <span className="text-sm text-slate-700">{t.water}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="hasParking" checked={formData.features.hasParking} onChange={handleChange} className="w-4 h-4 rounded" />
-                    <span className="text-sm text-slate-700">Parking</span>
+                    <span className="text-sm text-slate-700">{t.parking}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="hasGarden" checked={formData.features.hasGarden} onChange={handleChange} className="w-4 h-4 rounded" />
-                    <span className="text-sm text-slate-700">Garden</span>
+                    <span className="text-sm text-slate-700">{t.garden}</span>
                   </label>
                 </div>
                 <FurnishedStatusSelector />
@@ -829,7 +1064,7 @@ const PropertyForm = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Bedrooms</label>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.bedrooms}</label>
                     <input
                       type="number"
                       name="features.bedrooms"
@@ -840,7 +1075,7 @@ const PropertyForm = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Bathrooms</label>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.bathrooms}</label>
                     <input
                       type="number"
                       name="features.bathrooms"
@@ -854,19 +1089,19 @@ const PropertyForm = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="hasElectricity" checked={formData.features.hasElectricity} onChange={handleChange} className="w-4 h-4 rounded" />
-                    <span className="text-sm text-slate-700">Electricity</span>
+                    <span className="text-sm text-slate-700">{t.electricity}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="hasWater" checked={formData.features.hasWater} onChange={handleChange} className="w-4 h-4 rounded" />
-                    <span className="text-sm text-slate-700">Water</span>
+                    <span className="text-sm text-slate-700">{t.water}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="hasElevator" checked={formData.features.hasElevator} onChange={handleChange} className="w-4 h-4 rounded" />
-                    <span className="text-sm text-slate-700">Elevator</span>
+                    <span className="text-sm text-slate-700">{t.elevator}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="hasBalcony" checked={formData.features.hasBalcony} onChange={handleChange} className="w-4 h-4 rounded" />
-                    <span className="text-sm text-slate-700">Balcony</span>
+                    <span className="text-sm text-slate-700">{t.balcony}</span>
                   </label>
                 </div>
                 <FurnishedStatusSelector />
@@ -878,7 +1113,7 @@ const PropertyForm = () => {
               <div className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Surface Area (m²)</label>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.surfaceArea} (m²)</label>
                     <input
                       type="number"
                       name="surface.value"
@@ -892,11 +1127,11 @@ const PropertyForm = () => {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="hasElectricity" checked={formData.features.hasElectricity} onChange={handleChange} className="w-4 h-4 rounded" />
-                    <span className="text-sm text-slate-700">Electricity</span>
+                    <span className="text-sm text-slate-700">{t.electricity}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="hasWater" checked={formData.features.hasWater} onChange={handleChange} className="w-4 h-4 rounded" />
-                    <span className="text-sm text-slate-700">Water</span>
+                    <span className="text-sm text-slate-700">{t.water}</span>
                   </label>
                 </div>
                 <FurnishedStatusSelector />
@@ -907,35 +1142,35 @@ const PropertyForm = () => {
             {isLand && (
               <div className="space-y-5">
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Land Type</label>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.landType}</label>
                   <select
                     name="features.landType"
                     value={formData.features.landType}
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
                   >
-                    <option value="">Select land type</option>
-                    <option value="buildable">Buildable</option>
-                    <option value="agricultural">Agricultural</option>
-                    <option value="commercial">Commercial</option>
+                    <option value="">{t.selectLandType}</option>
+                    <option value="buildable">{t.buildable}</option>
+                    <option value="agricultural">{t.agricultural}</option>
+                    <option value="commercial">{t.commercial}</option>
                   </select>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="hasElectricity" checked={formData.features.hasElectricity} onChange={handleChange} className="w-4 h-4 rounded" />
-                    <span className="text-sm text-slate-700">Electricity nearby</span>
+                    <span className="text-sm text-slate-700">{t.electricityNearby}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="hasWater" checked={formData.features.hasWater} onChange={handleChange} className="w-4 h-4 rounded" />
-                    <span className="text-sm text-slate-700">Water nearby</span>
+                    <span className="text-sm text-slate-700">{t.waterNearby}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="hasRoad" checked={formData.features.hasRoad} onChange={handleChange} className="w-4 h-4 rounded" />
-                    <span className="text-sm text-slate-700">Road Access</span>
+                    <span className="text-sm text-slate-700">{t.roadAccess}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="isFenced" checked={formData.features.isFenced} onChange={handleChange} className="w-4 h-4 rounded" />
-                    <span className="text-sm text-slate-700">Fenced</span>
+                    <span className="text-sm text-slate-700">{t.fenced}</span>
                   </label>
                 </div>
               </div>
@@ -946,21 +1181,21 @@ const PropertyForm = () => {
               <div className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Commercial Zone</label>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.commercialZone}</label>
                     <select
                       name="features.zone"
                       value={formData.features.zone}
                       onChange={handleChange}
                       className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
                     >
-                      <option value="">Select zone type</option>
-                      <option value="commercial">Commercial Zone</option>
-                      <option value="residential">Residential Zone</option>
-                      <option value="mixed">Mixed Zone</option>
+                      <option value="">{t.selectZoneType}</option>
+                      <option value="commercial">{t.commercial}</option>
+                      <option value="residential">{t.residentialZone}</option>
+                      <option value="mixed">{t.mixedZone}</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Show Window</label>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">{t.showWindow}</label>
                     <select
                       name="features.showWindow"
                       value={formData.features.showWindow ? "yes" : "no"}
@@ -976,23 +1211,23 @@ const PropertyForm = () => {
                       }}
                       className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
                     >
-                      <option value="no">No Show Window</option>
-                      <option value="yes">Has Show Window</option>
+                      <option value="no">{t.noShowWindow}</option>
+                      <option value="yes">{t.hasShowWindow}</option>
                     </select>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="hasElectricity" checked={formData.features.hasElectricity} onChange={handleChange} className="w-4 h-4 rounded" />
-                    <span className="text-sm text-slate-700">Electricity</span>
+                    <span className="text-sm text-slate-700">{t.electricity}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="hasWater" checked={formData.features.hasWater} onChange={handleChange} className="w-4 h-4 rounded" />
-                    <span className="text-sm text-slate-700">Water</span>
+                    <span className="text-sm text-slate-700">{t.water}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="hasParking" checked={formData.features.hasParking} onChange={handleChange} className="w-4 h-4 rounded" />
-                    <span className="text-sm text-slate-700">Parking</span>
+                    <span className="text-sm text-slate-700">{t.parking}</span>
                   </label>
                 </div>
               </div>
@@ -1003,15 +1238,15 @@ const PropertyForm = () => {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" name="hasElectricity" checked={formData.features.hasElectricity} onChange={handleChange} className="w-4 h-4 rounded" />
-                  <span className="text-sm text-slate-700">Electricity</span>
+                  <span className="text-sm text-slate-700">{t.electricity}</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" name="hasWater" checked={formData.features.hasWater} onChange={handleChange} className="w-4 h-4 rounded" />
-                  <span className="text-sm text-slate-700">Water</span>
+                  <span className="text-sm text-slate-700">{t.water}</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" name="hasRoad" checked={formData.features.hasRoad} onChange={handleChange} className="w-4 h-4 rounded" />
-                  <span className="text-sm text-slate-700">Road Access</span>
+                  <span className="text-sm text-slate-700">{t.roadAccess}</span>
                 </label>
               </div>
             )}
@@ -1022,62 +1257,62 @@ const PropertyForm = () => {
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-100 bg-slate-50/50">
             <h2 className="font-bold text-[#0a2619] flex items-center gap-2">
-              <MapPin size={18} /> Strategic Proximity (Optional)
+              <MapPin size={18} /> {t.strategicProximity}
             </h2>
             <p className="text-[9px] text-slate-400 mt-1">
-              Tell us about nearby landmarks. Leave empty for auto-detection from map data.
+              {t.proximityNote}
             </p>
           </div>
           <div className="p-6 space-y-5">
             <div>
               <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
-                <School size={14} /> Schools / Universities
+                <School size={14} /> {t.schoolsUniversities}
               </label>
               <input
                 type="text"
                 name="amenities.schools"
                 value={formData.amenities.schools}
                 onChange={handleChange}
-                placeholder="e.g., Lycée de Bastos, Université de Yaoundé II"
+                placeholder={t.schoolsPlaceholder}
                 className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
               />
             </div>
             <div>
               <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
-                <ShoppingBasket size={14} /> Markets / Shopping
+                <ShoppingBasket size={14} /> {t.marketsShopping}
               </label>
               <input
                 type="text"
                 name="amenities.markets"
                 value={formData.amenities.markets}
                 onChange={handleChange}
-                placeholder="e.g., Marché Central, Super U Bonapriso"
+                placeholder={t.marketsPlaceholder}
                 className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
               />
             </div>
             <div>
               <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
-                <Fuel size={14} /> Gas Stations / Fuel
+                <Fuel size={14} /> {t.gasStations}
               </label>
               <input
                 type="text"
                 name="amenities.stations"
                 value={formData.amenities.stations}
                 onChange={handleChange}
-                placeholder="e.g., Total Bonapriso, Oil Libya"
+                placeholder={t.stationsPlaceholder}
                 className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
               />
             </div>
             <div>
               <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
-                <Coffee size={14} /> Bakeries / Restaurants
+                <Coffee size={14} /> {t.bakeriesRestaurants}
               </label>
               <input
                 type="text"
                 name="amenities.bakeries"
                 value={formData.amenities.bakeries}
                 onChange={handleChange}
-                placeholder="e.g., Boulangerie La Parisienne, Restaurant La Scala"
+                placeholder={t.bakeriesPlaceholder}
                 className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
               />
             </div>
@@ -1088,10 +1323,10 @@ const PropertyForm = () => {
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-100 bg-slate-50/50">
             <h2 className="font-bold text-[#0a2619] flex items-center gap-2">
-              <ImageIcon size={18} /> Images
+              <ImageIcon size={18} /> {t.images}
             </h2>
             <p className="text-[9px] text-slate-400 mt-1">
-              Maximum 10 images. Upload JPEG or PNG format.
+              {t.imagesNote}
             </p>
           </div>
           <div className="p-6">
@@ -1118,7 +1353,7 @@ const PropertyForm = () => {
                     </button>
                     {isExistingImage && (
                       <span className="absolute bottom-2 left-2 text-[8px] bg-green-600 text-white px-1.5 py-0.5 rounded">
-                        Existing
+                        {t.existing}
                       </span>
                     )}
                   </div>
@@ -1138,7 +1373,7 @@ const PropertyForm = () => {
                 ) : (
                   <>
                     <Plus size={24} className="text-slate-400" />
-                    <span className="text-[10px] text-slate-400 mt-1">Add Image</span>
+                    <span className="text-[10px] text-slate-400 mt-1">{t.addImage}</span>
                   </>
                 )}
               </label>
@@ -1153,7 +1388,7 @@ const PropertyForm = () => {
             onClick={() => navigate('/dashboard/properties')}
             className="flex-1 px-6 py-4 bg-slate-100 text-slate-600 rounded-xl font-black uppercase text-[11px] tracking-widest hover:bg-slate-200 transition-colors"
           >
-            Cancel
+            {t.cancel}
           </button>
           <button
             type="submit"
@@ -1161,7 +1396,7 @@ const PropertyForm = () => {
             className="flex-1 px-6 py-4 bg-[#0a2619] text-[#c5a059] rounded-xl font-black uppercase text-[11px] tracking-widest hover:bg-[#1a3d2a] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-            {id ? 'Update Property' : 'Create Property'}
+            {id ? t.updateProperty : t.createProperty}
           </button>
         </div>
       </form>

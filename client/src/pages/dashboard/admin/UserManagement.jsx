@@ -1,3 +1,4 @@
+// frontend/src/pages/dashboard/admin/UserManagement.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
@@ -8,15 +9,14 @@ import {
 import { useOutletContext } from 'react-router-dom';
 import api from '../../../services/api';
 
-// Importation des modals (sans UserVerificationModal)
+// Importation des modals
 import UserDetailModal from './users/UserDetailModal';
 import UserAccessModal from './users/UserAccessModal';
 import UserBanModal from './users/UserBanModal';
 import UserEditModal from './users/UserEditModal';
-// UserVerificationModal supprimé
 
 // --- SUB-COMPONENT: SMART ACTION MENU AVEC HANDLERS ---
-const UserActionMenu = ({ user, onAction }) => {
+const UserActionMenu = ({ user, onAction, t }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0, dropUp: false });
   const buttonRef = useRef(null);
@@ -25,7 +25,7 @@ const UserActionMenu = ({ user, onAction }) => {
   const updatePosition = () => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      const menuHeight = 250; // Réduit car on a enlevé l'option KYC
+      const menuHeight = 250;
       const spaceBelow = window.innerHeight - rect.bottom;
       const shouldDropUp = spaceBelow < menuHeight;
 
@@ -64,15 +64,39 @@ const UserActionMenu = ({ user, onAction }) => {
   }, []);
 
   const getSmartActions = () => {
-    const actions = [{ id: 'VIEW_PROFILE', label: 'View Profile', icon: <User size={14} />, color: 'text-slate-600', tab: 'profile' }];
+    const actions = [{ 
+      id: 'VIEW_PROFILE', 
+      label: t.viewProfile, 
+      icon: <User size={14} />, 
+      color: 'text-slate-600', 
+      tab: 'profile' 
+    }];
     
     if (user.roles && user.roles.includes('OWNER')) {
-      actions.push({ id: 'VIEW_PROPERTIES', label: 'View Properties', icon: <Home size={14} />, color: 'text-blue-600', tab: 'properties' });
-      actions.push({ id: 'VIEW_TITLES', label: 'Land Titles', icon: <FileText size={14} />, color: 'text-orange-600', tab: 'titles' });
+      actions.push({ 
+        id: 'VIEW_PROPERTIES', 
+        label: t.viewProperties, 
+        icon: <Home size={14} />, 
+        color: 'text-blue-600', 
+        tab: 'properties' 
+      });
+      actions.push({ 
+        id: 'VIEW_TITLES', 
+        label: t.landTitles, 
+        icon: <FileText size={14} />, 
+        color: 'text-orange-600', 
+        tab: 'titles' 
+      });
     }
     
     if (user.roles && user.roles.includes('INVESTOR')) {
-      actions.push({ id: 'VIEW_INVEST', label: 'Investments', icon: <TrendingUp size={14} />, color: 'text-emerald-600', tab: 'investments' });
+      actions.push({ 
+        id: 'VIEW_INVEST', 
+        label: t.investments, 
+        icon: <TrendingUp size={14} />, 
+        color: 'text-emerald-600', 
+        tab: 'investments' 
+      });
     }
     
     return actions;
@@ -99,7 +123,7 @@ const UserActionMenu = ({ user, onAction }) => {
           } duration-200`}
         >
           <div className="px-4 py-2 border-b border-slate-50 mb-1">
-            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Master Actions</p>
+            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{t.masterActions}</p>
           </div>
           
           {/* Actions Dynamiques */}
@@ -118,14 +142,13 @@ const UserActionMenu = ({ user, onAction }) => {
 
           {/* Actions Administratives Fixes */}
           <button onClick={() => { onAction('EDIT_INFO'); setIsOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 text-left">
-            <Edit3 size={14} className="text-slate-400" /> Edit Member Info
+            <Edit3 size={14} className="text-slate-400" /> {t.editMemberInfo}
           </button>
           <button onClick={() => { onAction('EDIT_ACCESS'); setIsOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-blue-600 hover:bg-blue-50 text-left">
-            <ShieldCheck size={14} /> Edit Access
+            <ShieldCheck size={14} /> {t.editAccess}
           </button>
-          {/* Bouton Verify KYC SUPPRIMÉ */}
           <button onClick={() => { onAction('BAN_USER'); setIsOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 text-left">
-            <Trash2 size={14} /> Ban Member
+            <Trash2 size={14} /> {t.banMember}
           </button>
         </div>,
         document.body
@@ -136,6 +159,7 @@ const UserActionMenu = ({ user, onAction }) => {
 
 // --- MAIN COMPONENT ---
 const UserManagement = () => {
+  const [currentLang, setCurrentLang] = useState('fr');
   const { activeRoles } = useOutletContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('ALL');
@@ -147,6 +171,131 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [activeModal, setActiveModal] = useState(null);
   const [initialTab, setInitialTab] = useState('profile');
+
+  // ========== TRADUCTIONS ==========
+  const translations = {
+    fr: {
+      title: "Gestion des Membres",
+      subtitle: "Supervisez les permissions d'accès et les actifs des utilisateurs.",
+      backendConnected: "✅ Connecté au backend - {count} utilisateur{plural} chargé{plural}",
+      
+      // Actions
+      createNewUser: "Créer un Nouvel Utilisateur",
+      searchMembers: "Rechercher des membres...",
+      
+      // Filters
+      all: "TOUS",
+      owner: "PROPRIÉTAIRE",
+      investor: "INVESTISSEUR",
+      buyer: "ACHETEUR",
+      admin: "ADMIN",
+      
+      // Table headers
+      user: "Utilisateur",
+      roles: "Rôles",
+      status: "Statut",
+      actions: "Actions",
+      
+      // Status
+      verified: "Vérifié",
+      banned: "Banni",
+      suspended: "Suspendu",
+      pending: "En Attente",
+      
+      // Menu
+      masterActions: "Actions Maître",
+      viewProfile: "Voir le Profil",
+      viewProperties: "Voir les Propriétés",
+      landTitles: "Titres Fonciers",
+      investments: "Investissements",
+      editMemberInfo: "Modifier les Infos",
+      editAccess: "Modifier l'Accès",
+      banMember: "Bannir le Membre",
+      
+      // Messages
+      noUsers: "Aucun utilisateur trouvé",
+      loadingUsers: "Chargement des utilisateurs...",
+      errorLoading: "Erreur de chargement",
+      retry: "Réessayer",
+      
+      // Modal titles
+      viewProfileTitle: "Profil de l'Utilisateur",
+      editUserTitle: "Modifier l'Utilisateur",
+      editAccessTitle: "Modifier les Accès",
+      banUserTitle: "Bannir l'Utilisateur"
+    },
+    en: {
+      title: "Member Management",
+      subtitle: "Supervise access permissions and user assets.",
+      backendConnected: "✅ Connected to backend - {count} user{plural} loaded",
+      
+      // Actions
+      createNewUser: "Create New User",
+      searchMembers: "Search members...",
+      
+      // Filters
+      all: "ALL",
+      owner: "OWNER",
+      investor: "INVESTOR",
+      buyer: "BUYER",
+      admin: "ADMIN",
+      
+      // Table headers
+      user: "User",
+      roles: "Roles",
+      status: "Status",
+      actions: "Actions",
+      
+      // Status
+      verified: "Verified",
+      banned: "Banned",
+      suspended: "Suspended",
+      pending: "Pending",
+      
+      // Menu
+      masterActions: "Master Actions",
+      viewProfile: "View Profile",
+      viewProperties: "View Properties",
+      landTitles: "Land Titles",
+      investments: "Investments",
+      editMemberInfo: "Edit Member Info",
+      editAccess: "Edit Access",
+      banMember: "Ban Member",
+      
+      // Messages
+      noUsers: "No users found",
+      loadingUsers: "Loading users...",
+      errorLoading: "Error loading",
+      retry: "Retry",
+      
+      // Modal titles
+      viewProfileTitle: "User Profile",
+      editUserTitle: "Edit User",
+      editAccessTitle: "Edit Access",
+      banUserTitle: "Ban User"
+    }
+  };
+
+  // Récupérer la langue
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    
+    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+    setCurrentLang(finalLang);
+  }, []);
+
+  const t = translations[currentLang] || translations.fr;
+
+  // Fonction pour formater le message de connexion
+  const getConnectionMessage = (count) => {
+    const msg = t.backendConnected
+      .replace('{count}', count)
+      .replace('{plural}', count > 1 ? 's' : '');
+    return msg;
+  };
 
   // Charger les utilisateurs depuis le backend
   const fetchUsers = async () => {
@@ -162,7 +311,7 @@ const UserManagement = () => {
       setUsers(response.users || []);
     } catch (err) {
       console.error('Error fetching users:', err);
-      setError(err.message || 'Erreur lors du chargement des utilisateurs');
+      setError(err.message || t.errorLoading);
       setUsers([]);
     } finally {
       setLoading(false);
@@ -172,7 +321,7 @@ const UserManagement = () => {
   // Effet pour charger les users quand les filtres changent
   useEffect(() => {
     fetchUsers();
-  }, [activeFilter, searchTerm]);
+  }, [activeFilter, searchTerm, currentLang]);
 
   // Handler Centralisé pour les actions du menu
   const handleMenuAction = (user, actionType, tab = 'profile') => {
@@ -183,7 +332,6 @@ const UserManagement = () => {
     else if (actionType === 'EDIT_INFO') setActiveModal('EDIT');
     else if (actionType === 'EDIT_ACCESS') setActiveModal('ACCESS');
     else if (actionType === 'BAN_USER') setActiveModal('BAN');
-    // VERIFY_KYC supprimé
   };
 
   // Handlers pour les actions backend
@@ -209,8 +357,6 @@ const UserManagement = () => {
     }
   };
 
-  // handleVerifyKYC SUPPRIMÉ
-
   const handleEditUser = async (userId, userData) => {
     try {
       await api.updateUser(userId, userData);
@@ -227,12 +373,43 @@ const UserManagement = () => {
     console.log('Create user');
   };
 
+  // Obtenir le libellé du statut traduit
+  const getStatusLabel = (status) => {
+    const statusMap = {
+      'Verified': t.verified,
+      'Banned': t.banned,
+      'Suspended': t.suspended,
+      'Pending': t.pending
+    };
+    return statusMap[status] || status || t.pending;
+  };
+
+  // Obtenir la couleur du statut
+  const getStatusColor = (status) => {
+    const colorMap = {
+      'Verified': 'bg-green-100 text-green-600',
+      'Banned': 'bg-red-100 text-red-600',
+      'Suspended': 'bg-orange-100 text-orange-600',
+      'Pending': 'bg-yellow-100 text-yellow-600'
+    };
+    return colorMap[status] || 'bg-yellow-100 text-yellow-600';
+  };
+
+  // Filtres avec traduction
+  const filters = [
+    { id: 'ALL', label: t.all },
+    { id: 'OWNER', label: t.owner },
+    { id: 'INVESTOR', label: t.investor },
+    { id: 'BUYER', label: t.buyer },
+    { id: 'ADMIN', label: t.admin }
+  ];
+
   // Affichage du loader
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-96 space-y-4">
         <Loader2 size={48} className="text-[#c5a059] animate-spin" />
-        <p className="text-slate-500 text-sm">Chargement des utilisateurs...</p>
+        <p className="text-slate-500 text-sm">{t.loadingUsers}</p>
       </div>
     );
   }
@@ -242,13 +419,13 @@ const UserManagement = () => {
     return (
       <div className="flex flex-col items-center justify-center h-96 space-y-4">
         <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-center">
-          <p className="font-bold">Erreur</p>
+          <p className="font-bold">{t.errorLoading}</p>
           <p className="text-sm">{error}</p>
           <button 
             onClick={fetchUsers}
             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold"
           >
-            Réessayer
+            {t.retry}
           </button>
         </div>
       </div>
@@ -261,34 +438,34 @@ const UserManagement = () => {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-serif text-[#0a2619] italic">Member Management</h1>
-          <p className="text-slate-500 text-sm mt-1">Supervise access permissions and user assets.</p>
+          <h1 className="text-3xl font-serif text-[#0a2619] italic">{t.title}</h1>
+          <p className="text-slate-500 text-sm mt-1">{t.subtitle}</p>
           <p className="text-xs text-green-600 mt-1">
-            ✅ Connecté au backend - {users.length} utilisateur{users.length > 1 ? 's' : ''} chargé{users.length > 1 ? 's' : ''}
+            {getConnectionMessage(users.length)}
           </p>
         </div>
         <button 
           onClick={handleCreateUser}
           className="flex items-center gap-2 bg-[#0a2619] text-[#c5a059] px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:scale-105 transition-all"
         >
-          <UserPlus size={16} /> Create New User
+          <UserPlus size={16} /> {t.createNewUser}
         </button>
       </div>
 
       {/* FILTRES */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-center">
         <div className="lg:col-span-2 flex flex-wrap gap-2">
-          {['ALL', 'OWNER', 'INVESTOR', 'BUYER', 'ADMIN'].map((filter) => (
+          {filters.map((filter) => (
             <button 
-              key={filter} 
-              onClick={() => setActiveFilter(filter)} 
+              key={filter.id} 
+              onClick={() => setActiveFilter(filter.id)} 
               className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                activeFilter === filter 
+                activeFilter === filter.id 
                   ? 'bg-[#c5a059] text-[#0a2619] shadow-md' 
                   : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'
               }`}
             >
-              {filter}
+              {filter.label}
             </button>
           ))}
         </div>
@@ -296,7 +473,7 @@ const UserManagement = () => {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input 
             type="text" 
-            placeholder="Search members..." 
+            placeholder={t.searchMembers} 
             className="w-full pl-12 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-[#c5a059]/20" 
             value={searchTerm} 
             onChange={(e) => setSearchTerm(e.target.value)} 
@@ -310,10 +487,10 @@ const UserManagement = () => {
           <table className="w-full text-left">
             <thead className="bg-slate-50/50 border-b border-slate-100">
               <tr>
-                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">User</th>
-                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Roles</th>
-                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.user}</th>
+                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.roles}</th>
+                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.status}</th>
+                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">{t.actions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -344,13 +521,8 @@ const UserManagement = () => {
                     </div>
                   </td>
                   <td className="px-8 py-5">
-                    <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${
-                      user.status === 'Verified' ? 'bg-green-100 text-green-600' :
-                      user.status === 'Banned' ? 'bg-red-100 text-red-600' : 
-                      user.status === 'Suspended' ? 'bg-orange-100 text-orange-600' :
-                      'bg-yellow-100 text-yellow-600'
-                    }`}>
-                      {user.status || 'Pending'}
+                    <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${getStatusColor(user.status)}`}>
+                      {getStatusLabel(user.status)}
                     </span>
                   </td>
                   <td className="px-8 py-5 text-right overflow-visible">
@@ -358,13 +530,14 @@ const UserManagement = () => {
                       <button 
                         onClick={() => handleMenuAction(user, 'VIEW_PROFILE', 'profile')}
                         className="p-2 text-slate-300 hover:text-blue-500 transition-colors"
-                        title="Voir le profil"
+                        title={t.viewProfile}
                       >
                         <Eye size={16}/>
                       </button>
                       <UserActionMenu 
                         user={user} 
-                        onAction={(type, tab) => handleMenuAction(user, type, tab)} 
+                        onAction={(type, tab) => handleMenuAction(user, type, tab)}
+                        t={t}
                       />
                     </div>
                   </td>
@@ -374,13 +547,13 @@ const UserManagement = () => {
           </table>
           {users.length === 0 && (
             <div className="p-20 text-center text-slate-400 font-medium italic">
-              Aucun utilisateur trouvé
+              {t.noUsers}
             </div>
           )}
         </div>
       </div>
 
-      {/* MODALS (SANS UserVerificationModal) */}
+      {/* MODALS */}
       {activeModal === 'VIEW' && selectedUser && (
         <UserDetailModal 
           isOpen={true} 
@@ -413,7 +586,6 @@ const UserManagement = () => {
           onConfirm={handleBanUser} 
         />
       )}
-      {/* UserVer ificationModal SUPPRIMÉ */}
 
     </div>
   );
