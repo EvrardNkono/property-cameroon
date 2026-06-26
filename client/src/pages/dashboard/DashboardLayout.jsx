@@ -24,7 +24,7 @@ import {
   Newspaper,
   Edit3,
   Image,
-  ChevronRight  // ← AJOUTER CECI
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -36,7 +36,6 @@ const DashboardLayout = () => {
   const [activeRoles, setActiveRoles] = useState([]);
   const [isUpdatingRoles, setIsUpdatingRoles] = useState(false);
 
-  // Initialiser les rôles actifs depuis l'utilisateur connecté
   useEffect(() => {
     if (user && user.roles) {
       setActiveRoles(user.roles);
@@ -45,13 +44,11 @@ const DashboardLayout = () => {
 
   const isAdminMode = activeRoles.includes('ADMIN');
 
-  // Déconnexion
   const handleLogout = async () => {
     await logout();
     navigate('/');
   };
 
-  // Changer les rôles actifs (mode simulation)
   const toggleRole = async (role) => {
     if (role === 'ADMIN' && activeRoles.length === 1 && activeRoles.includes('ADMIN')) {
       return;
@@ -73,7 +70,6 @@ const DashboardLayout = () => {
     });
   };
 
-  // ✅ Configuration du menu avec tous les rôles
   const menuConfig = [
     { 
       label: 'Overview', 
@@ -99,6 +95,13 @@ const DashboardLayout = () => {
       label: 'Financial Control', 
       path: '/dashboard/admin/finances', 
       icon: <BarChart3 size={20} />, 
+      roles: ['ADMIN'] 
+    },
+    // ✅ AJOUT : Properties Management pour l'admin
+    { 
+      label: 'Properties Management', 
+      path: '/dashboard/admin/properties', 
+      icon: <Home size={20} />, 
       roles: ['ADMIN'] 
     },
     { 
@@ -152,7 +155,6 @@ const DashboardLayout = () => {
       roles: ['OWNER'],
       isPersonal: true 
     },
-    // Livestock Owner
     { 
       label: 'My Livestock', 
       path: '/dashboard/livestock', 
@@ -160,7 +162,6 @@ const DashboardLayout = () => {
       roles: ['LIVESTOCK_OWNER'],
       isPersonal: true 
     },
-    // Agriculture Owner - PRODUITS
     { 
       label: 'My Agriculture Products', 
       path: '/dashboard/agriculture', 
@@ -168,7 +169,6 @@ const DashboardLayout = () => {
       roles: ['AGRICULTURE_OWNER'],
       isPersonal: true 
     },
-    // ✅ NOUVEAU: Agriculture Owner - TERRES
     { 
       label: 'My Agricultural Lands', 
       path: '/dashboard/my-agricultural-lands', 
@@ -176,7 +176,6 @@ const DashboardLayout = () => {
       roles: ['AGRICULTURE_OWNER'],
       isPersonal: true 
     },
-    // Investor
     { 
       label: 'Investments', 
       path: '/dashboard/invest', 
@@ -184,7 +183,6 @@ const DashboardLayout = () => {
       roles: ['INVESTOR'],
       isPersonal: true 
     },
-    // Buyer
     { 
       label: 'China Sourcing', 
       path: '/dashboard/sourcing', 
@@ -192,7 +190,6 @@ const DashboardLayout = () => {
       roles: ['BUYER'],
       isPersonal: true 
     },
-    // Profile - visible pour tous
     { 
       label: 'My Profile', 
       path: '/dashboard/profile', 
@@ -202,7 +199,6 @@ const DashboardLayout = () => {
     },
   ];
 
-  // Filtrage du menu selon les rôles actifs
   const filteredMenu = menuConfig.filter(item => {
     if (isAdminMode) {
       if (item.isPersonal) return false;
@@ -213,19 +209,16 @@ const DashboardLayout = () => {
     return item.roles.some(role => activeRoles.includes(role));
   });
 
-  // Récupérer le nom d'utilisateur
   const getUserName = () => {
     if (!user) return 'Guest';
     return user.name || user.email?.split('@')[0] || 'User';
   };
 
-  // Récupérer la lettre pour l'avatar
   const getUserInitial = () => {
     const name = getUserName();
     return name.charAt(0).toUpperCase();
   };
 
-  // Récupérer le rôle principal pour l'affichage
   const getPrimaryRoleLabel = () => {
     if (isAdminMode) return 'Super Admin';
     if (activeRoles.includes('OWNER')) return 'Owner';
@@ -236,7 +229,6 @@ const DashboardLayout = () => {
     return 'Member';
   };
 
-  // Récupérer tous les rôles disponibles pour le sélecteur
   const getAvailableRolesForSelector = () => {
     const userRoles = user?.roles || [];
     const allRoles = [
@@ -247,11 +239,9 @@ const DashboardLayout = () => {
       { id: 'INVESTOR', label: 'Investor', color: 'bg-[#0a2619]' },
       { id: 'BUYER', label: 'Buyer', color: 'bg-blue-600' }
     ];
-    
     return allRoles.filter(role => userRoles.includes(role.id));
   };
 
-  // Composant pour les sous-menus
   const MenuItemWithSubItems = ({ item, onClose }) => {
     const [isOpen, setIsOpen] = useState(false);
     const isActive = location.pathname === item.path || item.subItems?.some(sub => location.pathname === sub.path);
@@ -296,7 +286,6 @@ const DashboardLayout = () => {
     );
   };
 
-  // Chargement
   if (authLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#f8fafc]">
@@ -305,17 +294,12 @@ const DashboardLayout = () => {
     );
   }
 
-  // Redirection si non connecté
   if (!user) {
     navigate('/login');
     return null;
   }
 
   const availableRoles = getAvailableRolesForSelector();
-
-  console.log('🔍 isAdminMode:', isAdminMode);
-console.log('🔍 activeRoles:', activeRoles);
-console.log('🔍 Filtered menu labels:', filteredMenu.map(i => i.label));
 
   return (
     <div className="flex h-screen bg-[#f8fafc] font-sans text-slate-900 overflow-hidden">
@@ -364,7 +348,7 @@ console.log('🔍 Filtered menu labels:', filteredMenu.map(i => i.label));
           })}
         </nav>
 
-        {/* LOGOUT BUTTON */}
+        {/* LOGOUT */}
         <div className="p-6 border-t border-white/5 flex-shrink-0 bg-[#0a2619]">
           <button 
             onClick={handleLogout}
@@ -409,7 +393,7 @@ console.log('🔍 Filtered menu labels:', filteredMenu.map(i => i.label));
             </div>
           </div>
 
-          {/* PROFILE INDICATOR */}
+          {/* PROFILE */}
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <p className="text-xs font-black text-[#0a2619] uppercase">{getUserName()}</p>
@@ -418,7 +402,7 @@ console.log('🔍 Filtered menu labels:', filteredMenu.map(i => i.label));
               </p>
             </div>
             <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold transition-all duration-500 ${
-              isAdminMode ? 'bg-red-50 border-red-600 text-red-600 rotate-[360deg]' : 'bg-[#c5a059] border-[#0a2619]/10 text-[#0a2619]'
+              isAdminMode ? 'bg-red-50 border-red-600 text-red-600' : 'bg-[#c5a059] border-[#0a2619]/10 text-[#0a2619]'
             }`}>
               {getUserInitial()}
             </div>

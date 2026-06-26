@@ -91,7 +91,7 @@ const PropertyDetailsWrapper = () => {
   return <PropertyDetailsPage key={id} />;
 };
 
-// 🔥 Composant pour gérer le scroll et forcer les re-rendus
+// Composant pour gérer le scroll et forcer les re-rendus
 const RouteChangeHandler = ({ children }) => {
   const location = useLocation();
   
@@ -128,7 +128,6 @@ function App() {
   const [allProperties, setAllProperties] = useState([]);
   const [propertiesLoaded, setPropertiesLoaded] = useState(false);
 
-  // Récupérer les propriétés pour le ticker
   useEffect(() => {
     const fetchProperties = async () => {
       try {
@@ -148,10 +147,7 @@ function App() {
     const style = document.createElement('style');
     style.textContent = globalStyles;
     document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
+    return () => { document.head.removeChild(style); };
   }, []);
 
   return (
@@ -191,14 +187,18 @@ function App() {
                   <Route path="admin/users" element={<UserManagement />} />
                   <Route path="admin/inventory" element={<GlobalInventory />} />
                   <Route path="admin/finances" element={<FinancialControl />} />
+
+                  {/* ✅ Properties Management (admin) */}
+                  <Route path="admin/properties" element={<MyLands />} />
                   <Route path="admin/properties/new" element={<PropertyForm />} />
                   <Route path="admin/properties/edit/:id" element={<PropertyForm />} />
+
                   <Route path="admin/agriculture" element={<AgriculturalInventory />} />
                   <Route path="admin/agricultural-products" element={<AgriculturalManagement />} />
                   <Route path="admin/livestock-categories" element={<LivestockCategoriesManager />} />
                   <Route path="admin/livestock" element={<LivestockAssetsManager />} />
                   
-                  {/* 🌟 NOUVELLES ROUTES BLOG ADMIN 🌟 */}
+                  {/* Blog Admin */}
                   <Route path="admin/blog" element={<BlogManagement />} />
                   <Route path="admin/blog/create" element={<BlogCreate />} />
                   <Route path="admin/blog/edit/:id" element={<BlogEdit />} />
@@ -223,12 +223,10 @@ function App() {
           </RouteChangeHandler>
         </div>
 
-        {/* Property Ticker - Visible sur toutes les pages (sauf dashboard peut-être) */}
         {propertiesLoaded && allProperties.length > 0 && (
           <PropertyTicker properties={allProperties} interval={120000} />
         )}
 
-        {/* WhatsApp Button - Visible sur toutes les pages */}
         <WhatsAppButton />
 
         <Suspense fallback={null}>
