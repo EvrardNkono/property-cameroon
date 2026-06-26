@@ -1,7 +1,7 @@
 // frontend/src/pages/dashboard/admin/RoleRequests.jsx
 import React, { useState, useEffect } from 'react';
 import { CheckCircle2, XCircle, Clock, User, Loader2, AlertCircle } from 'lucide-react';
-import api from '../../services/api';
+import api from '../../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
 const RoleRequests = () => {
