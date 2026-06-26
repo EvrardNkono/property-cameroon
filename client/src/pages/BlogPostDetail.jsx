@@ -72,7 +72,7 @@ const getHardcodedArticle = (lang) => {
       
       <h2>${isFrench ? 'L\'Analyse de la Performance' : 'Performance Analysis'}</h2>
       <p>${isFrench ? 'Il y a seulement six mois, en janvier 2026, nous travaillions sur l\'aménagement d\'une parcelle de 4 hectares. À cette période, le prix du mètre carré était fixé à 1 500 FCFA.' : 'Just six months ago, in January 2026, we were working on the development of a 4-hectare plot. At that time, the price per square meter was set at 1,500 FCFA.'}</p>
-      <p>${isFrench ? 'Aujourd\'hui, en juillet 2026, la donne a radicalement changé. Grâce à notre stratégie de développement et à l\'attractivité croissante de la zone, le prix du mètre carré se négocie désormais entre 5 000 FCFA et 6 000 FCFA.' : 'Today, in July 2026, the situation has radically changed. Thanks to our development strategy and the growing attractiveness of the area, the price per square meter now ranges between 5,000 FCFA and 6,000 FCFA.'}</p>
+      <p>${isFrench ? 'Aujourd\'hui, en juillet 2026, la donne a radicalement changé. Grâce à notre stratégie de développement et à l\'attractivité croissante de la zone, le prix du mètre carré se négocie désormais entre 5 000 FCFA et 6 000 FCFA.' : 'Today, in June 2026, the situation has radically changed. Thanks to our development strategy and the growing attractiveness of the area, the price per square meter now ranges between 5,000 FCFA and 6,000 FCFA.'}</p>
       
       <h3>${isFrench ? 'Le Bilan Chiffré' : 'The Financial Summary'}</h3>
       <p>${isFrench ? 'Si l\'on prend la moyenne de notre nouvelle valeur de marché (5 500 FCFA/m²), voici l\'évolution de la rentabilité :' : 'Taking the average of our new market value (5,500 FCFA/m²), here is the evolution of profitability:'}</p>
