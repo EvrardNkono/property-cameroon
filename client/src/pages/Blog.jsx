@@ -1,7 +1,15 @@
 // frontend/src/pages/Blog.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { 
+  ArrowRight, Calendar, User, Tag, Heart, Share2, Clock, Eye,
+  Loader2, AlertCircle, BookOpen, Sparkles, ChevronRight, Star,
+  MessageCircle, ArrowLeft, TrendingUp, ShieldCheck, Globe,
+  CheckCircle, X, Mail, FileText, Award, Zap, Layers, MapPin
+} from 'lucide-react';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import api from '../services/api';
 
 // Hook pour récupérer la langue actuelle
@@ -26,26 +34,43 @@ const Blog = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [opportunities, setOpportunities] = useState([]);
   const [featuredPosts, setFeaturedPosts] = useState([]);
+  const [showNewsletter, setShowNewsletter] = useState(false);
+  const [emailSubmitted, setEmailSubmitted] = useState(false);
 
-  // ========== TRADUCTIONS ==========
+  const { scrollYProgress } = useScroll();
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.3]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
+
+  // ========== TRADUCTIONS COMPLÈTES ==========
   const t = {
     fr: {
+      // Hero
+      heroBadge: "Le Journal",
       heroTitle: "Investissez au Cameroun",
       heroTitleLine2: "Sans compromis",
       heroSubtitle: "Immobilier, Agriculture et Approvisionnement international — une approche sécurisée et rentable pour l'investisseur moderne.",
       exploreNow: "Explorer Maintenant",
       diasporaPortal: "Portail Diaspora",
+      
+      // CAPEF
       strategicPartnership: "Partenariat Stratégique avec le CAPEF",
       capefDescription: "Nous travaillons en étroite collaboration avec la Chambre d'Agriculture, des Pêches, de l'Élevage et des Forêts (CAPEF) pour garantir des investissements agricoles sécurisés et rentables, gérés par des experts locaux certifiés.",
       learnMore: "En Savoir Plus",
+      
+      // Diaspora
       investFromAbroad: "Investissez depuis l'Étranger en Toute Confiance",
       diasporaDescription: "Nous gérons, sécurisons et développons vos investissements au Cameroun. En exploitant notre expertise locale : vous investissez, nous exécutons.",
+      
+      // Opportunities
       currentOpportunities: "Opportunités Actuelles",
       details: "Détails →",
       estimatedRoi: "ROI Annuel Estimé",
       potentialRoi: "ROI Potentiel",
+      
+      // Blog
       theJournal: "Le Journal",
       insightsExpertise: "Perspectives & Expertise",
       all: "Tous",
@@ -54,43 +79,78 @@ const Blog = () => {
       sourcing: "Approvisionnement",
       lifestyle: "Mode de Vie",
       by: "Par",
-      readyToInvest: "Prêt à Investir Intelligemment ?",
-      talkToExpert: "Parler à un Expert",
-      viewOpportunities: "Voir les Opportunités",
       readMore: "Lire la suite",
       noPosts: "Aucun article pour le moment",
       loading: "Chargement...",
       featured: "À la Une",
-      performance: "Performance",
-      gain: "Gain de valeur par m²",
-      grossProfit: "Bénéfice brut",
-      successFactors: "Pourquoi un tel succès ?",
-      successDescription: "Cette appréciation de 266 % en un semestre n'est pas le fruit du hasard. Elle résulte de notre expertise dans le choix des emplacements, l'anticipation du développement urbain et la mise en valeur méthodique de nos parcelles.",
-      investAdvice: "Investir dans la terre reste l'un des moyens les plus sûrs et les plus lucratifs pour bâtir un patrimoine solide au Cameroun. Vous souhaitez profiter des prochaines opportunités avant que le marché ne sature ?",
-      contactUs: "Contactez Property Cameroun dès aujourd'hui pour découvrir nos prochains projets.",
-      // Nouveaux labels pour les stats
+      readFullArticle: "Lire l'article complet",
+      
+      // Stats
       acquisitionPrice: "Prix d'acquisition (Janvier)",
       currentMarketPrice: "Prix actuel du marché (Juillet)",
       valueGain: "Gain de valeur",
       percentageGain: "Bénéfice brut",
-      // Labels pour les champs
-      readFullArticle: "Lire l'article complet"
+      
+      // Newsletter
+      newsletterTitle: "Restez informé",
+      newsletterDesc: "Recevez nos derniers articles et opportunités d'investissement",
+      emailPlaceholder: "Votre adresse email",
+      subscribe: "S'abonner",
+      thanksSubscribing: "Merci !",
+      checkInbox: "Consultez votre boîte mail.",
+      freeGuide: "Guide Gratuit",
+      
+      // CTA
+      readyToInvest: "Prêt à Investir Intelligemment ?",
+      talkToExpert: "Parler à un Expert",
+      viewOpportunities: "Voir les Opportunités",
+      
+      // Badges
+      badgePartners: "Partenaires",
+      badgeExperts: "Experts",
+      badgeSecurity: "Sécurisé",
+      
+      // Error
+      errorLoading: "Erreur de chargement",
+      tryAgain: "Réessayer",
+      
+      // Categories
+      allCategories: "Toutes les catégories",
+      
+      // Share
+      share: "Partager",
+      copied: "Lien copié !",
+      
+      // Performance
+      performance: "Performance",
+      successFactors: "Pourquoi un tel succès ?",
+      investAdvice: "Investir dans la terre reste l'un des moyens les plus sûrs et les plus lucratifs pour bâtir un patrimoine solide au Cameroun."
     },
     en: {
+      // Hero
+      heroBadge: "The Journal",
       heroTitle: "Invest in Cameroon",
       heroTitleLine2: "Without Compromise",
       heroSubtitle: "Real Estate, Agriculture, and International Sourcing — a secure and profitable approach for the modern investor.",
       exploreNow: "Explore Now",
       diasporaPortal: "Diaspora Portal",
+      
+      // CAPEF
       strategicPartnership: "Strategic Partnership with CAPEF",
       capefDescription: "We work closely with the Chamber of Agriculture, Fisheries, Livestock and Forests (CAPEF) to guarantee secured and profitable agricultural investments, managed by certified local experts.",
       learnMore: "Learn More",
+      
+      // Diaspora
       investFromAbroad: "Invest from Abroad with Confidence",
       diasporaDescription: "We manage, secure, and develop your investments in Cameroon. Leveraging our local expertise: you invest, we execute.",
+      
+      // Opportunities
       currentOpportunities: "Current Opportunities",
       details: "Details →",
       estimatedRoi: "Estimated Annual ROI",
       potentialRoi: "Potential ROI",
+      
+      // Blog
       theJournal: "The Journal",
       insightsExpertise: "Insights & Expertise",
       all: "All",
@@ -99,29 +159,55 @@ const Blog = () => {
       sourcing: "Sourcing",
       lifestyle: "Lifestyle",
       by: "By",
-      readyToInvest: "Ready to Invest Smartly?",
-      talkToExpert: "Talk to an Expert",
-      viewOpportunities: "View Opportunities",
       readMore: "Read more",
       noPosts: "No posts yet",
       loading: "Loading...",
       featured: "Featured",
-      performance: "Performance",
-      gain: "Gain per m²",
-      grossProfit: "Gross Profit",
-      successFactors: "Why such success?",
-      successDescription: "This 266% appreciation in six months is no coincidence. It results from our expertise in location selection, urban development anticipation, and methodical land development.",
-      investAdvice: "Investing in land remains one of the safest and most lucrative ways to build solid wealth in Cameroon. Want to seize upcoming opportunities before the market saturates?",
-      contactUs: "Contact Property Cameroun today to discover our next projects.",
-      // New labels for stats
+      readFullArticle: "Read Full Article",
+      
+      // Stats
       acquisitionPrice: "Acquisition Price (January)",
       currentMarketPrice: "Current Market Price (July)",
       valueGain: "Value Gain",
       percentageGain: "Gross Profit",
-      // Labels for fields
-      readFullArticle: "Read Full Article"
+      
+      // Newsletter
+      newsletterTitle: "Stay Informed",
+      newsletterDesc: "Receive our latest articles and investment opportunities",
+      emailPlaceholder: "Your email address",
+      subscribe: "Subscribe",
+      thanksSubscribing: "Thanks!",
+      checkInbox: "Check your inbox.",
+      freeGuide: "Free Guide",
+      
+      // CTA
+      readyToInvest: "Ready to Invest Smartly?",
+      talkToExpert: "Talk to an Expert",
+      viewOpportunities: "View Opportunities",
+      
+      // Badges
+      badgePartners: "Partners",
+      badgeExperts: "Experts",
+      badgeSecurity: "Secure",
+      
+      // Error
+      errorLoading: "Loading error",
+      tryAgain: "Try Again",
+      
+      // Categories
+      allCategories: "All categories",
+      
+      // Share
+      share: "Share",
+      copied: "Link copied!",
+      
+      // Performance
+      performance: "Performance",
+      successFactors: "Why such success?",
+      investAdvice: "Investing in land remains one of the safest and most lucrative ways to build solid wealth in Cameroon."
     }
   }[currentLang] || {
+    heroBadge: "Le Journal",
     heroTitle: "Investissez au Cameroun",
     heroTitleLine2: "Sans compromis",
     heroSubtitle: "Immobilier, Agriculture et Approvisionnement international — une approche sécurisée et rentable pour l'investisseur moderne.",
@@ -144,28 +230,36 @@ const Blog = () => {
     sourcing: "Approvisionnement",
     lifestyle: "Mode de Vie",
     by: "Par",
-    readyToInvest: "Prêt à Investir Intelligemment ?",
-    talkToExpert: "Parler à un Expert",
-    viewOpportunities: "Voir les Opportunités",
     readMore: "Lire la suite",
     noPosts: "Aucun article pour le moment",
     loading: "Chargement...",
     featured: "À la Une",
-    performance: "Performance",
-    gain: "Gain de valeur par m²",
-    grossProfit: "Bénéfice brut",
-    successFactors: "Pourquoi un tel succès ?",
-    successDescription: "Cette appréciation de 266 % en un semestre n'est pas le fruit du hasard. Elle résulte de notre expertise dans le choix des emplacements, l'anticipation du développement urbain et la mise en valeur méthodique de nos parcelles.",
-    investAdvice: "Investir dans la terre reste l'un des moyens les plus sûrs et les plus lucratifs pour bâtir un patrimoine solide au Cameroun. Vous souhaitez profiter des prochaines opportunités avant que le marché ne sature ?",
-    contactUs: "Contactez Property Cameroun dès aujourd'hui pour découvrir nos prochains projets.",
+    readFullArticle: "Lire l'article complet",
     acquisitionPrice: "Prix d'acquisition (Janvier)",
     currentMarketPrice: "Prix actuel du marché (Juillet)",
     valueGain: "Gain de valeur",
     percentageGain: "Bénéfice brut",
-    readFullArticle: "Lire l'article complet"
+    readyToInvest: "Prêt à Investir Intelligemment ?",
+    talkToExpert: "Parler à un Expert",
+    viewOpportunities: "Voir les Opportunités",
+    newsletterTitle: "Restez informé",
+    newsletterDesc: "Recevez nos derniers articles et opportunités d'investissement",
+    emailPlaceholder: "Votre adresse email",
+    subscribe: "S'abonner",
+    thanksSubscribing: "Merci !",
+    checkInbox: "Consultez votre boîte mail.",
+    freeGuide: "Guide Gratuit",
+    errorLoading: "Erreur de chargement",
+    tryAgain: "Réessayer",
+    allCategories: "Toutes les catégories",
+    share: "Partager",
+    copied: "Lien copié !",
+    performance: "Performance",
+    successFactors: "Pourquoi un tel succès ?",
+    investAdvice: "Investir dans la terre reste l'un des moyens les plus sûrs et les plus lucratifs pour bâtir un patrimoine solide au Cameroun."
   };
 
-  // ========== ARTICLE EN DUR - INVESTISSEMENT IMMOBILIER +266% ==========
+  // ========== ARTICLE EN DUR ==========
   const hardcodedArticle = {
     id: 'featured-performance',
     category: 'Real Estate',
@@ -176,36 +270,15 @@ const Blog = () => {
     author: "Property Cameroun",
     slug: 'performance-immobiliere-266',
     isHardcoded: true,
-    // Données de performance
     performanceData: {
       acquisitionPrice: "1 500 FCFA/m²",
       currentPrice: "5 500 FCFA/m²",
       valueGain: "4 000 FCFA/m²",
       percentageGain: "+266,6 %"
-    },
-    // Contenu complet pour la page de détail
-    content: `
-      <h2>L'Analyse de la Performance</h2>
-      <p>Il y a seulement six mois, en janvier 2026, nous travaillions sur l'aménagement d'une parcelle de 4 hectares. À cette période, le prix du mètre carré était fixé à 1 500 FCFA.</p>
-      <p>Aujourd'hui, en juillet 2026, la donne a radicalement changé. Grâce à notre stratégie de développement et à l'attractivité croissante de la zone, le prix du mètre carré se négocie désormais entre 5 000 FCFA et 6 000 FCFA.</p>
-      
-      <h3>Le Bilan Chiffré</h3>
-      <p>Si l'on prend la moyenne de notre nouvelle valeur de marché (5 500 FCFA/m²), voici l'évolution de la rentabilité :</p>
-      <ul>
-        <li><strong>Prix d'acquisition (Janvier) :</strong> 1 500 FCFA/m²</li>
-        <li><strong>Prix actuel du marché (Juillet) :</strong> 5 500 FCFA/m²</li>
-        <li><strong>Gain de valeur par m² :</strong> 4 000 FCFA</li>
-        <li><strong>Pourcentage de bénéfice brut :</strong> +266,6 %</li>
-      </ul>
-      
-      <h3>Pourquoi un tel succès ?</h3>
-      <p>Cette appréciation de 266 % en un semestre n'est pas le fruit du hasard. Elle résulte de notre expertise dans le choix des emplacements, l'anticipation du développement urbain et la mise en valeur méthodique de nos parcelles.</p>
-      <p>Investir dans la terre reste l'un des moyens les plus sûrs et les plus lucratifs pour bâtir un patrimoine solide au Cameroun. Vous souhaitez profiter des prochaines opportunités avant que le marché ne sature ?</p>
-      <p><strong>Contactez Property Cameroun dès aujourd'hui pour découvrir nos prochains projets.</strong></p>
-    `
+    }
   };
 
-  // Données par défaut (fallback si pas de données backend)
+  // Données par défaut
   const defaultPosts = {
     fr: [
       {
@@ -215,7 +288,8 @@ const Blog = () => {
         excerpt: "Une analyse approfondie du marché local et des opportunités de rentabilité pour la saison à venir...",
         image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80",
         date: "10 Avril 2026",
-        author: "Expert Agro"
+        author: "Expert Agro",
+        slug: 'essor-elevage-porcin'
       },
       {
         id: 3,
@@ -224,16 +298,8 @@ const Blog = () => {
         excerpt: "Comment vérifier la fiabilité des fournisseurs et assurer le contrôle qualité avant l'expédition...",
         image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80",
         date: "08 Avril 2026",
-        author: "Équipe Sourcing"
-      },
-      {
-        id: 4,
-        category: 'Lifestyle',
-        title: "Vivre au Cameroun : Guide de l'Expatrié",
-        excerpt: "Découvrez les meilleurs quartiers, les écoles internationales et les opportunités de carrière...",
-        image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80",
-        date: "05 Avril 2026",
-        author: "Admin"
+        author: "Équipe Sourcing",
+        slug: 'importer-machines-chinoises'
       }
     ],
     en: [
@@ -244,7 +310,8 @@ const Blog = () => {
         excerpt: "A deep dive into the local market analysis and profitability opportunities for the upcoming season...",
         image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80",
         date: "April 10, 2026",
-        author: "Agro Expert"
+        author: "Agro Expert",
+        slug: 'rise-pig-farming'
       },
       {
         id: 3,
@@ -253,52 +320,32 @@ const Blog = () => {
         excerpt: "How to verify supplier reliability and ensure quality control before shipment...",
         image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80",
         date: "April 08, 2026",
-        author: "Sourcing Team"
-      },
-      {
-        id: 4,
-        category: 'Lifestyle',
-        title: "Living in Cameroon: Expat Guide",
-        excerpt: "Discover the best neighborhoods, international schools, and career opportunities...",
-        image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80",
-        date: "April 05, 2026",
-        author: "Admin"
+        author: "Sourcing Team",
+        slug: 'importing-chinese-machinery'
       }
     ]
   };
 
   const defaultOpportunities = {
     fr: [
-      {
-        id: 1,
-        title: "Terrain Agricole Sécurisé - 5 Hectares",
-        location: "Centre Cameroun",
-        roi: "12% ROI Annuel Estimé"
-      },
-      {
-        id: 2,
-        title: "Projet d'Élevage Porcin Clé en Main",
-        location: "Ouest Cameroun",
-        roi: "18% ROI Potentiel"
-      }
+      { id: 1, title: "Terrain Agricole Sécurisé - 5 Hectares", location: "Centre Cameroun", roi: "12% ROI Annuel Estimé" },
+      { id: 2, title: "Projet d'Élevage Porcin Clé en Main", location: "Ouest Cameroun", roi: "18% ROI Potentiel" }
     ],
     en: [
-      {
-        id: 1,
-        title: "Secured Agricultural Land - 5 Hectares",
-        location: "Central Cameroon",
-        roi: "12% Estimated Annual ROI"
-      },
-      {
-        id: 2,
-        title: "Turnkey Pig Farming Project",
-        location: "West Cameroon",
-        roi: "18% Potential ROI"
-      }
+      { id: 1, title: "Secured Agricultural Land - 5 Hectares", location: "Central Cameroon", roi: "12% Estimated Annual ROI" },
+      { id: 2, title: "Turnkey Pig Farming Project", location: "West Cameroon", roi: "18% Potential ROI" }
     ]
   };
 
-  // Charger les articles depuis l'API
+  const categories = [
+    { id: 'all', label: t.all },
+    { id: 'Real Estate', label: t.realEstate },
+    { id: 'Agriculture', label: t.agriculture },
+    { id: 'Sourcing', label: t.sourcing },
+    { id: 'Lifestyle', label: t.lifestyle }
+  ];
+
+  // Charger les articles
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
@@ -310,7 +357,6 @@ const Blog = () => {
         } else {
           apiPosts = defaultPosts[currentLang] || defaultPosts.fr;
         }
-        // Ajouter l'article en dur en première position
         setPosts([hardcodedArticle, ...apiPosts]);
       } catch (error) {
         console.error('Erreur lors du chargement des articles:', error);
@@ -320,7 +366,6 @@ const Blog = () => {
       }
     };
 
-    // Charger les opportunités
     const fetchOpportunities = async () => {
       try {
         const response = await api.get('/opportunities?lang=' + currentLang);
@@ -334,37 +379,32 @@ const Blog = () => {
       }
     };
 
-    // Charger les articles à la une
-    const fetchFeatured = async () => {
-      try {
-        const response = await api.get('/blog/featured?lang=' + currentLang);
-        if (response.data && response.data.success && response.data.data.length > 0) {
-          setFeaturedPosts(response.data.data);
-        }
-      } catch (error) {
-        console.error('Erreur chargement featured:', error);
-      }
-    };
-
     fetchPosts();
     fetchOpportunities();
-    fetchFeatured();
+
+    // Newsletter popup
+    const timer = setTimeout(() => {
+      if (!localStorage.getItem('blogNewsletterShown')) {
+        setShowNewsletter(true);
+        localStorage.setItem('blogNewsletterShown', 'true');
+      }
+    }, 8000);
+    return () => clearTimeout(timer);
   }, [currentLang]);
 
-  // Catégories avec traduction
-  const categories = [
-    { id: 'all', label: t.all },
-    { id: 'Real Estate', label: t.realEstate },
-    { id: 'Agriculture', label: t.agriculture },
-    { id: 'Sourcing', label: t.sourcing },
-    { id: 'Lifestyle', label: t.lifestyle }
-  ];
+  const handleNewsletterSubmit = (e) => {
+    e.preventDefault();
+    setEmailSubmitted(true);
+    setTimeout(() => {
+      setShowNewsletter(false);
+      setEmailSubmitted(false);
+    }, 2000);
+  };
 
   const filteredPosts = activeCategory === 'all'
     ? posts
     : posts.filter(post => post.category === activeCategory);
 
-  // Si loading, afficher un spinner
   if (loading) {
     return (
       <div className="bg-white min-h-screen">
@@ -377,59 +417,138 @@ const Blog = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="bg-white min-h-screen">
+        <Navbar />
+        <div className="flex flex-col items-center justify-center py-32 px-6">
+          <div className="bg-red-50 text-red-600 p-8 rounded-2xl text-center max-w-md">
+            <AlertCircle size={48} className="mx-auto mb-4 text-red-500" />
+            <p className="font-bold text-lg mb-2">{t.errorLoading}</p>
+            <p className="text-sm">{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="mt-6 px-6 py-3 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-colors"
+            >
+              {t.tryAgain}
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white min-h-screen">
       <Navbar />
 
-      {/* HERO SECTION */}
-      <div className="relative h-[80vh] flex items-center justify-center text-center pt-20">
-        <img
-          src="https://images.unsplash.com/photo-1500382017468-9049fed747ef"
-          className="absolute w-full h-full object-cover"
-          alt="Cameroon Landscape"
-        />
-        <div className="absolute inset-0 bg-black/60"></div>
-        <div className="relative z-10 text-white px-6">
-          <h1 className="text-4xl md:text-6xl font-serif italic mb-6">
-            {t.heroTitle} <br /> {t.heroTitleLine2}
-          </h1>
-          <p className="text-slate-300 mb-8 max-w-xl mx-auto">
+      {/* HERO SECTION avec animation */}
+      <motion.section 
+        style={{ opacity: heroOpacity, scale: heroScale }}
+        className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 text-white overflow-hidden"
+      >
+        <div className="absolute inset-0 overflow-hidden">
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute bg-white/5 rounded-full"
+              style={{
+                width: Math.random() * 100 + 50,
+                height: Math.random() * 100 + 50,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -30, 0],
+                opacity: [0.3, 0.6, 0.3],
+              }}
+              transition={{
+                duration: Math.random() * 10 + 10,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-6 py-24 text-center z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 backdrop-blur-sm rounded-full mb-8"
+          >
+            <Sparkles size={14} className="text-amber-400" />
+            <span className="text-amber-400 text-xs font-bold uppercase tracking-wide">{t.heroBadge}</span>
+          </motion.div>
+          
+          <motion.h1 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-6xl font-serif italic mb-6"
+          >
+            {t.heroTitle} <br /> <span className="text-amber-400">{t.heroTitleLine2}</span>
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-slate-300 mb-8 max-w-xl mx-auto"
+          >
             {t.heroSubtitle}
-          </p>
-          <div className="flex gap-4 justify-center">
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-wrap gap-4 justify-center"
+          >
             <Link to="/real-estate">
-              <button className="bg-pc-gold px-6 py-3 text-[10px] uppercase font-bold tracking-widest text-slate-900 hover:bg-pc-gold/90 transition-all">
+              <button className="bg-pc-gold px-6 py-3 text-[10px] uppercase font-bold tracking-widest text-slate-900 hover:bg-pc-gold/90 transition-all rounded-full">
                 {t.exploreNow}
               </button>
             </Link>
             <Link to="/diaspora">
-              <button className="border border-white px-6 py-3 text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all">
+              <button className="border border-white/50 px-6 py-3 text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all rounded-full">
                 {t.diasporaPortal}
               </button>
             </Link>
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.section>
 
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-20">
 
         {/* CAPEF PARTNERSHIP SECTION */}
-        <div className="bg-white border border-slate-100 p-10 mb-20 shadow-sm">
-          <h2 className="text-3xl font-serif italic mb-4">
-            {t.strategicPartnership}
-          </h2>
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="bg-white border border-slate-100 p-10 mb-20 shadow-sm rounded-3xl"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <ShieldCheck size={24} className="text-pc-gold" />
+            <h2 className="text-3xl font-serif italic">{t.strategicPartnership}</h2>
+          </div>
           <p className="text-slate-600 mb-6 leading-relaxed">
             {t.capefDescription}
           </p>
           <Link to="/agriculture/institutional-framework">
-            <button className="bg-pc-green text-white px-6 py-3 text-[10px] uppercase font-bold tracking-widest hover:bg-pc-green/90 transition-all">
+            <button className="bg-pc-green text-white px-6 py-3 text-[10px] uppercase font-bold tracking-widest hover:bg-pc-green/90 transition-all rounded-full">
               {t.learnMore}
             </button>
           </Link>
-        </div>
+        </motion.div>
 
         {/* DIASPORA SECTION */}
-        <div className="bg-slate-900 text-white p-16 mb-20 relative overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="bg-slate-900 text-white p-16 mb-20 relative overflow-hidden rounded-3xl"
+        >
           <div className="relative z-10">
             <h2 className="text-4xl font-serif italic mb-6">
               {t.investFromAbroad}
@@ -439,7 +558,7 @@ const Blog = () => {
             </p>
           </div>
           <div className="absolute top-0 right-0 w-32 h-32 bg-pc-gold opacity-10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-        </div>
+        </motion.div>
 
         {/* OPPORTUNITIES SECTION */}
         <div className="mb-20">
@@ -449,25 +568,36 @@ const Blog = () => {
           </div>
           <div className="grid md:grid-cols-2 gap-8">
             {opportunities.map((op) => (
-              <div key={op.id} className="border border-slate-100 p-8 group hover:border-pc-gold transition-colors duration-500">
+              <motion.div 
+                key={op.id} 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="border border-slate-100 p-8 group hover:border-pc-gold transition-colors duration-500 rounded-2xl"
+              >
                 <h3 className="text-xl font-semibold mb-2 group-hover:text-pc-gold transition-colors">{op.title}</h3>
                 <p className="text-sm text-slate-500 mb-4">{op.location}</p>
                 <div className="flex justify-between items-center">
-                    <p className="text-pc-green font-bold tracking-tighter">{op.roi}</p>
-                    <Link to="/real-estate" className="text-[10px] uppercase font-bold tracking-widest text-slate-400 group-hover:text-slate-900 transition-colors">
-                      {t.details}
-                    </Link>
+                  <p className="text-pc-green font-bold tracking-tighter">{op.roi}</p>
+                  <Link to="/real-estate" className="text-[10px] uppercase font-bold tracking-widest text-slate-400 group-hover:text-slate-900 transition-colors">
+                    {t.details}
+                  </Link>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
 
         {/* BLOG HEADER */}
-        <div className="mb-16">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-16"
+        >
           <p className="text-pc-gold text-[10px] uppercase font-bold tracking-[0.4em] mb-4">{t.theJournal}</p>
           <h2 className="text-4xl font-serif italic">{t.insightsExpertise}</h2>
-        </div>
+        </motion.div>
 
         {/* CATEGORY FILTER */}
         <div className="flex gap-4 mb-12 flex-wrap border-b border-slate-50 pb-8">
@@ -475,9 +605,9 @@ const Blog = () => {
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`px-6 py-2 text-[10px] uppercase tracking-widest font-bold transition-all ${
+              className={`px-6 py-2 text-[10px] uppercase tracking-widest font-bold transition-all rounded-full ${
                 activeCategory === cat.id
-                  ? 'bg-slate-900 text-white rounded-full'
+                  ? 'bg-slate-900 text-white'
                   : 'text-slate-400 hover:text-pc-gold'
               }`}
             >
@@ -486,76 +616,83 @@ const Blog = () => {
           ))}
         </div>
 
-        {/* POSTS GRID - Avec article en dur en première position */}
+        {/* POSTS GRID */}
         {filteredPosts.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12">
             {filteredPosts.map((post, index) => {
               const isFeatured = post.isHardcoded || index === 0;
               return (
-                <Link 
-                  key={post.id} 
-                  to={`/blog/${post.slug || post.id}`} 
+                <motion.div
+                  key={post.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
                   className={`group ${isFeatured ? 'lg:col-span-2 lg:row-span-2' : ''}`}
                 >
-                  <div className={`aspect-video overflow-hidden mb-6 bg-slate-100 ${isFeatured ? 'h-96' : ''}`}>
-                    <img 
-                      src={post.image} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                      alt={post.title} 
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000';
-                      }}
-                    />
-                  </div>
-                  
-                  {isFeatured && (
-                    <span className="inline-block bg-pc-gold text-slate-900 text-[8px] font-black uppercase tracking-widest px-3 py-1 mb-3">
-                      {t.featured}
-                    </span>
-                  )}
-                  
-                  <p className="text-[9px] text-pc-gold uppercase font-bold tracking-widest mb-3">{post.category}</p>
-                  <h3 className={`font-serif italic text-slate-900 mb-3 group-hover:text-pc-green transition-colors ${isFeatured ? 'text-3xl' : 'text-xl'} line-clamp-2`}>
-                    {post.title}
-                  </h3>
-                  <p className="text-sm text-slate-500 line-clamp-2 italic leading-relaxed">{post.excerpt}</p>
-                  
-                  {/* Affichage des stats de performance pour l'article en dur */}
-                  {post.isHardcoded && post.performanceData && (
-                    <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 bg-slate-50 p-4 rounded-xl">
-                      <div>
-                        <p className="text-[8px] text-slate-400 uppercase font-bold">{t.acquisitionPrice}</p>
-                        <p className="text-sm font-bold text-slate-800">{post.performanceData.acquisitionPrice}</p>
-                      </div>
-                      <div>
-                        <p className="text-[8px] text-slate-400 uppercase font-bold">{t.currentMarketPrice}</p>
-                        <p className="text-sm font-bold text-pc-gold">{post.performanceData.currentPrice}</p>
-                      </div>
-                      <div>
-                        <p className="text-[8px] text-slate-400 uppercase font-bold">{t.valueGain}</p>
-                        <p className="text-sm font-bold text-emerald-600">{post.performanceData.valueGain}</p>
-                      </div>
-                      <div>
-                        <p className="text-[8px] text-slate-400 uppercase font-bold">{t.percentageGain}</p>
-                        <p className="text-sm font-bold text-emerald-600">{post.performanceData.percentageGain}</p>
-                      </div>
+                  <Link to={`/blog/${post.slug || post.id}`} className="block h-full">
+                    <div className={`aspect-video overflow-hidden mb-6 bg-slate-100 rounded-2xl ${isFeatured ? 'h-96' : ''}`}>
+                      <img 
+                        src={post.image} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                        alt={post.title} 
+                        onError={(e) => {
+                          e.target.src = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000';
+                        }}
+                      />
                     </div>
-                  )}
-                  
-                  <div className="flex items-center gap-2 mt-3 text-[10px] text-slate-400">
-                    <span>{post.date}</span>
-                    <span>•</span>
-                    <span>{t.by} {post.author}</span>
-                  </div>
-                  
-                  {isFeatured && (
-                    <div className="mt-4">
-                      <span className="text-xs font-bold text-pc-gold group-hover:underline">
-                        {t.readFullArticle} →
+                    
+                    {isFeatured && (
+                      <span className="inline-block bg-pc-gold text-slate-900 text-[8px] font-black uppercase tracking-widest px-3 py-1 mb-3 rounded-full">
+                        {t.featured}
                       </span>
+                    )}
+                    
+                    <p className="text-[9px] text-pc-gold uppercase font-bold tracking-widest mb-3">{post.category}</p>
+                    <h3 className={`font-serif italic text-slate-900 mb-3 group-hover:text-pc-green transition-colors ${isFeatured ? 'text-3xl' : 'text-xl'} line-clamp-2`}>
+                      {post.title}
+                    </h3>
+                    <p className="text-sm text-slate-500 line-clamp-2 italic leading-relaxed">{post.excerpt}</p>
+                    
+                    {/* Performance Stats */}
+                    {post.isHardcoded && post.performanceData && (
+                      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 bg-slate-50 p-4 rounded-xl">
+                        <div>
+                          <p className="text-[8px] text-slate-400 uppercase font-bold">{t.acquisitionPrice}</p>
+                          <p className="text-sm font-bold text-slate-800">{post.performanceData.acquisitionPrice}</p>
+                        </div>
+                        <div>
+                          <p className="text-[8px] text-slate-400 uppercase font-bold">{t.currentMarketPrice}</p>
+                          <p className="text-sm font-bold text-pc-gold">{post.performanceData.currentPrice}</p>
+                        </div>
+                        <div>
+                          <p className="text-[8px] text-slate-400 uppercase font-bold">{t.valueGain}</p>
+                          <p className="text-sm font-bold text-emerald-600">{post.performanceData.valueGain}</p>
+                        </div>
+                        <div>
+                          <p className="text-[8px] text-slate-400 uppercase font-bold">{t.percentageGain}</p>
+                          <p className="text-sm font-bold text-emerald-600">{post.performanceData.percentageGain}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center gap-2 mt-3 text-[10px] text-slate-400">
+                      <Calendar size={12} />
+                      <span>{post.date}</span>
+                      <span>•</span>
+                      <User size={12} />
+                      <span>{t.by} {post.author}</span>
                     </div>
-                  )}
-                </Link>
+                    
+                    {isFeatured && (
+                      <div className="mt-4">
+                        <span className="text-xs font-bold text-pc-gold group-hover:underline inline-flex items-center gap-1">
+                          {t.readFullArticle} <ChevronRight size={14} />
+                        </span>
+                      </div>
+                    )}
+                  </Link>
+                </motion.div>
               );
             })}
           </div>
@@ -566,25 +703,112 @@ const Blog = () => {
         )}
 
         {/* FINAL CTA */}
-        <div className="mt-32 bg-slate-50 p-16 text-center border border-slate-100">
-          <h2 className="text-3xl font-serif italic mb-6">
-            {t.readyToInvest}
-          </h2>
-          <div className="flex flex-col md:flex-row justify-center gap-4">
-            <Link to="/book-appointment">
-              <button className="bg-slate-900 text-white px-10 py-4 text-[10px] uppercase font-bold tracking-widest hover:bg-pc-green transition-all">
-                {t.talkToExpert}
-              </button>
-            </Link>
-            <Link to="/real-estate">
-              <button className="border border-slate-900 text-slate-900 px-10 py-4 text-[10px] uppercase font-bold tracking-widest hover:bg-slate-900 hover:text-white transition-all">
-                {t.viewOpportunities}
-              </button>
-            </Link>
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mt-32 bg-gradient-to-r from-slate-900 to-slate-800 p-16 text-center rounded-3xl text-white relative overflow-hidden"
+        >
+          <div className="absolute inset-0 overflow-hidden">
+            {[...Array(10)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute bg-white/5 rounded-full"
+                style={{
+                  width: Math.random() * 80 + 20,
+                  height: Math.random() * 80 + 20,
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                }}
+              />
+            ))}
           </div>
-        </div>
+          <div className="relative z-10">
+            <BookOpen size={48} className="text-pc-gold mx-auto mb-4" />
+            <h2 className="text-3xl font-serif mb-6">
+              {t.readyToInvest}
+            </h2>
+            <div className="flex flex-col md:flex-row justify-center gap-4">
+              <Link to="/book-appointment">
+                <button className="bg-pc-gold text-slate-900 px-10 py-4 text-[10px] uppercase font-bold tracking-widest hover:bg-pc-gold/90 transition-all rounded-full">
+                  {t.talkToExpert}
+                </button>
+              </Link>
+              <Link to="/real-estate">
+                <button className="border border-white/30 text-white px-10 py-4 text-[10px] uppercase font-bold tracking-widest hover:bg-white/10 transition-all rounded-full">
+                  {t.viewOpportunities}
+                </button>
+              </Link>
+            </div>
+          </div>
+        </motion.div>
 
       </div>
+
+      {/* NEWSLETTER MODAL */}
+      <AnimatePresence>
+        {showNewsletter && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setShowNewsletter(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-3xl max-w-md w-full p-8 relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {!emailSubmitted ? (
+                <>
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-pc-gold to-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <Mail size={28} className="text-white" />
+                    </div>
+                    <h3 className="text-2xl font-serif font-bold text-gray-900 mb-2">
+                      {t.freeGuide}
+                    </h3>
+                    <p className="text-gray-500 text-sm">
+                      {t.newsletterDesc}
+                    </p>
+                  </div>
+                  <form onSubmit={handleNewsletterSubmit} className="space-y-4">
+                    <input
+                      type="email"
+                      placeholder={t.emailPlaceholder}
+                      required
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pc-gold focus:border-transparent"
+                    />
+                    <button
+                      type="submit"
+                      className="w-full py-3 bg-pc-gold text-slate-900 rounded-xl font-bold hover:shadow-lg transition-all"
+                    >
+                      {t.subscribe}
+                    </button>
+                  </form>
+                  <button
+                    onClick={() => setShowNewsletter(false)}
+                    className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X size={18} className="text-gray-400" />
+                  </button>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <CheckCircle size={48} className="text-emerald-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{t.thanksSubscribing}</h3>
+                  <p className="text-gray-500 text-sm">{t.checkInbox}</p>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <Footer />
     </div>
   );
 };
