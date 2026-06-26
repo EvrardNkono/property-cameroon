@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
-  ArrowLeft, Save, Trash2, Image, Plus, X, 
+  ArrowLeft, Save, Trash2, Image as ImageIcon, Plus, X, 
   MapPin, Home, Maximize2, DollarSign, FileText,
   CheckCircle2, Loader2, Upload, Building2,
   School, ShoppingBasket, Fuel, Coffee, BedDouble,
@@ -42,7 +42,7 @@ const compressImage = (file, quality = 0.6, maxWidth = 1024) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (e) => {
-      const img = new Image();
+      const img = new window.Image();
       img.src = e.target.result;
       img.onload = () => {
         const canvas = document.createElement('canvas');
@@ -84,7 +84,7 @@ const PropertyForm = () => {
   const [formData, setFormData] = useState({
     title: '',
     category: 'House',
-    listingType: 'sale', // ✅ NEW: 'sale' or 'rent'
+    listingType: 'sale',
     description: '',
     location: {
       city: '',
@@ -129,31 +129,19 @@ const PropertyForm = () => {
 
   const [imageUrls, setImageUrls] = useState([]);
 
-  // ✅ COMPLETE CATEGORIES
   const categories = [
-    // HOUSES
     { id: 'House', label: '🏠 House', icon: <Home size={18} />, type: 'house' },
     { id: 'Villa', label: '🏛️ Villa', icon: <Hotel size={18} />, type: 'house' },
     { id: 'Duplex', label: '🏘️ Duplex', icon: <Building2 size={18} />, type: 'house' },
-    
-    // APARTMENTS
     { id: 'Apartment', label: '🏢 Apartment', icon: <Building2 size={18} />, type: 'apartment' },
     { id: 'Studio', label: '📐 Studio', icon: <DoorOpen size={18} />, type: 'apartment' },
-    
-    // ROOMS
     { id: 'Room', label: '🛏️ Room', icon: <BedDouble size={18} />, type: 'room' },
-    
-    // LAND
     { id: 'Land', label: '🗺️ Land', icon: <MapPin size={18} />, type: 'land' },
     { id: 'Agricultural Land', label: '🌾 Agricultural Land', icon: <Trees size={18} />, type: 'land' },
-    
-    // COMMERCIAL
     { id: 'Commercial Space', label: '🏪 Commercial Space', icon: <Store size={18} />, type: 'commercial' },
     { id: 'Office', label: '💼 Office', icon: <Briefcase size={18} />, type: 'commercial' },
     { id: 'Warehouse', label: '📦 Warehouse', icon: <Warehouse size={18} />, type: 'commercial' },
     { id: 'Shop', label: '🛍️ Shop', icon: <ShoppingBasket size={18} />, type: 'commercial' },
-    
-    // OTHER
     { id: 'Industrial Space', label: '🏭 Industrial Space', icon: <Factory size={18} />, type: 'other' },
     { id: 'Parking', label: '🅿️ Parking', icon: <ParkingCircle size={18} />, type: 'other' }
   ];
@@ -163,7 +151,6 @@ const PropertyForm = () => {
     'Adamawa', 'North', 'Far-North', 'East'
   ];
 
-  // Determine category type for conditional display
   const getCurrentCategoryType = () => {
     const cat = categories.find(c => c.id === formData.category);
     return cat ? cat.type : 'other';
@@ -177,7 +164,6 @@ const PropertyForm = () => {
   const isCommercial = categoryType === 'commercial';
   const isOther = categoryType === 'other';
 
-  // Check if category is residential (should show furnished option)
   const isResidential = isHouse || isApartment || isRoom;
 
   useEffect(() => {
@@ -197,7 +183,7 @@ const PropertyForm = () => {
       setFormData({
         title: property.title || '',
         category: property.category || 'House',
-        listingType: property.listingType || 'sale', // ✅ NEW
+        listingType: property.listingType || 'sale',
         description: property.description || '',
         location: {
           city: property.location?.city || '',
@@ -394,7 +380,7 @@ const PropertyForm = () => {
       const submitData = {
         title: formData.title,
         category: formData.category,
-        listingType: formData.listingType, // ✅ NEW
+        listingType: formData.listingType,
         description: formData.description,
         location: {
           city: formData.location.city,
@@ -474,7 +460,6 @@ const PropertyForm = () => {
     }
   };
 
-  // Component for Furnished Status
   const FurnishedStatusSelector = () => (
     <div className="mt-5 pt-4 border-t border-slate-100">
       <div className="flex items-center gap-4 flex-wrap">
@@ -600,7 +585,7 @@ const PropertyForm = () => {
                 </select>
               </div>
               
-              {/* ✅ NEW: LISTING TYPE (For Sale / For Rent) */}
+              {/* Listing Type */}
               <div>
                 <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Listing Type *</label>
                 <div className="flex gap-3">
@@ -771,7 +756,7 @@ const PropertyForm = () => {
           </div>
         </div>
 
-        {/* Features - Conditional based on category type */}
+        {/* Features */}
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-100 bg-slate-50/50">
             <h2 className="font-bold text-[#0a2619] flex items-center gap-2">
@@ -779,7 +764,7 @@ const PropertyForm = () => {
             </h2>
           </div>
           <div className="p-6">
-            {/* HOUSE features (House, Villa, Duplex) */}
+            {/* HOUSE features */}
             {isHouse && (
               <div className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -808,43 +793,19 @@ const PropertyForm = () => {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hasElectricity"
-                      checked={formData.features.hasElectricity}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded"
-                    />
+                    <input type="checkbox" name="hasElectricity" checked={formData.features.hasElectricity} onChange={handleChange} className="w-4 h-4 rounded" />
                     <span className="text-sm text-slate-700">Electricity</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hasWater"
-                      checked={formData.features.hasWater}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded"
-                    />
+                    <input type="checkbox" name="hasWater" checked={formData.features.hasWater} onChange={handleChange} className="w-4 h-4 rounded" />
                     <span className="text-sm text-slate-700">Water</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hasParking"
-                      checked={formData.features.hasParking}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded"
-                    />
+                    <input type="checkbox" name="hasParking" checked={formData.features.hasParking} onChange={handleChange} className="w-4 h-4 rounded" />
                     <span className="text-sm text-slate-700">Parking</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hasGarden"
-                      checked={formData.features.hasGarden}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded"
-                    />
+                    <input type="checkbox" name="hasGarden" checked={formData.features.hasGarden} onChange={handleChange} className="w-4 h-4 rounded" />
                     <span className="text-sm text-slate-700">Garden</span>
                   </label>
                 </div>
@@ -852,7 +813,7 @@ const PropertyForm = () => {
               </div>
             )}
 
-            {/* APARTMENT features (Apartment, Studio) */}
+            {/* APARTMENT features */}
             {isApartment && (
               <div className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -892,43 +853,19 @@ const PropertyForm = () => {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hasElectricity"
-                      checked={formData.features.hasElectricity}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded"
-                    />
+                    <input type="checkbox" name="hasElectricity" checked={formData.features.hasElectricity} onChange={handleChange} className="w-4 h-4 rounded" />
                     <span className="text-sm text-slate-700">Electricity</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hasWater"
-                      checked={formData.features.hasWater}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded"
-                    />
+                    <input type="checkbox" name="hasWater" checked={formData.features.hasWater} onChange={handleChange} className="w-4 h-4 rounded" />
                     <span className="text-sm text-slate-700">Water</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hasElevator"
-                      checked={formData.features.hasElevator}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded"
-                    />
+                    <input type="checkbox" name="hasElevator" checked={formData.features.hasElevator} onChange={handleChange} className="w-4 h-4 rounded" />
                     <span className="text-sm text-slate-700">Elevator</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hasBalcony"
-                      checked={formData.features.hasBalcony}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded"
-                    />
+                    <input type="checkbox" name="hasBalcony" checked={formData.features.hasBalcony} onChange={handleChange} className="w-4 h-4 rounded" />
                     <span className="text-sm text-slate-700">Balcony</span>
                   </label>
                 </div>
@@ -954,23 +891,11 @@ const PropertyForm = () => {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hasElectricity"
-                      checked={formData.features.hasElectricity}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded"
-                    />
+                    <input type="checkbox" name="hasElectricity" checked={formData.features.hasElectricity} onChange={handleChange} className="w-4 h-4 rounded" />
                     <span className="text-sm text-slate-700">Electricity</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hasWater"
-                      checked={formData.features.hasWater}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded"
-                    />
+                    <input type="checkbox" name="hasWater" checked={formData.features.hasWater} onChange={handleChange} className="w-4 h-4 rounded" />
                     <span className="text-sm text-slate-700">Water</span>
                   </label>
                 </div>
@@ -978,7 +903,7 @@ const PropertyForm = () => {
               </div>
             )}
 
-            {/* LAND features (Land, Agricultural Land) */}
+            {/* LAND features */}
             {isLand && (
               <div className="space-y-5">
                 <div>
@@ -997,43 +922,19 @@ const PropertyForm = () => {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hasElectricity"
-                      checked={formData.features.hasElectricity}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded"
-                    />
+                    <input type="checkbox" name="hasElectricity" checked={formData.features.hasElectricity} onChange={handleChange} className="w-4 h-4 rounded" />
                     <span className="text-sm text-slate-700">Electricity nearby</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hasWater"
-                      checked={formData.features.hasWater}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded"
-                    />
+                    <input type="checkbox" name="hasWater" checked={formData.features.hasWater} onChange={handleChange} className="w-4 h-4 rounded" />
                     <span className="text-sm text-slate-700">Water nearby</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hasRoad"
-                      checked={formData.features.hasRoad}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded"
-                    />
+                    <input type="checkbox" name="hasRoad" checked={formData.features.hasRoad} onChange={handleChange} className="w-4 h-4 rounded" />
                     <span className="text-sm text-slate-700">Road Access</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="isFenced"
-                      checked={formData.features.isFenced}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded"
-                    />
+                    <input type="checkbox" name="isFenced" checked={formData.features.isFenced} onChange={handleChange} className="w-4 h-4 rounded" />
                     <span className="text-sm text-slate-700">Fenced</span>
                   </label>
                 </div>
@@ -1082,226 +983,190 @@ const PropertyForm = () => {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hasElectricity"
-                      checked={formData.features.hasElectricity}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded"
-                    />
+                    <input type="checkbox" name="hasElectricity" checked={formData.features.hasElectricity} onChange={handleChange} className="w-4 h-4 rounded" />
                     <span className="text-sm text-slate-700">Electricity</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hasWater"
-                      checked={formData.features.hasWater}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded"
-                    />
+                    <input type="checkbox" name="hasWater" checked={formData.features.hasWater} onChange={handleChange} className="w-4 h-4 rounded" />
                     <span className="text-sm text-slate-700">Water</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="hasParking"
-                      checked={formData.features.hasParking}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded"
-                    />
+                    <input type="checkbox" name="hasParking" checked={formData.features.hasParking} onChange={handleChange} className="w-4 h-4 rounded" />
                     <span className="text-sm text-slate-700">Parking</span>
                   </label>
                 </div>
               </div>
             )}
 
-            {/* OTHER features (Industrial, Parking) */}
+            {/* OTHER features */}
             {isOther && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="hasElectricity"
-                    checked={formData.features.hasElectricity}
-                    onChange={handleChange}
-                    className="w-4 h-4 rounded"
-                  />
+                  <input type="checkbox" name="hasElectricity" checked={formData.features.hasElectricity} onChange={handleChange} className="w-4 h-4 rounded" />
                   <span className="text-sm text-slate-700">Electricity</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="hasWater"
-                    checked={formData.features.hasWater}
-                    onChange={handleChange}
-                    className="w-4 h-4 rounded"
-                  />
+                  <input type="checkbox" name="hasWater" checked={formData.features.hasWater} onChange={handleChange} className="w-4 h-4 rounded" />
                   <span className="text-sm text-slate-700">Water</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="hasRoad"
-                    checked={formData.features.hasRoad}
-                    onChange={handleChange}
-                    className="w-4 h-4 rounded"
-                  />
-                    <span className="text-sm text-slate-700">Road Access</span>
-                  </label>
-                </div>
-              )}
-            </div>
+                  <input type="checkbox" name="hasRoad" checked={formData.features.hasRoad} onChange={handleChange} className="w-4 h-4 rounded" />
+                  <span className="text-sm text-slate-700">Road Access</span>
+                </label>
+              </div>
+            )}
           </div>
+        </div>
 
-          {/* Strategic Proximity (Amenities) - Optional */}
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-              <h2 className="font-bold text-[#0a2619] flex items-center gap-2">
-                <MapPin size={18} /> Strategic Proximity (Optional)
-              </h2>
-              <p className="text-[9px] text-slate-400 mt-1">
-                Tell us about nearby landmarks. Leave empty for auto-detection from map data.
-              </p>
+        {/* Strategic Proximity */}
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+            <h2 className="font-bold text-[#0a2619] flex items-center gap-2">
+              <MapPin size={18} /> Strategic Proximity (Optional)
+            </h2>
+            <p className="text-[9px] text-slate-400 mt-1">
+              Tell us about nearby landmarks. Leave empty for auto-detection from map data.
+            </p>
+          </div>
+          <div className="p-6 space-y-5">
+            <div>
+              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
+                <School size={14} /> Schools / Universities
+              </label>
+              <input
+                type="text"
+                name="amenities.schools"
+                value={formData.amenities.schools}
+                onChange={handleChange}
+                placeholder="e.g., Lycée de Bastos, Université de Yaoundé II"
+                className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+              />
             </div>
-            <div className="p-6 space-y-5">
-              <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
-                  <School size={14} /> Schools / Universities
-                </label>
-                <input
-                  type="text"
-                  name="amenities.schools"
-                  value={formData.amenities.schools}
-                  onChange={handleChange}
-                  placeholder="e.g., Lycée de Bastos, Université de Yaoundé II"
-                  className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
-                  <ShoppingBasket size={14} /> Markets / Shopping
-                </label>
-                <input
-                  type="text"
-                  name="amenities.markets"
-                  value={formData.amenities.markets}
-                  onChange={handleChange}
-                  placeholder="e.g., Marché Central, Super U Bonapriso"
-                  className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
-                  <Fuel size={14} /> Gas Stations / Fuel
-                </label>
-                <input
-                  type="text"
-                  name="amenities.stations"
-                  value={formData.amenities.stations}
-                  onChange={handleChange}
-                  placeholder="e.g., Total Bonapriso, Oil Libya"
-                  className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
-                  <Coffee size={14} /> Bakeries / Restaurants
-                </label>
-                <input
-                  type="text"
-                  name="amenities.bakeries"
-                  value={formData.amenities.bakeries}
-                  onChange={handleChange}
-                  placeholder="e.g., Boulangerie La Parisienne, Restaurant La Scala"
-                  className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
-                />
-              </div>
+            <div>
+              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
+                <ShoppingBasket size={14} /> Markets / Shopping
+              </label>
+              <input
+                type="text"
+                name="amenities.markets"
+                value={formData.amenities.markets}
+                onChange={handleChange}
+                placeholder="e.g., Marché Central, Super U Bonapriso"
+                className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
+                <Fuel size={14} /> Gas Stations / Fuel
+              </label>
+              <input
+                type="text"
+                name="amenities.stations"
+                value={formData.amenities.stations}
+                onChange={handleChange}
+                placeholder="e.g., Total Bonapriso, Oil Libya"
+                className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-2">
+                <Coffee size={14} /> Bakeries / Restaurants
+              </label>
+              <input
+                type="text"
+                name="amenities.bakeries"
+                value={formData.amenities.bakeries}
+                onChange={handleChange}
+                placeholder="e.g., Boulangerie La Parisienne, Restaurant La Scala"
+                className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-[#c5a059] transition-all"
+              />
             </div>
           </div>
+        </div>
 
-          {/* Images */}
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-              <h2 className="font-bold text-[#0a2619] flex items-center gap-2">
-                <Image size={18} /> Images
-              </h2>
-              <p className="text-[9px] text-slate-400 mt-1">
-                Maximum 10 images. Upload JPEG or PNG format.
-              </p>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {imageUrls.map((url, index) => {
-                  const isExistingImage = url.startsWith('http') && !url.includes('blob');
-                  return (
-                    <div key={index} className="relative group">
-                      <img
-                        src={url}
-                        alt={`Property ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-xl"
-                        onError={(e) => {
-                          console.error('Image failed to load:', url);
-                          e.target.src = 'https://via.placeholder.com/150?text=Image+Error';
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X size={14} />
-                      </button>
-                      {isExistingImage && (
-                        <span className="absolute bottom-2 left-2 text-[8px] bg-green-600 text-white px-1.5 py-0.5 rounded">
-                          Existing
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-[#c5a059] transition-colors">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    disabled={uploadingImage}
-                  />
-                  {uploadingImage ? (
-                    <Loader2 size={24} className="text-[#c5a059] animate-spin" />
-                  ) : (
-                    <>
-                      <Plus size={24} className="text-slate-400" />
-                      <span className="text-[10px] text-slate-400 mt-1">Add Image</span>
-                    </>
-                  )}
-                </label>
-              </div>
+        {/* Images */}
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+            <h2 className="font-bold text-[#0a2619] flex items-center gap-2">
+              <ImageIcon size={18} /> Images
+            </h2>
+            <p className="text-[9px] text-slate-400 mt-1">
+              Maximum 10 images. Upload JPEG or PNG format.
+            </p>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {imageUrls.map((url, index) => {
+                const isExistingImage = url.startsWith('http') && !url.includes('blob');
+                return (
+                  <div key={index} className="relative group">
+                    <img
+                      src={url}
+                      alt={`Property ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-xl"
+                      onError={(e) => {
+                        console.error('Image failed to load:', url);
+                        e.target.src = 'https://via.placeholder.com/150?text=Image+Error';
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X size={14} />
+                    </button>
+                    {isExistingImage && (
+                      <span className="absolute bottom-2 left-2 text-[8px] bg-green-600 text-white px-1.5 py-0.5 rounded">
+                        Existing
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-[#c5a059] transition-colors">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  disabled={uploadingImage}
+                />
+                {uploadingImage ? (
+                  <Loader2 size={24} className="text-[#c5a059] animate-spin" />
+                ) : (
+                  <>
+                    <Plus size={24} className="text-slate-400" />
+                    <span className="text-[10px] text-slate-400 mt-1">Add Image</span>
+                  </>
+                )}
+              </label>
             </div>
           </div>
+        </div>
 
-          {/* Submit Buttons */}
-          <div className="flex gap-4">
-            <button
-              type="button"
-              onClick={() => navigate('/dashboard/properties')}
-              className="flex-1 px-6 py-4 bg-slate-100 text-slate-600 rounded-xl font-black uppercase text-[11px] tracking-widest hover:bg-slate-200 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 px-6 py-4 bg-[#0a2619] text-[#c5a059] rounded-xl font-black uppercase text-[11px] tracking-widest hover:bg-[#1a3d2a] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {loading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-              {id ? 'Update Property' : 'Create Property'}
-            </button>
-          </div>
-        </form>
-      </div>
-    );
-  };
+        {/* Submit Buttons */}
+        <div className="flex gap-4">
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard/properties')}
+            className="flex-1 px-6 py-4 bg-slate-100 text-slate-600 rounded-xl font-black uppercase text-[11px] tracking-widest hover:bg-slate-200 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 px-6 py-4 bg-[#0a2619] text-[#c5a059] rounded-xl font-black uppercase text-[11px] tracking-widest hover:bg-[#1a3d2a] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {loading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+            {id ? 'Update Property' : 'Create Property'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
 
 export default PropertyForm;
