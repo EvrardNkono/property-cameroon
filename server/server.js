@@ -39,6 +39,7 @@ import amenityRoutes from './routes/amenity.routes.js';
 import livestockRoutes from './routes/livestock.routes.js';
 import livestockCategoryRoutes from './routes/livestockCategory.routes.js';
 import sitemapRoutes from './routes/sitemap.js';
+import roleRequestRoutes from './routes/roleRequest.routes.js'; // ✅ AJOUT ICI
 
 // 🌟 NOUVELLES ROUTES BLOG
 import blogRoutes from './routes/blog.js';
@@ -348,7 +349,6 @@ const connectMongoDB = async () => {
 };
 
 // ========== MIDDLEWARE 1 : CONNEXION MONGODB ==========
-// ✅ Exclusions des routes debug restaurées
 app.use('/api', async (req, res, next) => {
   if (req.url.includes('/debug-mongo') || req.url.includes('/test-real-data') || req.url.includes('/health') || req.url.includes('/diagnostic')) {
     return next();
@@ -363,7 +363,6 @@ app.use('/api', async (req, res, next) => {
 });
 
 // ========== MIDDLEWARE 2 : MODE DÉGRADÉ ==========
-// ✅ Exclusions des routes debug restaurées
 app.use('/api', (req, res, next) => {
   if (req.url.includes('/debug-mongo') || req.url.includes('/test-real-data') || req.url.includes('/health') || req.url.includes('/diagnostic')) {
     return next();
@@ -375,8 +374,7 @@ app.use('/api', (req, res, next) => {
   
   console.log(`📦 Mock mode: ${req.method} ${req.url}`);
   
-  // ✅ UNIQUE MODIFICATION : LAISSER PASSER LES REQUÊTES BLOG (GET et POST)
-  // Cela permet de créer des catégories et articles même en mode dégradé
+  // LAISSER PASSER LES REQUÊTES BLOG (GET et POST)
   if (req.url.includes('/blog')) {
     console.log('📝 Blog route in mock mode - passing through to real handler');
     return next();
@@ -410,7 +408,6 @@ app.use('/api', (req, res, next) => {
       });
     }
     
-    // 🌟 ROUTES BLOG EN MODE DÉGRADÉ
     if (req.url.includes('/blog/categories')) {
       return res.json({
         success: true,
@@ -442,8 +439,7 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
-// ========== MIDDLEWARE 3 : TRADUCTION (EN DERNIER) ==========
-// ✅ Exclusions des routes debug restaurées
+// ========== MIDDLEWARE 3 : TRADUCTION ==========
 app.use('/api', (req, res, next) => {
   const excludedPaths = ['/debug-mongo', '/test-real-data', '/health', '/diagnostic'];
   if (excludedPaths.some(path => req.url.includes(path))) {
@@ -469,6 +465,9 @@ app.use('/api/livestock-categories', livestockCategoryRoutes);
 // 🌟 NOUVELLES ROUTES BLOG (ordre important : categories avant blog)
 app.use('/api/blog/categories', blogCategoryRoutes);
 app.use('/api/blog', blogRoutes);
+
+// ✅ ROUTES DES DEMANDES DE RÔLE (AJOUT ICI)
+app.use('/api/role-requests', roleRequestRoutes);
 
 app.use('/', sitemapRoutes);
 
@@ -496,7 +495,8 @@ app.get('/api/health', (req, res) => {
     vercel_env: process.env.VERCEL === '1' ? true : false,
     mock_mode: mongoose.connection.readyState !== 1,
     translation_active: true,
-    blog_routes: 'active'
+    blog_routes: 'active',
+    role_requests_routes: 'active' // ✅ AJOUT
   });
 });
 
@@ -518,9 +518,11 @@ app.get('/api/diagnostic', async (req, res) => {
     mock_mode_active: mongoose.connection.readyState !== 1,
     translation_middleware: 'active',
     blog_routes: 'active',
+    role_requests_routes: 'active', // ✅ AJOUT
     routes_configured: [
       '/api/blog',
-      '/api/blog/categories'
+      '/api/blog/categories',
+      '/api/role-requests' // ✅ AJOUT
     ]
   };
   
@@ -533,6 +535,7 @@ app.get('/', (req, res) => {
     endpoints: {
       blog: "/api/blog",
       blogCategories: "/api/blog/categories",
+      roleRequests: "/api/role-requests", // ✅ AJOUT
       health: "/api/health",
       diagnostic: "/api/diagnostic"
     }
@@ -579,6 +582,7 @@ const startServer = async () => {
   console.log('🚀 Starting server...');
   console.log('🌐 Translation middleware enabled - Auto-translates API responses');
   console.log('📝 Blog routes enabled - /api/blog and /api/blog/categories');
+  console.log('👤 Role requests routes enabled - /api/role-requests'); // ✅ AJOUT
   
   await new Promise(resolve => setTimeout(resolve, 2000));
   
@@ -600,6 +604,7 @@ const startServer = async () => {
       console.log(`📍 http://localhost:${PORT}`);
       console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
       console.log(`📝 Blog API: http://localhost:${PORT}/api/blog`);
+      console.log(`👤 Role requests API: http://localhost:${PORT}/api/role-requests`); // ✅ AJOUT
       console.log(`🛠️ Debug MongoDB: http://localhost:${PORT}/api/debug-mongo`);
       console.log(`📊 Test real data: http://localhost:${PORT}/api/test-real-data`);
     });

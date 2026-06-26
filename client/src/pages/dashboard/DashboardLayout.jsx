@@ -24,7 +24,8 @@ import {
   Newspaper,
   Edit3,
   Image,
-  ChevronRight
+  ChevronRight,
+  ShieldCheck 
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -85,6 +86,12 @@ const DashboardLayout = () => {
       icon: <Users size={20} />, 
       roles: ['ADMIN'] 
     },
+    { 
+  label: 'Role Requests', 
+  path: '/dashboard/admin/role-requests', 
+  icon: <ShieldCheck size={20} />, 
+  roles: ['ADMIN'] 
+},
     { 
       label: 'Global Inventory', 
       path: '/dashboard/admin/inventory', 
