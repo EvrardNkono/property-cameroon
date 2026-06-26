@@ -45,12 +45,35 @@ export const updateUser = async (req, res) => {
 
 export const updateUserRoles = async (req, res) => {
   try {
-    const { roles } = req.body;
+    let { roles } = req.body;
+
+    if (!Array.isArray(roles) || roles.length === 0) {
+      return res.status(400).json({ success: false, message: 'roles must be a non-empty array' });
+    }
+
+    const isAdmin = req.user.roles?.includes('ADMIN');
+
+    // ✅ Sécurité : un non-ADMIN ne peut pas s'attribuer le rôle ADMIN
+    if (!isAdmin) {
+      roles = roles.filter(r => r !== 'ADMIN');
+    }
+
+    // ✅ Conserver le rôle ADMIN si l'utilisateur le possède déjà (ne pas se le retirer accidentellement)
+    const existingUser = await User.findById(req.params.id).select('roles');
+    if (!existingUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (existingUser.roles?.includes('ADMIN') && !isAdmin) {
+      roles = [...new Set([...roles, 'ADMIN'])];
+    }
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { roles },
       { new: true }
     ).select('-password');
+
     res.json({ success: true, user });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -75,33 +98,30 @@ export const verifyKYC = async (req, res) => {
   try {
     console.log('📝 verifyKYC called for user:', req.params.id);
     console.log('📝 Request body:', req.body);
-    
+
     const { kycStatus } = req.body;
-    
-    // Validation des valeurs acceptées
+
     const validStatuses = ['Verified', 'Rejected', 'Pending', 'Not Submitted'];
     if (!validStatuses.includes(kycStatus)) {
       return res.status(400).json({ success: false, message: 'Invalid KYC status' });
     }
-    
-    // 🔧 CORRECTION : Si KYC est approuvé, on approuve aussi le compte
-    const updateData = { kycStatus: kycStatus };
+
+    const updateData = { kycStatus };
     if (kycStatus === 'Verified') {
       updateData.status = 'Verified';
     }
-    
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
       updateData,
       { new: true, runValidators: true }
     ).select('-password');
-    
+
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    
+
     console.log(`✅ User updated: status=${user.status}, kycStatus=${user.kycStatus}`);
-    
     res.json({ success: true, user });
   } catch (error) {
     console.error('❌ Error in verifyKYC:', error);
@@ -118,31 +138,25 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-// ========== REGISTER (INSCRIPTION) ==========
 export const register = async (req, res) => {
   try {
     const { name, email, password, phone, roles } = req.body;
-    
-    // Vérifier si l'utilisateur existe déjà
+
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ success: false, message: 'User already exists' });
     }
-    
-    // Créer l'utilisateur avec statut "Pending"
+
     const user = await User.create({
       name,
       email,
       password,
       phone,
       roles: roles || ['BUYER'],
-      status: 'Pending',  // En attente de validation admin
+      status: 'Pending',
       kycStatus: 'Not Submitted'
     });
-    
-    // TODO: Envoyer une notification à l'admin (email)
-    // await sendAdminNotification(user);
-    
+
     res.status(201).json({
       success: true,
       message: 'Registration submitted. Awaiting admin approval.',
@@ -159,7 +173,6 @@ export const register = async (req, res) => {
   }
 };
 
-// ========== APPROUVER UN UTILISATEUR (ADMIN) ==========
 export const approveUser = async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate(
@@ -167,25 +180,17 @@ export const approveUser = async (req, res) => {
       { status: 'Verified' },
       { new: true }
     ).select('-password');
-    
+
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    
-    // TODO: Envoyer un email de confirmation à l'utilisateur
-    // await sendApprovalEmail(user.email);
-    
-    res.json({ 
-      success: true, 
-      message: 'User approved successfully',
-      user 
-    });
+
+    res.json({ success: true, message: 'User approved successfully', user });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// ========== REJETER UN UTILISATEUR (ADMIN) ==========
 export const rejectUser = async (req, res) => {
   try {
     const { rejectionReason } = req.body;
@@ -194,49 +199,41 @@ export const rejectUser = async (req, res) => {
       { status: 'Rejected', rejectionReason },
       { new: true }
     ).select('-password');
-    
+
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    
-    res.json({ 
-      success: true, 
-      message: 'User rejected',
-      user 
-    });
+
+    res.json({ success: true, message: 'User rejected', user });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// ========== OBTENIR LES UTILISATEURS EN ATTENTE ==========
 export const getPendingUsers = async (req, res) => {
   try {
     const users = await User.find({ status: 'Pending' })
       .select('-password')
       .sort('-createdAt');
-    
     res.json({ success: true, count: users.length, users });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// ========== NOUVELLES FONCTIONS ==========
-
 export const uploadAvatar = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file provided' });
     }
-    
+
     const avatarUrl = `/uploads/avatars/${req.file.filename}`;
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { profilePicture: avatarUrl },
       { new: true }
     ).select('-password');
-    
+
     res.json({ success: true, user, avatarUrl });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -248,14 +245,14 @@ export const uploadKYCDocument = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No document provided' });
     }
-    
+
     const { type } = req.body;
     const documentUrl = `/uploads/kyc/${req.file.filename}`;
-    
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      { 
-        $push: { 
+      {
+        $push: {
           kycDocuments: {
             type: type || 'ID_CARD',
             url: documentUrl,
@@ -266,7 +263,7 @@ export const uploadKYCDocument = async (req, res) => {
       },
       { new: true }
     ).select('-password');
-    
+
     res.json({ success: true, user });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

@@ -12,8 +12,7 @@ const UserProfile = () => {
   const [showKYCModal, setShowKYCModal] = useState(false);
   const [kycDocument, setKycDocument] = useState(null);
   const [uploadingKYC, setUploadingKYC] = useState(false);
-  
-  // Edit mode
+
   const [editMode, setEditMode] = useState(false);
   const [editRolesMode, setEditRolesMode] = useState(false);
   const [formData, setFormData] = useState({
@@ -24,7 +23,6 @@ const UserProfile = () => {
   });
   const [selectedRoles, setSelectedRoles] = useState([]);
 
-  // Role options (ADMIN excluded from user self-editing)
   const roleOptions = [
     { id: 'BUYER', label: 'Buyer', description: 'Browse and purchase properties' },
     { id: 'OWNER', label: 'Property Owner', description: 'List and manage properties' },
@@ -33,10 +31,11 @@ const UserProfile = () => {
     { id: 'LIVESTOCK', label: 'Livestock Owner', description: 'Manage livestock production units' }
   ];
 
-  // Check if user has ADMIN role
   const isAdmin = user?.roles?.includes('ADMIN');
 
-  // Load user data
+  // ✅ Helper — résout _id ou id selon le format retourné par le contexte auth
+  const getUserId = () => user?._id || user?.id;
+
   useEffect(() => {
     if (user) {
       setFormData({
@@ -50,17 +49,22 @@ const UserProfile = () => {
     }
   }, [user]);
 
-  // Update profile
+  // ✅ Update profile
   const handleUpdateProfile = async () => {
+    const userId = getUserId();
+    if (!userId) {
+      setError('User ID not available. Please refresh the page.');
+      return;
+    }
+
     try {
       setUpdating(true);
       setError(null);
-      
-      const response = await api.updateUser(user._id, formData);
+
+      const response = await api.updateUser(userId, formData);
       if (updateUser) updateUser(response.user);
       setSuccess('Profile updated successfully!');
       setEditMode(false);
-      
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Error updating profile:', err);
@@ -70,23 +74,28 @@ const UserProfile = () => {
     }
   };
 
-  // Update roles
+  // ✅ Update roles
   const handleUpdateRoles = async () => {
+    const userId = getUserId();
+    if (!userId) {
+      setError('User ID not available. Please refresh the page.');
+      return;
+    }
+
     try {
       setUpdating(true);
       setError(null);
-      
-      // Keep ADMIN role if user already has it
+
       let rolesToUpdate = [...selectedRoles];
+      // Conserver ADMIN si déjà présent (le backend le protège aussi)
       if (isAdmin && !rolesToUpdate.includes('ADMIN')) {
         rolesToUpdate.push('ADMIN');
       }
-      
-      const response = await api.updateUserRoles(user._id, rolesToUpdate);
+
+      const response = await api.updateUserRoles(userId, rolesToUpdate);
       if (updateUser) updateUser(response.user);
       setSuccess('Roles updated successfully!');
       setEditRolesMode(false);
-      
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Error updating roles:', err);
@@ -96,26 +105,28 @@ const UserProfile = () => {
     }
   };
 
-  // Toggle role selection
   const toggleRole = (roleId) => {
-    setSelectedRoles(prev => 
-      prev.includes(roleId) 
+    setSelectedRoles(prev =>
+      prev.includes(roleId)
         ? prev.filter(r => r !== roleId)
         : [...prev, roleId]
     );
   };
 
-  // Profile image upload
   const handleProfileImageUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-    
-    const formData = new FormData();
-    formData.append('avatar', file);
-    
+
+    const userId = getUserId();
+    if (!userId) { setError('User ID not available.'); return; }
+
+    const data = new FormData();
+    data.append('avatar', file);
+
     try {
       setUpdating(true);
-      // Implement avatar upload API call here
+      const response = await api.uploadAvatar(userId, data);
+      if (updateUser) updateUser(response.user);
       setSuccess('Profile photo updated!');
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
@@ -125,24 +136,23 @@ const UserProfile = () => {
     }
   };
 
-  // KYC document submission
   const handleKYCSubmission = async () => {
-    if (!kycDocument) {
-      setError('Please select a document');
-      return;
-    }
-    
-    const formData = new FormData();
-    formData.append('document', kycDocument);
-    formData.append('type', 'ID_CARD');
-    
+    if (!kycDocument) { setError('Please select a document'); return; }
+
+    const userId = getUserId();
+    if (!userId) { setError('User ID not available.'); return; }
+
+    const data = new FormData();
+    data.append('document', kycDocument);
+    data.append('type', 'ID_CARD');
+
     try {
       setUploadingKYC(true);
-      // Implement KYC upload API call here
+      const response = await api.uploadKYCDocument(userId, data);
+      if (updateUser) updateUser(response.user);
       setSuccess('Documents submitted successfully! Pending verification.');
       setShowKYCModal(false);
       setKycDocument(null);
-      
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError('Error submitting documents');
@@ -151,10 +161,7 @@ const UserProfile = () => {
     }
   };
 
-  // Get role status
-  const isRoleActive = (roleId) => {
-    return selectedRoles.includes(roleId);
-  };
+  const isRoleActive = (roleId) => selectedRoles.includes(roleId);
 
   if (loading) {
     return (
@@ -167,8 +174,7 @@ const UserProfile = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      
-      {/* Success/Error messages */}
+
       {success && (
         <div className="bg-green-50 text-green-700 p-4 rounded-2xl text-sm font-medium">
           {success}
@@ -184,7 +190,11 @@ const UserProfile = () => {
       <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col md:flex-row items-center gap-8">
         <div className="relative">
           <div className="w-32 h-32 bg-[#c5a059] rounded-full border-4 border-white shadow-lg flex items-center justify-center text-4xl font-black text-[#0a2619]">
-            {formData.name?.charAt(0) || 'U'}
+            {user?.profilePicture ? (
+              <img src={user.profilePicture} alt="avatar" className="w-full h-full rounded-full object-cover" />
+            ) : (
+              formData.name?.charAt(0)?.toUpperCase() || 'U'
+            )}
           </div>
           <label className="absolute bottom-1 right-1 p-2 bg-[#0a2619] text-white rounded-full border-2 border-white hover:bg-slate-800 transition-colors cursor-pointer">
             <Camera size={16} />
@@ -200,6 +210,13 @@ const UserProfile = () => {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="text-3xl font-black text-[#0a2619] bg-slate-50 rounded-xl px-4 py-2 w-full"
+              />
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="Phone number"
+                className="text-sm text-slate-600 bg-slate-50 rounded-xl px-4 py-2 w-full"
               />
               <div className="flex gap-2">
                 <button
@@ -253,7 +270,7 @@ const UserProfile = () => {
             </button>
           )}
         </div>
-        
+
         {editRolesMode ? (
           <div className="space-y-4">
             {roleOptions.map((role) => {
@@ -269,9 +286,7 @@ const UserProfile = () => {
                   }`}
                 >
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 ${
-                    isActive
-                      ? 'bg-[#c5a059] border-[#c5a059]'
-                      : 'border-slate-300'
+                    isActive ? 'bg-[#c5a059] border-[#c5a059]' : 'border-slate-300'
                   }`}>
                     {isActive && <CheckCircle2 size={12} className="text-white" />}
                   </div>
@@ -287,6 +302,8 @@ const UserProfile = () => {
                 </div>
               );
             })}
+
+            {/* Rôle ADMIN non modifiable */}
             {isAdmin && (
               <div className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 opacity-70">
                 <div className="w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center mt-0.5">
@@ -301,6 +318,7 @@ const UserProfile = () => {
                 </div>
               </div>
             )}
+
             <div className="flex gap-3 pt-4">
               <button
                 onClick={handleUpdateRoles}
@@ -328,9 +346,7 @@ const UserProfile = () => {
                 <div
                   key={role.id}
                   className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                    isActive
-                      ? 'bg-[#c5a059] text-[#0a2619]'
-                      : 'bg-slate-100 text-slate-400'
+                    isActive ? 'bg-[#c5a059] text-[#0a2619]' : 'bg-slate-100 text-slate-400'
                   }`}
                 >
                   {role.label}
@@ -366,11 +382,17 @@ const UserProfile = () => {
               <p className="text-xs text-white/70 leading-relaxed mb-6">
                 To unlock the Investor role and access co-ownership projects, you must provide a valid ID document.
               </p>
-              <button 
+              {user?.kycStatus === 'Pending' && (
+                <p className="text-xs text-[#c5a059]/80 mb-4 italic">
+                  ⏳ Your documents are under review. You will be notified once verified.
+                </p>
+              )}
+              <button
                 onClick={() => setShowKYCModal(true)}
-                className="w-full py-3 bg-[#c5a059] text-[#0a2619] font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:scale-105 transition-transform"
+                disabled={user?.kycStatus === 'Pending'}
+                className="w-full py-3 bg-[#c5a059] text-[#0a2619] font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
-                Submit My Documents
+                {user?.kycStatus === 'Pending' ? 'Documents Under Review' : 'Submit My Documents'}
               </button>
             </>
           )}
@@ -386,7 +408,7 @@ const UserProfile = () => {
             <p className="text-sm text-slate-500">
               Please upload a valid ID document (National ID Card, Passport, or Driver's License)
             </p>
-            
+
             <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center">
               <input
                 type="file"
@@ -403,17 +425,17 @@ const UserProfile = () => {
                 <p className="text-[10px] text-slate-400 mt-1">PDF, JPG, PNG (Max. 5MB)</p>
               </label>
             </div>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={handleKYCSubmission}
                 disabled={!kycDocument || uploadingKYC}
-                className="flex-1 py-3 bg-[#0a2619] text-white rounded-xl text-xs font-black uppercase tracking-widest disabled:opacity-50"
+                className="flex-1 py-3 bg-[#0a2619] text-white rounded-xl text-xs font-black uppercase tracking-widest disabled:opacity-50 flex items-center justify-center"
               >
-                {uploadingKYC ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Submit'}
+                {uploadingKYC ? <Loader2 size={16} className="animate-spin" /> : 'Submit'}
               </button>
               <button
-                onClick={() => setShowKYCModal(false)}
+                onClick={() => { setShowKYCModal(false); setKycDocument(null); }}
                 className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl text-xs font-black uppercase tracking-widest"
               >
                 Cancel
