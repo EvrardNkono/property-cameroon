@@ -1,3 +1,4 @@
+// frontend/src/pages/Blog.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -58,7 +59,22 @@ const Blog = () => {
       viewOpportunities: "Voir les Opportunités",
       readMore: "Lire la suite",
       noPosts: "Aucun article pour le moment",
-      loading: "Chargement..."
+      loading: "Chargement...",
+      featured: "À la Une",
+      performance: "Performance",
+      gain: "Gain de valeur par m²",
+      grossProfit: "Bénéfice brut",
+      successFactors: "Pourquoi un tel succès ?",
+      successDescription: "Cette appréciation de 266 % en un semestre n'est pas le fruit du hasard. Elle résulte de notre expertise dans le choix des emplacements, l'anticipation du développement urbain et la mise en valeur méthodique de nos parcelles.",
+      investAdvice: "Investir dans la terre reste l'un des moyens les plus sûrs et les plus lucratifs pour bâtir un patrimoine solide au Cameroun. Vous souhaitez profiter des prochaines opportunités avant que le marché ne sature ?",
+      contactUs: "Contactez Property Cameroun dès aujourd'hui pour découvrir nos prochains projets.",
+      // Nouveaux labels pour les stats
+      acquisitionPrice: "Prix d'acquisition (Janvier)",
+      currentMarketPrice: "Prix actuel du marché (Juillet)",
+      valueGain: "Gain de valeur",
+      percentageGain: "Bénéfice brut",
+      // Labels pour les champs
+      readFullArticle: "Lire l'article complet"
     },
     en: {
       heroTitle: "Invest in Cameroon",
@@ -88,7 +104,22 @@ const Blog = () => {
       viewOpportunities: "View Opportunities",
       readMore: "Read more",
       noPosts: "No posts yet",
-      loading: "Loading..."
+      loading: "Loading...",
+      featured: "Featured",
+      performance: "Performance",
+      gain: "Gain per m²",
+      grossProfit: "Gross Profit",
+      successFactors: "Why such success?",
+      successDescription: "This 266% appreciation in six months is no coincidence. It results from our expertise in location selection, urban development anticipation, and methodical land development.",
+      investAdvice: "Investing in land remains one of the safest and most lucrative ways to build solid wealth in Cameroon. Want to seize upcoming opportunities before the market saturates?",
+      contactUs: "Contact Property Cameroun today to discover our next projects.",
+      // New labels for stats
+      acquisitionPrice: "Acquisition Price (January)",
+      currentMarketPrice: "Current Market Price (July)",
+      valueGain: "Value Gain",
+      percentageGain: "Gross Profit",
+      // Labels for fields
+      readFullArticle: "Read Full Article"
     }
   }[currentLang] || {
     heroTitle: "Investissez au Cameroun",
@@ -118,21 +149,65 @@ const Blog = () => {
     viewOpportunities: "Voir les Opportunités",
     readMore: "Lire la suite",
     noPosts: "Aucun article pour le moment",
-    loading: "Chargement..."
+    loading: "Chargement...",
+    featured: "À la Une",
+    performance: "Performance",
+    gain: "Gain de valeur par m²",
+    grossProfit: "Bénéfice brut",
+    successFactors: "Pourquoi un tel succès ?",
+    successDescription: "Cette appréciation de 266 % en un semestre n'est pas le fruit du hasard. Elle résulte de notre expertise dans le choix des emplacements, l'anticipation du développement urbain et la mise en valeur méthodique de nos parcelles.",
+    investAdvice: "Investir dans la terre reste l'un des moyens les plus sûrs et les plus lucratifs pour bâtir un patrimoine solide au Cameroun. Vous souhaitez profiter des prochaines opportunités avant que le marché ne sature ?",
+    contactUs: "Contactez Property Cameroun dès aujourd'hui pour découvrir nos prochains projets.",
+    acquisitionPrice: "Prix d'acquisition (Janvier)",
+    currentMarketPrice: "Prix actuel du marché (Juillet)",
+    valueGain: "Gain de valeur",
+    percentageGain: "Bénéfice brut",
+    readFullArticle: "Lire l'article complet"
+  };
+
+  // ========== ARTICLE EN DUR - INVESTISSEMENT IMMOBILIER +266% ==========
+  const hardcodedArticle = {
+    id: 'featured-performance',
+    category: 'Real Estate',
+    title: "Investissement Immobilier : Une Plus-Value Exceptionnelle de +266% en 6 Mois !",
+    excerpt: "Le marché immobilier camerounais confirme une fois de plus son statut de valeur refuge et de moteur de croissance pour les investisseurs avisés. Chez Property Cameroun, nous venons d'en faire la démonstration concrète sur un projet de lotissement stratégique.",
+    image: "/images/propertycameroun.png",
+    date: currentLang === 'fr' ? "15 Juillet 2026" : "July 15, 2026",
+    author: "Property Cameroun",
+    slug: 'performance-immobiliere-266',
+    isHardcoded: true,
+    // Données de performance
+    performanceData: {
+      acquisitionPrice: "1 500 FCFA/m²",
+      currentPrice: "5 500 FCFA/m²",
+      valueGain: "4 000 FCFA/m²",
+      percentageGain: "+266,6 %"
+    },
+    // Contenu complet pour la page de détail
+    content: `
+      <h2>L'Analyse de la Performance</h2>
+      <p>Il y a seulement six mois, en janvier 2026, nous travaillions sur l'aménagement d'une parcelle de 4 hectares. À cette période, le prix du mètre carré était fixé à 1 500 FCFA.</p>
+      <p>Aujourd'hui, en juillet 2026, la donne a radicalement changé. Grâce à notre stratégie de développement et à l'attractivité croissante de la zone, le prix du mètre carré se négocie désormais entre 5 000 FCFA et 6 000 FCFA.</p>
+      
+      <h3>Le Bilan Chiffré</h3>
+      <p>Si l'on prend la moyenne de notre nouvelle valeur de marché (5 500 FCFA/m²), voici l'évolution de la rentabilité :</p>
+      <ul>
+        <li><strong>Prix d'acquisition (Janvier) :</strong> 1 500 FCFA/m²</li>
+        <li><strong>Prix actuel du marché (Juillet) :</strong> 5 500 FCFA/m²</li>
+        <li><strong>Gain de valeur par m² :</strong> 4 000 FCFA</li>
+        <li><strong>Pourcentage de bénéfice brut :</strong> +266,6 %</li>
+      </ul>
+      
+      <h3>Pourquoi un tel succès ?</h3>
+      <p>Cette appréciation de 266 % en un semestre n'est pas le fruit du hasard. Elle résulte de notre expertise dans le choix des emplacements, l'anticipation du développement urbain et la mise en valeur méthodique de nos parcelles.</p>
+      <p>Investir dans la terre reste l'un des moyens les plus sûrs et les plus lucratifs pour bâtir un patrimoine solide au Cameroun. Vous souhaitez profiter des prochaines opportunités avant que le marché ne sature ?</p>
+      <p><strong>Contactez Property Cameroun dès aujourd'hui pour découvrir nos prochains projets.</strong></p>
+    `
   };
 
   // Données par défaut (fallback si pas de données backend)
   const defaultPosts = {
     fr: [
-      {
-        id: 1,
-        category: 'Real Estate',
-        title: "Sécuriser votre Titre Foncier au Cameroun : Le Guide Complet 2026",
-        excerpt: "Tout ce que vous devez savoir pour éviter les litiges fonciers et investir en toute sérénité...",
-        image: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&q=80",
-        date: "12 Avril 2026",
-        author: "Admin"
-      },
       {
         id: 2,
         category: 'Agriculture',
@@ -150,18 +225,18 @@ const Blog = () => {
         image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80",
         date: "08 Avril 2026",
         author: "Équipe Sourcing"
+      },
+      {
+        id: 4,
+        category: 'Lifestyle',
+        title: "Vivre au Cameroun : Guide de l'Expatrié",
+        excerpt: "Découvrez les meilleurs quartiers, les écoles internationales et les opportunités de carrière...",
+        image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80",
+        date: "05 Avril 2026",
+        author: "Admin"
       }
     ],
     en: [
-      {
-        id: 1,
-        category: 'Real Estate',
-        title: "Securing Your Land Title in Cameroon: The 2026 Comprehensive Guide",
-        excerpt: "Everything you need to know to avoid land disputes and invest with complete peace of mind...",
-        image: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&q=80",
-        date: "April 12, 2026",
-        author: "Admin"
-      },
       {
         id: 2,
         category: 'Agriculture',
@@ -179,6 +254,15 @@ const Blog = () => {
         image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80",
         date: "April 08, 2026",
         author: "Sourcing Team"
+      },
+      {
+        id: 4,
+        category: 'Lifestyle',
+        title: "Living in Cameroon: Expat Guide",
+        excerpt: "Discover the best neighborhoods, international schools, and career opportunities...",
+        image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80",
+        date: "April 05, 2026",
+        author: "Admin"
       }
     ]
   };
@@ -220,16 +304,17 @@ const Blog = () => {
       setLoading(true);
       try {
         const response = await api.get(`/blog?lang=${currentLang}`);
+        let apiPosts = [];
         if (response.data && response.data.success && response.data.data.length > 0) {
-          setPosts(response.data.data);
+          apiPosts = response.data.data;
         } else {
-          // Fallback aux données par défaut
-          setPosts(defaultPosts[currentLang] || defaultPosts.fr);
+          apiPosts = defaultPosts[currentLang] || defaultPosts.fr;
         }
+        // Ajouter l'article en dur en première position
+        setPosts([hardcodedArticle, ...apiPosts]);
       } catch (error) {
         console.error('Erreur lors du chargement des articles:', error);
-        // Fallback aux données par défaut en cas d'erreur
-        setPosts(defaultPosts[currentLang] || defaultPosts.fr);
+        setPosts([hardcodedArticle, ...(defaultPosts[currentLang] || defaultPosts.fr)]);
       } finally {
         setLoading(false);
       }
@@ -296,7 +381,7 @@ const Blog = () => {
     <div className="bg-white min-h-screen">
       <Navbar />
 
-      {/* HERO SECTION - Inchangé */}
+      {/* HERO SECTION */}
       <div className="relative h-[80vh] flex items-center justify-center text-center pt-20">
         <img
           src="https://images.unsplash.com/photo-1500382017468-9049fed747ef"
@@ -328,7 +413,7 @@ const Blog = () => {
 
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-20">
 
-        {/* CAPEF PARTNERSHIP SECTION - Inchangé */}
+        {/* CAPEF PARTNERSHIP SECTION */}
         <div className="bg-white border border-slate-100 p-10 mb-20 shadow-sm">
           <h2 className="text-3xl font-serif italic mb-4">
             {t.strategicPartnership}
@@ -343,7 +428,7 @@ const Blog = () => {
           </Link>
         </div>
 
-        {/* DIASPORA SECTION - Inchangé */}
+        {/* DIASPORA SECTION */}
         <div className="bg-slate-900 text-white p-16 mb-20 relative overflow-hidden">
           <div className="relative z-10">
             <h2 className="text-4xl font-serif italic mb-6">
@@ -401,31 +486,78 @@ const Blog = () => {
           ))}
         </div>
 
-        {/* POSTS GRID - Dynamique avec fallback */}
+        {/* POSTS GRID - Avec article en dur en première position */}
         {filteredPosts.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12">
-            {filteredPosts.map((post) => (
-              <Link key={post.id} to={`/blog/${post.slug || post.id}`} className="group">
-                <div className="aspect-video overflow-hidden mb-6 bg-slate-100">
-                  <img 
-                    src={post.image} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                    alt={post.title} 
-                    onError={(e) => {
-                      e.target.src = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000';
-                    }}
-                  />
-                </div>
-                <p className="text-[9px] text-pc-gold uppercase font-bold tracking-widest mb-3">{post.category}</p>
-                <h3 className="text-xl font-serif italic text-slate-900 mb-3 group-hover:text-pc-green transition-colors line-clamp-2">{post.title}</h3>
-                <p className="text-sm text-slate-500 line-clamp-2 italic leading-relaxed">{post.excerpt}</p>
-                <div className="flex items-center gap-2 mt-3 text-[10px] text-slate-400">
-                  <span>{post.date}</span>
-                  <span>•</span>
-                  <span>{t.by} {post.author}</span>
-                </div>
-              </Link>
-            ))}
+            {filteredPosts.map((post, index) => {
+              const isFeatured = post.isHardcoded || index === 0;
+              return (
+                <Link 
+                  key={post.id} 
+                  to={`/blog/${post.slug || post.id}`} 
+                  className={`group ${isFeatured ? 'lg:col-span-2 lg:row-span-2' : ''}`}
+                >
+                  <div className={`aspect-video overflow-hidden mb-6 bg-slate-100 ${isFeatured ? 'h-96' : ''}`}>
+                    <img 
+                      src={post.image} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                      alt={post.title} 
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000';
+                      }}
+                    />
+                  </div>
+                  
+                  {isFeatured && (
+                    <span className="inline-block bg-pc-gold text-slate-900 text-[8px] font-black uppercase tracking-widest px-3 py-1 mb-3">
+                      {t.featured}
+                    </span>
+                  )}
+                  
+                  <p className="text-[9px] text-pc-gold uppercase font-bold tracking-widest mb-3">{post.category}</p>
+                  <h3 className={`font-serif italic text-slate-900 mb-3 group-hover:text-pc-green transition-colors ${isFeatured ? 'text-3xl' : 'text-xl'} line-clamp-2`}>
+                    {post.title}
+                  </h3>
+                  <p className="text-sm text-slate-500 line-clamp-2 italic leading-relaxed">{post.excerpt}</p>
+                  
+                  {/* Affichage des stats de performance pour l'article en dur */}
+                  {post.isHardcoded && post.performanceData && (
+                    <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 bg-slate-50 p-4 rounded-xl">
+                      <div>
+                        <p className="text-[8px] text-slate-400 uppercase font-bold">{t.acquisitionPrice}</p>
+                        <p className="text-sm font-bold text-slate-800">{post.performanceData.acquisitionPrice}</p>
+                      </div>
+                      <div>
+                        <p className="text-[8px] text-slate-400 uppercase font-bold">{t.currentMarketPrice}</p>
+                        <p className="text-sm font-bold text-pc-gold">{post.performanceData.currentPrice}</p>
+                      </div>
+                      <div>
+                        <p className="text-[8px] text-slate-400 uppercase font-bold">{t.valueGain}</p>
+                        <p className="text-sm font-bold text-emerald-600">{post.performanceData.valueGain}</p>
+                      </div>
+                      <div>
+                        <p className="text-[8px] text-slate-400 uppercase font-bold">{t.percentageGain}</p>
+                        <p className="text-sm font-bold text-emerald-600">{post.performanceData.percentageGain}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center gap-2 mt-3 text-[10px] text-slate-400">
+                    <span>{post.date}</span>
+                    <span>•</span>
+                    <span>{t.by} {post.author}</span>
+                  </div>
+                  
+                  {isFeatured && (
+                    <div className="mt-4">
+                      <span className="text-xs font-bold text-pc-gold group-hover:underline">
+                        {t.readFullArticle} →
+                      </span>
+                    </div>
+                  )}
+                </Link>
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-20">
