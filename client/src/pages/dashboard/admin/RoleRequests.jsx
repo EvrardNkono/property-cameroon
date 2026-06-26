@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle2, XCircle, Clock, User, Loader2, AlertCircle } from 'lucide-react';
 import api from '../../../services/api';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 const RoleRequests = () => {
   const [requests, setRequests] = useState([]);
