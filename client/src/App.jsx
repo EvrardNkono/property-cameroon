@@ -50,6 +50,7 @@ const SourcingTracker    = lazy(() => import('./pages/dashboard/market/SourcingT
 // --- DASHBOARD (ADMINISTRATION) ---
 const AdminOverview              = lazy(() => import('./pages/dashboard/admin/AdminOverview'));
 const UserManagement             = lazy(() => import('./pages/dashboard/admin/UserManagement'));
+const RoleRequests               = lazy(() => import('./pages/dashboard/admin/RoleRequests')); // ✅ AJOUT
 const GlobalInventory            = lazy(() => import('./pages/dashboard/admin/GlobalInventory'));
 const FinancialControl           = lazy(() => import('./pages/dashboard/admin/FinancialControl'));
 const AgriculturalInventory      = lazy(() => import('./pages/dashboard/admin/AgriculturalInventory'));
@@ -185,6 +186,10 @@ function App() {
                   <Route index element={<Overview />} />
                   <Route path="admin" element={<AdminOverview />} />
                   <Route path="admin/users" element={<UserManagement />} />
+                  
+                  {/* ✅ NOUVELLE ROUTE ROLE REQUESTS */}
+                  <Route path="admin/role-requests" element={<RoleRequests />} />
+                  
                   <Route path="admin/inventory" element={<GlobalInventory />} />
                   <Route path="admin/finances" element={<FinancialControl />} />
 
