@@ -452,7 +452,7 @@ app.use('/api', (req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/profile', profileRoutes);
-app.use('/api/properties', propertyRoutes);
+app.use('/api/properties', propertyRoutes); // ✅ Cette route contient maintenant delete /:id/images
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/investments', investmentRoutes);
@@ -466,7 +466,7 @@ app.use('/api/livestock-categories', livestockCategoryRoutes);
 app.use('/api/blog/categories', blogCategoryRoutes);
 app.use('/api/blog', blogRoutes);
 
-// ✅ ROUTES DES DEMANDES DE RÔLE (AJOUT ICI)
+// ✅ ROUTES DES DEMANDES DE RÔLE
 app.use('/api/role-requests', roleRequestRoutes);
 
 app.use('/', sitemapRoutes);
@@ -496,7 +496,8 @@ app.get('/api/health', (req, res) => {
     mock_mode: mongoose.connection.readyState !== 1,
     translation_active: true,
     blog_routes: 'active',
-    role_requests_routes: 'active' // ✅ AJOUT
+    role_requests_routes: 'active',
+    property_image_deletion: 'active' // ✅ AJOUT
   });
 });
 
@@ -518,11 +519,13 @@ app.get('/api/diagnostic', async (req, res) => {
     mock_mode_active: mongoose.connection.readyState !== 1,
     translation_middleware: 'active',
     blog_routes: 'active',
-    role_requests_routes: 'active', // ✅ AJOUT
+    role_requests_routes: 'active',
+    property_image_deletion: 'active', // ✅ AJOUT
     routes_configured: [
       '/api/blog',
       '/api/blog/categories',
-      '/api/role-requests' // ✅ AJOUT
+      '/api/role-requests',
+      '/api/properties/:id/images' // ✅ AJOUT
     ]
   };
   
@@ -535,7 +538,8 @@ app.get('/', (req, res) => {
     endpoints: {
       blog: "/api/blog",
       blogCategories: "/api/blog/categories",
-      roleRequests: "/api/role-requests", // ✅ AJOUT
+      roleRequests: "/api/role-requests",
+      propertyImageDeletion: "/api/properties/:id/images", // ✅ AJOUT
       health: "/api/health",
       diagnostic: "/api/diagnostic"
     }
@@ -582,7 +586,8 @@ const startServer = async () => {
   console.log('🚀 Starting server...');
   console.log('🌐 Translation middleware enabled - Auto-translates API responses');
   console.log('📝 Blog routes enabled - /api/blog and /api/blog/categories');
-  console.log('👤 Role requests routes enabled - /api/role-requests'); // ✅ AJOUT
+  console.log('👤 Role requests routes enabled - /api/role-requests');
+  console.log('🖼️ Property image deletion enabled - DELETE /api/properties/:id/images'); // ✅ AJOUT
   
   await new Promise(resolve => setTimeout(resolve, 2000));
   
@@ -604,7 +609,8 @@ const startServer = async () => {
       console.log(`📍 http://localhost:${PORT}`);
       console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
       console.log(`📝 Blog API: http://localhost:${PORT}/api/blog`);
-      console.log(`👤 Role requests API: http://localhost:${PORT}/api/role-requests`); // ✅ AJOUT
+      console.log(`👤 Role requests API: http://localhost:${PORT}/api/role-requests`);
+      console.log(`🖼️ Delete property images: DELETE http://localhost:${PORT}/api/properties/:id/images`); // ✅ AJOUT
       console.log(`🛠️ Debug MongoDB: http://localhost:${PORT}/api/debug-mongo`);
       console.log(`📊 Test real data: http://localhost:${PORT}/api/test-real-data`);
     });
