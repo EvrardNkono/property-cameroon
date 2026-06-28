@@ -207,6 +207,14 @@ class ApiService {
     return this.request(`/properties/owner/${ownerId}`);
   }
 
+  // ✅ NOUVEAU : Supprimer des images d'une propriété
+  async deletePropertyImages(propertyId, images) {
+    return this.request(`/properties/${propertyId}/images`, {
+      method: 'DELETE',
+      body: JSON.stringify({ images }),
+    });
+  }
+
   // ========== AGRICULTURAL LANDS ==========
   async getAgriculturalLands(filters = {}) {
     const query = new URLSearchParams(filters).toString();

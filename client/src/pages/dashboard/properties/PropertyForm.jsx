@@ -531,18 +531,38 @@ const PropertyForm = () => {
     }
   };
 
+  // ✅ Fonction pour supprimer les images du serveur
+  const deleteImagesFromServer = async (imagesToDelete) => {
+    if (!imagesToDelete || imagesToDelete.length === 0 || !id) return;
+    
+    try {
+      console.log('🗑️ Deleting images from server:', imagesToDelete);
+      await api.deletePropertyImages(id, imagesToDelete);
+      console.log('✅ Images deleted from server successfully');
+      return true;
+    } catch (err) {
+      console.error('❌ Error deleting images from server:', err);
+      // Ne pas bloquer le processus si la suppression échoue
+      return false;
+    }
+  };
+
+  // ✅ Fonction pour supprimer une image (UI + serveur)
   const removeImage = (index) => {
     const urlToRemove = imageUrls[index];
     const isExistingImage = urlToRemove.startsWith('http') && !urlToRemove.includes('blob');
     
     if (isExistingImage) {
+      // Trouver le chemin relatif de l'image dans la base de données
       const relativePath = formData.images.find(img => 
         getImageUrl(img) === urlToRemove || 
         `${BACKEND_URL}/uploads/properties/${img}` === urlToRemove
       );
       
       if (relativePath) {
+        // Marquer l'image pour suppression
         setImagesToDelete(prev => [...prev, relativePath]);
+        // Retirer l'image de formData.images
         setFormData(prev => ({
           ...prev,
           images: prev.images.filter(img => img !== relativePath)
@@ -550,8 +570,23 @@ const PropertyForm = () => {
       }
     }
     
+    // Retirer l'URL de l'affichage
     setImageUrls(prev => prev.filter((_, i) => i !== index));
+    // Retirer le fichier de la liste des nouveaux fichiers
     setImageFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // ✅ Fonction pour supprimer toutes les images (utile pour la suppression de la propriété)
+  const deleteAllImages = async () => {
+    if (!id || formData.images.length === 0) return;
+    
+    try {
+      console.log('🗑️ Deleting all images for property:', id);
+      await api.deletePropertyImages(id, formData.images);
+      console.log('✅ All images deleted');
+    } catch (err) {
+      console.error('❌ Error deleting all images:', err);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -560,8 +595,14 @@ const PropertyForm = () => {
     setError(null);
     
     try {
-      let uploadedImageUrls = [];
+      // 1️⃣ Supprimer les images marquées du serveur (uniquement en mise à jour)
+      if (imagesToDelete.length > 0 && id) {
+        await deleteImagesFromServer(imagesToDelete);
+        setImagesToDelete([]); // Réinitialiser après suppression
+      }
       
+      // 2️⃣ Upload des nouvelles images
+      let uploadedImageUrls = [];
       if (imageFiles.length > 0) {
         const uploadFormData = new FormData();
         imageFiles.forEach(file => {
@@ -584,14 +625,18 @@ const PropertyForm = () => {
         }
       }
       
+      // 3️⃣ Combiner les images restantes + nouvelles
       let finalImageUrls;
       if (id) {
+        // Pour une mise à jour : garder les images existantes (déjà filtrées) + nouvelles
         const keptImages = formData.images || [];
         finalImageUrls = [...keptImages, ...uploadedImageUrls];
       } else {
+        // Pour une création : seulement les nouvelles images
         finalImageUrls = uploadedImageUrls;
       }
       
+      // 4️⃣ Préparer les données des amenities
       const amenitiesData = {
         schools: formData.amenities.schools?.trim() ? {
           count: formData.amenities.schools.split(',').filter(s => s.trim()).length,
@@ -611,6 +656,7 @@ const PropertyForm = () => {
         } : { count: 0, names: [] }
       };
       
+      // 5️⃣ Préparer les données complètes
       const submitData = {
         title: formData.title,
         category: formData.category,
@@ -655,8 +701,9 @@ const PropertyForm = () => {
         images: finalImageUrls
       };
       
-      console.log('Submitting data:', submitData);
+      console.log('📤 Submitting data:', submitData);
       
+      // 6️⃣ Envoyer la requête
       if (id) {
         await api.updateProperty(id, submitData);
         setSuccess(t.successUpdate);
@@ -665,11 +712,16 @@ const PropertyForm = () => {
         setSuccess(t.successCreate);
       }
       
+      // 7️⃣ Réinitialiser les états d'images
+      setImageFiles([]);
+      setImagesToDelete([]);
+      
       setTimeout(() => {
         navigate('/dashboard/properties');
       }, 1500);
+      
     } catch (err) {
-      console.error('Error saving property:', err);
+      console.error('❌ Error saving property:', err);
       setError(t.errorSave);
     } finally {
       setLoading(false);
@@ -681,13 +733,16 @@ const PropertyForm = () => {
     
     setLoading(true);
     try {
+      // Supprimer les images avant de supprimer la propriété
+      await deleteAllImages();
+      
       await api.deleteProperty(id);
       setSuccess(t.successDelete);
       setTimeout(() => {
         navigate('/dashboard/properties');
       }, 1500);
     } catch (err) {
-      console.error('Error deleting property:', err);
+      console.error('❌ Error deleting property:', err);
       setError(t.errorDelete);
     } finally {
       setLoading(false);

@@ -10,6 +10,16 @@
 
 import Property from '../models/Property.model.js';
 import translate from 'google-translate-api-x';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// ─────────────────────────────────────────────────────────────
+// Configuration du chemin des uploads
+// ─────────────────────────────────────────────────────────────
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const UPLOAD_DIR = path.join(path.dirname(__dirname), 'uploads', 'properties');
 
 // ─────────────────────────────────────────────────────────────
 // Cache mémoire (session serveur) — complète le cache MongoDB
@@ -94,6 +104,36 @@ function sanitizeAmenities(property) {
     });
   }
   return property;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Supprime les images physiquement du serveur
+// ─────────────────────────────────────────────────────────────
+async function deleteImageFiles(imagePaths) {
+  if (!imagePaths || imagePaths.length === 0) return { deleted: [], errors: [] };
+  
+  const results = { deleted: [], errors: [] };
+  
+  for (const imagePath of imagePaths) {
+    try {
+      // Extraire le nom du fichier du chemin
+      const filename = path.basename(imagePath);
+      const filePath = path.join(UPLOAD_DIR, filename);
+      
+      // Vérifier si le fichier existe
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        results.deleted.push(imagePath);
+        console.log(`🗑️ Deleted image: ${filename}`);
+      } else {
+        results.errors.push(`File not found: ${filename}`);
+      }
+    } catch (err) {
+      results.errors.push(`Error deleting ${imagePath}: ${err.message}`);
+    }
+  }
+  
+  return results;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -295,7 +335,19 @@ export const updateProperty = async (req, res) => {
 
 export const deleteProperty = async (req, res) => {
   try {
+    const property = await Property.findById(req.params.id);
+    
+    if (!property) {
+      return res.status(404).json({ success: false, message: 'Property not found' });
+    }
+
+    // Supprimer les images du serveur avant de supprimer la propriété
+    if (property.images && property.images.length > 0) {
+      await deleteImageFiles(property.images);
+    }
+
     await Property.findByIdAndDelete(req.params.id);
+    
     res.json({ success: true, message: 'Property deleted successfully' });
   } catch (error) {
     console.error('[deleteProperty]', error);
@@ -318,6 +370,133 @@ export const getPropertiesByOwner = async (req, res) => {
 
   } catch (error) {
     console.error('[getPropertiesByOwner]', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// NOUVEAU CONTROLLER : Supprimer des images d'une propriété
+// ─────────────────────────────────────────────────────────────
+export const deletePropertyImages = async (req, res) => {
+  try {
+    const { images } = req.body;
+    const propertyId = req.params.id;
+
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No images specified for deletion' 
+      });
+    }
+
+    // Récupérer la propriété
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Property not found' 
+      });
+    }
+
+    // Vérifier les permissions
+    if (property.owner.toString() !== req.user._id.toString() && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Not authorized to delete images from this property' 
+      });
+    }
+
+    // Filtrer les images à supprimer qui existent vraiment dans la propriété
+    const imagesToDelete = images.filter(img => property.images.includes(img));
+    
+    if (imagesToDelete.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'None of the specified images exist in this property' 
+      });
+    }
+
+    // Supprimer les fichiers physiquement
+    const deletionResult = await deleteImageFiles(imagesToDelete);
+
+    // Mettre à jour la propriété : retirer les images supprimées
+    property.images = property.images.filter(img => !imagesToDelete.includes(img));
+    await property.save();
+
+    // Si des traductions existent, les marquer pour mise à jour
+    if (property.translations && Object.keys(property.translations).length > 0) {
+      // On ne supprime pas les traductions, on les laisse pour le moment
+      // Elles seront mises à jour lors de la prochaine requête de traduction
+      console.log(`[property] Translations cache might need refresh for ${propertyId}`);
+    }
+
+    res.json({
+      success: true,
+      message: `Successfully deleted ${deletionResult.deleted.length} images`,
+      deletedImages: deletionResult.deleted,
+      errors: deletionResult.errors.length > 0 ? deletionResult.errors : undefined,
+      remainingImages: property.images
+    });
+
+  } catch (error) {
+    console.error('[deletePropertyImages]', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// NOUVEAU CONTROLLER : Nettoyer les images orphelines
+// ─────────────────────────────────────────────────────────────
+export const cleanupOrphanedImages = async (req, res) => {
+  try {
+    // Vérifier que l'utilisateur est admin
+    if (req.user.role !== 'ADMIN') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Only admins can perform cleanup' 
+      });
+    }
+
+    // Récupérer toutes les images utilisées par les propriétés
+    const properties = await Property.find({}, 'images');
+    const usedImages = new Set();
+    properties.forEach(p => {
+      p.images.forEach(img => usedImages.add(img));
+    });
+
+    // Lire le dossier d'upload
+    let deletedCount = 0;
+    let errors = [];
+
+    if (fs.existsSync(UPLOAD_DIR)) {
+      const files = fs.readdirSync(UPLOAD_DIR);
+      
+      for (const file of files) {
+        // Ignorer les fichiers cachés et les dossiers
+        if (file.startsWith('.')) continue;
+        
+        if (!usedImages.has(file)) {
+          try {
+            const filePath = path.join(UPLOAD_DIR, file);
+            fs.unlinkSync(filePath);
+            deletedCount++;
+            console.log(`🧹 Cleaned up orphaned image: ${file}`);
+          } catch (err) {
+            errors.push(`Failed to delete ${file}: ${err.message}`);
+          }
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Cleanup completed`,
+      deletedCount,
+      errors: errors.length > 0 ? errors : undefined
+    });
+
+  } catch (error) {
+    console.error('[cleanupOrphanedImages]', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
