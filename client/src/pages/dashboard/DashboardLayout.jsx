@@ -1,3 +1,4 @@
+// frontend/src/layouts/DashboardLayout.jsx
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -29,6 +30,42 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
+// ========== HOOK POUR LA LANGUE ==========
+const useCurrentLang = () => {
+  const getInitialLang = () => {
+    if (typeof window === 'undefined') return 'fr';
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    const storedLang = localStorage.getItem('preferredLanguage');
+    const browserLang = navigator.language.split('-')[0];
+    return urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+  };
+  
+  const [lang, setLang] = useState(getInitialLang);
+  
+  useEffect(() => {
+    const handleLangChange = () => {
+      if (typeof window === 'undefined') return;
+      const params = new URLSearchParams(window.location.search);
+      const urlLang = params.get('lang');
+      const storedLang = localStorage.getItem('preferredLanguage');
+      const browserLang = navigator.language.split('-')[0];
+      const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
+      setLang(finalLang);
+    };
+    
+    window.addEventListener('popstate', handleLangChange);
+    window.addEventListener('storage', handleLangChange);
+    
+    return () => {
+      window.removeEventListener('popstate', handleLangChange);
+      window.removeEventListener('storage', handleLangChange);
+    };
+  }, []);
+  
+  return lang;
+};
+
 const DashboardLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -36,6 +73,94 @@ const DashboardLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeRoles, setActiveRoles] = useState([]);
   const [isUpdatingRoles, setIsUpdatingRoles] = useState(false);
+  const currentLang = useCurrentLang();
+
+  // ========== TRADUCTIONS ==========
+  const t = {
+    fr: {
+      // Sidebar
+      overview: "Tableau de Bord",
+      userManagement: "Gestion des Utilisateurs",
+      roleRequests: "Demandes de Rôle",
+      globalInventory: "Inventaire Global",
+      financialControl: "Contrôle Financier",
+      propertiesManagement: "Gestion des Propriétés",
+      agriculturalLands: "Terres Agricoles",
+      agriculturalProducts: "Produits Agricoles",
+      livestockCategories: "Catégories d'Élevage",
+      livestockAssets: "Actifs d'Élevage",
+      blogPosts: "Articles du Blog",
+      allPosts: "Tous les Articles",
+      createNew: "Créer un Nouvel Article",
+      categories: "Catégories",
+      myProperties: "Mes Propriétés",
+      landTitles: "Titres Fonciers",
+      myLivestock: "Mon Élevage",
+      myAgricultureProducts: "Mes Produits Agricoles",
+      myAgriculturalLands: "Mes Terres Agricoles",
+      investments: "Investissements",
+      chinaSourcing: "Approvisionnement Chine",
+      myProfile: "Mon Profil",
+      logout: "Déconnexion",
+      
+      // Header
+      masterConsole: "Console d'Administration",
+      memberArea: "Espace Membre",
+      adminMode: "Mode Administration",
+      
+      // Roles
+      superAdmin: "Super Admin",
+      owner: "Propriétaire",
+      livestockFarmer: "Éleveur",
+      agriculturist: "Agriculteur",
+      investor: "Investisseur",
+      buyer: "Acheteur",
+      member: "Membre"
+    },
+    en: {
+      // Sidebar
+      overview: "Overview",
+      userManagement: "User Management",
+      roleRequests: "Role Requests",
+      globalInventory: "Global Inventory",
+      financialControl: "Financial Control",
+      propertiesManagement: "Properties Management",
+      agriculturalLands: "Agricultural Lands",
+      agriculturalProducts: "Agricultural Products",
+      livestockCategories: "Livestock Categories",
+      livestockAssets: "Livestock Assets",
+      blogPosts: "Blog Posts",
+      allPosts: "All Posts",
+      createNew: "Create New",
+      categories: "Categories",
+      myProperties: "My Properties",
+      landTitles: "Land Titles",
+      myLivestock: "My Livestock",
+      myAgricultureProducts: "My Agriculture Products",
+      myAgriculturalLands: "My Agricultural Lands",
+      investments: "Investments",
+      chinaSourcing: "China Sourcing",
+      myProfile: "My Profile",
+      logout: "Logout",
+      
+      // Header
+      masterConsole: "Master Console",
+      memberArea: "Member Area",
+      adminMode: "Administration Mode",
+      
+      // Roles
+      superAdmin: "Super Admin",
+      owner: "Owner",
+      livestockFarmer: "Livestock Farmer",
+      agriculturist: "Agriculturist",
+      investor: "Investor",
+      buyer: "Buyer",
+      member: "Member"
+    }
+  };
+
+  // Sélectionner la bonne langue
+  const lang = currentLang === 'en' ? t.en : t.fr;
 
   useEffect(() => {
     if (user && user.roles) {
@@ -71,9 +196,10 @@ const DashboardLayout = () => {
     });
   };
 
+  // ✅ MENU CONFIGURATION AVEC TRADUCTION
   const menuConfig = [
     { 
-      label: 'Overview', 
+      label: lang.overview, 
       path: '/dashboard', 
       icon: <LayoutDashboard size={20} />, 
       roles: ['BUYER', 'OWNER', 'INVESTOR', 'LIVESTOCK_OWNER', 'AGRICULTURE_OWNER', 'ADMIN'],
@@ -81,124 +207,123 @@ const DashboardLayout = () => {
     },
     // --- ADMIN SECTION ---
     { 
-      label: 'User Management', 
+      label: lang.userManagement, 
       path: '/dashboard/admin/users', 
       icon: <Users size={20} />, 
       roles: ['ADMIN'] 
     },
     { 
-  label: 'Role Requests', 
-  path: '/dashboard/admin/role-requests', 
-  icon: <ShieldCheck size={20} />, 
-  roles: ['ADMIN'] 
-},
+      label: lang.roleRequests, 
+      path: '/dashboard/admin/role-requests', 
+      icon: <ShieldCheck size={20} />, 
+      roles: ['ADMIN'] 
+    },
     { 
-      label: 'Global Inventory', 
+      label: lang.globalInventory, 
       path: '/dashboard/admin/inventory', 
       icon: <Database size={20} />, 
       roles: ['ADMIN'] 
     },
     { 
-      label: 'Financial Control', 
+      label: lang.financialControl, 
       path: '/dashboard/admin/finances', 
       icon: <BarChart3 size={20} />, 
       roles: ['ADMIN'] 
     },
-    // ✅ AJOUT : Properties Management pour l'admin
     { 
-      label: 'Properties Management', 
+      label: lang.propertiesManagement, 
       path: '/dashboard/admin/properties', 
       icon: <Home size={20} />, 
       roles: ['ADMIN'] 
     },
     { 
-      label: 'Agricultural Lands', 
+      label: lang.agriculturalLands, 
       path: '/dashboard/admin/agriculture', 
       icon: <Sprout size={20} />, 
       roles: ['ADMIN'] 
     },
     { 
-      label: 'Agricultural Products', 
+      label: lang.agriculturalProducts, 
       path: '/dashboard/admin/agricultural-products', 
       icon: <Package size={20} />, 
       roles: ['ADMIN'] 
     },
     { 
-      label: 'Livestock Categories', 
+      label: lang.livestockCategories, 
       path: '/dashboard/admin/livestock-categories', 
       icon: <Beef size={20} />, 
       roles: ['ADMIN'] 
     },
     { 
-      label: 'Livestock Assets', 
+      label: lang.livestockAssets, 
       path: '/dashboard/admin/livestock', 
       icon: <Leaf size={20} />, 
       roles: ['ADMIN'] 
     },
     // --- BLOG / JOURNAL SECTION (Admin only) ---
     { 
-      label: 'Blog Posts', 
+      label: lang.blogPosts, 
       path: '/dashboard/admin/blog', 
       icon: <Newspaper size={20} />, 
       roles: ['ADMIN'],
       subItems: [
-        { label: 'All Posts', path: '/dashboard/admin/blog', icon: <Newspaper size={16} /> },
-        { label: 'Create New', path: '/dashboard/admin/blog/create', icon: <Edit3 size={16} /> },
-        { label: 'Categories', path: '/dashboard/admin/blog/categories', icon: <Image size={16} /> }
+        { label: lang.allPosts, path: '/dashboard/admin/blog', icon: <Newspaper size={16} /> },
+        { label: lang.createNew, path: '/dashboard/admin/blog/create', icon: <Edit3 size={16} /> },
+        { label: lang.categories, path: '/dashboard/admin/blog/categories', icon: <Image size={16} /> }
       ]
     },
     // --- USER SECTION ---
     { 
-      label: 'My Properties', 
+      label: lang.myProperties, 
       path: '/dashboard/properties', 
       icon: <Home size={20} />, 
       roles: ['OWNER'],
       isPersonal: true 
     },
     { 
-      label: 'Land Titles', 
+      label: lang.landTitles, 
       path: '/dashboard/titles', 
       icon: <FileCheck size={20} />, 
       roles: ['OWNER'],
       isPersonal: true 
     },
     { 
-      label: 'My Livestock', 
+      label: lang.myLivestock, 
       path: '/dashboard/livestock', 
       icon: <PawPrint size={20} />, 
       roles: ['LIVESTOCK_OWNER'],
       isPersonal: true 
     },
     { 
-      label: 'My Agriculture Products', 
+      label: lang.myAgricultureProducts, 
       path: '/dashboard/agriculture', 
       icon: <Sprout size={20} />, 
       roles: ['AGRICULTURE_OWNER'],
       isPersonal: true 
     },
     { 
-      label: 'My Agricultural Lands', 
+      label: lang.myAgriculturalLands, 
       path: '/dashboard/my-agricultural-lands', 
       icon: <Map size={20} />, 
       roles: ['AGRICULTURE_OWNER'],
       isPersonal: true 
     },
     { 
-      label: 'Investments', 
+      label: lang.investments, 
       path: '/dashboard/invest', 
       icon: <TrendingUp size={20} />, 
       roles: ['INVESTOR'],
       isPersonal: true 
     },
     { 
-      label: 'China Sourcing', 
+      label: lang.chinaSourcing, 
       path: '/dashboard/sourcing', 
       icon: <Truck size={20} />, 
       roles: ['BUYER'],
       isPersonal: true 
     },
     { 
-      label: 'My Profile', 
+      label: lang.myProfile, 
       path: '/dashboard/profile', 
       icon: <UserCircle size={20} />, 
       roles: ['BUYER', 'OWNER', 'INVESTOR', 'LIVESTOCK_OWNER', 'AGRICULTURE_OWNER', 'ADMIN'],
@@ -227,24 +352,24 @@ const DashboardLayout = () => {
   };
 
   const getPrimaryRoleLabel = () => {
-    if (isAdminMode) return 'Super Admin';
-    if (activeRoles.includes('OWNER')) return 'Owner';
-    if (activeRoles.includes('LIVESTOCK_OWNER')) return 'Livestock Farmer';
-    if (activeRoles.includes('AGRICULTURE_OWNER')) return 'Agriculturist';
-    if (activeRoles.includes('INVESTOR')) return 'Investor';
-    if (activeRoles.includes('BUYER')) return 'Buyer';
-    return 'Member';
+    if (isAdminMode) return lang.superAdmin;
+    if (activeRoles.includes('OWNER')) return lang.owner;
+    if (activeRoles.includes('LIVESTOCK_OWNER')) return lang.livestockFarmer;
+    if (activeRoles.includes('AGRICULTURE_OWNER')) return lang.agriculturist;
+    if (activeRoles.includes('INVESTOR')) return lang.investor;
+    if (activeRoles.includes('BUYER')) return lang.buyer;
+    return lang.member;
   };
 
   const getAvailableRolesForSelector = () => {
     const userRoles = user?.roles || [];
     const allRoles = [
       { id: 'ADMIN', label: 'ADMIN', color: 'bg-red-600' },
-      { id: 'OWNER', label: 'Owner', color: 'bg-orange-500' },
-      { id: 'LIVESTOCK_OWNER', label: 'Livestock', color: 'bg-emerald-600' },
-      { id: 'AGRICULTURE_OWNER', label: 'Agriculture', color: 'bg-green-600' },
-      { id: 'INVESTOR', label: 'Investor', color: 'bg-[#0a2619]' },
-      { id: 'BUYER', label: 'Buyer', color: 'bg-blue-600' }
+      { id: 'OWNER', label: lang.owner, color: 'bg-orange-500' },
+      { id: 'LIVESTOCK_OWNER', label: lang.livestockFarmer, color: 'bg-emerald-600' },
+      { id: 'AGRICULTURE_OWNER', label: lang.agriculturist, color: 'bg-green-600' },
+      { id: 'INVESTOR', label: lang.investor, color: 'bg-[#0a2619]' },
+      { id: 'BUYER', label: lang.buyer, color: 'bg-blue-600' }
     ];
     return allRoles.filter(role => userRoles.includes(role.id));
   };
@@ -326,7 +451,7 @@ const DashboardLayout = () => {
           </h1>
           {isAdminMode && (
             <div className="mt-2 inline-block px-2 py-0.5 bg-red-600 text-[8px] font-black uppercase tracking-[0.2em] rounded animate-pulse">
-              Administration Mode
+              {lang.adminMode}
             </div>
           )}
         </div>
@@ -361,7 +486,7 @@ const DashboardLayout = () => {
             onClick={handleLogout}
             className="flex items-center gap-3 text-white/30 hover:text-red-400 text-xs uppercase font-black tracking-widest transition-colors w-full group"
           >
-            <LogOut size={16} className="group-hover:translate-x-1 transition-transform" /> Logout
+            <LogOut size={16} className="group-hover:translate-x-1 transition-transform" /> {lang.logout}
           </button>
         </div>
       </aside>
@@ -377,7 +502,7 @@ const DashboardLayout = () => {
               <Menu />
             </button>
             <h2 className="font-serif text-[#0a2619] text-lg italic transition-all">
-              {isAdminMode ? "Master Console" : "Member Area"}
+              {isAdminMode ? lang.masterConsole : lang.memberArea}
             </h2>
           </div>
 
