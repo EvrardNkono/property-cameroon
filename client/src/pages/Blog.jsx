@@ -86,8 +86,8 @@ const Blog = () => {
       readFullArticle: "Lire l'article complet",
       
       // Stats
-      acquisitionPrice: "Prix d'acquisition (Janvier)",
-      currentMarketPrice: "Prix actuel du marché (Juillet)",
+      acquisitionPrice: "Prix d'acquisition",
+      currentMarketPrice: "Prix actuel du marché",
       valueGain: "Gain de valeur",
       percentageGain: "Bénéfice brut",
       
@@ -166,8 +166,8 @@ const Blog = () => {
       readFullArticle: "Read Full Article",
       
       // Stats
-      acquisitionPrice: "Acquisition Price (January)",
-      currentMarketPrice: "Current Market Price (July)",
+      acquisitionPrice: "Acquisition Price",
+      currentMarketPrice: "Current Market Price",
       valueGain: "Value Gain",
       percentageGain: "Gross Profit",
       
@@ -235,8 +235,8 @@ const Blog = () => {
     loading: "Chargement...",
     featured: "À la Une",
     readFullArticle: "Lire l'article complet",
-    acquisitionPrice: "Prix d'acquisition (Janvier)",
-    currentMarketPrice: "Prix actuel du marché (Juillet)",
+    acquisitionPrice: "Prix d'acquisition",
+    currentMarketPrice: "Prix actuel du marché",
     valueGain: "Gain de valeur",
     percentageGain: "Bénéfice brut",
     readyToInvest: "Prêt à Investir Intelligemment ?",
@@ -259,14 +259,14 @@ const Blog = () => {
     investAdvice: "Investir dans la terre reste l'un des moyens les plus sûrs et les plus lucratifs pour bâtir un patrimoine solide au Cameroun."
   };
 
-  // ========== ARTICLE EN DUR ==========
+  // ========== ARTICLE EN DUR (Dates cohérentes 2026) ==========
   const hardcodedArticle = {
     id: 'featured-performance',
     category: 'Real Estate',
     title: "Investissement Immobilier : Une Plus-Value Exceptionnelle de +266% en 6 Mois !",
     excerpt: "Le marché immobilier camerounais confirme une fois de plus son statut de valeur refuge et de moteur de croissance pour les investisseurs avisés. Chez Property Cameroun, nous venons d'en faire la démonstration concrète sur un projet de lotissement stratégique.",
     image: "/images/propertycameroun.png",
-    date: currentLang === 'fr' ? "15 Juillet 2026" : "July 15, 2026",
+    date: currentLang === 'fr' ? "15 Janvier 2026" : "January 15, 2026",
     author: "Property Cameroun",
     slug: 'performance-immobiliere-266',
     isHardcoded: true,
@@ -278,7 +278,7 @@ const Blog = () => {
     }
   };
 
-  // Données par défaut
+  // ========== DONNÉES PAR DÉFAUT (Dates cohérentes 2026) ==========
   const defaultPosts = {
     fr: [
       {
@@ -287,7 +287,7 @@ const Blog = () => {
         title: "L'essor de l'Élevage Porcin : Pourquoi Investir Maintenant",
         excerpt: "Une analyse approfondie du marché local et des opportunités de rentabilité pour la saison à venir...",
         image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80",
-        date: "10 Avril 2026",
+        date: "10 Mars 2026",
         author: "Expert Agro",
         slug: 'essor-elevage-porcin'
       },
@@ -297,9 +297,39 @@ const Blog = () => {
         title: "Importer des Machines Chinoises : Évitez ces 5 Erreurs Courantes",
         excerpt: "Comment vérifier la fiabilité des fournisseurs et assurer le contrôle qualité avant l'expédition...",
         image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80",
-        date: "08 Avril 2026",
+        date: "22 Février 2026",
         author: "Équipe Sourcing",
         slug: 'importer-machines-chinoises'
+      },
+      {
+        id: 4,
+        category: 'Real Estate',
+        title: "Les Quartiers Émergents de Douala : Où Investir en 2026",
+        excerpt: "Découvrez les zones à fort potentiel de croissance immobilière dans la capitale économique du Cameroun.",
+        image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80",
+        date: "5 Mai 2026",
+        author: "Expert Immobilier",
+        slug: 'quartiers-emergents-douala'
+      },
+      {
+        id: 5,
+        category: 'Agriculture',
+        title: "La Révolution Agricole au Cameroun : Opportunités pour 2026",
+        excerpt: "Comment les nouvelles politiques agricoles ouvrent la voie à des investissements rentables dans le secteur.",
+        image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80",
+        date: "15 Avril 2026",
+        author: "Agro Expert",
+        slug: 'revolution-agricole-cameroun'
+      },
+      {
+        id: 6,
+        category: 'Lifestyle',
+        title: "Vivre à Douala : Guide du Parfait Expatrié Investisseur",
+        excerpt: "Conseils pratiques pour s'installer et investir dans la capitale économique camerounaise.",
+        image: "https://images.unsplash.com/photo-1518391846015-55a9cc003b25?auto=format&fit=crop&q=80",
+        date: "1 Mai 2026",
+        author: "Property Cameroun",
+        slug: 'vivre-douala-guide-expatrie'
       }
     ],
     en: [
@@ -309,7 +339,7 @@ const Blog = () => {
         title: "The Rise of Pig Farming: Why You Should Invest Now",
         excerpt: "A deep dive into the local market analysis and profitability opportunities for the upcoming season...",
         image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80",
-        date: "April 10, 2026",
+        date: "March 10, 2026",
         author: "Agro Expert",
         slug: 'rise-pig-farming'
       },
@@ -319,9 +349,39 @@ const Blog = () => {
         title: "Importing Chinese Machinery: Avoid These 5 Common Mistakes",
         excerpt: "How to verify supplier reliability and ensure quality control before shipment...",
         image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80",
-        date: "April 08, 2026",
+        date: "February 22, 2026",
         author: "Sourcing Team",
         slug: 'importing-chinese-machinery'
+      },
+      {
+        id: 4,
+        category: 'Real Estate',
+        title: "Emerging Neighborhoods of Douala: Where to Invest in 2026",
+        excerpt: "Discover the high-growth potential areas in Cameroon's economic capital.",
+        image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80",
+        date: "May 5, 2026",
+        author: "Real Estate Expert",
+        slug: 'emerging-neighborhoods-douala'
+      },
+      {
+        id: 5,
+        category: 'Agriculture',
+        title: "The Agricultural Revolution in Cameroon: Opportunities for 2026",
+        excerpt: "How new agricultural policies are opening the way for profitable investments in the sector.",
+        image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80",
+        date: "April 15, 2026",
+        author: "Agro Expert",
+        slug: 'agricultural-revolution-cameroon'
+      },
+      {
+        id: 6,
+        category: 'Lifestyle',
+        title: "Living in Douala: The Perfect Expat Investor Guide",
+        excerpt: "Practical tips for settling and investing in Cameroon's economic capital.",
+        image: "https://images.unsplash.com/photo-1518391846015-55a9cc003b25?auto=format&fit=crop&q=80",
+        date: "May 1, 2026",
+        author: "Property Cameroun",
+        slug: 'living-douala-expat-guide'
       }
     ]
   };
@@ -329,11 +389,13 @@ const Blog = () => {
   const defaultOpportunities = {
     fr: [
       { id: 1, title: "Terrain Agricole Sécurisé - 5 Hectares", location: "Centre Cameroun", roi: "12% ROI Annuel Estimé" },
-      { id: 2, title: "Projet d'Élevage Porcin Clé en Main", location: "Ouest Cameroun", roi: "18% ROI Potentiel" }
+      { id: 2, title: "Projet d'Élevage Porcin Clé en Main", location: "Ouest Cameroun", roi: "18% ROI Potentiel" },
+      { id: 3, title: "Villa de Standing - Bastos", location: "Yaoundé", roi: "15% ROI Annuel" }
     ],
     en: [
       { id: 1, title: "Secured Agricultural Land - 5 Hectares", location: "Central Cameroon", roi: "12% Estimated Annual ROI" },
-      { id: 2, title: "Turnkey Pig Farming Project", location: "West Cameroon", roi: "18% Potential ROI" }
+      { id: 2, title: "Turnkey Pig Farming Project", location: "West Cameroon", roi: "18% Potential ROI" },
+      { id: 3, title: "Luxury Villa - Bastos", location: "Yaoundé", roi: "15% Annual ROI" }
     ]
   };
 

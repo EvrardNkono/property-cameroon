@@ -40,7 +40,7 @@ const useCurrentLang = () => {
   return lang;
 };
 
-// ========== ARTICLE EN DUR ==========
+// ========== ARTICLE EN DUR (Dates cohérentes 2026) ==========
 const getHardcodedArticle = (lang) => {
   const isFrench = lang === 'fr';
   
@@ -55,12 +55,12 @@ const getHardcodedArticle = (lang) => {
       ? "Le marché immobilier camerounais confirme une fois de plus son statut de valeur refuge et de moteur de croissance pour les investisseurs avisés. Chez Property Cameroun, nous venons d'en faire la démonstration concrète sur un projet de lotissement stratégique."
       : "The Cameroonian real estate market once again confirms its status as a safe haven and growth engine for savvy investors. At Property Cameroun, we have just demonstrated this concretely on a strategic subdivision project.",
     image: "/images/propertycameroun.png",
-    date: isFrench ? "15 Juillet 2026" : "July 15, 2026",
+    date: isFrench ? "15 Janvier 2026" : "January 15, 2026",
     author: "Property Cameroun",
     isFeatured: true,
     isHardcoded: true,
     views: 2847,
-    tags: ['Immobilier', 'Investissement', 'Plus-Value', 'Cameroun'],
+    tags: isFrench ? ['Immobilier', 'Investissement', 'Plus-Value', 'Cameroun'] : ['Real Estate', 'Investment', 'Capital Gain', 'Cameroon'],
     performanceData: {
       acquisitionPrice: "1 500 FCFA/m²",
       currentPrice: "5 500 FCFA/m²",
@@ -72,15 +72,15 @@ const getHardcodedArticle = (lang) => {
       
       <h2>${isFrench ? 'L\'Analyse de la Performance' : 'Performance Analysis'}</h2>
       <p>${isFrench ? 'Il y a seulement six mois, en janvier 2026, nous travaillions sur l\'aménagement d\'une parcelle de 4 hectares. À cette période, le prix du mètre carré était fixé à 1 500 FCFA.' : 'Just six months ago, in January 2026, we were working on the development of a 4-hectare plot. At that time, the price per square meter was set at 1,500 FCFA.'}</p>
-      <p>${isFrench ? 'Aujourd\'hui, en juillet 2026, la donne a radicalement changé. Grâce à notre stratégie de développement et à l\'attractivité croissante de la zone, le prix du mètre carré se négocie désormais entre 5 000 FCFA et 6 000 FCFA.' : 'Today, in June 2026, the situation has radically changed. Thanks to our development strategy and the growing attractiveness of the area, the price per square meter now ranges between 5,000 FCFA and 6,000 FCFA.'}</p>
+      <p>${isFrench ? 'Aujourd\'hui, en juin 2026, la donne a radicalement changé. Grâce à notre stratégie de développement et à l\'attractivité croissante de la zone, le prix du mètre carré se négocie désormais entre 5 000 FCFA et 6 000 FCFA.' : 'Today, in June 2026, the situation has radically changed. Thanks to our development strategy and the growing attractiveness of the area, the price per square meter now ranges between 5,000 FCFA and 6,000 FCFA.'}</p>
       
       <h3>${isFrench ? 'Le Bilan Chiffré' : 'The Financial Summary'}</h3>
       <p>${isFrench ? 'Si l\'on prend la moyenne de notre nouvelle valeur de marché (5 500 FCFA/m²), voici l\'évolution de la rentabilité :' : 'Taking the average of our new market value (5,500 FCFA/m²), here is the evolution of profitability:'}</p>
       
       <div class="bg-slate-50 rounded-xl p-6 my-6">
         <ul class="list-none space-y-3">
-          <li><strong>${isFrench ? 'Prix d\'acquisition (Janvier)' : 'Acquisition Price (January)'} :</strong> 1 500 FCFA/m²</li>
-          <li><strong>${isFrench ? 'Prix actuel du marché (Juillet)' : 'Current Market Price (July)'} :</strong> 5 500 FCFA/m²</li>
+          <li><strong>${isFrench ? 'Prix d\'acquisition (Janvier 2026)' : 'Acquisition Price (January 2026)'} :</strong> 1 500 FCFA/m²</li>
+          <li><strong>${isFrench ? 'Prix actuel du marché (Juin 2026)' : 'Current Market Price (June 2026)'} :</strong> 5 500 FCFA/m²</li>
           <li><strong>${isFrench ? 'Gain de valeur par m²' : 'Value Gain per m²'} :</strong> 4 000 FCFA</li>
           <li><strong>${isFrench ? 'Pourcentage de bénéfice brut' : 'Gross Profit Percentage'} :</strong> <span class="text-emerald-600 font-bold">+266,6 %</span></li>
         </ul>
@@ -133,8 +133,8 @@ const BlogPostDetail = () => {
       copied: "Lien copié !",
       performanceSummary: "Résumé de la Performance",
       featured: "À la une",
-      acquisitionPrice: "Prix d'acquisition",
-      currentMarketPrice: "Prix actuel du marché",
+      acquisitionPrice: "Prix d'acquisition (Janv. 2026)",
+      currentMarketPrice: "Prix actuel (Juin 2026)",
       valueGain: "Gain de valeur",
       percentageGain: "Bénéfice brut",
       readyToInvest: "Prêt à investir au Cameroun ?",
@@ -162,8 +162,8 @@ const BlogPostDetail = () => {
       copied: "Link copied!",
       performanceSummary: "Performance Summary",
       featured: "Featured",
-      acquisitionPrice: "Acquisition Price",
-      currentMarketPrice: "Current Market Price",
+      acquisitionPrice: "Acquisition Price (Jan. 2026)",
+      currentMarketPrice: "Current Price (June 2026)",
       valueGain: "Value Gain",
       percentageGain: "Gross Profit",
       readyToInvest: "Ready to invest in Cameroon?",
@@ -191,8 +191,8 @@ const BlogPostDetail = () => {
     copied: "Lien copié !",
     performanceSummary: "Résumé de la Performance",
     featured: "À la une",
-    acquisitionPrice: "Prix d'acquisition",
-    currentMarketPrice: "Prix actuel du marché",
+    acquisitionPrice: "Prix d'acquisition (Janv. 2026)",
+    currentMarketPrice: "Prix actuel (Juin 2026)",
     valueGain: "Gain de valeur",
     percentageGain: "Bénéfice brut",
     readyToInvest: "Prêt à investir au Cameroun ?",
@@ -226,7 +226,7 @@ const BlogPostDetail = () => {
               setRelatedPosts(filtered.slice(0, 3));
             }
           } catch (err) {
-            // Fallback articles
+            // Fallback articles avec dates cohérentes
             setRelatedPosts([
               {
                 id: '1',
@@ -234,7 +234,7 @@ const BlogPostDetail = () => {
                 title: currentLang === 'fr' ? "Sécuriser votre Titre Foncier au Cameroun : Le Guide Complet 2026" : "Securing Your Land Title in Cameroon: The 2026 Comprehensive Guide",
                 image: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&q=80",
                 category: "Real Estate",
-                date: currentLang === 'fr' ? "12 Avril 2026" : "April 12, 2026",
+                date: currentLang === 'fr' ? "12 Mai 2026" : "May 12, 2026",
                 content: ""
               },
               {
@@ -243,7 +243,16 @@ const BlogPostDetail = () => {
                 title: currentLang === 'fr' ? "L'essor de l'Élevage Porcin : Pourquoi Investir Maintenant" : "The Rise of Pig Farming: Why You Should Invest Now",
                 image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80",
                 category: "Agriculture",
-                date: currentLang === 'fr' ? "10 Avril 2026" : "April 10, 2026",
+                date: currentLang === 'fr' ? "10 Mars 2026" : "March 10, 2026",
+                content: ""
+              },
+              {
+                id: '3',
+                slug: 'quartiers-emergents-douala',
+                title: currentLang === 'fr' ? "Les Quartiers Émergents de Douala : Où Investir en 2026" : "Emerging Neighborhoods of Douala: Where to Invest in 2026",
+                image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80",
+                category: "Real Estate",
+                date: currentLang === 'fr' ? "5 Mai 2026" : "May 5, 2026",
                 content: ""
               }
             ]);
