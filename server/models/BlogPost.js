@@ -43,4 +43,6 @@ blogPostSchema.index({ slug: 1 });
 blogPostSchema.index({ status: 1, publishedAt: -1 });
 blogPostSchema.index({ '$**': 'text' });
 
-export default mongoose.models.BlogPost || mongoose.model('BlogPost', blogPostSchema);
+// ✅ Plus robuste
+const BlogPost = mongoose.models.BlogPost || mongoose.model('BlogPost', blogPostSchema);
+export default BlogPost;
