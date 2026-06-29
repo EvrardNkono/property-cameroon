@@ -115,8 +115,8 @@ export const getPost = async (req, res) => {
 
     if (!post) return res.status(404).json({ success: false, message: 'Article non trouvé' });
 
-    post.views += 1;
-    await post.save();
+    // ✅ Par :
+await BlogPost.findByIdAndUpdate(post._id, { $inc: { views: 1 } });
 
     const tr = post.translations?.[lang];
     res.json({
