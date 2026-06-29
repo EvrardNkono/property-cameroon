@@ -31,7 +31,7 @@ const blogPostSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-// Auto-set publishedAt
+// models/BlogPost.js - Version corrigée
 blogPostSchema.pre('save', function(next) {
   if (this.isModified('status') && this.status === 'published' && !this.publishedAt) {
     this.publishedAt = new Date();
