@@ -1,128 +1,46 @@
 import mongoose from 'mongoose';
 
 const blogPostSchema = new mongoose.Schema({
-  // Informations de base
-  title: {
-    type: String,
-    required: [true, 'Le titre est requis'],
-    trim: true
-  },
-  slug: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true,
-    trim: true
-  },
-  excerpt: {
-    type: String,
-    required: [true, 'Le résumé est requis'],
-    maxLength: 300
-  },
-  content: {
-    type: String,
-    required: [true, 'Le contenu est requis']
-  },
-  
+  title:   { type: String, required: true },
+  slug:    { type: String, required: true, unique: true },
+  excerpt: { type: String, required: true },
+  content: { type: String, required: true },
   category: {
     type: String,
-    required: true,
-    enum: ['Real Estate', 'Agriculture', 'Sourcing', 'Lifestyle']
-  },
-  
-  featuredImage: {
-    type: String,
-    required: [true, 'L\'image principale est requise']
-  },
-  galleryImages: [{
-    type: String
-  }],
-  
-  seoTitle: {
-    type: String,
-    trim: true
-  },
-  seoDescription: {
-    type: String,
-    maxLength: 160
-  },
-  metaKeywords: [{
-    type: String
-  }],
-  
-  author: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    enum: ['Real Estate', 'Agriculture', 'Sourcing', 'Lifestyle'],
     required: true
   },
-  authorName: {
-    type: String,
-    required: true
-  },
-  
-  publishedAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  },
-  
+  featuredImage: { type: String, default: null },
+  tags:          { type: [String], default: [] },
+  metaKeywords:  { type: [String], default: [] },
+  isFeatured:    { type: Boolean, default: false },
   status: {
     type: String,
     enum: ['draft', 'published', 'archived'],
     default: 'draft'
   },
-  
-  isFeatured: {
-    type: Boolean,
-    default: false
-  },
-  
-  views: {
-    type: Number,
-    default: 0
-  },
-  
-  tags: [{
-    type: String,
-    trim: true
-  }],
-  
+  author:      { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  authorName:  { type: String, default: 'Property Cameroun' },
+  views:       { type: Number, default: 0 },
+  publishedAt: { type: Date },
+  seoTitle:       { type: String },
+  seoDescription: { type: String },
   translations: {
-    en: {
-      title: String,
-      excerpt: String,
-      content: String,
-      seoTitle: String,
-      seoDescription: String
-    },
-    fr: {
-      title: String,
-      excerpt: String,
-      content: String,
-      seoTitle: String,
-      seoDescription: String
-    }
+    fr: { title: String, excerpt: String, content: String, seoTitle: String, seoDescription: String },
+    en: { title: String, excerpt: String, content: String, seoTitle: String, seoDescription: String }
   }
-}, {
-  timestamps: true
-});
+}, { timestamps: true });
 
+// Auto-set publishedAt
 blogPostSchema.pre('save', function(next) {
-  if (this.isModified('title')) {
-    this.slug = this.title
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/--+/g, '-')
-      .trim();
+  if (this.isModified('status') && this.status === 'published' && !this.publishedAt) {
+    this.publishedAt = new Date();
   }
-  this.updatedAt = Date.now();
   next();
 });
 
-blogPostSchema.index({ title: 'text', content: 'text', tags: 'text' });
+blogPostSchema.index({ slug: 1 });
+blogPostSchema.index({ status: 1, publishedAt: -1 });
+blogPostSchema.index({ '$**': 'text' });
 
-export default mongoose.model('BlogPost', blogPostSchema);
+export default mongoose.models.BlogPost || mongoose.model('BlogPost', blogPostSchema);

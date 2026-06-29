@@ -42,8 +42,7 @@ import sitemapRoutes from './routes/sitemap.js';
 import roleRequestRoutes from './routes/roleRequest.routes.js'; // ✅ AJOUT ICI
 
 // 🌟 NOUVELLES ROUTES BLOG
-import blogRoutes from './routes/blog.js';
-import blogCategoryRoutes from './routes/blogCategories.js';
+import blogRoutes from './routes/blogRoutes.js';
 
 // ✅ Import complet des controllers upload (restauré)
 import { 
@@ -463,7 +462,6 @@ app.use('/api/livestock', livestockRoutes);
 app.use('/api/livestock-categories', livestockCategoryRoutes);
 
 // 🌟 NOUVELLES ROUTES BLOG (ordre important : categories avant blog)
-app.use('/api/blog/categories', blogCategoryRoutes);
 app.use('/api/blog', blogRoutes);
 
 // ✅ ROUTES DES DEMANDES DE RÔLE

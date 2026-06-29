@@ -1,8 +1,4 @@
-import express from 'express';
 import BlogCategory from '../models/BlogCategory.js';
-import { protect, authorize } from '../middleware/auth.middleware.js';
-
-const router = express.Router();
 
 const generateSlug = (name) => {
   return name
@@ -13,10 +9,8 @@ const generateSlug = (name) => {
     .trim();
 };
 
-// ========== ROUTES PUBLIQUES ==========
-
-// GET /api/blog/categories - Liste des catégories
-router.get('/', async (req, res) => {
+// ========== GET ALL CATEGORIES ==========
+export const getCategories = async (req, res) => {
   try {
     const categories = await BlogCategory.find().sort({ displayOrder: 1, name: 1 });
     
@@ -38,12 +32,10 @@ router.get('/', async (req, res) => {
     console.error(error);
     res.status(500).json({ success: false, message: 'Erreur serveur' });
   }
-});
+};
 
-// ========== ROUTES ADMIN (protégées) ==========
-
-// POST /api/blog/categories - Créer une catégorie
-router.post('/', protect, authorize('admin', 'editor'), async (req, res) => {
+// ========== CREATE CATEGORY ==========
+export const createCategory = async (req, res) => {
   try {
     const { name, slug, description, icon, color, isActive, displayOrder, metaTitle, metaDescription } = req.body;
     
@@ -89,10 +81,10 @@ router.post('/', protect, authorize('admin', 'editor'), async (req, res) => {
     console.error(error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+};
 
-// PUT /api/blog/categories/:id - Mettre à jour une catégorie
-router.put('/:id', protect, authorize('admin', 'editor'), async (req, res) => {
+// ========== UPDATE CATEGORY ==========
+export const updateCategory = async (req, res) => {
   try {
     const category = await BlogCategory.findById(req.params.id);
     
@@ -144,10 +136,10 @@ router.put('/:id', protect, authorize('admin', 'editor'), async (req, res) => {
     console.error(error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+};
 
-// DELETE /api/blog/categories/:id - Supprimer une catégorie
-router.delete('/:id', protect, authorize('admin'), async (req, res) => {
+// ========== DELETE CATEGORY ==========
+export const deleteCategory = async (req, res) => {
   try {
     const category = await BlogCategory.findById(req.params.id);
     
@@ -162,6 +154,4 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
     console.error(error);
     res.status(500).json({ success: false, message: 'Erreur serveur' });
   }
-});
-
-export default router;
+};
