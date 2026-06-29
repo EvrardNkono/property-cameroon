@@ -1,9 +1,7 @@
+// middleware/uploadCloudinary.js - Version compatible Cloudinary v2
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 // Configuration Cloudinary
 cloudinary.config({
@@ -12,17 +10,19 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Configuration du stockage
+// ✅ Configuration du storage avec la nouvelle API
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'blog-images',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-    transformation: [{ width: 1200, height: 630, crop: 'fill' }]
+    format: async (req, file) => 'webp', // Conversion en WebP
+    public_id: (req, file) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      return 'blog-' + uniqueSuffix;
+    }
   }
 });
 
-// Configuration de l'upload
 const uploadBlogImage = multer({
   storage: storage,
   limits: {
