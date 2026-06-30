@@ -19,6 +19,7 @@ const blogPostSchema = new mongoose.Schema({
     enum: ['draft', 'published', 'archived'],
     default: 'draft'
   },
+   sourceLang:  { type: String, enum: ['fr', 'en'], default: 'fr' },
   author:      { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   authorName:  { type: String, default: 'Property Cameroun' },
   views:       { type: Number, default: 0 },

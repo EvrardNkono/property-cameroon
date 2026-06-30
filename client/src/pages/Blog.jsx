@@ -1,31 +1,30 @@
 // frontend/src/pages/Blog.jsx
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
-  ArrowRight, Calendar, User, Tag, Heart, Share2, Clock, Eye,
-  Loader2, AlertCircle, BookOpen, Sparkles, ChevronRight, Star,
-  MessageCircle, ArrowLeft, TrendingUp, ShieldCheck, Globe,
-  CheckCircle, X, Mail, FileText, Award, Zap, Layers, MapPin
+  Calendar, User, Loader2, AlertCircle, BookOpen, Sparkles, ChevronRight,
+  ShieldCheck, CheckCircle, X, Mail
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
+import { useAutoTranslate } from '../hooks/useAutoTranslate';
 
-// Hook pour récupérer la langue actuelle
+// ─────────────────────────────────────────────────────────────
+// Hook de langue — calcule la valeur dès le premier rendu
+// (lazy initializer), évite le flash FR→EN et le double fetch
+// ─────────────────────────────────────────────────────────────
 const useCurrentLang = () => {
-  const [lang, setLang] = useState('fr');
-  
-  useEffect(() => {
+  const [lang] = useState(() => {
+    if (typeof window === 'undefined') return 'fr';
     const params = new URLSearchParams(window.location.search);
     const urlLang = params.get('lang');
     const storedLang = localStorage.getItem('preferredLanguage');
     const browserLang = navigator.language.split('-')[0];
-    
     const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
-    setLang(finalLang);
-  }, []);
-  
+    return ['fr', 'en'].includes(finalLang) ? finalLang : 'fr';
+  });
   return lang;
 };
 
@@ -36,7 +35,6 @@ const Blog = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [opportunities, setOpportunities] = useState([]);
-  const [featuredPosts, setFeaturedPosts] = useState([]);
   const [showNewsletter, setShowNewsletter] = useState(false);
   const [emailSubmitted, setEmailSubmitted] = useState(false);
 
@@ -44,33 +42,22 @@ const Blog = () => {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.3]);
   const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
 
-  // ========== TRADUCTIONS COMPLÈTES ==========
+  // ========== TRADUCTIONS UI (textes fixes de l'interface) ==========
   const t = {
     fr: {
-      // Hero
       heroBadge: "Le Journal",
       heroTitle: "Investissez au Cameroun",
       heroTitleLine2: "Sans compromis",
       heroSubtitle: "Immobilier, Agriculture et Approvisionnement international — une approche sécurisée et rentable pour l'investisseur moderne.",
       exploreNow: "Explorer Maintenant",
       diasporaPortal: "Portail Diaspora",
-      
-      // CAPEF
       strategicPartnership: "Partenariat Stratégique avec le CAPEF",
       capefDescription: "Nous travaillons en étroite collaboration avec la Chambre d'Agriculture, des Pêches, de l'Élevage et des Forêts (CAPEF) pour garantir des investissements agricoles sécurisés et rentables, gérés par des experts locaux certifiés.",
       learnMore: "En Savoir Plus",
-      
-      // Diaspora
       investFromAbroad: "Investissez depuis l'Étranger en Toute Confiance",
       diasporaDescription: "Nous gérons, sécurisons et développons vos investissements au Cameroun. En exploitant notre expertise locale : vous investissez, nous exécutons.",
-      
-      // Opportunities
       currentOpportunities: "Opportunités Actuelles",
       details: "Détails →",
-      estimatedRoi: "ROI Annuel Estimé",
-      potentialRoi: "ROI Potentiel",
-      
-      // Blog
       theJournal: "Le Journal",
       insightsExpertise: "Perspectives & Expertise",
       all: "Tous",
@@ -79,78 +66,40 @@ const Blog = () => {
       sourcing: "Approvisionnement",
       lifestyle: "Mode de Vie",
       by: "Par",
-      readMore: "Lire la suite",
       noPosts: "Aucun article pour le moment",
       loading: "Chargement...",
       featured: "À la Une",
       readFullArticle: "Lire l'article complet",
-      
-      // Stats
       acquisitionPrice: "Prix d'acquisition",
       currentMarketPrice: "Prix actuel du marché",
       valueGain: "Gain de valeur",
       percentageGain: "Bénéfice brut",
-      
-      // Newsletter
-      newsletterTitle: "Restez informé",
       newsletterDesc: "Recevez nos derniers articles et opportunités d'investissement",
       emailPlaceholder: "Votre adresse email",
       subscribe: "S'abonner",
       thanksSubscribing: "Merci !",
       checkInbox: "Consultez votre boîte mail.",
       freeGuide: "Guide Gratuit",
-      
-      // CTA
       readyToInvest: "Prêt à Investir Intelligemment ?",
       talkToExpert: "Parler à un Expert",
       viewOpportunities: "Voir les Opportunités",
-      
-      // Badges
-      badgePartners: "Partenaires",
-      badgeExperts: "Experts",
-      badgeSecurity: "Sécurisé",
-      
-      // Error
       errorLoading: "Erreur de chargement",
       tryAgain: "Réessayer",
-      
-      // Categories
-      allCategories: "Toutes les catégories",
-      
-      // Share
-      share: "Partager",
-      copied: "Lien copié !",
-      
-      // Performance
-      performance: "Performance",
-      successFactors: "Pourquoi un tel succès ?",
-      investAdvice: "Investir dans la terre reste l'un des moyens les plus sûrs et les plus lucratifs pour bâtir un patrimoine solide au Cameroun."
     },
     en: {
-      // Hero
       heroBadge: "The Journal",
       heroTitle: "Invest in Cameroon",
       heroTitleLine2: "Without Compromise",
       heroSubtitle: "Real Estate, Agriculture, and International Sourcing — a secure and profitable approach for the modern investor.",
       exploreNow: "Explore Now",
       diasporaPortal: "Diaspora Portal",
-      
-      // CAPEF
       strategicPartnership: "Strategic Partnership with CAPEF",
       capefDescription: "We work closely with the Chamber of Agriculture, Fisheries, Livestock and Forests (CAPEF) to guarantee secured and profitable agricultural investments, managed by certified local experts.",
       learnMore: "Learn More",
-      
-      // Diaspora
       investFromAbroad: "Invest from Abroad with Confidence",
       diasporaDescription: "We manage, secure, and develop your investments in Cameroon. Leveraging our local expertise: you invest, we execute.",
-      
-      // Opportunities
       currentOpportunities: "Current Opportunities",
       details: "Details →",
-      estimatedRoi: "Estimated Annual ROI",
-      potentialRoi: "Potential ROI",
-      
-      // Blog
       theJournal: "The Journal",
       insightsExpertise: "Insights & Expertise",
       all: "All",
@@ -159,114 +108,39 @@ const Blog = () => {
       sourcing: "Sourcing",
       lifestyle: "Lifestyle",
       by: "By",
-      readMore: "Read more",
       noPosts: "No posts yet",
       loading: "Loading...",
       featured: "Featured",
       readFullArticle: "Read Full Article",
-      
-      // Stats
       acquisitionPrice: "Acquisition Price",
       currentMarketPrice: "Current Market Price",
       valueGain: "Value Gain",
       percentageGain: "Gross Profit",
-      
-      // Newsletter
-      newsletterTitle: "Stay Informed",
       newsletterDesc: "Receive our latest articles and investment opportunities",
       emailPlaceholder: "Your email address",
       subscribe: "Subscribe",
       thanksSubscribing: "Thanks!",
       checkInbox: "Check your inbox.",
       freeGuide: "Free Guide",
-      
-      // CTA
       readyToInvest: "Ready to Invest Smartly?",
       talkToExpert: "Talk to an Expert",
       viewOpportunities: "View Opportunities",
-      
-      // Badges
-      badgePartners: "Partners",
-      badgeExperts: "Experts",
-      badgeSecurity: "Secure",
-      
-      // Error
       errorLoading: "Loading error",
       tryAgain: "Try Again",
-      
-      // Categories
-      allCategories: "All categories",
-      
-      // Share
-      share: "Share",
-      copied: "Link copied!",
-      
-      // Performance
-      performance: "Performance",
-      successFactors: "Why such success?",
-      investAdvice: "Investing in land remains one of the safest and most lucrative ways to build solid wealth in Cameroon."
     }
-  }[currentLang] || {
-    heroBadge: "Le Journal",
-    heroTitle: "Investissez au Cameroun",
-    heroTitleLine2: "Sans compromis",
-    heroSubtitle: "Immobilier, Agriculture et Approvisionnement international — une approche sécurisée et rentable pour l'investisseur moderne.",
-    exploreNow: "Explorer Maintenant",
-    diasporaPortal: "Portail Diaspora",
-    strategicPartnership: "Partenariat Stratégique avec le CAPEF",
-    capefDescription: "Nous travaillons en étroite collaboration avec la Chambre d'Agriculture, des Pêches, de l'Élevage et des Forêts (CAPEF) pour garantir des investissements agricoles sécurisés et rentables, gérés par des experts locaux certifiés.",
-    learnMore: "En Savoir Plus",
-    investFromAbroad: "Investissez depuis l'Étranger en Toute Confiance",
-    diasporaDescription: "Nous gérons, sécurisons et développons vos investissements au Cameroun. En exploitant notre expertise locale : vous investissez, nous exécutons.",
-    currentOpportunities: "Opportunités Actuelles",
-    details: "Détails →",
-    estimatedRoi: "ROI Annuel Estimé",
-    potentialRoi: "ROI Potentiel",
-    theJournal: "Le Journal",
-    insightsExpertise: "Perspectives & Expertise",
-    all: "Tous",
-    realEstate: "Immobilier",
-    agriculture: "Agriculture",
-    sourcing: "Approvisionnement",
-    lifestyle: "Mode de Vie",
-    by: "Par",
-    readMore: "Lire la suite",
-    noPosts: "Aucun article pour le moment",
-    loading: "Chargement...",
-    featured: "À la Une",
-    readFullArticle: "Lire l'article complet",
-    acquisitionPrice: "Prix d'acquisition",
-    currentMarketPrice: "Prix actuel du marché",
-    valueGain: "Gain de valeur",
-    percentageGain: "Bénéfice brut",
-    readyToInvest: "Prêt à Investir Intelligemment ?",
-    talkToExpert: "Parler à un Expert",
-    viewOpportunities: "Voir les Opportunités",
-    newsletterTitle: "Restez informé",
-    newsletterDesc: "Recevez nos derniers articles et opportunités d'investissement",
-    emailPlaceholder: "Votre adresse email",
-    subscribe: "S'abonner",
-    thanksSubscribing: "Merci !",
-    checkInbox: "Consultez votre boîte mail.",
-    freeGuide: "Guide Gratuit",
-    errorLoading: "Erreur de chargement",
-    tryAgain: "Réessayer",
-    allCategories: "Toutes les catégories",
-    share: "Partager",
-    copied: "Lien copié !",
-    performance: "Performance",
-    successFactors: "Pourquoi un tel succès ?",
-    investAdvice: "Investir dans la terre reste l'un des moyens les plus sûrs et les plus lucratifs pour bâtir un patrimoine solide au Cameroun."
-  };
+  }[currentLang];
 
-  // ========== ARTICLE EN DUR (Dates cohérentes 2026) ==========
-  const hardcodedArticle = {
+  // ========== DONNÉES EN DUR — SOURCE UNIQUE EN FRANÇAIS ==========
+  // Plus besoin de dupliquer manuellement en fr/en : useAutoTranslate
+  // appelle le backend (/translate/batch, même logique que blogController.js)
+  // et met en cache la traduction en localStorage.
+  const hardcodedArticleFr = {
     id: 'featured-performance',
     category: 'Real Estate',
     title: "Investissement Immobilier : Une Plus-Value Exceptionnelle de +266% en 6 Mois !",
     excerpt: "Le marché immobilier camerounais confirme une fois de plus son statut de valeur refuge et de moteur de croissance pour les investisseurs avisés. Chez Property Cameroun, nous venons d'en faire la démonstration concrète sur un projet de lotissement stratégique.",
     image: "/images/propertycameroun.png",
-    date: currentLang === 'fr' ? "15 Janvier 2026" : "January 15, 2026",
+    date: "15 Janvier 2026",
     author: "Property Cameroun",
     slug: 'performance-immobiliere-266',
     isHardcoded: true,
@@ -278,126 +152,87 @@ const Blog = () => {
     }
   };
 
-  // ========== DONNÉES PAR DÉFAUT (Dates cohérentes 2026) ==========
-  const defaultPosts = {
-    fr: [
-      {
-        id: 2,
-        category: 'Agriculture',
-        title: "L'essor de l'Élevage Porcin : Pourquoi Investir Maintenant",
-        excerpt: "Une analyse approfondie du marché local et des opportunités de rentabilité pour la saison à venir...",
-        image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80",
-        date: "10 Mars 2026",
-        author: "Expert Agro",
-        slug: 'essor-elevage-porcin'
-      },
-      {
-        id: 3,
-        category: 'Sourcing',
-        title: "Importer des Machines Chinoises : Évitez ces 5 Erreurs Courantes",
-        excerpt: "Comment vérifier la fiabilité des fournisseurs et assurer le contrôle qualité avant l'expédition...",
-        image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80",
-        date: "22 Février 2026",
-        author: "Équipe Sourcing",
-        slug: 'importer-machines-chinoises'
-      },
-      {
-        id: 4,
-        category: 'Real Estate',
-        title: "Les Quartiers Émergents de Douala : Où Investir en 2026",
-        excerpt: "Découvrez les zones à fort potentiel de croissance immobilière dans la capitale économique du Cameroun.",
-        image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80",
-        date: "5 Mai 2026",
-        author: "Expert Immobilier",
-        slug: 'quartiers-emergents-douala'
-      },
-      {
-        id: 5,
-        category: 'Agriculture',
-        title: "La Révolution Agricole au Cameroun : Opportunités pour 2026",
-        excerpt: "Comment les nouvelles politiques agricoles ouvrent la voie à des investissements rentables dans le secteur.",
-        image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80",
-        date: "15 Avril 2026",
-        author: "Agro Expert",
-        slug: 'revolution-agricole-cameroun'
-      },
-      {
-        id: 6,
-        category: 'Lifestyle',
-        title: "Vivre à Douala : Guide du Parfait Expatrié Investisseur",
-        excerpt: "Conseils pratiques pour s'installer et investir dans la capitale économique camerounaise.",
-        image: "https://images.unsplash.com/photo-1518391846015-55a9cc003b25?auto=format&fit=crop&q=80",
-        date: "1 Mai 2026",
-        author: "Property Cameroun",
-        slug: 'vivre-douala-guide-expatrie'
-      }
-    ],
-    en: [
-      {
-        id: 2,
-        category: 'Agriculture',
-        title: "The Rise of Pig Farming: Why You Should Invest Now",
-        excerpt: "A deep dive into the local market analysis and profitability opportunities for the upcoming season...",
-        image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80",
-        date: "March 10, 2026",
-        author: "Agro Expert",
-        slug: 'rise-pig-farming'
-      },
-      {
-        id: 3,
-        category: 'Sourcing',
-        title: "Importing Chinese Machinery: Avoid These 5 Common Mistakes",
-        excerpt: "How to verify supplier reliability and ensure quality control before shipment...",
-        image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80",
-        date: "February 22, 2026",
-        author: "Sourcing Team",
-        slug: 'importing-chinese-machinery'
-      },
-      {
-        id: 4,
-        category: 'Real Estate',
-        title: "Emerging Neighborhoods of Douala: Where to Invest in 2026",
-        excerpt: "Discover the high-growth potential areas in Cameroon's economic capital.",
-        image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80",
-        date: "May 5, 2026",
-        author: "Real Estate Expert",
-        slug: 'emerging-neighborhoods-douala'
-      },
-      {
-        id: 5,
-        category: 'Agriculture',
-        title: "The Agricultural Revolution in Cameroon: Opportunities for 2026",
-        excerpt: "How new agricultural policies are opening the way for profitable investments in the sector.",
-        image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80",
-        date: "April 15, 2026",
-        author: "Agro Expert",
-        slug: 'agricultural-revolution-cameroon'
-      },
-      {
-        id: 6,
-        category: 'Lifestyle',
-        title: "Living in Douala: The Perfect Expat Investor Guide",
-        excerpt: "Practical tips for settling and investing in Cameroon's economic capital.",
-        image: "https://images.unsplash.com/photo-1518391846015-55a9cc003b25?auto=format&fit=crop&q=80",
-        date: "May 1, 2026",
-        author: "Property Cameroun",
-        slug: 'living-douala-expat-guide'
-      }
-    ]
-  };
+  const defaultPostsFr = [
+    {
+      id: 2, category: 'Agriculture',
+      title: "L'essor de l'Élevage Porcin : Pourquoi Investir Maintenant",
+      excerpt: "Une analyse approfondie du marché local et des opportunités de rentabilité pour la saison à venir...",
+      image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80",
+      date: "10 Mars 2026", author: "Expert Agro", slug: 'essor-elevage-porcin'
+    },
+    {
+      id: 3, category: 'Sourcing',
+      title: "Importer des Machines Chinoises : Évitez ces 5 Erreurs Courantes",
+      excerpt: "Comment vérifier la fiabilité des fournisseurs et assurer le contrôle qualité avant l'expédition...",
+      image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80",
+      date: "22 Février 2026", author: "Équipe Sourcing", slug: 'importer-machines-chinoises'
+    },
+    {
+      id: 4, category: 'Real Estate',
+      title: "Les Quartiers Émergents de Douala : Où Investir en 2026",
+      excerpt: "Découvrez les zones à fort potentiel de croissance immobilière dans la capitale économique du Cameroun.",
+      image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80",
+      date: "5 Mai 2026", author: "Expert Immobilier", slug: 'quartiers-emergents-douala'
+    },
+    {
+      id: 5, category: 'Agriculture',
+      title: "La Révolution Agricole au Cameroun : Opportunités pour 2026",
+      excerpt: "Comment les nouvelles politiques agricoles ouvrent la voie à des investissements rentables dans le secteur.",
+      image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80",
+      date: "15 Avril 2026", author: "Agro Expert", slug: 'revolution-agricole-cameroun'
+    },
+    {
+      id: 6, category: 'Lifestyle',
+      title: "Vivre à Douala : Guide du Parfait Expatrié Investisseur",
+      excerpt: "Conseils pratiques pour s'installer et investir dans la capitale économique camerounaise.",
+      image: "https://images.unsplash.com/photo-1518391846015-55a9cc003b25?auto=format&fit=crop&q=80",
+      date: "1 Mai 2026", author: "Property Cameroun", slug: 'vivre-douala-guide-expatrie'
+    }
+  ];
 
-  const defaultOpportunities = {
-    fr: [
-      { id: 1, title: "Terrain Agricole Sécurisé - 5 Hectares", location: "Centre Cameroun", roi: "12% ROI Annuel Estimé" },
-      { id: 2, title: "Projet d'Élevage Porcin Clé en Main", location: "Ouest Cameroun", roi: "18% ROI Potentiel" },
-      { id: 3, title: "Villa de Standing - Bastos", location: "Yaoundé", roi: "15% ROI Annuel" }
-    ],
-    en: [
-      { id: 1, title: "Secured Agricultural Land - 5 Hectares", location: "Central Cameroon", roi: "12% Estimated Annual ROI" },
-      { id: 2, title: "Turnkey Pig Farming Project", location: "West Cameroon", roi: "18% Potential ROI" },
-      { id: 3, title: "Luxury Villa - Bastos", location: "Yaoundé", roi: "15% Annual ROI" }
-    ]
-  };
+  const defaultOpportunitiesFr = [
+    { id: 1, title: "Terrain Agricole Sécurisé - 5 Hectares", location: "Centre Cameroun", roi: "12% ROI Annuel Estimé" },
+    { id: 2, title: "Projet d'Élevage Porcin Clé en Main", location: "Ouest Cameroun", roi: "18% ROI Potentiel" },
+    { id: 3, title: "Villa de Standing - Bastos", location: "Yaoundé", roi: "15% ROI Annuel" }
+  ];
+
+  // ── Traduction auto des données en dur (source = FR) ──
+  // On regroupe tous les champs texte à traduire dans un seul tableau,
+  // pour ne faire qu'un seul appel /translate/batch.
+  const hardcodedTexts = useMemo(() => [
+    hardcodedArticleFr.title,
+    hardcodedArticleFr.excerpt,
+    ...defaultPostsFr.flatMap(p => [p.title, p.excerpt]),
+    ...defaultOpportunitiesFr.flatMap(o => [o.title, o.location, o.roi]),
+  ], []);
+
+  const translatedTexts = useAutoTranslate(hardcodedTexts, currentLang, 'fr');
+
+  const hardcodedArticle = useMemo(() => ({
+    ...hardcodedArticleFr,
+    title: translatedTexts[0],
+    excerpt: translatedTexts[1],
+    date: currentLang === 'en' ? 'January 15, 2026' : hardcodedArticleFr.date,
+  }), [translatedTexts, currentLang]);
+
+  const defaultPosts = useMemo(() => {
+    let i = 2; // les 2 premiers slots sont pris par hardcodedArticle
+    return defaultPostsFr.map((p) => {
+      const title = translatedTexts[i++];
+      const excerpt = translatedTexts[i++];
+      return { ...p, title, excerpt };
+    });
+  }, [translatedTexts]);
+
+  const defaultOpportunities = useMemo(() => {
+    let i = 2 + defaultPostsFr.length * 2;
+    return defaultOpportunitiesFr.map((o) => {
+      const title = translatedTexts[i++];
+      const location = translatedTexts[i++];
+      const roi = translatedTexts[i++];
+      return { ...o, title, location, roi };
+    });
+  }, [translatedTexts]);
 
   const categories = [
     { id: 'all', label: t.all },
@@ -413,16 +248,16 @@ const Blog = () => {
       setLoading(true);
       try {
         const response = await api.get(`/blog?lang=${currentLang}`);
-let apiPosts = [];
-if (response && response.success && response.data && response.data.length > 0) {
-  apiPosts = response.data;
-} else {
-  apiPosts = defaultPosts[currentLang] || defaultPosts.fr;
-}
-setPosts([hardcodedArticle, ...apiPosts]);
+        let apiPosts = [];
+        if (response && response.success && response.data && response.data.length > 0) {
+          apiPosts = response.data;
+        } else {
+          apiPosts = defaultPosts;
+        }
+        setPosts([hardcodedArticle, ...apiPosts]);
       } catch (error) {
         console.error('Erreur lors du chargement des articles:', error);
-        setPosts([hardcodedArticle, ...(defaultPosts[currentLang] || defaultPosts.fr)]);
+        setPosts([hardcodedArticle, ...defaultPosts]);
       } finally {
         setLoading(false);
       }
@@ -431,20 +266,19 @@ setPosts([hardcodedArticle, ...apiPosts]);
     const fetchOpportunities = async () => {
       try {
         const response = await api.get('/opportunities?lang=' + currentLang);
-if (response && response.success && response.data && response.data.length > 0) {
-  setOpportunities(response.data);
-} else {
-  setOpportunities(defaultOpportunities[currentLang] || defaultOpportunities.fr);
-}
+        if (response && response.success && response.data && response.data.length > 0) {
+          setOpportunities(response.data);
+        } else {
+          setOpportunities(defaultOpportunities);
+        }
       } catch (error) {
-        setOpportunities(defaultOpportunities[currentLang] || defaultOpportunities.fr);
+        setOpportunities(defaultOpportunities);
       }
     };
 
     fetchPosts();
     fetchOpportunities();
 
-    // Newsletter popup
     const timer = setTimeout(() => {
       if (!localStorage.getItem('blogNewsletterShown')) {
         setShowNewsletter(true);
@@ -452,7 +286,8 @@ if (response && response.success && response.data && response.data.length > 0) {
       }
     }, 8000);
     return () => clearTimeout(timer);
-  }, [currentLang]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentLang, hardcodedArticle, defaultPosts, defaultOpportunities]);
 
   const handleNewsletterSubmit = (e) => {
     e.preventDefault();
@@ -505,7 +340,7 @@ if (response && response.success && response.data && response.data.length > 0) {
     <div className="bg-white min-h-screen">
       <Navbar />
 
-      {/* HERO SECTION avec animation */}
+      {/* HERO SECTION */}
       <motion.section 
         style={{ opacity: heroOpacity, scale: heroScale }}
         className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 text-white overflow-hidden"
@@ -521,15 +356,8 @@ if (response && response.success && response.data && response.data.length > 0) {
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
               }}
-              animate={{
-                y: [0, -30, 0],
-                opacity: [0.3, 0.6, 0.3],
-              }}
-              transition={{
-                duration: Math.random() * 10 + 10,
-                repeat: Infinity,
-                ease: "linear"
-              }}
+              animate={{ y: [0, -30, 0], opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: Math.random() * 10 + 10, repeat: Infinity, ease: "linear" }}
             />
           ))}
         </div>
@@ -583,7 +411,7 @@ if (response && response.success && response.data && response.data.length > 0) {
 
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-20">
 
-        {/* CAPEF PARTNERSHIP SECTION */}
+        {/* CAPEF */}
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -594,9 +422,7 @@ if (response && response.success && response.data && response.data.length > 0) {
             <ShieldCheck size={24} className="text-pc-gold" />
             <h2 className="text-3xl font-serif italic">{t.strategicPartnership}</h2>
           </div>
-          <p className="text-slate-600 mb-6 leading-relaxed">
-            {t.capefDescription}
-          </p>
+          <p className="text-slate-600 mb-6 leading-relaxed">{t.capefDescription}</p>
           <Link to="/agriculture/institutional-framework">
             <button className="bg-pc-green text-white px-6 py-3 text-[10px] uppercase font-bold tracking-widest hover:bg-pc-green/90 transition-all rounded-full">
               {t.learnMore}
@@ -604,7 +430,7 @@ if (response && response.success && response.data && response.data.length > 0) {
           </Link>
         </motion.div>
 
-        {/* DIASPORA SECTION */}
+        {/* DIASPORA */}
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -612,17 +438,13 @@ if (response && response.success && response.data && response.data.length > 0) {
           className="bg-slate-900 text-white p-16 mb-20 relative overflow-hidden rounded-3xl"
         >
           <div className="relative z-10">
-            <h2 className="text-4xl font-serif italic mb-6">
-              {t.investFromAbroad}
-            </h2>
-            <p className="text-slate-300 max-w-2xl leading-relaxed">
-              {t.diasporaDescription}
-            </p>
+            <h2 className="text-4xl font-serif italic mb-6">{t.investFromAbroad}</h2>
+            <p className="text-slate-300 max-w-2xl leading-relaxed">{t.diasporaDescription}</p>
           </div>
           <div className="absolute top-0 right-0 w-32 h-32 bg-pc-gold opacity-10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
         </motion.div>
 
-        {/* OPPORTUNITIES SECTION */}
+        {/* OPPORTUNITIES */}
         <div className="mb-20">
           <div className="flex items-center gap-4 mb-10">
             <h2 className="text-3xl font-serif italic">{t.currentOpportunities}</h2>
@@ -668,9 +490,7 @@ if (response && response.success && response.data && response.data.length > 0) {
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
               className={`px-6 py-2 text-[10px] uppercase tracking-widest font-bold transition-all rounded-full ${
-                activeCategory === cat.id
-                  ? 'bg-slate-900 text-white'
-                  : 'text-slate-400 hover:text-pc-gold'
+                activeCategory === cat.id ? 'bg-slate-900 text-white' : 'text-slate-400 hover:text-pc-gold'
               }`}
             >
               {cat.label}
@@ -716,7 +536,6 @@ if (response && response.success && response.data && response.data.length > 0) {
                     </h3>
                     <p className="text-sm text-slate-500 line-clamp-2 italic leading-relaxed">{post.excerpt}</p>
                     
-                    {/* Performance Stats */}
                     {post.isHardcoded && post.performanceData && (
                       <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 bg-slate-50 p-4 rounded-xl">
                         <div>
@@ -787,9 +606,7 @@ if (response && response.success && response.data && response.data.length > 0) {
           </div>
           <div className="relative z-10">
             <BookOpen size={48} className="text-pc-gold mx-auto mb-4" />
-            <h2 className="text-3xl font-serif mb-6">
-              {t.readyToInvest}
-            </h2>
+            <h2 className="text-3xl font-serif mb-6">{t.readyToInvest}</h2>
             <div className="flex flex-col md:flex-row justify-center gap-4">
               <Link to="/book-appointment">
                 <button className="bg-pc-gold text-slate-900 px-10 py-4 text-[10px] uppercase font-bold tracking-widest hover:bg-pc-gold/90 transition-all rounded-full">
@@ -830,12 +647,8 @@ if (response && response.success && response.data && response.data.length > 0) {
                     <div className="w-16 h-16 bg-gradient-to-br from-pc-gold to-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
                       <Mail size={28} className="text-white" />
                     </div>
-                    <h3 className="text-2xl font-serif font-bold text-gray-900 mb-2">
-                      {t.freeGuide}
-                    </h3>
-                    <p className="text-gray-500 text-sm">
-                      {t.newsletterDesc}
-                    </p>
+                    <h3 className="text-2xl font-serif font-bold text-gray-900 mb-2">{t.freeGuide}</h3>
+                    <p className="text-gray-500 text-sm">{t.newsletterDesc}</p>
                   </div>
                   <form onSubmit={handleNewsletterSubmit} className="space-y-4">
                     <input

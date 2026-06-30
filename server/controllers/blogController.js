@@ -1,4 +1,5 @@
 import BlogPost from '../models/BlogPost.js';
+import translate from 'google-translate-api-x';
 
 const makeSlug = (title) =>
   title.toLowerCase()
@@ -6,6 +7,88 @@ const makeSlug = (title) =>
     .replace(/\s+/g, '-')
     .replace(/--+/g, '-')
     .trim();
+
+// ─────────────────────────────────────────────────────────────
+// Cache mémoire (session serveur) — complète le cache MongoDB
+// pour les chaînes répétées
+// ─────────────────────────────────────────────────────────────
+const memCache = new Map();
+
+async function translateText(text, targetLang) {
+  if (!text || typeof text !== 'string' || text.trim().length === 0) return text;
+
+  const key = `${text}_${targetLang}`;
+  if (memCache.has(key)) return memCache.get(key);
+
+  try {
+    const result = await translate(text, { to: targetLang });
+    memCache.set(key, result.text);
+    return result.text;
+  } catch {
+    return text;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Applique la traduction d'un article avec cache MongoDB persistant
+// - Si targetLang === sourceLang du post (par défaut 'fr') → retour brut
+// - Si traduction déjà en cache (translations.{lang}) → on l'utilise
+// - Sinon → on traduit via google-translate-api-x, on stocke en base
+//   en arrière-plan (sans bloquer la réponse), et on retourne le résultat
+// ─────────────────────────────────────────────────────────────
+async function applyBlogTranslation(post, targetLang) {
+  const doc = post.toObject ? post.toObject() : { ...post };
+  const sourceLang = doc.sourceLang || 'fr';
+
+  if (!targetLang || targetLang === sourceLang) {
+    return doc;
+  }
+
+  const cached = doc.translations?.[targetLang];
+
+  // Cache présent et valide
+  if (cached && cached.title) {
+    return {
+      ...doc,
+      title:          cached.title,
+      excerpt:        cached.excerpt        ?? doc.excerpt,
+      content:        cached.content        ?? doc.content,
+      seoTitle:       cached.seoTitle       ?? doc.seoTitle,
+      seoDescription: cached.seoDescription ?? doc.seoDescription,
+    };
+  }
+
+  // Pas de cache → traduire et stocker en arrière-plan
+  try {
+    console.log(`[translate] Translating post ${doc._id} to ${targetLang}...`);
+
+    const [title, excerpt, content, seoTitle, seoDescription] = await Promise.all([
+      translateText(doc.title,          targetLang),
+      translateText(doc.excerpt,        targetLang),
+      translateText(doc.content,        targetLang),
+      translateText(doc.seoTitle,       targetLang),
+      translateText(doc.seoDescription, targetLang),
+    ]);
+
+    const cacheEntry = { title, excerpt, content, seoTitle, seoDescription };
+
+    BlogPost.findByIdAndUpdate(
+      doc._id,
+      { $set: { [`translations.${targetLang}`]: cacheEntry } },
+      { new: false }
+    ).catch(err =>
+      console.error(`[blog] Cache write failed for ${doc._id}:`, err.message)
+    );
+
+    console.log(`[translate] Successfully translated post ${doc._id} to ${targetLang}`);
+
+    return { ...doc, title, excerpt, content, seoTitle, seoDescription };
+
+  } catch (err) {
+    console.error(`[translate] Translation failed for ${doc._id}:`, err.message);
+    return doc;
+  }
+}
 
 // ========== GET ALL POSTS (ADMIN) ==========
 export const getAllPostsAdmin = async (req, res) => {
@@ -52,13 +135,13 @@ export const getPosts = async (req, res) => {
 
     const total = await BlogPost.countDocuments(query);
 
-    const formatted = posts.map(post => {
-      const tr = post.translations?.[lang];
+    const formatted = await Promise.all(posts.map(async (post) => {
+      const tr = await applyBlogTranslation(post, lang);
       return {
         id:         post._id,
-        title:      tr?.title      || post.title,
-        excerpt:    tr?.excerpt    || post.excerpt,
-        content:    tr?.content    || post.content,
+        title:      tr.title,
+        excerpt:    tr.excerpt,
+        content:    tr.content,
         category:   post.category,
         image:      post.featuredImage,
         date:       post.publishedAt || post.createdAt,
@@ -68,7 +151,7 @@ export const getPosts = async (req, res) => {
         tags:       post.tags,
         views:      post.views,
       };
-    });
+    }));
 
     res.json({
       success: true,
@@ -87,19 +170,20 @@ export const getFeaturedPosts = async (req, res) => {
     const posts = await BlogPost.find({ status: 'published', isFeatured: true })
       .sort({ publishedAt: -1 }).limit(3);
 
-    const formatted = posts.map(post => {
-      const tr = post.translations?.[lang];
+    const formatted = await Promise.all(posts.map(async (post) => {
+      const tr = await applyBlogTranslation(post, lang);
       return {
-        id: post._id, 
-        title: tr?.title || post.title,
-        excerpt: tr?.excerpt || post.excerpt,
-        category: post.category, 
-        image: post.featuredImage,
-        date: post.publishedAt || post.createdAt,
-        author: post.authorName, 
-        slug: post.slug
+        id:       post._id,
+        title:    tr.title,
+        excerpt:  tr.excerpt,
+        category: post.category,
+        image:    post.featuredImage,
+        date:     post.publishedAt || post.createdAt,
+        author:   post.authorName,
+        slug:     post.slug
       };
-    }); 
+    }));
+
     res.json({ success: true, data: formatted });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -115,17 +199,17 @@ export const getPost = async (req, res) => {
 
     if (!post) return res.status(404).json({ success: false, message: 'Article non trouvé' });
 
-    // ✅ Par :
-await BlogPost.findByIdAndUpdate(post._id, { $inc: { views: 1 } });
+    await BlogPost.findByIdAndUpdate(post._id, { $inc: { views: 1 } });
 
-    const tr = post.translations?.[lang];
+    const tr = await applyBlogTranslation(post, lang);
+
     res.json({
       success: true,
       data: {
         id:         post._id,
-        title:      tr?.title      || post.title,
-        excerpt:    tr?.excerpt    || post.excerpt,
-        content:    tr?.content    || post.content,
+        title:      tr.title,
+        excerpt:    tr.excerpt,
+        content:    tr.content,
         category:   post.category,
         image:      post.featuredImage,
         date:       post.publishedAt || post.createdAt,
@@ -133,8 +217,8 @@ await BlogPost.findByIdAndUpdate(post._id, { $inc: { views: 1 } });
         author:     { name: post.authorName, bio: post.author?.bio },
         tags:       post.tags,
         views:      post.views,
-        seoTitle:       tr?.seoTitle       || post.seoTitle,
-        seoDescription: tr?.seoDescription || post.seoDescription,
+        seoTitle:       tr.seoTitle,
+        seoDescription: tr.seoDescription,
       }
     });
   } catch (err) {
@@ -148,7 +232,7 @@ export const createPost = async (req, res) => {
     const {
       title, excerpt, content, category,
       tags, metaKeywords, isFeatured, status,
-      seoTitle, seoDescription, translations
+      seoTitle, seoDescription, translations, sourceLang
     } = req.body;
 
     // URL Cloudinary injectée par uploadBlogImage.single()
@@ -169,6 +253,7 @@ export const createPost = async (req, res) => {
       seoTitle:       seoTitle       || title,
       seoDescription: seoDescription || excerpt,
       translations:   translations   ? JSON.parse(translations)   : {},
+      sourceLang:     sourceLang     || 'fr',
       author:     req.user.id,
       authorName: req.user.name,
     });
@@ -189,8 +274,10 @@ export const updatePost = async (req, res) => {
     const {
       title, excerpt, content, category,
       tags, metaKeywords, isFeatured, status,
-      seoTitle, seoDescription, translations
+      seoTitle, seoDescription, translations, sourceLang
     } = req.body;
+
+    const contentChanged = title || excerpt || content;
 
     if (title) { post.title = title; post.slug = makeSlug(title); }
     if (excerpt)        post.excerpt        = excerpt;
@@ -202,7 +289,17 @@ export const updatePost = async (req, res) => {
     if (status)         post.status         = status;
     if (seoTitle)       post.seoTitle       = seoTitle;
     if (seoDescription) post.seoDescription = seoDescription;
-    if (translations)   post.translations   = JSON.parse(translations);
+    if (sourceLang)      post.sourceLang     = sourceLang;
+
+    if (translations) {
+      // Mise à jour manuelle explicite des traductions par l'admin
+      post.translations = JSON.parse(translations);
+    } else if (contentChanged) {
+      // ✅ Le contenu source a changé sans fournir de nouvelles traductions
+      // → le cache de traduction devient obsolète, on le vide pour forcer
+      // une retraduction automatique à la prochaine requête publique
+      post.translations = {};
+    }
 
     // Nouvelle image uploadée → nouvelle URL Cloudinary
     if (req.file) post.featuredImage = req.file.path;

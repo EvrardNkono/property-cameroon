@@ -43,7 +43,8 @@ import roleRequestRoutes from './routes/roleRequest.routes.js'; // ✅ AJOUT ICI
 
 // 🌟 NOUVELLES ROUTES BLOG
 import blogRoutes from './routes/blogRoutes.js';
-
+// 🌐 ROUTE DE TRADUCTION GÉNÉRIQUE (données en dur frontend)
+import translateRoutes from './routes/translate.routes.js';
 // ✅ Import complet des controllers upload (restauré)
 import { 
   uploadPropertyImages, 
@@ -460,6 +461,9 @@ app.use('/api/livestock-categories', livestockCategoryRoutes);
 
 // 🌟 NOUVELLES ROUTES BLOG (ordre important : categories avant blog)
 app.use('/api/blog', blogRoutes);
+
+// 🌐 Traduction générique pour le frontend
+app.use('/api/translate', translateRoutes);
 
 // ✅ ROUTES DES DEMANDES DE RÔLE
 app.use('/api/role-requests', roleRequestRoutes);
