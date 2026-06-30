@@ -1,18 +1,18 @@
 // frontend/src/pages/Blog.jsx
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
-  ArrowRight, Calendar, User, Tag, Heart, Share2, Clock, Eye,
-  Loader2, AlertCircle, BookOpen, Sparkles, ChevronRight, Star,
-  MessageCircle, ArrowLeft, TrendingUp, ShieldCheck, Globe,
-  CheckCircle, X, Mail, FileText, Award, Zap, Layers, MapPin
+  Calendar, User, Sparkles, ChevronRight, ShieldCheck,
+  CheckCircle, X, Mail, BookOpen, AlertCircle
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import api from '../services/api';
 
-// Hook pour récupérer la langue actuelle
+// ============================================
+// 1. HOOK DE LANGUE RÉUTILISABLE
+// ============================================
 const useCurrentLang = () => {
   const [lang, setLang] = useState('fr');
   
@@ -22,206 +22,43 @@ const useCurrentLang = () => {
     const storedLang = localStorage.getItem('preferredLanguage');
     const browserLang = navigator.language.split('-')[0];
     
-    const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
-    setLang(finalLang);
+    // Priorité: URL > localStorage > navigateur > fallback
+    const finalLang = urlLang || storedLang || (['fr', 'en'].includes(browserLang) ? browserLang : 'fr');
+    setLang(['fr', 'en'].includes(finalLang) ? finalLang : 'fr');
   }, []);
   
   return lang;
 };
 
-const Blog = () => {
-  const currentLang = useCurrentLang();
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [opportunities, setOpportunities] = useState([]);
-  const [featuredPosts, setFeaturedPosts] = useState([]);
-  const [showNewsletter, setShowNewsletter] = useState(false);
-  const [emailSubmitted, setEmailSubmitted] = useState(false);
-
-  const { scrollYProgress } = useScroll();
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.3]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
-
-  // ========== TRADUCTIONS COMPLÈTES ==========
-  const t = {
-    fr: {
-      // Hero
-      heroBadge: "Le Journal",
-      heroTitle: "Investissez au Cameroun",
-      heroTitleLine2: "Sans compromis",
-      heroSubtitle: "Immobilier, Agriculture et Approvisionnement international — une approche sécurisée et rentable pour l'investisseur moderne.",
-      exploreNow: "Explorer Maintenant",
-      diasporaPortal: "Portail Diaspora",
-      
-      // CAPEF
-      strategicPartnership: "Partenariat Stratégique avec le CAPEF",
-      capefDescription: "Nous travaillons en étroite collaboration avec la Chambre d'Agriculture, des Pêches, de l'Élevage et des Forêts (CAPEF) pour garantir des investissements agricoles sécurisés et rentables, gérés par des experts locaux certifiés.",
-      learnMore: "En Savoir Plus",
-      
-      // Diaspora
-      investFromAbroad: "Investissez depuis l'Étranger en Toute Confiance",
-      diasporaDescription: "Nous gérons, sécurisons et développons vos investissements au Cameroun. En exploitant notre expertise locale : vous investissez, nous exécutons.",
-      
-      // Opportunities
-      currentOpportunities: "Opportunités Actuelles",
-      details: "Détails →",
-      estimatedRoi: "ROI Annuel Estimé",
-      potentialRoi: "ROI Potentiel",
-      
-      // Blog
-      theJournal: "Le Journal",
-      insightsExpertise: "Perspectives & Expertise",
-      all: "Tous",
-      realEstate: "Immobilier",
-      agriculture: "Agriculture",
-      sourcing: "Approvisionnement",
-      lifestyle: "Mode de Vie",
-      by: "Par",
-      readMore: "Lire la suite",
-      noPosts: "Aucun article pour le moment",
-      loading: "Chargement...",
-      featured: "À la Une",
-      readFullArticle: "Lire l'article complet",
-      
-      // Stats
-      acquisitionPrice: "Prix d'acquisition",
-      currentMarketPrice: "Prix actuel du marché",
-      valueGain: "Gain de valeur",
-      percentageGain: "Bénéfice brut",
-      
-      // Newsletter
-      newsletterTitle: "Restez informé",
-      newsletterDesc: "Recevez nos derniers articles et opportunités d'investissement",
-      emailPlaceholder: "Votre adresse email",
-      subscribe: "S'abonner",
-      thanksSubscribing: "Merci !",
-      checkInbox: "Consultez votre boîte mail.",
-      freeGuide: "Guide Gratuit",
-      
-      // CTA
-      readyToInvest: "Prêt à Investir Intelligemment ?",
-      talkToExpert: "Parler à un Expert",
-      viewOpportunities: "Voir les Opportunités",
-      
-      // Badges
-      badgePartners: "Partenaires",
-      badgeExperts: "Experts",
-      badgeSecurity: "Sécurisé",
-      
-      // Error
-      errorLoading: "Erreur de chargement",
-      tryAgain: "Réessayer",
-      
-      // Categories
-      allCategories: "Toutes les catégories",
-      
-      // Share
-      share: "Partager",
-      copied: "Lien copié !",
-      
-      // Performance
-      performance: "Performance",
-      successFactors: "Pourquoi un tel succès ?",
-      investAdvice: "Investir dans la terre reste l'un des moyens les plus sûrs et les plus lucratifs pour bâtir un patrimoine solide au Cameroun."
-    },
-    en: {
-      // Hero
-      heroBadge: "The Journal",
-      heroTitle: "Invest in Cameroon",
-      heroTitleLine2: "Without Compromise",
-      heroSubtitle: "Real Estate, Agriculture, and International Sourcing — a secure and profitable approach for the modern investor.",
-      exploreNow: "Explore Now",
-      diasporaPortal: "Diaspora Portal",
-      
-      // CAPEF
-      strategicPartnership: "Strategic Partnership with CAPEF",
-      capefDescription: "We work closely with the Chamber of Agriculture, Fisheries, Livestock and Forests (CAPEF) to guarantee secured and profitable agricultural investments, managed by certified local experts.",
-      learnMore: "Learn More",
-      
-      // Diaspora
-      investFromAbroad: "Invest from Abroad with Confidence",
-      diasporaDescription: "We manage, secure, and develop your investments in Cameroon. Leveraging our local expertise: you invest, we execute.",
-      
-      // Opportunities
-      currentOpportunities: "Current Opportunities",
-      details: "Details →",
-      estimatedRoi: "Estimated Annual ROI",
-      potentialRoi: "Potential ROI",
-      
-      // Blog
-      theJournal: "The Journal",
-      insightsExpertise: "Insights & Expertise",
-      all: "All",
-      realEstate: "Real Estate",
-      agriculture: "Agriculture",
-      sourcing: "Sourcing",
-      lifestyle: "Lifestyle",
-      by: "By",
-      readMore: "Read more",
-      noPosts: "No posts yet",
-      loading: "Loading...",
-      featured: "Featured",
-      readFullArticle: "Read Full Article",
-      
-      // Stats
-      acquisitionPrice: "Acquisition Price",
-      currentMarketPrice: "Current Market Price",
-      valueGain: "Value Gain",
-      percentageGain: "Gross Profit",
-      
-      // Newsletter
-      newsletterTitle: "Stay Informed",
-      newsletterDesc: "Receive our latest articles and investment opportunities",
-      emailPlaceholder: "Your email address",
-      subscribe: "Subscribe",
-      thanksSubscribing: "Thanks!",
-      checkInbox: "Check your inbox.",
-      freeGuide: "Free Guide",
-      
-      // CTA
-      readyToInvest: "Ready to Invest Smartly?",
-      talkToExpert: "Talk to an Expert",
-      viewOpportunities: "View Opportunities",
-      
-      // Badges
-      badgePartners: "Partners",
-      badgeExperts: "Experts",
-      badgeSecurity: "Secure",
-      
-      // Error
-      errorLoading: "Loading error",
-      tryAgain: "Try Again",
-      
-      // Categories
-      allCategories: "All categories",
-      
-      // Share
-      share: "Share",
-      copied: "Link copied!",
-      
-      // Performance
-      performance: "Performance",
-      successFactors: "Why such success?",
-      investAdvice: "Investing in land remains one of the safest and most lucrative ways to build solid wealth in Cameroon."
-    }
-  }[currentLang] || {
+// ============================================
+// 2. TRADUCTIONS EXTERNALISÉES
+// ============================================
+const BLOG_TRANSLATIONS = {
+  fr: {
+    // Hero
     heroBadge: "Le Journal",
     heroTitle: "Investissez au Cameroun",
     heroTitleLine2: "Sans compromis",
     heroSubtitle: "Immobilier, Agriculture et Approvisionnement international — une approche sécurisée et rentable pour l'investisseur moderne.",
     exploreNow: "Explorer Maintenant",
     diasporaPortal: "Portail Diaspora",
+    
+    // CAPEF
     strategicPartnership: "Partenariat Stratégique avec le CAPEF",
     capefDescription: "Nous travaillons en étroite collaboration avec la Chambre d'Agriculture, des Pêches, de l'Élevage et des Forêts (CAPEF) pour garantir des investissements agricoles sécurisés et rentables, gérés par des experts locaux certifiés.",
     learnMore: "En Savoir Plus",
+    
+    // Diaspora
     investFromAbroad: "Investissez depuis l'Étranger en Toute Confiance",
     diasporaDescription: "Nous gérons, sécurisons et développons vos investissements au Cameroun. En exploitant notre expertise locale : vous investissez, nous exécutons.",
+    
+    // Opportunities
     currentOpportunities: "Opportunités Actuelles",
     details: "Détails →",
     estimatedRoi: "ROI Annuel Estimé",
     potentialRoi: "ROI Potentiel",
+    
+    // Blog
     theJournal: "Le Journal",
     insightsExpertise: "Perspectives & Expertise",
     all: "Tous",
@@ -235,13 +72,14 @@ const Blog = () => {
     loading: "Chargement...",
     featured: "À la Une",
     readFullArticle: "Lire l'article complet",
+    
+    // Stats
     acquisitionPrice: "Prix d'acquisition",
     currentMarketPrice: "Prix actuel du marché",
     valueGain: "Gain de valeur",
     percentageGain: "Bénéfice brut",
-    readyToInvest: "Prêt à Investir Intelligemment ?",
-    talkToExpert: "Parler à un Expert",
-    viewOpportunities: "Voir les Opportunités",
+    
+    // Newsletter
     newsletterTitle: "Restez informé",
     newsletterDesc: "Recevez nos derniers articles et opportunités d'investissement",
     emailPlaceholder: "Votre adresse email",
@@ -249,38 +87,129 @@ const Blog = () => {
     thanksSubscribing: "Merci !",
     checkInbox: "Consultez votre boîte mail.",
     freeGuide: "Guide Gratuit",
+    
+    // CTA
+    readyToInvest: "Prêt à Investir Intelligemment ?",
+    talkToExpert: "Parler à un Expert",
+    viewOpportunities: "Voir les Opportunités",
+    
+    // Badges
+    badgePartners: "Partenaires",
+    badgeExperts: "Experts",
+    badgeSecurity: "Sécurisé",
+    
+    // Error
     errorLoading: "Erreur de chargement",
     tryAgain: "Réessayer",
+    
+    // Categories
     allCategories: "Toutes les catégories",
+    
+    // Share
     share: "Partager",
     copied: "Lien copié !",
+    
+    // Performance
     performance: "Performance",
     successFactors: "Pourquoi un tel succès ?",
     investAdvice: "Investir dans la terre reste l'un des moyens les plus sûrs et les plus lucratifs pour bâtir un patrimoine solide au Cameroun."
-  };
+  },
+  en: {
+    // Hero
+    heroBadge: "The Journal",
+    heroTitle: "Invest in Cameroon",
+    heroTitleLine2: "Without Compromise",
+    heroSubtitle: "Real Estate, Agriculture, and International Sourcing — a secure and profitable approach for the modern investor.",
+    exploreNow: "Explore Now",
+    diasporaPortal: "Diaspora Portal",
+    
+    // CAPEF
+    strategicPartnership: "Strategic Partnership with CAPEF",
+    capefDescription: "We work closely with the Chamber of Agriculture, Fisheries, Livestock and Forests (CAPEF) to guarantee secured and profitable agricultural investments, managed by certified local experts.",
+    learnMore: "Learn More",
+    
+    // Diaspora
+    investFromAbroad: "Invest from Abroad with Confidence",
+    diasporaDescription: "We manage, secure, and develop your investments in Cameroon. Leveraging our local expertise: you invest, we execute.",
+    
+    // Opportunities
+    currentOpportunities: "Current Opportunities",
+    details: "Details →",
+    estimatedRoi: "Estimated Annual ROI",
+    potentialRoi: "Potential ROI",
+    
+    // Blog
+    theJournal: "The Journal",
+    insightsExpertise: "Insights & Expertise",
+    all: "All",
+    realEstate: "Real Estate",
+    agriculture: "Agriculture",
+    sourcing: "Sourcing",
+    lifestyle: "Lifestyle",
+    by: "By",
+    readMore: "Read more",
+    noPosts: "No posts yet",
+    loading: "Loading...",
+    featured: "Featured",
+    readFullArticle: "Read Full Article",
+    
+    // Stats
+    acquisitionPrice: "Acquisition Price",
+    currentMarketPrice: "Current Market Price",
+    valueGain: "Value Gain",
+    percentageGain: "Gross Profit",
+    
+    // Newsletter
+    newsletterTitle: "Stay Informed",
+    newsletterDesc: "Receive our latest articles and investment opportunities",
+    emailPlaceholder: "Your email address",
+    subscribe: "Subscribe",
+    thanksSubscribing: "Thanks!",
+    checkInbox: "Check your inbox.",
+    freeGuide: "Free Guide",
+    
+    // CTA
+    readyToInvest: "Ready to Invest Smartly?",
+    talkToExpert: "Talk to an Expert",
+    viewOpportunities: "View Opportunities",
+    
+    // Badges
+    badgePartners: "Partners",
+    badgeExperts: "Experts",
+    badgeSecurity: "Secure",
+    
+    // Error
+    errorLoading: "Loading error",
+    tryAgain: "Try Again",
+    
+    // Categories
+    allCategories: "All categories",
+    
+    // Share
+    share: "Share",
+    copied: "Link copied!",
+    
+    // Performance
+    performance: "Performance",
+    successFactors: "Why such success?",
+    investAdvice: "Investing in land remains one of the safest and most lucrative ways to build solid wealth in Cameroon."
+  }
+};
 
-  // ========== ARTICLE EN DUR (Dates cohérentes 2026) ==========
-  const hardcodedArticle = {
-    id: 'featured-performance',
-    category: 'Real Estate',
-    title: "Investissement Immobilier : Une Plus-Value Exceptionnelle de +266% en 6 Mois !",
-    excerpt: "Le marché immobilier camerounais confirme une fois de plus son statut de valeur refuge et de moteur de croissance pour les investisseurs avisés. Chez Property Cameroun, nous venons d'en faire la démonstration concrète sur un projet de lotissement stratégique.",
-    image: "/images/propertycameroun.png",
-    date: currentLang === 'fr' ? "15 Janvier 2026" : "January 15, 2026",
-    author: "Property Cameroun",
-    slug: 'performance-immobiliere-266',
-    isHardcoded: true,
-    performanceData: {
-      acquisitionPrice: "1 500 FCFA/m²",
-      currentPrice: "5 500 FCFA/m²",
-      valueGain: "4 000 FCFA/m²",
-      percentageGain: "+266,6 %"
-    }
-  };
+// ============================================
+// 3. HOOK DE TRADUCTION PERSONNALISÉ
+// ============================================
+const useTranslation = () => {
+  const lang = useCurrentLang();
+  return BLOG_TRANSLATIONS[lang] || BLOG_TRANSLATIONS.fr;
+};
 
-  // ========== DONNÉES PAR DÉFAUT (Dates cohérentes 2026) ==========
-  const defaultPosts = {
-    fr: [
+// ============================================
+// 4. DONNÉES PAR DÉFAUT AVEC TRADUCTIONS
+// ============================================
+const DEFAULT_DATA = {
+  fr: {
+    posts: [
       {
         id: 2,
         category: 'Agriculture',
@@ -332,7 +261,14 @@ const Blog = () => {
         slug: 'vivre-douala-guide-expatrie'
       }
     ],
-    en: [
+    opportunities: [
+      { id: 1, title: "Terrain Agricole Sécurisé - 5 Hectares", location: "Centre Cameroun", roi: "12% ROI Annuel Estimé" },
+      { id: 2, title: "Projet d'Élevage Porcin Clé en Main", location: "Ouest Cameroun", roi: "18% ROI Potentiel" },
+      { id: 3, title: "Villa de Standing - Bastos", location: "Yaoundé", roi: "15% ROI Annuel" }
+    ]
+  },
+  en: {
+    posts: [
       {
         id: 2,
         category: 'Agriculture',
@@ -383,66 +319,109 @@ const Blog = () => {
         author: "Property Cameroun",
         slug: 'living-douala-expat-guide'
       }
-    ]
-  };
-
-  const defaultOpportunities = {
-    fr: [
-      { id: 1, title: "Terrain Agricole Sécurisé - 5 Hectares", location: "Centre Cameroun", roi: "12% ROI Annuel Estimé" },
-      { id: 2, title: "Projet d'Élevage Porcin Clé en Main", location: "Ouest Cameroun", roi: "18% ROI Potentiel" },
-      { id: 3, title: "Villa de Standing - Bastos", location: "Yaoundé", roi: "15% ROI Annuel" }
     ],
-    en: [
+    opportunities: [
       { id: 1, title: "Secured Agricultural Land - 5 Hectares", location: "Central Cameroon", roi: "12% Estimated Annual ROI" },
       { id: 2, title: "Turnkey Pig Farming Project", location: "West Cameroon", roi: "18% Potential ROI" },
       { id: 3, title: "Luxury Villa - Bastos", location: "Yaoundé", roi: "15% Annual ROI" }
     ]
-  };
+  }
+};
 
-  const categories = [
+// ============================================
+// 5. COMPOSANT PRINCIPAL
+// ============================================
+const Blog = () => {
+  const t = useTranslation();
+  const currentLang = useCurrentLang();
+  
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [opportunities, setOpportunities] = useState([]);
+  const [showNewsletter, setShowNewsletter] = useState(false);
+  const [emailSubmitted, setEmailSubmitted] = useState(false);
+
+  const { scrollYProgress } = useScroll();
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.3]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
+
+  // ============================================
+  // 6. ARTICLE EN DUR AVEC TRADUCTION
+  // ============================================
+  const hardcodedArticle = useMemo(() => ({
+    id: 'featured-performance',
+    category: 'Real Estate',
+    title: currentLang === 'fr'
+      ? "Investissement Immobilier : Une Plus-Value Exceptionnelle de +266% en 6 Mois !"
+      : "Real Estate Investment: An Exceptional +266% Gain in 6 Months!",
+    excerpt: currentLang === 'fr'
+      ? "Le marché immobilier camerounais confirme une fois de plus son statut de valeur refuge et de moteur de croissance pour les investisseurs avisés. Chez Property Cameroun, nous venons d'en faire la démonstration concrète sur un projet de lotissement stratégique."
+      : "The Cameroonian real estate market once again confirms its status as a safe haven and growth driver for savvy investors. At Property Cameroun, we have just demonstrated this concretely on a strategic land development project.",
+    image: "/images/propertycameroun.png",
+    date: currentLang === 'fr' ? "15 Janvier 2026" : "January 15, 2026",
+    author: "Property Cameroun",
+    slug: 'performance-immobiliere-266',
+    isHardcoded: true,
+    performanceData: {
+      acquisitionPrice: "1 500 FCFA/m²",
+      currentPrice: "5 500 FCFA/m²",
+      valueGain: "4 000 FCFA/m²",
+      percentageGain: "+266,6 %"
+    }
+  }), [currentLang]);
+
+  // ============================================
+  // 7. CATÉGORIES
+  // ============================================
+  const categories = useMemo(() => [
     { id: 'all', label: t.all },
     { id: 'Real Estate', label: t.realEstate },
     { id: 'Agriculture', label: t.agriculture },
     { id: 'Sourcing', label: t.sourcing },
     { id: 'Lifestyle', label: t.lifestyle }
-  ];
+  ], [t]);
 
-  // Charger les articles
+  // ============================================
+  // 8. CHARGEMENT DES DONNÉES
+  // ============================================
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchData = async () => {
       setLoading(true);
+      setError(null);
+      
       try {
-        const response = await api.get(`/blog?lang=${currentLang}`);
-let apiPosts = [];
-if (response && response.success && response.data && response.data.length > 0) {
-  apiPosts = response.data;
-} else {
-  apiPosts = defaultPosts[currentLang] || defaultPosts.fr;
-}
-setPosts([hardcodedArticle, ...apiPosts]);
+        // Récupération des articles
+        const postsResponse = await api.get(`/blog?lang=${currentLang}`);
+        let apiPosts = [];
+        
+        if (postsResponse?.success && postsResponse?.data?.length > 0) {
+          apiPosts = postsResponse.data;
+        } else {
+          apiPosts = DEFAULT_DATA[currentLang]?.posts || DEFAULT_DATA.fr.posts;
+        }
+        setPosts([hardcodedArticle, ...apiPosts]);
+
+        // Récupération des opportunités
+        const oppResponse = await api.get('/opportunities?lang=' + currentLang);
+        if (oppResponse?.success && oppResponse?.data?.length > 0) {
+          setOpportunities(oppResponse.data);
+        } else {
+          setOpportunities(DEFAULT_DATA[currentLang]?.opportunities || DEFAULT_DATA.fr.opportunities);
+        }
       } catch (error) {
-        console.error('Erreur lors du chargement des articles:', error);
-        setPosts([hardcodedArticle, ...(defaultPosts[currentLang] || defaultPosts.fr)]);
+        console.error('Erreur de chargement:', error);
+        setError(error.message || 'Erreur de chargement des données');
+        // Fallback sur les données par défaut
+        setPosts([hardcodedArticle, ...(DEFAULT_DATA[currentLang]?.posts || DEFAULT_DATA.fr.posts)]);
+        setOpportunities(DEFAULT_DATA[currentLang]?.opportunities || DEFAULT_DATA.fr.opportunities);
       } finally {
         setLoading(false);
       }
     };
 
-    const fetchOpportunities = async () => {
-      try {
-        const response = await api.get('/opportunities?lang=' + currentLang);
-if (response && response.success && response.data && response.data.length > 0) {
-  setOpportunities(response.data);
-} else {
-  setOpportunities(defaultOpportunities[currentLang] || defaultOpportunities.fr);
-}
-      } catch (error) {
-        setOpportunities(defaultOpportunities[currentLang] || defaultOpportunities.fr);
-      }
-    };
-
-    fetchPosts();
-    fetchOpportunities();
+    fetchData();
 
     // Newsletter popup
     const timer = setTimeout(() => {
@@ -451,9 +430,13 @@ if (response && response.success && response.data && response.data.length > 0) {
         localStorage.setItem('blogNewsletterShown', 'true');
       }
     }, 8000);
+    
     return () => clearTimeout(timer);
-  }, [currentLang]);
+  }, [currentLang, hardcodedArticle]);
 
+  // ============================================
+  // 9. GESTIONNAIRES
+  // ============================================
   const handleNewsletterSubmit = (e) => {
     e.preventDefault();
     setEmailSubmitted(true);
@@ -463,10 +446,15 @@ if (response && response.success && response.data && response.data.length > 0) {
     }, 2000);
   };
 
-  const filteredPosts = activeCategory === 'all'
-    ? posts
-    : posts.filter(post => post.category === activeCategory);
+  const filteredPosts = useMemo(() => {
+    return activeCategory === 'all'
+      ? posts
+      : posts.filter(post => post.category === activeCategory);
+  }, [posts, activeCategory]);
 
+  // ============================================
+  // 10. RENDU - CHARGEMENT
+  // ============================================
   if (loading) {
     return (
       <div className="bg-white min-h-screen">
@@ -475,10 +463,14 @@ if (response && response.success && response.data && response.data.length > 0) {
           <div className="w-12 h-12 border-2 border-pc-gold border-t-transparent rounded-full animate-spin" />
           <span className="ml-3 text-gray-500">{t.loading}</span>
         </div>
+        <Footer />
       </div>
     );
   }
 
+  // ============================================
+  // 11. RENDU - ERREUR
+  // ============================================
   if (error) {
     return (
       <div className="bg-white min-h-screen">
@@ -501,11 +493,14 @@ if (response && response.success && response.data && response.data.length > 0) {
     );
   }
 
+  // ============================================
+  // 12. RENDU - PRINCIPAL
+  // ============================================
   return (
     <div className="bg-white min-h-screen">
       <Navbar />
 
-      {/* HERO SECTION avec animation */}
+      {/* HERO SECTION */}
       <motion.section 
         style={{ opacity: heroOpacity, scale: heroScale }}
         className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 text-white overflow-hidden"

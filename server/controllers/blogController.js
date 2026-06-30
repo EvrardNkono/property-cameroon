@@ -1,40 +1,87 @@
+// backend/controllers/blog.controller.js
+
 import BlogPost from '../models/BlogPost.js';
+import translate from 'google-translate-api-x';
 
-const makeSlug = (title) =>
-  title.toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/--+/g, '-')
-    .trim();
+// ===== CACHE MÉMOIRE =====
+const memCache = new Map();
 
-// ========== GET ALL POSTS (ADMIN) ==========
-export const getAllPostsAdmin = async (req, res) => {
+async function translateText(text, targetLang) {
+  if (!text || typeof text !== 'string' || text.trim().length === 0) return text;
+  if (targetLang === 'en') return text;
+
+  const key = `${text}_${targetLang}`;
+  if (memCache.has(key)) return memCache.get(key);
+
   try {
-    const posts = await BlogPost.find()
-      .sort({ createdAt: -1 })
-      .populate('author', 'name');
-
-    res.json({
-      success: true,
-      data: posts.map(p => ({ ...p.toObject(), id: p._id }))
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    const result = await translate(text, { to: targetLang });
+    memCache.set(key, result.text);
+    return result.text;
+  } catch {
+    return text;
   }
-};
+}
 
-// ========== GET SINGLE POST (ADMIN) ==========
-export const getAdminPost = async (req, res) => {
+// ===== APPLIQUER LA TRADUCTION AVEC CACHE =====
+async function applyTranslation(post, targetLang) {
+  if (!targetLang || targetLang === 'en') return post;
+
+  const doc = post.toObject ? post.toObject() : { ...post };
+  const translations = doc.translations || {};
+  const cached = translations[targetLang];
+
+  // Cache présent
+  if (cached && cached.title) {
+    return {
+      ...doc,
+      title: cached.title,
+      excerpt: cached.excerpt || doc.excerpt,
+      content: cached.content || doc.content,
+      seoTitle: cached.seoTitle || doc.seoTitle,
+      seoDescription: cached.seoDescription || doc.seoDescription,
+    };
+  }
+
+  // Pas de cache → traduire
   try {
-    const post = await BlogPost.findById(req.params.id).populate('author', 'name email');
-    if (!post) return res.status(404).json({ success: false, message: 'Article non trouvé' });
-    res.json({ success: true, data: { ...post.toObject(), id: post._id } });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
+    console.log(`[blog] Translating post ${doc._id} to ${targetLang}...`);
 
-// ========== GET PUBLIC POSTS ==========
+    const [title, excerpt, content, seoTitle, seoDescription] = await Promise.all([
+      translateText(doc.title, targetLang),
+      translateText(doc.excerpt || '', targetLang),
+      translateText(doc.content || '', targetLang),
+      translateText(doc.seoTitle || doc.title, targetLang),
+      translateText(doc.seoDescription || doc.excerpt || '', targetLang),
+    ]);
+
+    const cacheEntry = { title, excerpt, content, seoTitle, seoDescription };
+
+    // Sauvegarder en base
+    await BlogPost.findByIdAndUpdate(
+      doc._id,
+      { $set: { [`translations.${targetLang}`]: cacheEntry } }
+    ).catch(err =>
+      console.error(`[blog] Cache write failed:`, err.message)
+    );
+
+    console.log(`[blog] ✅ Successfully translated post ${doc._id} to ${targetLang}`);
+
+    return {
+      ...doc,
+      title,
+      excerpt,
+      content,
+      seoTitle,
+      seoDescription,
+    };
+
+  } catch (err) {
+    console.error(`[blog] Translation failed:`, err.message);
+    return doc;
+  }
+}
+
+// ===== GET PUBLIC POSTS (avec traduction auto) =====
 export const getPosts = async (req, res) => {
   try {
     const { page = 1, limit = 10, category, tag, search, lang = 'fr' } = req.query;
@@ -52,23 +99,24 @@ export const getPosts = async (req, res) => {
 
     const total = await BlogPost.countDocuments(query);
 
-    const formatted = posts.map(post => {
-      const tr = post.translations?.[lang];
+    // ✅ Appliquer la traduction automatique
+    const formatted = await Promise.all(posts.map(async post => {
+      const translated = await applyTranslation(post, lang);
       return {
-        id:         post._id,
-        title:      tr?.title      || post.title,
-        excerpt:    tr?.excerpt    || post.excerpt,
-        content:    tr?.content    || post.content,
-        category:   post.category,
-        image:      post.featuredImage,
-        date:       post.publishedAt || post.createdAt,
-        author:     post.authorName,
-        slug:       post.slug,
-        isFeatured: post.isFeatured,
-        tags:       post.tags,
-        views:      post.views,
+        id:         translated._id,
+        title:      translated.title,
+        excerpt:    translated.excerpt,
+        content:    translated.content,
+        category:   translated.category,
+        image:      translated.featuredImage,
+        date:       translated.publishedAt || translated.createdAt,
+        author:     translated.authorName,
+        slug:       translated.slug,
+        isFeatured: translated.isFeatured,
+        tags:       translated.tags,
+        views:      translated.views,
       };
-    });
+    }));
 
     res.json({
       success: true,
@@ -80,33 +128,34 @@ export const getPosts = async (req, res) => {
   }
 };
 
-// ========== GET FEATURED POSTS ==========
+// ===== GET FEATURED POSTS =====
 export const getFeaturedPosts = async (req, res) => {
   try {
     const { lang = 'fr' } = req.query;
     const posts = await BlogPost.find({ status: 'published', isFeatured: true })
       .sort({ publishedAt: -1 }).limit(3);
 
-    const formatted = posts.map(post => {
-      const tr = post.translations?.[lang];
+    const formatted = await Promise.all(posts.map(async post => {
+      const translated = await applyTranslation(post, lang);
       return {
-        id: post._id, 
-        title: tr?.title || post.title,
-        excerpt: tr?.excerpt || post.excerpt,
-        category: post.category, 
-        image: post.featuredImage,
-        date: post.publishedAt || post.createdAt,
-        author: post.authorName, 
-        slug: post.slug
+        id: translated._id,
+        title: translated.title,
+        excerpt: translated.excerpt,
+        category: translated.category,
+        image: translated.featuredImage,
+        date: translated.publishedAt || translated.createdAt,
+        author: translated.authorName,
+        slug: translated.slug
       };
-    }); 
+    }));
+
     res.json({ success: true, data: formatted });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ========== GET SINGLE POST (PUBLIC) ==========
+// ===== GET SINGLE POST =====
 export const getPost = async (req, res) => {
   try {
     const { lang = 'fr' } = req.query;
@@ -115,26 +164,28 @@ export const getPost = async (req, res) => {
 
     if (!post) return res.status(404).json({ success: false, message: 'Article non trouvé' });
 
-    // ✅ Par :
-await BlogPost.findByIdAndUpdate(post._id, { $inc: { views: 1 } });
+    // Incrémenter les vues
+    await BlogPost.findByIdAndUpdate(post._id, { $inc: { views: 1 } });
 
-    const tr = post.translations?.[lang];
+    // ✅ Appliquer la traduction
+    const translated = await applyTranslation(post, lang);
+
     res.json({
       success: true,
       data: {
-        id:         post._id,
-        title:      tr?.title      || post.title,
-        excerpt:    tr?.excerpt    || post.excerpt,
-        content:    tr?.content    || post.content,
-        category:   post.category,
-        image:      post.featuredImage,
-        date:       post.publishedAt || post.createdAt,
-        updatedAt:  post.updatedAt,
-        author:     { name: post.authorName, bio: post.author?.bio },
-        tags:       post.tags,
-        views:      post.views,
-        seoTitle:       tr?.seoTitle       || post.seoTitle,
-        seoDescription: tr?.seoDescription || post.seoDescription,
+        id:         translated._id,
+        title:      translated.title,
+        excerpt:    translated.excerpt,
+        content:    translated.content,
+        category:   translated.category,
+        image:      translated.featuredImage,
+        date:       translated.publishedAt || translated.createdAt,
+        updatedAt:  translated.updatedAt,
+        author:     { name: translated.authorName, bio: translated.author?.bio },
+        tags:       translated.tags,
+        views:      translated.views,
+        seoTitle:       translated.seoTitle,
+        seoDescription: translated.seoDescription,
       }
     });
   } catch (err) {
@@ -142,7 +193,34 @@ await BlogPost.findByIdAndUpdate(post._id, { $inc: { views: 1 } });
   }
 };
 
-// ========== CREATE POST ==========
+// ===== GET ALL POSTS (ADMIN) - pas de traduction =====
+export const getAllPostsAdmin = async (req, res) => {
+  try {
+    const posts = await BlogPost.find()
+      .sort({ createdAt: -1 })
+      .populate('author', 'name');
+
+    res.json({
+      success: true,
+      data: posts.map(p => ({ ...p.toObject(), id: p._id }))
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ===== GET SINGLE POST (ADMIN) - pas de traduction =====
+export const getAdminPost = async (req, res) => {
+  try {
+    const post = await BlogPost.findById(req.params.id).populate('author', 'name email');
+    if (!post) return res.status(404).json({ success: false, message: 'Article non trouvé' });
+    res.json({ success: true, data: { ...post.toObject(), id: post._id } });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ===== CREATE POST =====
 export const createPost = async (req, res) => {
   try {
     const {
@@ -151,10 +229,8 @@ export const createPost = async (req, res) => {
       seoTitle, seoDescription, translations
     } = req.body;
 
-    // URL Cloudinary injectée par uploadBlogImage.single()
     const featuredImage = req.file ? req.file.path : null;
 
-    // Slug unique
     let slug = makeSlug(title);
     const existing = await BlogPost.findOne({ slug });
     if (existing) slug = `${slug}-${Date.now()}`;
@@ -180,7 +256,7 @@ export const createPost = async (req, res) => {
   }
 };
 
-// ========== UPDATE POST ==========
+// ===== UPDATE POST =====
 export const updatePost = async (req, res) => {
   try {
     const post = await BlogPost.findById(req.params.id);
@@ -202,9 +278,13 @@ export const updatePost = async (req, res) => {
     if (status)         post.status         = status;
     if (seoTitle)       post.seoTitle       = seoTitle;
     if (seoDescription) post.seoDescription = seoDescription;
-    if (translations)   post.translations   = JSON.parse(translations);
+    
+    // ✅ Mise à jour des traductions
+    if (translations) {
+      const parsedTranslations = JSON.parse(translations);
+      post.translations = parsedTranslations;
+    }
 
-    // Nouvelle image uploadée → nouvelle URL Cloudinary
     if (req.file) post.featuredImage = req.file.path;
 
     await post.save();
@@ -214,7 +294,7 @@ export const updatePost = async (req, res) => {
   }
 };
 
-// ========== DELETE POST ==========
+// ===== DELETE POST =====
 export const deletePost = async (req, res) => {
   try {
     const post = await BlogPost.findById(req.params.id);
