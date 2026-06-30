@@ -98,6 +98,16 @@ const getHardcodedArticle = (lang) => {
     `
   };
 };
+const formatContent = (content) => {
+  if (!content) return '';
+  
+  return content
+    .split(/\n\s*\n/) // une ligne vide = nouveau paragraphe
+    .map(paragraph => paragraph.trim())
+    .filter(paragraph => paragraph.length > 0)
+    .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br/>')}</p>`)
+    .join('');
+};
 
 const BlogPostDetail = () => {
   const { slug } = useParams();
@@ -587,10 +597,11 @@ const BlogPostDetail = () => {
             )}
             
             {/* Contenu HTML */}
-            <div 
-              className="prose prose-lg prose-slate max-w-none blog-content"
-              dangerouslySetInnerHTML={{ __html: post.content }}
-            />
+           {/* Contenu HTML */}
+<div 
+  className="prose prose-lg prose-slate max-w-none blog-content"
+  dangerouslySetInnerHTML={{ __html: formatContent(post.content) }}
+/>
             
             {/* Tags */}
             {post.tags && post.tags.length > 0 && (
