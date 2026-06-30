@@ -305,12 +305,9 @@ const connectMongoDB = async () => {
 
     console.log('🔄 Connecting Mongoose to MongoDB...');
     
-    if (mongoose.connection.readyState !== 0) {
-      try {
-        await mongoose.disconnect();
-      } catch(e) { /* ignore */ }
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
+    if (mongoose.connection.readyState === 0) {
+  await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
+}
     
     await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
     console.log('✅ Mongoose connected successfully');

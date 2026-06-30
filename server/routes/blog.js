@@ -11,7 +11,7 @@ import {
 
 const router = express.Router();
 
-// ── Catégories ────────────────────────────────────────────
+// ── Catégories (avant /:slug pour éviter les conflits) ────
 router.get('/categories', getCategories);
 router.post('/categories', protect, authorize('admin', 'editor'), createCategory);
 router.put('/categories/:id', protect, authorize('admin', 'editor'), updateCategory);

@@ -32,11 +32,10 @@ const blogPostSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // models/BlogPost.js - Version corrigée
-blogPostSchema.pre('save', function(next) {
+blogPostSchema.pre('save', function () {
   if (this.isModified('status') && this.status === 'published' && !this.publishedAt) {
     this.publishedAt = new Date();
   }
-  next();
 });
 
 blogPostSchema.index({ slug: 1 });
