@@ -413,13 +413,13 @@ const Blog = () => {
       setLoading(true);
       try {
         const response = await api.get(`/blog?lang=${currentLang}`);
-        let apiPosts = [];
-        if (response.data && response.data.success && response.data.data.length > 0) {
-          apiPosts = response.data.data;
-        } else {
-          apiPosts = defaultPosts[currentLang] || defaultPosts.fr;
-        }
-        setPosts([hardcodedArticle, ...apiPosts]);
+let apiPosts = [];
+if (response && response.success && response.data && response.data.length > 0) {
+  apiPosts = response.data;
+} else {
+  apiPosts = defaultPosts[currentLang] || defaultPosts.fr;
+}
+setPosts([hardcodedArticle, ...apiPosts]);
       } catch (error) {
         console.error('Erreur lors du chargement des articles:', error);
         setPosts([hardcodedArticle, ...(defaultPosts[currentLang] || defaultPosts.fr)]);
@@ -431,11 +431,11 @@ const Blog = () => {
     const fetchOpportunities = async () => {
       try {
         const response = await api.get('/opportunities?lang=' + currentLang);
-        if (response.data && response.data.success && response.data.data.length > 0) {
-          setOpportunities(response.data.data);
-        } else {
-          setOpportunities(defaultOpportunities[currentLang] || defaultOpportunities.fr);
-        }
+if (response && response.success && response.data && response.data.length > 0) {
+  setOpportunities(response.data);
+} else {
+  setOpportunities(defaultOpportunities[currentLang] || defaultOpportunities.fr);
+}
       } catch (error) {
         setOpportunities(defaultOpportunities[currentLang] || defaultOpportunities.fr);
       }
