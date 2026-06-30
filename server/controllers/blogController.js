@@ -99,7 +99,7 @@ export const getFeaturedPosts = async (req, res) => {
         author: post.authorName, 
         slug: post.slug
       };
-    });
+    }); 
     res.json({ success: true, data: formatted });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
