@@ -1,6 +1,6 @@
 // frontend/src/pages/BlogPostDetail.jsx
-import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -11,220 +11,42 @@ import {
   Clock,
   Eye,
   MessageCircle,
-  ChevronRight,
   Loader2,
   AlertCircle,
   Mail,
-  CheckCircle,
   BookOpen,
-  ThumbsUp,
   Link as LinkIcon
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
+import { useAutoTranslate } from '../hooks/useAutoTranslate';
 
-// Hook pour récupérer la langue actuelle
+// ============================================
+// 1. HOOK DE LANGUE (lazy initializer)
+// ============================================
 const useCurrentLang = () => {
-  const [lang, setLang] = useState('fr');
-  
-  useEffect(() => {
+  const [lang] = useState(() => {
+    if (typeof window === 'undefined') return 'fr';
     const params = new URLSearchParams(window.location.search);
     const urlLang = params.get('lang');
     const storedLang = localStorage.getItem('preferredLanguage');
     const browserLang = navigator.language.split('-')[0];
-    
     const finalLang = urlLang || storedLang || (browserLang === 'en' ? 'en' : 'fr');
-    setLang(finalLang);
-  }, []);
-  
+    return ['fr', 'en'].includes(finalLang) ? finalLang : 'fr';
+  });
   return lang;
 };
 
-// ========== ARTICLE EN DUR (Dates cohérentes 2026) ==========
-const getHardcodedArticle = (lang) => {
-  const isFrench = lang === 'fr';
-  
-  return {
-    id: 'featured-performance',
-    slug: 'performance-immobiliere-266',
-    category: 'Real Estate',
-    title: isFrench 
-      ? "Investissement Immobilier : Une Plus-Value Exceptionnelle de +266% en 6 Mois !"
-      : "Real Estate Investment: An Exceptional +266% Capital Gain in 6 Months!",
-    excerpt: isFrench
-      ? "Le marché immobilier camerounais confirme une fois de plus son statut de valeur refuge et de moteur de croissance pour les investisseurs avisés. Chez Property Cameroun, nous venons d'en faire la démonstration concrète sur un projet de lotissement stratégique."
-      : "The Cameroonian real estate market once again confirms its status as a safe haven and growth engine for savvy investors. At Property Cameroun, we have just demonstrated this concretely on a strategic subdivision project.",
-    image: "/images/propertycameroun.png",
-    date: isFrench ? "15 Janvier 2026" : "January 15, 2026",
-    author: "Property Cameroun",
-    isFeatured: true,
-    isHardcoded: true,
-    views: 2847,
-    tags: isFrench ? ['Immobilier', 'Investissement', 'Plus-Value', 'Cameroun'] : ['Real Estate', 'Investment', 'Capital Gain', 'Cameroon'],
-    performanceData: {
-      acquisitionPrice: "1 500 FCFA/m²",
-      currentPrice: "5 500 FCFA/m²",
-      valueGain: "4 000 FCFA/m²",
-      percentageGain: "+266,6 %"
-    },
-    content: `
-      <p>${isFrench ? 'Le marché immobilier camerounais confirme une fois de plus son statut de valeur refuge et de moteur de croissance pour les investisseurs avisés. Chez Property Cameroun, nous venons d\'en faire la démonstration concrète sur un projet de lotissement stratégique.' : 'The Cameroonian real estate market once again confirms its status as a safe haven and growth engine for savvy investors. At Property Cameroun, we have just demonstrated this concretely on a strategic subdivision project.'}</p>
-      
-      <h2>${isFrench ? 'L\'Analyse de la Performance' : 'Performance Analysis'}</h2>
-      <p>${isFrench ? 'Il y a seulement six mois, en janvier 2026, nous travaillions sur l\'aménagement d\'une parcelle de 4 hectares. À cette période, le prix du mètre carré était fixé à 1 500 FCFA.' : 'Just six months ago, in January 2026, we were working on the development of a 4-hectare plot. At that time, the price per square meter was set at 1,500 FCFA.'}</p>
-      <p>${isFrench ? 'Aujourd\'hui, en juin 2026, la donne a radicalement changé. Grâce à notre stratégie de développement et à l\'attractivité croissante de la zone, le prix du mètre carré se négocie désormais entre 5 000 FCFA et 6 000 FCFA.' : 'Today, in June 2026, the situation has radically changed. Thanks to our development strategy and the growing attractiveness of the area, the price per square meter now ranges between 5,000 FCFA and 6,000 FCFA.'}</p>
-      
-      <h3>${isFrench ? 'Le Bilan Chiffré' : 'The Financial Summary'}</h3>
-      <p>${isFrench ? 'Si l\'on prend la moyenne de notre nouvelle valeur de marché (5 500 FCFA/m²), voici l\'évolution de la rentabilité :' : 'Taking the average of our new market value (5,500 FCFA/m²), here is the evolution of profitability:'}</p>
-      
-      <div class="bg-slate-50 rounded-xl p-6 my-6">
-        <ul class="list-none space-y-3">
-          <li><strong>${isFrench ? 'Prix d\'acquisition (Janvier 2026)' : 'Acquisition Price (January 2026)'} :</strong> 1 500 FCFA/m²</li>
-          <li><strong>${isFrench ? 'Prix actuel du marché (Juin 2026)' : 'Current Market Price (June 2026)'} :</strong> 5 500 FCFA/m²</li>
-          <li><strong>${isFrench ? 'Gain de valeur par m²' : 'Value Gain per m²'} :</strong> 4 000 FCFA</li>
-          <li><strong>${isFrench ? 'Pourcentage de bénéfice brut' : 'Gross Profit Percentage'} :</strong> <span class="text-emerald-600 font-bold">+266,6 %</span></li>
-        </ul>
-      </div>
-      
-      <h3>${isFrench ? 'Pourquoi un tel succès ?' : 'Why such success?'}</h3>
-      <p>${isFrench ? 'Cette appréciation de 266 % en un semestre n\'est pas le fruit du hasard. Elle résulte de notre expertise dans le choix des emplacements, l\'anticipation du développement urbain et la mise en valeur méthodique de nos parcelles.' : 'This 266% appreciation in six months is no coincidence. It results from our expertise in location selection, anticipation of urban development, and the methodical development of our plots.'}</p>
-      
-      <div class="bg-pc-gold/10 border-l-4 border-pc-gold p-6 my-8 rounded-r-xl">
-        <p class="font-bold text-slate-800 italic text-lg">"${isFrench ? 'Investir dans la terre reste l\'un des moyens les plus sûrs et les plus lucratifs pour bâtir un patrimoine solide au Cameroun.' : 'Investing in land remains one of the safest and most lucrative ways to build solid wealth in Cameroon.'}"</p>
-      </div>
-      
-      <p>${isFrench ? 'Vous souhaitez profiter des prochaines opportunités avant que le marché ne sature ?' : 'Want to take advantage of upcoming opportunities before the market saturates?'}</p>
-      <p><strong>${isFrench ? 'Contactez Property Cameroun dès aujourd\'hui pour découvrir nos prochains projets.' : 'Contact Property Cameroun today to discover our next projects.'}</strong></p>
-    `
-  };
-};
-
-// Repère le premier "mot" d'un paragraphe (lettres, chiffres, ponctuation collée)
-// et l'enveloppe dans un span stylé, même si c'est un nombre (ex: "266%", "2026,").
-const formatContent = (content) => {
-  if (!content) return '';
-  
-  return content
-    .split(/\n\s*\n/) // une ligne vide = nouveau paragraphe
-    .map(paragraph => paragraph.trim())
-    .filter(paragraph => paragraph.length > 0)
-    .map(paragraph => {
-      const withBreaks = paragraph.replace(/\n/g, '<br/>');
-
-      // On ne touche pas aux paragraphes qui commencent par une balise HTML
-      // (ex: <strong>...) pour éviter de casser le markup.
-      const startsWithTag = /^\s*</.test(withBreaks);
-      if (startsWithTag) {
-        return `<p>${withBreaks}</p>`;
-      }
-
-      // \S+ capture le premier "mot" quel qu'il soit : texte, chiffre, symbole, etc.
-      const match = withBreaks.match(/^(\S+)(\s*)([\s\S]*)$/);
-      if (!match) {
-        return `<p>${withBreaks}</p>`;
-      }
-
-      const [, firstWord, spacer, rest] = match;
-      return `<p><span class="first-word">${firstWord}</span>${spacer}${rest}</p>`;
-    })
-    .join('');
-};
-
-const BlogPostDetail = () => {
-  const { slug } = useParams();
-  const navigate = useNavigate();
-  const currentLang = useCurrentLang();
-  
-  const [post, setPost] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [relatedPosts, setRelatedPosts] = useState([]);
-  const [liked, setLiked] = useState(false);
-  const [showShareMenu, setShowShareMenu] = useState(false);
-
-  // Incrémente et persiste (dans le navigateur) le compteur de vues
-  // des articles en dur, afin qu'il augmente à chaque rafraîchissement.
-  const getAndIncrementHardcodedViews = (slugKey, baseViews) => {
-    try {
-      const storageKey = `blog_views_${slugKey}`;
-      const stored = localStorage.getItem(storageKey);
-      const currentCount = stored ? parseInt(stored, 10) : baseViews;
-      const safeCount = Number.isFinite(currentCount) ? currentCount : baseViews;
-      const newCount = safeCount + 1;
-      localStorage.setItem(storageKey, String(newCount));
-      return newCount;
-    } catch (err) {
-      // Mode navigation privée, quota dépassé, etc.
-      return baseViews;
-    }
-  };
-  
-  // Traductions
-  const t = {
-    fr: {
-      backToBlog: "Retour au blog",
-      publishedOn: "Publié le",
-      by: "Par",
-      readTime: "Temps de lecture",
-      minutes: "month",
-      tags: "Tags",
-      share: "Partager",
-      like: "J'aime",
-      relatedArticles: "Articles similaires",
-      readMore: "Lire la suite",
-      errorTitle: "Article non trouvé",
-      errorMessage: "Désolé, l'article que vous recherchez n'existe pas ou a été déplacé.",
-      backToHome: "Retour à l'accueil",
-      goToBlog: "Voir tous les articles",
-      loading: "Chargement de l'article...",
-      views: "vues",
-      copied: "Lien copié !",
-      performanceSummary: "Résumé de la Performance",
-      featured: "À la une",
-      acquisitionPrice: "Prix d'acquisition (Janv. 2026)",
-      currentMarketPrice: "Prix actuel (Juin 2026)",
-      valueGain: "Gain de valeur",
-      percentageGain: "Bénéfice brut",
-      readyToInvest: "Prêt à investir au Cameroun ?",
-      expertGuide: "Nos experts sont là pour vous guider dans vos projets d'investissement.",
-      talkToExpert: "Parler à un expert",
-      exploreOpportunities: "Explorer les opportunités"
-    },
-    en: {
-      backToBlog: "Back to blog",
-      publishedOn: "Published on",
-      by: "By",
-      readTime: "Read time",
-      minutes: "mois",
-      tags: "Tags",
-      share: "Share",
-      like: "Like",
-      relatedArticles: "Related articles",
-      readMore: "Read more",
-      errorTitle: "Article not found",
-      errorMessage: "Sorry, the article you're looking for doesn't exist or has been moved.",
-      backToHome: "Back to home",
-      goToBlog: "View all articles",
-      loading: "Loading article...",
-      views: "views",
-      copied: "Link copied!",
-      performanceSummary: "Performance Summary",
-      featured: "Featured",
-      acquisitionPrice: "Acquisition Price (Jan. 2026)",
-      currentMarketPrice: "Current Price (June 2026)",
-      valueGain: "Value Gain",
-      percentageGain: "Gross Profit",
-      readyToInvest: "Ready to invest in Cameroon?",
-      expertGuide: "Our experts are here to guide you in your investment projects.",
-      talkToExpert: "Talk to an expert",
-      exploreOpportunities: "Explore opportunities"
-    }
-  }[currentLang] || {
+// ============================================
+// 2. TRADUCTIONS UI
+// ============================================
+const UI_TRANSLATIONS = {
+  fr: {
     backToBlog: "Retour au blog",
     publishedOn: "Publié le",
     by: "Par",
     readTime: "Temps de lecture",
-    minutes: "month",
+    min: "min",
     tags: "Tags",
     share: "Partager",
     like: "J'aime",
@@ -246,15 +68,251 @@ const BlogPostDetail = () => {
     readyToInvest: "Prêt à investir au Cameroun ?",
     expertGuide: "Nos experts sont là pour vous guider dans vos projets d'investissement.",
     talkToExpert: "Parler à un expert",
-    exploreOpportunities: "Explorer les opportunités"
-  };
+    exploreOpportunities: "Explorer les opportunités",
+    shareOn: "Partager sur",
+    copyLink: "Copier le lien"
+  },
+  en: {
+    backToBlog: "Back to blog",
+    publishedOn: "Published on",
+    by: "By",
+    readTime: "Read time",
+    min: "min",
+    tags: "Tags",
+    share: "Share",
+    like: "Like",
+    relatedArticles: "Related articles",
+    readMore: "Read more",
+    errorTitle: "Article not found",
+    errorMessage: "Sorry, the article you're looking for doesn't exist or has been moved.",
+    backToHome: "Back to home",
+    goToBlog: "View all articles",
+    loading: "Loading article...",
+    views: "views",
+    copied: "Link copied!",
+    performanceSummary: "Performance Summary",
+    featured: "Featured",
+    acquisitionPrice: "Acquisition Price (Jan. 2026)",
+    currentMarketPrice: "Current Price (June 2026)",
+    valueGain: "Value Gain",
+    percentageGain: "Gross Profit",
+    readyToInvest: "Ready to invest in Cameroon?",
+    expertGuide: "Our experts are here to guide you in your investment projects.",
+    talkToExpert: "Talk to an expert",
+    exploreOpportunities: "Explore opportunities",
+    shareOn: "Share on",
+    copyLink: "Copy link"
+  }
+};
 
-  // Vérifier si c'est l'article en dur
-  const isHardcodedSlug = (slug) => {
-    return slug === 'performance-immobiliere-266' || slug === 'performance-immobiliere-266-en';
-  };
+// ============================================
+// 3. ARTICLE EN DUR - SOURCE UNIQUE (FR)
+// ============================================
+const HARDCODED_ARTICLE_FR = {
+  id: 'featured-performance',
+  slug: 'performance-immobiliere-266',
+  category: 'Real Estate',
+  title: "Investissement Immobilier : Une Plus-Value Exceptionnelle de +266% en 6 Mois !",
+  excerpt: "Le marché immobilier camerounais confirme une fois de plus son statut de valeur refuge et de moteur de croissance pour les investisseurs avisés. Chez Property Cameroun, nous venons d'en faire la démonstration concrète sur un projet de lotissement stratégique.",
+  image: "/images/propertycameroun.png",
+  date: "15 Janvier 2026",
+  author: "Property Cameroun",
+  isFeatured: true,
+  isHardcoded: true,
+  views: 2847,
+  tags: ['Immobilier', 'Investissement', 'Plus-Value', 'Cameroun'],
+  performanceData: {
+    acquisitionPrice: "1 500 FCFA/m²",
+    currentPrice: "5 500 FCFA/m²",
+    valueGain: "4 000 FCFA/m²",
+    percentageGain: "+266,6 %"
+  },
+  content: `
+    <p>Le marché immobilier camerounais confirme une fois de plus son statut de valeur refuge et de moteur de croissance pour les investisseurs avisés. Chez Property Cameroun, nous venons d'en faire la démonstration concrète sur un projet de lotissement stratégique.</p>
+    
+    <h2>L'Analyse de la Performance</h2>
+    <p>Il y a seulement six mois, en janvier 2026, nous travaillions sur l'aménagement d'une parcelle de 4 hectares. À cette période, le prix du mètre carré était fixé à 1 500 FCFA.</p>
+    <p>Aujourd'hui, en juin 2026, la donne a radicalement changé. Grâce à notre stratégie de développement et à l'attractivité croissante de la zone, le prix du mètre carré se négocie désormais entre 5 000 FCFA et 6 000 FCFA.</p>
+    
+    <h3>Le Bilan Chiffré</h3>
+    <p>Si l'on prend la moyenne de notre nouvelle valeur de marché (5 500 FCFA/m²), voici l'évolution de la rentabilité :</p>
+    
+    <div class="bg-slate-50 rounded-xl p-6 my-6">
+      <ul class="list-none space-y-3">
+        <li><strong>Prix d'acquisition (Janvier 2026) :</strong> 1 500 FCFA/m²</li>
+        <li><strong>Prix actuel du marché (Juin 2026) :</strong> 5 500 FCFA/m²</li>
+        <li><strong>Gain de valeur par m² :</strong> 4 000 FCFA</li>
+        <li><strong>Pourcentage de bénéfice brut :</strong> <span class="text-emerald-600 font-bold">+266,6 %</span></li>
+      </ul>
+    </div>
+    
+    <h3>Pourquoi un tel succès ?</h3>
+    <p>Cette appréciation de 266 % en un semestre n'est pas le fruit du hasard. Elle résulte de notre expertise dans le choix des emplacements, l'anticipation du développement urbain et la mise en valeur méthodique de nos parcelles.</p>
+    
+    <div class="bg-pc-gold/10 border-l-4 border-pc-gold p-6 my-8 rounded-r-xl">
+      <p class="font-bold text-slate-800 italic text-lg">"Investir dans la terre reste l'un des moyens les plus sûrs et les plus lucratifs pour bâtir un patrimoine solide au Cameroun."</p>
+    </div>
+    
+    <p>Vous souhaitez profiter des prochaines opportunités avant que le marché ne sature ?</p>
+    <p><strong>Contactez Property Cameroun dès aujourd'hui pour découvrir nos prochains projets.</strong></p>
+  `
+};
 
-  // Charger l'article
+// ============================================
+// 4. ARTICLES FALLBACK - SOURCE UNIQUE (FR)
+// ============================================
+const FALLBACK_POSTS_FR = [
+  {
+    id: '1',
+    slug: 'securiser-titre-foncier-cameroun',
+    title: "Sécuriser votre Titre Foncier au Cameroun : Le Guide Complet 2026",
+    image: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&q=80",
+    category: "Real Estate",
+    date: "12 Mai 2026",
+    content: ""
+  },
+  {
+    id: '2',
+    slug: 'essor-elevage-porcin',
+    title: "L'essor de l'Élevage Porcin : Pourquoi Investir Maintenant",
+    image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80",
+    category: "Agriculture",
+    date: "10 Mars 2026",
+    content: ""
+  },
+  {
+    id: '3',
+    slug: 'quartiers-emergents-douala',
+    title: "Les Quartiers Émergents de Douala : Où Investir en 2026",
+    image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80",
+    category: "Real Estate",
+    date: "5 Mai 2026",
+    content: ""
+  }
+];
+
+// ============================================
+// 5. UTILITAIRES
+// ============================================
+const isHardcodedSlug = (slug) => {
+  return slug === 'performance-immobiliere-266' || slug === 'performance-immobiliere-266-en';
+};
+
+const getAndIncrementHardcodedViews = (slugKey, baseViews) => {
+  try {
+    const storageKey = `blog_views_${slugKey}`;
+    const stored = localStorage.getItem(storageKey);
+    const currentCount = stored ? parseInt(stored, 10) : baseViews;
+    const safeCount = Number.isFinite(currentCount) ? currentCount : baseViews;
+    const newCount = safeCount + 1;
+    localStorage.setItem(storageKey, String(newCount));
+    return newCount;
+  } catch {
+    return baseViews;
+  }
+};
+
+const getReadTime = (content) => {
+  if (!content) return 3;
+  const wordsPerMinute = 200;
+  const words = content.replace(/<[^>]*>/g, '').split(/\s+/).length;
+  const minutes = Math.ceil(words / wordsPerMinute);
+  return Math.max(1, minutes);
+};
+
+const getCategoryColor = (category) => {
+  const colors = {
+    'Real Estate': 'bg-blue-100 text-blue-700 border-blue-200',
+    'Agriculture': 'bg-green-100 text-green-700 border-green-200',
+    'Sourcing': 'bg-purple-100 text-purple-700 border-purple-200',
+    'Lifestyle': 'bg-rose-100 text-rose-700 border-rose-200'
+  };
+  return colors[category] || 'bg-gray-100 text-gray-700 border-gray-200';
+};
+
+const formatContent = (content) => {
+  if (!content) return '';
+  
+  return content
+    .split(/\n\s*\n/)
+    .map(paragraph => paragraph.trim())
+    .filter(paragraph => paragraph.length > 0)
+    .map(paragraph => {
+      const withBreaks = paragraph.replace(/\n/g, '<br/>');
+      const startsWithTag = /^\s*</.test(withBreaks);
+      if (startsWithTag) {
+        return `<p>${withBreaks}</p>`;
+      }
+      const match = withBreaks.match(/^(\S+)(\s*)([\s\S]*)$/);
+      if (!match) {
+        return `<p>${withBreaks}</p>`;
+      }
+      const [, firstWord, spacer, rest] = match;
+      return `<p><span class="first-word">${firstWord}</span>${spacer}${rest}</p>`;
+    })
+    .join('');
+};
+
+// ============================================
+// 6. COMPOSANT PRINCIPAL
+// ============================================
+const BlogPostDetail = () => {
+  const { slug } = useParams();
+  const currentLang = useCurrentLang();
+  const t = UI_TRANSLATIONS[currentLang] || UI_TRANSLATIONS.fr;
+  
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [relatedPosts, setRelatedPosts] = useState([]);
+  const [liked, setLiked] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // ── Traduction auto des données en dur (source = FR) ──
+  const hardcodedTexts = useMemo(() => [
+    HARDCODED_ARTICLE_FR.title,
+    HARDCODED_ARTICLE_FR.excerpt,
+    HARDCODED_ARTICLE_FR.content,
+    ...HARDCODED_ARTICLE_FR.tags,
+    ...FALLBACK_POSTS_FR.flatMap(p => [p.title, p.category])
+  ], []);
+
+  const translatedTexts = useAutoTranslate(hardcodedTexts, currentLang, 'fr');
+
+  // Article traduit
+  const hardcodedArticle = useMemo(() => {
+    const [title, excerpt, content, ...rest] = translatedTexts;
+    const tags = rest.slice(0, 4); // 4 tags
+    const tagIndex = 4;
+    
+    return {
+      ...HARDCODED_ARTICLE_FR,
+      title: title || HARDCODED_ARTICLE_FR.title,
+      excerpt: excerpt || HARDCODED_ARTICLE_FR.excerpt,
+      content: content || HARDCODED_ARTICLE_FR.content,
+      tags: tags.length === 4 ? tags : HARDCODED_ARTICLE_FR.tags,
+      date: currentLang === 'en' ? 'January 15, 2026' : HARDCODED_ARTICLE_FR.date,
+    };
+  }, [translatedTexts, currentLang]);
+
+  // Fallback posts traduits
+  const fallbackPosts = useMemo(() => {
+    let i = 4 + 4; // skip: title, excerpt, content, 4 tags
+    return FALLBACK_POSTS_FR.map((p) => {
+      const title = translatedTexts[i++];
+      const category = translatedTexts[i++];
+      return { 
+        ...p, 
+        title: title || p.title,
+        category: category || p.category 
+      };
+    });
+  }, [translatedTexts]);
+
+  // ============================================
+  // 7. CHARGEMENT DE L'ARTICLE
+  // ============================================
   useEffect(() => {
     const fetchPost = async () => {
       setLoading(true);
@@ -263,65 +321,39 @@ const BlogPostDetail = () => {
       try {
         // Vérifier si c'est l'article en dur
         if (isHardcodedSlug(slug)) {
-          const hardcodedPost = getHardcodedArticle(currentLang);
-          hardcodedPost.views = getAndIncrementHardcodedViews(slug, hardcodedPost.views);
-          setPost(hardcodedPost);
+          const views = getAndIncrementHardcodedViews(slug, hardcodedArticle.views);
+          setPost({ ...hardcodedArticle, views });
           
-          // Charger des articles similaires depuis l'API ou fallback
+          // Charger des articles similaires
           try {
             const response = await api.get(`/blog?category=Real Estate&limit=3&lang=${currentLang}`);
             if (response.success && response.data) {
-              const filtered = response.data.filter(p => p.id !== hardcodedPost.id);
+              const filtered = response.data.filter(p => p.id !== hardcodedArticle.id);
               setRelatedPosts(filtered.slice(0, 3));
             }
-          } catch (err) {
-            // Fallback articles avec dates cohérentes
-            setRelatedPosts([
-              {
-                id: '1',
-                slug: 'securiser-titre-foncier-cameroun',
-                title: currentLang === 'fr' ? "Sécuriser votre Titre Foncier au Cameroun : Le Guide Complet 2026" : "Securing Your Land Title in Cameroon: The 2026 Comprehensive Guide",
-                image: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&q=80",
-                category: "Real Estate",
-                date: currentLang === 'fr' ? "12 Mai 2026" : "May 12, 2026",
-                content: ""
-              },
-              {
-                id: '2',
-                slug: 'essor-elevage-porcin',
-                title: currentLang === 'fr' ? "L'essor de l'Élevage Porcin : Pourquoi Investir Maintenant" : "The Rise of Pig Farming: Why You Should Invest Now",
-                image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&q=80",
-                category: "Agriculture",
-                date: currentLang === 'fr' ? "10 Mars 2026" : "March 10, 2026",
-                content: ""
-              },
-              {
-                id: '3',
-                slug: 'quartiers-emergents-douala',
-                title: currentLang === 'fr' ? "Les Quartiers Émergents de Douala : Où Investir en 2026" : "Emerging Neighborhoods of Douala: Where to Invest in 2026",
-                image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80",
-                category: "Real Estate",
-                date: currentLang === 'fr' ? "5 Mai 2026" : "May 5, 2026",
-                content: ""
-              }
-            ]);
+          } catch {
+            setRelatedPosts(fallbackPosts);
           }
           
           setLoading(false);
           return;
         }
 
-        // Sinon, charger depuis l'API
+        // Charger depuis l'API
         const response = await api.get(`/blog/${slug}?lang=${currentLang}`);
-        if (response.success) {
+        if (response.success && response.data) {
           setPost(response.data);
           
           // Charger les articles similaires
           if (response.data.category) {
-            const relatedResponse = await api.get(`/blog?category=${response.data.category}&limit=3&lang=${currentLang}`);
-            if (relatedResponse.success) {
-              const filtered = relatedResponse.data.filter(p => p.id !== response.data.id);
-              setRelatedPosts(filtered.slice(0, 3));
+            try {
+              const relatedResponse = await api.get(`/blog?category=${response.data.category}&limit=3&lang=${currentLang}`);
+              if (relatedResponse.success && relatedResponse.data) {
+                const filtered = relatedResponse.data.filter(p => p.id !== response.data.id);
+                setRelatedPosts(filtered.slice(0, 3));
+              }
+            } catch {
+              // Fallback silencieux
             }
           }
         } else {
@@ -330,11 +362,11 @@ const BlogPostDetail = () => {
       } catch (err) {
         console.error('Error fetching post:', err);
         
-        // Vérifier si c'est l'article en dur (fallback)
+        // Fallback sur l'article en dur
         if (isHardcodedSlug(slug)) {
-          const fallbackPost = getHardcodedArticle(currentLang);
-          fallbackPost.views = getAndIncrementHardcodedViews(slug, fallbackPost.views);
-          setPost(fallbackPost);
+          const views = getAndIncrementHardcodedViews(slug, hardcodedArticle.views);
+          setPost({ ...hardcodedArticle, views });
+          setRelatedPosts(fallbackPosts);
           setError(null);
         } else {
           setError(err.message || 'Impossible de charger l\'article');
@@ -347,40 +379,11 @@ const BlogPostDetail = () => {
     if (slug) {
       fetchPost();
     }
-  }, [slug, currentLang]);
-  
-  // Calculer le temps de lecture estimé
-  const getReadTime = (content) => {
-    if (!content) return 3;
-    const wordsPerMinute = 200;
-    const words = content.replace(/<[^>]*>/g, '').split(/\s+/).length;
-    const minutes = Math.ceil(words / wordsPerMinute);
-    return Math.max(1, minutes);
-  };
-  
-  // Formater la date
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString(currentLang === 'fr' ? 'fr-FR' : 'en-US', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-  };
-  
-  // Obtenir la couleur de la catégorie
-  const getCategoryColor = (category) => {
-    const colors = {
-      'Real Estate': 'bg-blue-100 text-blue-700 border-blue-200',
-      'Agriculture': 'bg-green-100 text-green-700 border-green-200',
-      'Sourcing': 'bg-purple-100 text-purple-700 border-purple-200',
-      'Lifestyle': 'bg-rose-100 text-rose-700 border-rose-200'
-    };
-    return colors[category] || 'bg-gray-100 text-gray-700 border-gray-200';
-  };
-  
-  // Partager sur les réseaux sociaux
+  }, [slug, currentLang, hardcodedArticle, fallbackPosts]);
+
+  // ============================================
+  // 8. GESTIONNAIRES
+  // ============================================
   const shareOnSocial = (platform) => {
     const url = window.location.href;
     const title = encodeURIComponent(post?.title || '');
@@ -401,7 +404,8 @@ const BlogPostDetail = () => {
         break;
       case 'copy':
         navigator.clipboard.writeText(url);
-        alert(t.copied);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
         setShowShareMenu(false);
         return;
       default:
@@ -411,7 +415,10 @@ const BlogPostDetail = () => {
     window.open(shareUrl, '_blank', 'width=600,height=400');
     setShowShareMenu(false);
   };
-  
+
+  // ============================================
+  // 9. RENDU - CHARGEMENT
+  // ============================================
   if (loading) {
     return (
       <div className="bg-white min-h-screen">
@@ -423,7 +430,10 @@ const BlogPostDetail = () => {
       </div>
     );
   }
-  
+
+  // ============================================
+  // 10. RENDU - ERREUR
+  // ============================================
   if (error || !post) {
     return (
       <div className="bg-white min-h-screen">
@@ -452,7 +462,10 @@ const BlogPostDetail = () => {
       </div>
     );
   }
-  
+
+  // ============================================
+  // 11. RENDU - PRINCIPAL
+  // ============================================
   const readTime = getReadTime(post.content);
   const isHardcoded = post.isHardcoded || false;
   
@@ -460,7 +473,7 @@ const BlogPostDetail = () => {
     <div className="bg-white min-h-screen">
       <Navbar />
       
-      {/* Hero Section avec image de couverture */}
+      {/* Hero Section */}
       <div className="relative h-[50vh] min-h-[400px] flex items-end pb-16">
         <div className="absolute inset-0">
           <img
@@ -501,15 +514,15 @@ const BlogPostDetail = () => {
           <div className="flex flex-wrap items-center gap-4 text-white/70 text-sm">
             <div className="flex items-center gap-2">
               <User size={14} />
-              <span>{t.by} {post.author?.name || post.author}</span>
+              <span>{t.by} {post.author?.name || post.author || 'Property Cameroun'}</span>
             </div>
             <div className="flex items-center gap-2">
               <Calendar size={14} />
-              <span>{post.date || formatDate(post.publishedAt)}</span>
+              <span>{post.date || post.publishedAt || ''}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock size={14} />
-              <span>{readTime} {t.minutes}</span>
+              <span>{readTime} {t.min}</span>
             </div>
             {post.views > 0 && (
               <div className="flex items-center gap-2">
@@ -521,13 +534,12 @@ const BlogPostDetail = () => {
         </div>
       </div>
       
-      {/* Contenu de l'article */}
+      {/* Contenu */}
       <div className="max-w-4xl mx-auto px-6 py-12">
         <div className="flex flex-col lg:flex-row gap-12">
-          {/* Barre latérale gauche - Actions */}
+          {/* Barre latérale */}
           <div className="lg:w-16 order-1 lg:order-none">
             <div className="sticky top-32 flex lg:flex-col items-center gap-4 lg:gap-6">
-              {/* Like button */}
               <button
                 onClick={() => setLiked(!liked)}
                 className={`p-3 rounded-full transition-all ${
@@ -539,7 +551,6 @@ const BlogPostDetail = () => {
                 <Heart size={20} className={liked ? 'fill-red-500' : ''} />
               </button>
               
-              {/* Share button with menu */}
               <div className="relative">
                 <button
                   onClick={() => setShowShareMenu(!showShareMenu)}
@@ -549,7 +560,8 @@ const BlogPostDetail = () => {
                 </button>
                 
                 {showShareMenu && (
-                  <div className="absolute lg:left-full lg:top-0 lg:ml-2 left-0 top-full mt-2 lg:mt-0 bg-white rounded-xl shadow-lg border border-slate-100 p-2 z-20">
+                  <div className="absolute lg:left-full lg:top-0 lg:ml-2 left-0 top-full mt-2 lg:mt-0 bg-white rounded-xl shadow-lg border border-slate-100 p-2 z-20 min-w-[180px]">
+                    <p className="text-[10px] text-slate-400 uppercase font-bold px-3 py-1">{t.shareOn}</p>
                     <button
                       onClick={() => shareOnSocial('facebook')}
                       className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg w-full"
@@ -583,13 +595,12 @@ const BlogPostDetail = () => {
                       className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg w-full border-t border-slate-100 mt-1 pt-2"
                     >
                       <LinkIcon size={16} />
-                      Copier le lien
+                      {copied ? t.copied : t.copyLink}
                     </button>
                   </div>
                 )}
               </div>
               
-              {/* Contact expert */}
               <Link
                 to="/experts"
                 className="p-3 rounded-full bg-pc-gold/10 text-pc-gold hover:bg-pc-gold/20 transition-colors"
@@ -610,7 +621,7 @@ const BlogPostDetail = () => {
               </div>
             )}
             
-            {/* Performance Stats (pour l'article en dur) */}
+            {/* Performance Stats */}
             {isHardcoded && post.performanceData && (
               <div className="mb-8 bg-gradient-to-r from-pc-gold/10 to-emerald-50 rounded-2xl p-6 border border-pc-gold/20">
                 <h3 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
@@ -671,7 +682,7 @@ const BlogPostDetail = () => {
                   <User size={24} className="text-pc-gold" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-800">{post.author?.name || post.author}</h3>
+                  <h3 className="font-semibold text-slate-800">{post.author?.name || post.author || 'Property Cameroun'}</h3>
                   <p className="text-sm text-slate-500">
                     Expert chez Property Cameroon
                   </p>
@@ -713,10 +724,10 @@ const BlogPostDetail = () => {
                   </h3>
                   <div className="flex items-center gap-2 mt-2 text-xs text-slate-400">
                     <Calendar size={12} />
-                    <span>{relatedPost.date || formatDate(relatedPost.publishedAt)}</span>
+                    <span>{relatedPost.date || relatedPost.publishedAt || ''}</span>
                     <span>•</span>
                     <Clock size={12} />
-                    <span>{getReadTime(relatedPost.content)} min</span>
+                    <span>{getReadTime(relatedPost.content)} {t.min}</span>
                   </div>
                 </Link>
               ))}
@@ -724,7 +735,7 @@ const BlogPostDetail = () => {
           </div>
         )}
         
-        {/* Call to Action */}
+        {/* CTA */}
         <div className="mt-12 bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-8 text-center text-white">
           <BookOpen size={32} className="mx-auto mb-4 text-pc-gold" />
           <h3 className="text-xl font-serif mb-2">{t.readyToInvest}</h3>
