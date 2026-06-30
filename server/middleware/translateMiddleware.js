@@ -19,6 +19,7 @@ async function translateText(text, targetLang) {
 }
 
 async function translateObject(obj, targetLang) {
+  if (obj instanceof Date) return obj;
   if (Array.isArray(obj)) {
     return Promise.all(obj.map(item => translateObject(item, targetLang)));
   }
@@ -39,7 +40,7 @@ async function translateObject(obj, targetLang) {
         || value === null
         || value === undefined;
 
-      if (skip) {
+      if (skip || value instanceof Date) {
         translated[key] = value;
       } else if (typeof value === 'string' && value.length > 0) {
         translated[key] = await translateText(value, targetLang);
