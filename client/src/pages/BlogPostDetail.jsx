@@ -98,6 +98,9 @@ const getHardcodedArticle = (lang) => {
     `
   };
 };
+
+// Repère le premier "mot" d'un paragraphe (lettres, chiffres, ponctuation collée)
+// et l'enveloppe dans un span stylé, même si c'est un nombre (ex: "266%", "2026,").
 const formatContent = (content) => {
   if (!content) return '';
   
@@ -105,7 +108,25 @@ const formatContent = (content) => {
     .split(/\n\s*\n/) // une ligne vide = nouveau paragraphe
     .map(paragraph => paragraph.trim())
     .filter(paragraph => paragraph.length > 0)
-    .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br/>')}</p>`)
+    .map(paragraph => {
+      const withBreaks = paragraph.replace(/\n/g, '<br/>');
+
+      // On ne touche pas aux paragraphes qui commencent par une balise HTML
+      // (ex: <strong>...) pour éviter de casser le markup.
+      const startsWithTag = /^\s*</.test(withBreaks);
+      if (startsWithTag) {
+        return `<p>${withBreaks}</p>`;
+      }
+
+      // \S+ capture le premier "mot" quel qu'il soit : texte, chiffre, symbole, etc.
+      const match = withBreaks.match(/^(\S+)(\s*)([\s\S]*)$/);
+      if (!match) {
+        return `<p>${withBreaks}</p>`;
+      }
+
+      const [, firstWord, spacer, rest] = match;
+      return `<p><span class="first-word">${firstWord}</span>${spacer}${rest}</p>`;
+    })
     .join('');
 };
 
@@ -120,6 +141,23 @@ const BlogPostDetail = () => {
   const [relatedPosts, setRelatedPosts] = useState([]);
   const [liked, setLiked] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
+
+  // Incrémente et persiste (dans le navigateur) le compteur de vues
+  // des articles en dur, afin qu'il augmente à chaque rafraîchissement.
+  const getAndIncrementHardcodedViews = (slugKey, baseViews) => {
+    try {
+      const storageKey = `blog_views_${slugKey}`;
+      const stored = localStorage.getItem(storageKey);
+      const currentCount = stored ? parseInt(stored, 10) : baseViews;
+      const safeCount = Number.isFinite(currentCount) ? currentCount : baseViews;
+      const newCount = safeCount + 1;
+      localStorage.setItem(storageKey, String(newCount));
+      return newCount;
+    } catch (err) {
+      // Mode navigation privée, quota dépassé, etc.
+      return baseViews;
+    }
+  };
   
   // Traductions
   const t = {
@@ -226,6 +264,7 @@ const BlogPostDetail = () => {
         // Vérifier si c'est l'article en dur
         if (isHardcodedSlug(slug)) {
           const hardcodedPost = getHardcodedArticle(currentLang);
+          hardcodedPost.views = getAndIncrementHardcodedViews(slug, hardcodedPost.views);
           setPost(hardcodedPost);
           
           // Charger des articles similaires depuis l'API ou fallback
@@ -293,7 +332,9 @@ const BlogPostDetail = () => {
         
         // Vérifier si c'est l'article en dur (fallback)
         if (isHardcodedSlug(slug)) {
-          setPost(getHardcodedArticle(currentLang));
+          const fallbackPost = getHardcodedArticle(currentLang);
+          fallbackPost.views = getAndIncrementHardcodedViews(slug, fallbackPost.views);
+          setPost(fallbackPost);
           setError(null);
         } else {
           setError(err.message || 'Impossible de charger l\'article');
@@ -597,11 +638,10 @@ const BlogPostDetail = () => {
             )}
             
             {/* Contenu HTML */}
-           {/* Contenu HTML */}
-<div 
-  className="prose prose-lg prose-slate max-w-none blog-content"
-  dangerouslySetInnerHTML={{ __html: formatContent(post.content) }}
-/>
+            <div 
+              className="prose prose-lg prose-slate max-w-none blog-content"
+              dangerouslySetInnerHTML={{ __html: formatContent(post.content) }}
+            />
             
             {/* Tags */}
             {post.tags && post.tags.length > 0 && (
@@ -727,6 +767,12 @@ const BlogPostDetail = () => {
           margin-bottom: 1.25rem;
           line-height: 1.75;
           color: #475569;
+        }
+        .blog-content .first-word {
+          font-size: 1.3em;
+          font-weight: 700;
+          color: #1e293b;
+          letter-spacing: 0.02em;
         }
         .blog-content ul, .blog-content ol {
           margin-bottom: 1.25rem;
