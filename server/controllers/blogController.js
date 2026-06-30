@@ -61,7 +61,7 @@ export const getPosts = async (req, res) => {
         content:    tr?.content    || post.content,
         category:   post.category,
         image:      post.featuredImage,
-        date:       post.publishedAt,
+        date:       post.publishedAt || post.createdAt,
         author:     post.authorName,
         slug:       post.slug,
         isFeatured: post.isFeatured,
@@ -95,7 +95,7 @@ export const getFeaturedPosts = async (req, res) => {
         excerpt: tr?.excerpt || post.excerpt,
         category: post.category, 
         image: post.featuredImage,
-        date: post.publishedAt, 
+        date: post.publishedAt || post.createdAt,
         author: post.authorName, 
         slug: post.slug
       };
@@ -128,7 +128,7 @@ await BlogPost.findByIdAndUpdate(post._id, { $inc: { views: 1 } });
         content:    tr?.content    || post.content,
         category:   post.category,
         image:      post.featuredImage,
-        date:       post.publishedAt,
+        date:       post.publishedAt || post.createdAt,
         updatedAt:  post.updatedAt,
         author:     { name: post.authorName, bio: post.author?.bio },
         tags:       post.tags,
